@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState, useReducer, useCallback } from "react";
-import styles from "./production.module.css"
+import { useEffect, useState } from "react";
+import styles from "./production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -18,14 +17,14 @@ export default function Production() {
 
   const INITIAL_PRODUCT_STATE = {
     date: new Date().toISOString().slice(0, 10),
-    batch: generateBatchNumber(), // Initialize batch directly
-    milk_quantity: undefined,
-    curd_quantity: undefined,
-    premium_paneer_quantity: undefined,
-    soft_paneer_quantity: undefined,
-    butter_quantity: undefined,
-    cream_quantity: undefined,
-    ghee_quantity: undefined,
+    batch: generateBatchNumber(),
+    milk_quantity: "",
+    curd_quantity: "",
+    premium_paneer_quantity: "",
+    soft_paneer_quantity: "",
+    butter_quantity: "",
+    cream_quantity: "",
+    ghee_quantity: "",
   };
 
   const [formData, setFormData] = useState(INITIAL_PRODUCT_STATE);
@@ -33,17 +32,17 @@ export default function Production() {
   const [entries, setEntries] = useState([]);
   const [filterBy, setFilterBy] = useState("");
 
-//   useEffect(() => {
-//     fetchData();
-//   }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-//   useEffect(() => {
-//     if (filterBy) {
-//       filterProducts();
-//     } else {
-//       fetchData();
-//     }
-//   }, [filterBy]);
+  useEffect(() => {
+    if (filterBy) {
+      filterProducts();
+    } else {
+      fetchData();
+    }
+  }, [filterBy]);
 
   async function fetchData() {
     setLoading(true);
@@ -87,7 +86,7 @@ export default function Production() {
   const resetForm = () => {
     setFormData({
       ...INITIAL_PRODUCT_STATE,
-      batch: generateBatchNumber(), // Generate new batch on reset
+      batch: generateBatchNumber(),
     });
   };
 
@@ -95,18 +94,30 @@ export default function Production() {
     e.preventDefault();
     setLoading(true);
 
+    // Prepare data for submission - convert empty strings to null
+    const submissionData = {
+      ...formData,
+      milk_quantity: formData.milk_quantity === "" ? null : Number(formData.milk_quantity),
+      curd_quantity: formData.curd_quantity === "" ? null : Number(formData.curd_quantity),
+      premium_paneer_quantity: formData.premium_paneer_quantity === "" ? null : Number(formData.premium_paneer_quantity),
+      soft_paneer_quantity: formData.soft_paneer_quantity === "" ? null : Number(formData.soft_paneer_quantity),
+      butter_quantity: formData.butter_quantity === "" ? null : Number(formData.butter_quantity),
+      cream_quantity: formData.cream_quantity === "" ? null : Number(formData.cream_quantity),
+      ghee_quantity: formData.ghee_quantity === "" ? null : Number(formData.ghee_quantity),
+    };
+
     try {
       const res = await fetch("/api/production", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submissionData),
       });
 
       const data = await res.json();
       
       if (res.ok) {
         toast.success("Production data added successfully!");
-        resetForm(); // Use the reset function
+        resetForm();
         fetchData();
       } else {
         toast.error(data.error || "Submission failed");
@@ -138,6 +149,11 @@ export default function Production() {
     }
   }
 
+  // Helper function to display values in table (shows empty instead of 0 or null)
+  const displayValue = (value) => {
+    return value && value !== 0 ? value : "";
+  };
+
   return (
     <div className={styles.container}>
       <ToastContainer />
@@ -151,6 +167,7 @@ export default function Production() {
             value={formData.date}
             onChange={(e) => handleInputChange('date', e.target.value)}
             className={styles.input}
+            required
           />
         </div>
 
@@ -162,6 +179,7 @@ export default function Production() {
             onChange={(e) => handleInputChange('batch', e.target.value)}
             className={styles.input}
             placeholder="Batch number"
+            required
           />
         </div>
 
@@ -172,8 +190,10 @@ export default function Production() {
               type="number" 
               value={formData.milk_quantity}
               onChange={(e) => handleInputChange('milk_quantity', e.target.value)}
-              placeholder="15L"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
@@ -185,8 +205,10 @@ export default function Production() {
               type="number" 
               value={formData.curd_quantity}
               onChange={(e) => handleInputChange('curd_quantity', e.target.value)}
-              placeholder="15L"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
@@ -198,60 +220,70 @@ export default function Production() {
               type="number" 
               value={formData.premium_paneer_quantity}
               onChange={(e) => handleInputChange('premium_paneer_quantity', e.target.value)}
-              placeholder="15Kg"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
 
         <div className={styles.productRow}>
           <div className={styles.inputGroup}>
-            <label>Soft Paneer Quantity (kg):</label>
+            <label>Soft Paneer Quantity (Kg):</label>
             <input 
               type="number" 
               value={formData.soft_paneer_quantity}
               onChange={(e) => handleInputChange('soft_paneer_quantity', e.target.value)}
-              placeholder="15Kg"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
 
         <div className={styles.productRow}>
           <div className={styles.inputGroup}>
-            <label>Butter Quantity (kg):</label>
+            <label>Butter Quantity (Kg):</label>
             <input 
               type="number" 
               value={formData.butter_quantity}
               onChange={(e) => handleInputChange('butter_quantity', e.target.value)}
-              placeholder="15Kg"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
 
         <div className={styles.productRow}>
           <div className={styles.inputGroup}>
-            <label>Cream Quantity (kg):</label>
+            <label>Cream Quantity (L):</label>
             <input 
               type="number" 
               value={formData.cream_quantity}
               onChange={(e) => handleInputChange('cream_quantity', e.target.value)}
-              placeholder="15L"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
 
         <div className={styles.productRow}>
           <div className={styles.inputGroup}>
-            <label>Ghee Quantity (kg):</label>
+            <label>Ghee Quantity (L):</label>
             <input 
               type="number" 
               value={formData.ghee_quantity}
               onChange={(e) => handleInputChange('ghee_quantity', e.target.value)}
-              placeholder="15L"
+              placeholder="15"
               className={styles.input}
+              step="0.01"
+              min="0"
             />
           </div>
         </div>
@@ -292,13 +324,13 @@ export default function Production() {
                 <tr>
                   <th>Date</th>
                   <th>Batch</th>
-                  <th>Milk</th>
-                  <th>Curd</th>
-                  <th>Premium Paneer</th>
-                  <th>Soft Paneer</th>
-                  <th>Butter</th>
-                  <th>Cream</th>
-                  <th>Ghee</th>
+                  <th>Milk (L)</th>
+                  <th>Curd (Kg)</th>
+                  <th>Premium Paneer (Kg)</th>
+                  <th>Soft Paneer (Kg)</th>
+                  <th>Butter (Kg)</th>
+                  <th>Cream (L)</th>
+                  <th>Ghee (L)</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -307,13 +339,13 @@ export default function Production() {
                   <tr key={item._id}>
                     <td>{new Date(item.date).toLocaleDateString("en-IN")}</td>
                     <td>{item.batch}</td>
-                    <td>{item.milk_quantity}</td>
-                    <td>{item.curd_quantity}</td>
-                    <td>{item.premium_paneer_quantity}</td>
-                    <td>{item.soft_paneer_quantity}</td>
-                    <td>{item.butter_quantity}</td>
-                    <td>{item.cream_quantity}</td>
-                    <td>{item.ghee_quantity}</td>
+                    <td>{displayValue(item.milk_quantity)}</td>
+                    <td>{displayValue(item.curd_quantity)}</td>
+                    <td>{displayValue(item.premium_paneer_quantity)}</td>
+                    <td>{displayValue(item.soft_paneer_quantity)}</td>
+                    <td>{displayValue(item.butter_quantity)}</td>
+                    <td>{displayValue(item.cream_quantity)}</td>
+                    <td>{displayValue(item.ghee_quantity)}</td>
                     <td>
                       <button 
                         onClick={() => handleDelete(item._id)}
