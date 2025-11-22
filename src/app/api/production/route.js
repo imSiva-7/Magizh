@@ -3,11 +3,12 @@ import clientPromise from '@/lib/mongodb';
 
 export async function GET(request) {
   try {
+    console.log('GET /api/production - Connecting to MongoDB...');
+    const client = await clientPromise;
+    const db = client.db('production');
+    
     const { searchParams } = new URL(request.url);
     const product = searchParams.get('product');
-    
-    const client = await clientPromise;
-    const db = client.db('production'); // Using 'production' database
     
     let query = {};
     
@@ -21,11 +22,13 @@ export async function GET(request) {
       .sort({ date: -1, batch: -1 })
       .toArray();
     
+    console.log(`GET /api/production - Found ${entries.length} entries`);
     return NextResponse.json(entries);
+    
   } catch (error) {
-    console.error('Error fetching production data:', error);
+    console.error('GET /api/production - Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch production data' },
+      { error: 'Failed to fetch production data: ' + error.message },
       { status: 500 }
     );
   }
@@ -33,7 +36,9 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    console.log('POST /api/production - Starting...');
     const data = await request.json();
+    console.log('POST /api/production - Received data:', data);
     
     if (!data.date || !data.batch) {
       return NextResponse.json(
@@ -43,7 +48,7 @@ export async function POST(request) {
     }
     
     const client = await clientPromise;
-    const db = client.db('production'); // Using 'production' database
+    const db = client.db('production');
     
     // Check if batch already exists for the same date
     const existingEntry = await db
@@ -75,10 +80,12 @@ export async function POST(request) {
       updatedAt: new Date()
     };
     
+    console.log('POST /api/production - Inserting data:', productionData);
     const result = await db
       .collection('entries')
       .insertOne(productionData);
     
+    console.log('POST /api/production - Insert successful, ID:', result.insertedId);
     return NextResponse.json({
       success: true,
       id: result.insertedId,
@@ -86,9 +93,9 @@ export async function POST(request) {
     });
     
   } catch (error) {
-    console.error('Error adding production data:', error);
+    console.error('POST /api/production - Error:', error);
     return NextResponse.json(
-      { error: 'Failed to add production data' },
+      { error: 'Failed to add production data: ' + error.message },
       { status: 500 }
     );
   }
@@ -107,7 +114,7 @@ export async function DELETE(request) {
     }
     
     const client = await clientPromise;
-    const db = client.db('production'); // Using 'production' database
+    const db = client.db('production');
     
     const { ObjectId } = await import('mongodb');
     
@@ -128,9 +135,9 @@ export async function DELETE(request) {
     });
     
   } catch (error) {
-    console.error('Error deleting production data:', error);
+    console.error('DELETE /api/production - Error:', error);
     return NextResponse.json(
-      { error: 'Failed to delete production data' },
+      { error: 'Failed to delete production data: ' + error.message },
       { status: 500 }
     );
   }
