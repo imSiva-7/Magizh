@@ -7,6 +7,13 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function Production() {
   
+  const getLocalDateString = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
   const generateBatchNumber = () => {
     const date = new Date();
     const day = date.getDate().toString().padStart(2, '0');
@@ -15,8 +22,11 @@ export default function Production() {
     return `B${day}${month}${year}`;
   };
 
+
+// Call this function to see what's happening at midnight
+
   const INITIAL_PRODUCT_STATE = {
-    date: new Date().toISOString().slice(0, 10),
+    date: getLocalDateString(),
     batch: generateBatchNumber(),
     milk_quantity: "",
     curd_quantity: "",
@@ -51,7 +61,7 @@ export default function Production() {
       const res = await fetch("/api/production");
       const data = await res.json();
       if (res.ok) {
-        setEntries(data.reverse());
+        setEntries(data);
       } else {
         toast.error("Failed to fetch data");
       }
@@ -87,7 +97,6 @@ export default function Production() {
   const resetForm = () => {
     setFormData({
       ...INITIAL_PRODUCT_STATE,
-      // batch: generateBatchNumber(),
     });
   };
 
@@ -150,10 +159,8 @@ export default function Production() {
     }
   }
 
-  // Helper function to display values in table (shows empty instead of 0 or null)
   const displayValue = (value) => {
-    return value; 
-    // && value !== 0 ? value : "";
+    return value && value !== 0 ? value : "";
   };
 
   return (
@@ -194,7 +201,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('milk_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -209,7 +215,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('curd_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -224,7 +229,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('premium_paneer_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -239,7 +243,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('soft_paneer_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -254,7 +257,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('butter_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -269,7 +271,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('cream_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -284,7 +285,6 @@ export default function Production() {
               onChange={(e) => handleInputChange('ghee_quantity', e.target.value)}
               placeholder="15"
               className={styles.input}
-              step="0.01"
               min="0"
             />
           </div>
@@ -340,7 +340,7 @@ export default function Production() {
                 {entries.map((item) => (
                   <tr key={item._id}>
                     <td>{new Date(item.date).toLocaleDateString("en-IN")}</td>
-                    <td>{item.batch}</td>
+                    <td> {item.batch} </td>
                     <td>{displayValue(item.milk_quantity)}</td>
                     <td>{displayValue(item.curd_quantity)}</td>
                     <td>{displayValue(item.premium_paneer_quantity)}</td>

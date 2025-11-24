@@ -50,33 +50,22 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db('production');
     
-    // Check if batch already exists for the same date
-    const existingEntry = await db
+    const existingEntryCount = await db
       .collection('entries')
-      .findOne({ 
+      .countDocuments({ 
         date: data.date, 
-        batch: data.batch 
       });
-    
-    // if (existingEntry) {
-    //   return NextResponse.json(
-    //     { error: 'Batch number already exists, submit again to continue.' },
-    //     { status: 400 }
-    //   );
 
-    // }
-    
-    // Prepare data for database
     const productionData = {
       date: data.date,
-      batch: data.batch,
-      milk_quantity: data.milk_quantity ? Number(data.milk_quantity) : null,
-      curd_quantity: data.curd_quantity ? Number(data.curd_quantity) : null,
-      premium_paneer_quantity: data.premium_paneer_quantity ? Number(data.premium_paneer_quantity) : null,
-      soft_paneer_quantity: data.soft_paneer_quantity ? Number(data.soft_paneer_quantity) : null,
-      butter_quantity: data.butter_quantity ? Number(data.butter_quantity) : null,
-      cream_quantity: data.cream_quantity ? Number(data.cream_quantity) : null,
-      ghee_quantity: data.ghee_quantity ? Number(data.ghee_quantity) : null,
+      batch: existingEntryCount ? data.batch + " " + `(${existingEntryCount})` :data.batch,
+      milk_quantity: data.milk_quantity,
+      curd_quantity: data.curd_quantity,
+      premium_paneer_quantity: data.premium_paneer_quantity,
+      soft_paneer_quantity: data.soft_paneer_quantity,
+      butter_quantity: data.butter_quantity,
+      cream_quantity: data.cream_quantity,
+      ghee_quantity: data.ghee_quantity,
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -86,12 +75,6 @@ export async function POST(request) {
       .collection('entries')
       .insertOne(productionData);
 
-       if (existingEntry) {
-      return NextResponse.json(
-        { message: 'Data added, But the batch number already exists!,' },
-      );
-
-    }
     
     console.log('POST /api/production - Insert successful, ID:', result.insertedId);
     return NextResponse.json({

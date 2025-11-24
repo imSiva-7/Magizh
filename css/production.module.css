@@ -185,6 +185,11 @@
   border-bottom: none;
 }
 
+table td:nth-child(2) {
+  width: 90px;
+  min-width: 90px;
+}
+
 .deleteBtn {
   background: #e53e3e;
   color: white;
