@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import styles from "./production.module.css";
+import styles from "@/css/production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Production() {
-  // Generate batch number based on current date
+  
   const generateBatchNumber = () => {
     const date = new Date();
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear().toString().slice(-2);
+    const year = date.getFullYear().toString().slice(2);
     return `B${day}${month}${year}`;
   };
 
@@ -29,6 +29,7 @@ export default function Production() {
 
   const [formData, setFormData] = useState(INITIAL_PRODUCT_STATE);
   const [loading, setLoading] = useState(false);
+  const[btnLoading, setBtnLoading] = useState(false);
   const [entries, setEntries] = useState([]);
   const [filterBy, setFilterBy] = useState("");
 
@@ -50,7 +51,7 @@ export default function Production() {
       const res = await fetch("/api/production");
       const data = await res.json();
       if (res.ok) {
-        setEntries(data);
+        setEntries(data.reverse());
       } else {
         toast.error("Failed to fetch data");
       }
@@ -86,13 +87,13 @@ export default function Production() {
   const resetForm = () => {
     setFormData({
       ...INITIAL_PRODUCT_STATE,
-      batch: generateBatchNumber(),
+      // batch: generateBatchNumber(),
     });
   };
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
+    setBtnLoading(true);
 
     // Prepare data for submission - convert empty strings to null
     const submissionData = {
@@ -116,7 +117,7 @@ export default function Production() {
       const data = await res.json();
       
       if (res.ok) {
-        toast.success("Production data added successfully!");
+        toast.success(data.message);
         resetForm();
         fetchData();
       } else {
@@ -125,7 +126,7 @@ export default function Production() {
     } catch (error) {
       toast.error("Error submitting data");
     }
-    setLoading(false);
+    setBtnLoading(false);
   }
 
   async function handleDelete(id) {
@@ -139,7 +140,7 @@ export default function Production() {
       const data = await res.json();
       
       if (res.ok) {
-        toast.success("Entry deleted successfully!");
+        toast.success(data.message);
         fetchData();
       } else {
         toast.error(data.error || "Deletion failed");
@@ -151,7 +152,8 @@ export default function Production() {
 
   // Helper function to display values in table (shows empty instead of 0 or null)
   const displayValue = (value) => {
-    return value && value !== 0 ? value : "";
+    return value; 
+    // && value !== 0 ? value : "";
   };
 
   return (
@@ -288,8 +290,8 @@ export default function Production() {
           </div>
         </div>
 
-        <button type="submit" disabled={loading} className={styles.submitBtn}>
-          {loading ? "Submitting..." : "Submit"}
+        <button type="submit" disabled={btnLoading} className={styles.submitBtn}>
+          {btnLoading ? "Submitting..." : "Submit"}
         </button>
       </form>
 

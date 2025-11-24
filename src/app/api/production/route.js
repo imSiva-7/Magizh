@@ -58,12 +58,13 @@ export async function POST(request) {
         batch: data.batch 
       });
     
-    if (existingEntry) {
-      return NextResponse.json(
-        { error: 'Batch number already exists for this date' },
-        { status: 400 }
-      );
-    }
+    // if (existingEntry) {
+    //   return NextResponse.json(
+    //     { error: 'Batch number already exists, submit again to continue.' },
+    //     { status: 400 }
+    //   );
+
+    // }
     
     // Prepare data for database
     const productionData = {
@@ -84,6 +85,13 @@ export async function POST(request) {
     const result = await db
       .collection('entries')
       .insertOne(productionData);
+
+       if (existingEntry) {
+      return NextResponse.json(
+        { message: 'Data added, But the batch number already exists!,' },
+      );
+
+    }
     
     console.log('POST /api/production - Insert successful, ID:', result.insertedId);
     return NextResponse.json({
@@ -131,7 +139,7 @@ export async function DELETE(request) {
     
     return NextResponse.json({
       success: true,
-      message: 'Entry deleted successfully'
+      message: 'Entry deleted successfully...'
     });
     
   } catch (error) {

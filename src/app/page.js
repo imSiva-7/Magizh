@@ -38,8 +38,7 @@ export default function Home() {
         <div className={styles.ctas}>
           <a
             className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
+            href="/productions"
             rel="noopener noreferrer"
           >
             <Image
@@ -49,7 +48,7 @@ export default function Home() {
               width={16}
               height={16}
             />
-            Deploy Now
+            Productions
           </a>
           <a
             className={styles.secondary}
