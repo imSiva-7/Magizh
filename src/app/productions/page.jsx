@@ -14,6 +14,7 @@ export default function Production() {
   const day = date.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
   const generateBatchNumber = () => {
     const date = new Date();
     const day = date.getDate().toString().padStart(2, '0');
@@ -21,9 +22,6 @@ export default function Production() {
     const year = date.getFullYear().toString().slice(2);
     return `B${day}${month}${year}`;
   };
-
-
-// Call this function to see what's happening at midnight
 
   const INITIAL_PRODUCT_STATE = {
     date: getLocalDateString(),
@@ -44,17 +42,14 @@ export default function Production() {
   const [filterBy, setFilterBy] = useState("");
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     if (filterBy) {
       filterProducts();
-    } else {
-      fetchData();
+      return;
     }
+    fetchData();
   }, [filterBy]);
 
+  
   async function fetchData() {
     setLoading(true);
     try {
@@ -104,7 +99,7 @@ export default function Production() {
     e.preventDefault();
     setBtnLoading(true);
 
-    // Prepare data for submission - convert empty strings to null
+   
     const submissionData = {
       ...formData,
       milk_quantity: formData.milk_quantity === "" ? null : Number(formData.milk_quantity),
@@ -293,6 +288,8 @@ export default function Production() {
         <button type="submit" disabled={btnLoading} className={styles.submitBtn}>
           {btnLoading ? "Submitting..." : "Submit"}
         </button>
+        <a href="https://magizh-three.vercel.app/productions/history" className={styles.linkBtn}>Detailed report</a>
+
       </form>
 
       <div className={styles.filter}>
@@ -312,6 +309,8 @@ export default function Production() {
           <option value="ghee">Ghee</option>
         </select>
       </div>
+
+      
 
       <div className={styles.tableWrapper}>
         {loading ? (

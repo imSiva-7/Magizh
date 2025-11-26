@@ -1,0 +1,120 @@
+/* Add to production.module.css */
+
+.filterForm {
+  background: #f8fdf8;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e8f5e8;
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 15px;
+  align-items: end;
+}
+
+.statsCard {
+  background: #e8f5e8;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #4caf50;
+}
+
+.statsCard h3 {
+  margin: 0 0 15px 0;
+  color: #2c5530;
+  font-size: 16px;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #4caf50;
+}
+
+.statLabel {
+  font-weight: 600;
+  color: #2c5530;
+  font-size: 14px;
+}
+
+.statValue {
+  font-weight: bold;
+  color: #4caf50;
+  font-size: 14px;
+}
+
+.exportSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8fdf8;
+  border-radius: 8px;
+}
+
+.exportBtn {
+  background: #2196f3;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.exportBtn:hover:not(:disabled) {
+  background: #1976d2;
+  transform: translateY(-2px);
+}
+
+.exportBtn:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.entryCount {
+  color: #666;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filterRow {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .exportSection {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
