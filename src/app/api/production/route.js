@@ -1,134 +1,171 @@
 import { NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
+// Helper for standardizing console logs
+const log = (method, message, data = null) => {
+  const timestamp = new Date().toISOString();
+  const dataString = data ? ` | Data: ${JSON.stringify(data)}` : '';
+  console.log(`[${timestamp}] [${method}] ${message}${dataString}`);
+};
+
+const parseQuantity = (val) => {
+  const num = Number(val);
+  return !isNaN(num) && num >= 0 ? num : null;
+};
+
+// --- GET: Fetch Data ---
 export async function GET(request) {
+  const METHOD = 'GET /api/production';
   try {
-    console.log('GET /api/production - Connecting to MongoDB...');
-    const client = await clientPromise;
-    const db = client.db('production');
-    
     const { searchParams } = new URL(request.url);
     const product = searchParams.get('product');
-    
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    log(METHOD, 'Fetching started', { product, startDate, endDate });
+
+    const client = await clientPromise;
+    const db = client.db('production');
+
     let query = {};
-    
-    if (product) {
-      query[`${product}_quantity`] = { $exists: true, $ne: null, $gt: 0 };
+
+    // Dynamic Filter
+    if (product && !product.includes('$')) {
+       query[`${product}_quantity`] = { $exists: true, $ne: null, $gt: 0 };
     }
-    
+
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) query.date.$gte = startDate;
+      if (endDate) query.date.$lte = endDate;
+    }
+
     const entries = await db
       .collection('entries')
       .find(query)
-      .sort({ date: -1, batch: -1 })
+      .sort({ date: -1, createdAt: -1 })
+      .limit(100)
       .toArray();
+
+    log(METHOD, `Success. Found ${entries.length} entries.`);
     
-    console.log(`GET /api/production - Found ${entries.length} entries`);
     return NextResponse.json(entries);
-    
+
   } catch (error) {
-    console.error('GET /api/production - Error:', error);
+    console.error(`[${METHOD}] CRITICAL ERROR:`, error);
     return NextResponse.json(
-      { error: 'Failed to fetch production data: ' + error.message },
+      { error: 'Server error: Could not fetch production records.' }, 
       { status: 500 }
     );
   }
 }
 
+// --- POST: Create Data ---
 export async function POST(request) {
+  const METHOD = 'POST /api/production';
   try {
-    console.log('POST /api/production - Starting...');
     const data = await request.json();
-    console.log('POST /api/production - Received data:', data);
-    
+    log(METHOD, 'Request received', data);
+
+    // 1. Validation
     if (!data.date || !data.batch) {
+      log(METHOD, 'Validation Failed: Missing required fields');
       return NextResponse.json(
-        { error: 'Date and Batch are required' },
+        { error: 'Validation Error: Date and Batch are required.' },
         { status: 400 }
       );
     }
-    
+
     const client = await clientPromise;
     const db = client.db('production');
-    
-    const existingEntryCount = await db
-      .collection('entries')
-      .countDocuments({ 
-        date: data.date, 
-      });
 
+    // 2. Duplicate / Batch Logic
+    let finalBatchName = data.batch;
+    const existingBatch = await db.collection('entries').findOne({ batch: finalBatchName });
+
+    if (existingBatch) {
+       log(METHOD, `Batch name "${finalBatchName}" exists. Checking for duplicates...`);
+       const count = await db.collection('entries').countDocuments({ date: data.date });
+       finalBatchName = `${data.batch} (${count + 1})`; // Start at (1) not (0)
+       log(METHOD, `Renamed batch to: ${finalBatchName}`);
+    }
+
+    // 3. Construct Payload
     const productionData = {
       date: data.date,
-      batch: existingEntryCount ? data.batch + " " + `(${existingEntryCount})` :data.batch,
-      milk_quantity: data.milk_quantity,
-      curd_quantity: data.curd_quantity,
-      premium_paneer_quantity: data.premium_paneer_quantity,
-      soft_paneer_quantity: data.soft_paneer_quantity,
-      butter_quantity: data.butter_quantity,
-      cream_quantity: data.cream_quantity,
-      ghee_quantity: data.ghee_quantity,
+      batch: finalBatchName,
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    
-    console.log('POST /api/production - Inserting data:', productionData);
-    const result = await db
-      .collection('entries')
-      .insertOne(productionData);
 
+    // Dynamic quantity loop
+    Object.keys(data).forEach(key => {
+      if (key.endsWith('_quantity')) {
+        productionData[key] = parseQuantity(data[key]);
+      }
+    });
+
+    // 4. Insert
+    const result = await db.collection('entries').insertOne(productionData);
     
-    console.log('POST /api/production - Insert successful, ID:', result.insertedId);
+    if (!result.acknowledged) {
+        throw new Error("Database refused insertion");
+    }
+
+    log(METHOD, 'Insertion successful', { id: result.insertedId });
+
     return NextResponse.json({
       success: true,
       id: result.insertedId,
-      message: 'Production data added successfully'
-    });
-    
+      message: `Batch ${finalBatchName} saved successfully!` // Ready for Toast
+    }, { status: 201 });
+
   } catch (error) {
-    console.error('POST /api/production - Error:', error);
+    console.error(`[${METHOD}] CRITICAL ERROR:`, error);
     return NextResponse.json(
-      { error: 'Failed to add production data: ' + error.message },
+      { error: 'Server Error: Failed to save entry. Please try again.' },
       { status: 500 }
     );
   }
 }
 
+// --- DELETE: Remove Data ---
 export async function DELETE(request) {
+  const METHOD = 'DELETE /api/production';
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
+
+    log(METHOD, 'Request received', { id });
+
     if (!id) {
-      return NextResponse.json(
-        { error: 'ID is required' },
-        { status: 400 }
-      );
+      log(METHOD, 'Validation Failed: No ID provided');
+      return NextResponse.json({ error: 'Error: Cannot delete without a valid ID.' }, { status: 400 });
     }
-    
+
     const client = await clientPromise;
     const db = client.db('production');
-    
-    const { ObjectId } = await import('mongodb');
-    
+
     const result = await db
       .collection('entries')
       .deleteOne({ _id: new ObjectId(id) });
-    
+
     if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: 'Entry not found' },
-        { status: 404 }
-      );
+      log(METHOD, 'Warning: ID not found in database', { id });
+      return NextResponse.json({ error: 'Error: Entry not found or already deleted.' }, { status: 404 });
     }
-    
+
+    log(METHOD, 'Deletion successful', { id });
     return NextResponse.json({
       success: true,
-      message: 'Entry deleted successfully...'
+      message: 'Entry deleted successfully.' // Ready for Toast
     });
-    
+
   } catch (error) {
-    console.error('DELETE /api/production - Error:', error);
+    console.error(`[${METHOD}] CRITICAL ERROR:`, error);
     return NextResponse.json(
-      { error: 'Failed to delete production data: ' + error.message },
+      { error: 'Server Error: Could not delete entry.' },
       { status: 500 }
     );
   }
