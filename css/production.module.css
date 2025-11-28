@@ -92,7 +92,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 120px;
+  min-width: 80px;
   background: #fff;
   color: #333;
   transition: all 0.2s ease;
