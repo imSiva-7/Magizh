@@ -48,7 +48,7 @@ export default function History() {
     }, []);
 
     const handleFilterChange = (field, value) => {
-        filterDate(prev => ({
+        setFilterData(prev => ({
             ...prev, 
             [field] : value
         }));
