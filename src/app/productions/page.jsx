@@ -63,18 +63,9 @@ export default function Production() {
     fetchData();
   }, [fetchData]);
 
-  // Improved input handler with better validation
+  
   const handleInputChange = (field, value) => {
-    // Handle empty values
-    if (value === "" || value === null) {
-      setFormData((prev) => ({ ...prev, [field]: "" }));
-      return;
-    }
-
-    // Allow numbers, single decimal point, and prevent multiple decimals
-    if (/^\d*\.?\d*$/.test(value) && !value.match(/\./g)?.length > 1) {
       setFormData((prev) => ({ ...prev, [field]: value }));
-    }
   };
 
   // Enhanced decimal parser with range validation
@@ -245,14 +236,14 @@ export default function Production() {
       <h1>Production Entry</h1>
 
       {/* Milk Usage Summary */}
-      {formData.milk_quantity && (
+      {/* {formData.milk_quantity && (
         <div className={styles.milkSummary}>
           <p>
             <strong>Milk Usage:</strong> {totalMilkUsed.toFixed(2)}L used |{" "}
             <strong>Balance:</strong> {milkBalance}L remaining
           </p>
         </div>
-      )}
+      )} */}
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formRow}>
@@ -283,7 +274,6 @@ export default function Production() {
         </div>
 
         <div className={styles.section}>
-          <h3>Milk Quality</h3>
           <div className={styles.formRow}>
             <div className={styles.inputGroup}>
               <label>Milk Quantity (L):</label>
@@ -333,7 +323,6 @@ export default function Production() {
         </div>
 
         <div className={styles.section}>
-          <h3>Production Output</h3>
           <div className={styles.formGrid}>
             {[
               {
@@ -428,7 +417,7 @@ export default function Production() {
             <div className={styles.tableHeader}>
               <h3>Recent Production Entries ({entries.length})</h3>
               <button onClick={fetchData} className={styles.refreshBtn}>
-                Refresh
+                🔄
               </button>
             </div>
             <div className={styles.tableContainer}>
@@ -469,7 +458,7 @@ export default function Production() {
                           className={styles.deleteBtn}
                           title="Delete entry"
                         >
-                          🗑️ Delete
+                          🗑️ 
                         </button>
                       </td>
                     </tr>
