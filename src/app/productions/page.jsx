@@ -219,7 +219,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -304,7 +304,7 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
@@ -321,12 +321,16 @@ export default function Production() {
               placeholder="15"
               className={styles.input}
               min="0"
-              step="0.01"
+              step="1"
             />
           </div>
         </div>
 
         <div className={styles.buttonGroup}>
+          <button className={styles.resetBtn} type="button" onClick={resetForm}>
+            Reset
+          </button>
+
           <button
             type="submit"
             disabled={btnLoading}
@@ -334,17 +338,20 @@ export default function Production() {
           >
             {btnLoading ? "Submitting..." : "Submit"}
           </button>
-          <button className={styles.resetBtn} type="button" onClick={resetForm}>
-            Reset
-          </button>
-          <a
-            href="https://magizh-three.vercel.app/productions/history"
-            target="_blank"
-            rel="noopener noreferrer"
+
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                "https://magizh-three.vercel.app/productions/history",
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
             className={styles.reportBtn}
           >
-            Detailed Report
-          </a>
+            View History
+          </button>
         </div>
       </form>
 

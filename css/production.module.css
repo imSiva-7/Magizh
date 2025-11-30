@@ -73,25 +73,19 @@
   margin-bottom: 15px;
 }
 
-/* Button Styles */
-.buttonGroup {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 25px;
-}
+
 
 .submitBtn, .resetBtn, .reportBtn, .deleteBtn {
-  padding: 10px 20px;
+  padding: 10px 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 0.95rem;
   font-weight: normal;
   cursor: pointer;
   text-decoration: none;
-  display: inline-flex;
+  margin-top: 5px;
+  margin-right: 5px;
   align-items: center;
-  justify-content: center;
   min-width: 80px;
   background: #fff;
   color: #333;
@@ -190,9 +184,10 @@
 }
 
 .tableWrapper h3 {
-  background: #f8f9fa;
+  background: #ffffff;
   color: #333;
   padding: 15px 20px;
+  text-align: center;
   margin: 0;
   border-bottom: 1px solid #dee2e6;
   font-size: 1.2rem;
@@ -204,6 +199,8 @@
   font-size: 0.9rem;
 }
 
+
+
 .table th {
   background: #e9ecef;
   color: #333;
@@ -211,6 +208,10 @@
   text-align: left;
   font-weight: bold;
   border-bottom: 1px solid #dee2e6;
+}
+
+.table th:nth-child(2) {
+  min-width: 90px;
 }
 
 .table td {
