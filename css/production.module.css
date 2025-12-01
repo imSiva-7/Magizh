@@ -210,8 +210,10 @@
   border-bottom: 1px solid #dee2e6;
 }
 
-.table th:nth-child(2) {
-  min-width: 90px;
+.table th:nth-child(2),
+.table th:nth-child(7),
+.table th:nth-child(8) {
+  min-width: 80px;
 }
 
 .table td {
