@@ -114,11 +114,11 @@ export default function Production() {
       batch: batchNo,
       milk_quantity: parseDecimalValue(formData.milk_quantity, { min: 0 }),
       fat_percentage: parseDecimalValue(formData.fat_percentage, {
-        min: 3,
+        min: 1,
         max: 7,
       }),
       snf_percentage: parseDecimalValue(formData.snf_percentage, {
-        min: 8,
+        min: 1,
         max: 9.5,
       }),
       curd_quantity: parseDecimalValue(formData.curd_quantity, { min: 0 }),
@@ -255,7 +255,7 @@ export default function Production() {
               onChange={(e) => setDateStr(e.target.value)}
               className={styles.input}
               required
-              max={getLocalDateString()} // Prevent future dates
+              //max={getLocalDateString()} // Prevent future dates
             />
           </div>
 
