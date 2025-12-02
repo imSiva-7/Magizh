@@ -307,16 +307,16 @@ const validatePercentageFields = (data) => {
   // Validate fat percentage (typical range 3.0 - 7.0)
   if (data.fat_percentage) {
     const fat = parseFloat(data.fat_percentage);
-    if (fat < 3.0 || fat > 7.0) {
-      errors.push("Fat percentage should be between 3.0 and 7.0");
+    if (fat > 7.0) {
+      errors.push("Fat percentage should be below 7.0");
     }
   }
 
   // Validate SNF percentage (typical range 8.0 - 9.5)
   if (data.snf_percentage) {
     const snf = parseFloat(data.snf_percentage);
-    if (snf < 8.0 || snf > 9.5) {
-      errors.push("SNF percentage should be between 8.0 and 9.5");
+    if (snf > 9.5) {
+      errors.push("SNF percentage should be below 9.5");
     }
   }
 
