@@ -286,7 +286,7 @@ export default function Production() {
                 placeholder="355"
                 className={styles.input}
                 min="0"
-                step="0.1"
+                step="1"
               />
             </div>
             <div className={styles.inputGroup}>
@@ -299,7 +299,7 @@ export default function Production() {
                 }
                 placeholder="6.9"
                 className={styles.input}
-                min="3.0"
+                min="1"
                 max="7.0"
                 step="0.1"
               />
@@ -314,7 +314,7 @@ export default function Production() {
                 }
                 placeholder="7.5"
                 className={styles.input}
-                min="8.0"
+                min="1"
                 max="9.5"
                 step="0.1"
               />
@@ -329,37 +329,37 @@ export default function Production() {
                 key: "curd_quantity",
                 label: "Curd (Kg)",
                 placeholder: "100",
-                step: "0.01",
+                step: "0.5",
               },
               {
                 key: "premium_paneer_quantity",
                 label: "Premium Paneer (Kg)",
                 placeholder: "50",
-                step: "0.1",
+                step: "0.5",
               },
               {
                 key: "soft_paneer_quantity",
                 label: "Soft Paneer (Kg)",
                 placeholder: "50",
-                step: "0.1",
+                step: "0.5",
               },
               {
                 key: "butter_quantity",
                 label: "Butter (Kg)",
                 placeholder: "20",
-                step: "0.01",
+                step: "0.5",
               },
               {
                 key: "cream_quantity",
                 label: "Cream (L)",
                 placeholder: "5",
-                step: "0.1",
+                step: "0.5",
               },
               {
                 key: "ghee_quantity",
                 label: "Ghee (L)",
                 placeholder: "20",
-                step: "0.1",
+                step: "0.5",
               },
             ].map(({ key, label, placeholder, step }) => (
               <div key={key} className={styles.inputGroup}>
