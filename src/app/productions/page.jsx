@@ -5,45 +5,59 @@ import styles from "@/css/production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// 1. IMPROVED LOGIC: Centralized formatting function
-// Uses Intl.NumberFormat for consistent display (e.g., 1,200.50)
 const formatNumber = (value) => {
-  if (value === null || value === undefined || value === 0 || value === "") return "-";
+  if (value === null || value === undefined || value === 0 || value === "")
+    return "-";
   return new Intl.NumberFormat("en-IN", {
     maximumFractionDigits: 2,
     minimumFractionDigits: 0,
   }).format(value);
 };
 
-// 2. IMPROVED LOGIC: Reusable Input Component to reduce code duplication
-const NumberInput = ({ label, value, onChange, placeholder, min, max, step, suffix }) => (
+const NumberInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  min,
+  max,
+  step,
+  suffix,
+}) => (
   <div className={styles.inputGroup}>
-    <label>{label} {suffix && `(${suffix})`}</label>
+    <label>
+      {label} {suffix && `(${suffix})`}
+    </label>
     <input
       type="number"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       className={styles.input}
-      min={min || "0"}
+      min="0"
       max={max}
       step={step || "0.01"}
     />
   </div>
 );
-
+const generateDateString = () => {
+  const date = new Date();
+  const day = String(date.getDay()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+  const dateString = `${year}-${month}-${day}`;
+  return dateString;
+};
 export default function Production() {
-  // State
-  const [mounted, setMounted] = useState(false); // Fix for Hydration Mismatch
+  const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState("light");
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
-  
-  // Form State
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dateStr, setDateStr] = useState(() => new Date().toISOString().split("T")[0]);
+  const [dateStr, setDateStr] = useState(generateDateString());
   const [batchNo, setBatchNo] = useState("");
-  
+
   const initialFormState = {
     milk_quantity: "",
     fat_percentage: "",
@@ -56,20 +70,15 @@ export default function Production() {
     ghee_quantity: "",
   };
   const [formData, setFormData] = useState(initialFormState);
-
-  // Ref for double-submit protection
   const lastSubmitTime = useRef(0);
-
-  // --- Effects ---
 
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem("dairy-theme");
-    // Simple theme logic
+
     if (savedTheme) setTheme(savedTheme);
   }, []);
 
-  // 3. IMPROVED LOGIC: Auto-generate batch number
   const generateBatchNumber = useCallback(() => {
     if (!dateStr) return;
     const date = new Date(dateStr);
@@ -125,7 +134,7 @@ export default function Production() {
     // 4. IMPROVED LOGIC: Debounce submit (prevent double clicks)
     const now = Date.now();
     if (isSubmitting || now - lastSubmitTime.current < 2000) return;
-    
+
     if (!batchNo) {
       toast.error("Batch number missing");
       return;
@@ -142,7 +151,10 @@ export default function Production() {
       fat_percentage: parseDecimal(formData.fat_percentage, 1),
       snf_percentage: parseDecimal(formData.snf_percentage, 1),
       curd_quantity: parseDecimal(formData.curd_quantity),
-      premium_paneer_quantity: parseDecimal(formData.premium_paneer_quantity, 1),
+      premium_paneer_quantity: parseDecimal(
+        formData.premium_paneer_quantity,
+        1
+      ),
       soft_paneer_quantity: parseDecimal(formData.soft_paneer_quantity, 1),
       butter_quantity: parseDecimal(formData.butter_quantity),
       cream_quantity: parseDecimal(formData.cream_quantity, 1),
@@ -177,7 +189,7 @@ export default function Production() {
 
     // 5. IMPROVED LOGIC: Optimistic UI Update (Remove immediately)
     const previousEntries = [...entries];
-    setEntries(prev => prev.filter(item => item._id !== id));
+    setEntries((prev) => prev.filter((item) => item._id !== id));
 
     try {
       const res = await fetch(`/api/production?id=${id}`, { method: "DELETE" });
@@ -193,7 +205,7 @@ export default function Production() {
   if (!mounted) return null;
 
   return (
-   <div className={styles.container} data-theme={theme}>
+    <div className={styles.container} data-theme={theme}>
       <ToastContainer position="top-right" autoClose={3000} theme={theme} />
 
       <div className={styles.headerSection}>
@@ -213,7 +225,7 @@ export default function Production() {
               max={new Date().toISOString().split("T")[0]}
             />
           </div>
-          
+
           <div className={styles.inputGroup}>
             <label>Batch No</label>
             <input
@@ -227,35 +239,85 @@ export default function Production() {
 
         <div className={styles.section}>
           <div className={styles.milkQualityRow}>
-            <NumberInput 
-              label="Milk Quantity" suffix="L" 
-              value={formData.milk_quantity} 
-              onChange={(v) => handleInputChange("milk_quantity", v)} 
-              placeholder="355.5" step="0.1" 
+            <NumberInput
+              label="Milk Quantity"
+              suffix="L"
+              value={formData.milk_quantity}
+              onChange={(v) => handleInputChange("milk_quantity", v)}
+              placeholder="400"
+              step="0.1"
             />
-            <NumberInput 
-              label="Fat Percentage" suffix="%" 
-              value={formData.fat_percentage} 
-              onChange={(v) => handleInputChange("fat_percentage", v)} 
-              placeholder="6.9" min="3.0" max="7.0" step="0.1" 
+            <NumberInput
+              label="Fat Percentage"
+              suffix="%"
+              value={formData.fat_percentage}
+              onChange={(v) => handleInputChange("fat_percentage", v)}
+              placeholder="6.5"
+              min="0"
+              max="7.0"
+              step="0.1"
             />
-            <NumberInput 
-              label="SNF Percentage" suffix="%" 
-              value={formData.snf_percentage} 
-              onChange={(v) => handleInputChange("snf_percentage", v)} 
-              placeholder="8.5" min="8.0" max="9.5" step="0.1" 
+            <NumberInput
+              label="SNF Percentage"
+              suffix="%"
+              value={formData.snf_percentage}
+              onChange={(v) => handleInputChange("snf_percentage", v)}
+              placeholder="8.5"
+              min="0"
+              max="9.5"
+              step="0.1"
             />
           </div>
         </div>
 
         <div className={styles.section}>
           <div className={styles.formGrid}>
-            <NumberInput label="Curd" suffix="Kg" value={formData.curd_quantity} onChange={(v) => handleInputChange("curd_quantity", v)} />
-            <NumberInput label="Premium Paneer" suffix="Kg" value={formData.premium_paneer_quantity} onChange={(v) => handleInputChange("premium_paneer_quantity", v)} step="0.1" />
-            <NumberInput label="Soft Paneer" suffix="Kg" value={formData.soft_paneer_quantity} onChange={(v) => handleInputChange("soft_paneer_quantity", v)} step="0.1" />
-            <NumberInput label="Butter" suffix="Kg" value={formData.butter_quantity} onChange={(v) => handleInputChange("butter_quantity", v)} />
-            <NumberInput label="Cream" suffix="L" value={formData.cream_quantity} onChange={(v) => handleInputChange("cream_quantity", v)} step="0.1" />
-            <NumberInput label="Ghee" suffix="L" value={formData.ghee_quantity} onChange={(v) => handleInputChange("ghee_quantity", v)} step="0.1" />
+            <NumberInput
+              label="Curd"
+              suffix="Kg"
+              value={formData.curd_quantity}
+              onChange={(v) => handleInputChange("curd_quantity", v)}
+              placeholder="100"
+            />
+            <NumberInput
+              label="Premium Paneer"
+              suffix="Kg"
+              value={formData.premium_paneer_quantity}
+              onChange={(v) => handleInputChange("premium_paneer_quantity", v)}
+              placeholder="100"
+              step="0.1"
+            />
+            <NumberInput
+              label="Soft Paneer"
+              suffix="Kg"
+              value={formData.soft_paneer_quantity}
+              onChange={(v) => handleInputChange("soft_paneer_quantity", v)}
+              placeholder="100"
+              step="0.1"
+            />
+            <NumberInput
+              label="Butter"
+              suffix="Kg"
+              value={formData.butter_quantity}
+              onChange={(v) => handleInputChange("butter_quantity", v)}
+              placeholder="100"
+            />
+            <NumberInput
+              label="Cream"
+              suffix="L"
+              value={formData.cream_quantity}
+              onChange={(v) => handleInputChange("cream_quantity", v)}
+              placeholder="50"
+              step="0.1"
+            />
+            <NumberInput
+              label="Ghee"
+              suffix="L"
+              value={formData.ghee_quantity}
+              onChange={(v) => handleInputChange("ghee_quantity", v)}
+              placeholder="50"
+              step="0.1"
+            />
           </div>
         </div>
 
@@ -278,8 +340,6 @@ export default function Production() {
         </div>
       </form>
 
-      {/* This is the EXACT table structure you asked for 
-      */}
       <div className={styles.tableWrapper}>
         {loading ? (
           <div className={styles.loading}>Loading production data...</div>
@@ -291,8 +351,12 @@ export default function Production() {
         ) : (
           <>
             <div className={styles.tableHeader}>
-              <h3>Recent Production Entries ({entries.length})</h3>
-              <button onClick={fetchData} className={styles.refreshBtn}>🔄</button>
+              <h3 className={styles.tableH3}>
+                Recent Production Entries ({entries.length}){" "}
+              </h3>
+              <button onClick={fetchData} className={styles.refreshBtn}>
+                🔄
+              </button>
             </div>
             <div className={styles.tableContainer}>
               <table className={styles.table}>

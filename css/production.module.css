@@ -54,7 +54,8 @@
   padding: var(--spacing-xl);
   background-color: var(--light-bg);
   color: var(--light-text);
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal);
 }
 
 .container[data-theme="dark"] {
@@ -167,6 +168,8 @@
 /* ===== INPUT STYLES ===== */
 .inputGroup {
   display: flex;
+  min-width: 200px;
+  max-width: 300px;
   flex-direction: column;
   gap: var(--spacing-xs);
 }
@@ -218,7 +221,6 @@
   border-color: #475569;
 }
 
-/* Batch Input Special Styling */
 .batchInput {
   background-color: #f1f5f9;
   font-weight: 600;
@@ -230,7 +232,6 @@
   background-color: #334155;
 }
 
-/* Number Input Arrows */
 .input[type="number"]::-webkit-inner-spin-button,
 .input[type="number"]::-webkit-outer-spin-button {
   opacity: 0.5;
@@ -303,6 +304,9 @@
   box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
 }
 
+.tableh3 {
+}
+
 .resetBtn {
   background-color: transparent;
   color: var(--light-text);
@@ -348,6 +352,7 @@
 .refreshBtn {
   background-color: transparent;
   color: var(--light-accent);
+  display: inline;
   padding: 0.5rem;
   font-size: 1rem;
   border-radius: var(--radius-sm);
@@ -383,12 +388,11 @@
 }
 
 .tableHeader {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
+  gap: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
-  padding-bottom: var(--spacing-md);
-  border-bottom: 2px solid var(--light-border);
 }
 
 .container[data-theme="dark"] .tableHeader {
@@ -474,7 +478,7 @@
 
 /* Batch Cell Special Styling */
 .batchCell {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-weight: 600;
   color: var(--light-accent);
   letter-spacing: 0.5px;
@@ -487,7 +491,7 @@
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: right;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875rem;
 }
 
