@@ -1,5 +1,5 @@
-// next.config.js
+
 const nextConfig = {
-  reactStrictMode: false, // ⚠️ Disable for debugging
+  reactStrictMode: false, 
   // ... rest of config
 };

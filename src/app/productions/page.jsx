@@ -312,7 +312,7 @@ export default function Production() {
               type="date"
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
-              className={styles.input}
+              className={`${styles.input} ${styles.dateInput}`}
               required
               max={getLocalDateString()}
             />
@@ -337,10 +337,9 @@ export default function Production() {
           <div className={styles.formRow_1}>
             <div className={styles.inputGroup}>
               <label>Milk Quantity (L):</label>
-              {/* ✅ FIXED: Added missing value attribute */}
               <input
                 type="number"
-                value={formData.milk_quantity} // This was missing!
+                value={formData.milk_quantity}
                 onChange={(e) =>
                   handleInputChange("milk_quantity", e.target.value)
                 }

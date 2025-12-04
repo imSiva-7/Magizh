@@ -29,11 +29,12 @@
 }
 
 .formRow {
-  display: grid;
+  display: -moz-grid-line;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1.5rem;
   margin-bottom: 1rem;
 }
+
 
 .formRow_1 {
   display: flex;
