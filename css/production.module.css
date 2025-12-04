@@ -29,6 +29,13 @@
 }
 
 .formRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.formRow_1 {
   display: flex;
   gap: 1.5rem;
   flex-wrap: wrap;
@@ -37,7 +44,7 @@
 
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1.5rem;
 }
 
@@ -151,7 +158,7 @@
 }
 
 .tableHeader {
-  padding: 1.5rem;
+  padding: 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -183,16 +190,16 @@
 }
 
 .table th, .table td {
-  padding: 1rem;
+  padding: .6rem;
   text-align: left;
   border-bottom: 1px solid #eee;
 }
 
-/* Targets 3rd column and everything after it */
 .table th:nth-child(n+3),
 .table td:nth-child(n+3) {
   text-align: right;
 }
+
 .table tbody tr:nth-child(even) {
   background-color: #f9fafb;
 }
@@ -208,7 +215,7 @@
 }
 .table th {
   background-color: #f8f9fa;
-  font-weight: 600;
+  font-weight:600;
   color: #4b5563;
   white-space: nowrap;
 }

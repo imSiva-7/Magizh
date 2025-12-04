@@ -261,7 +261,7 @@ export default function Production() {
   // Improved display formatter
   const displayValue = (value) => {
     if (value === null || value === undefined) return "-";
-    if (value === 0) return "0";
+    if (value === 0) return "-";
 
     const num = parseFloat(value);
     if (isNaN(num)) return "-";
@@ -334,7 +334,7 @@ export default function Production() {
 
         <div className={styles.section}>
     
-          <div className={styles.formRow}>
+          <div className={styles.formRow_1}>
             <div className={styles.inputGroup}>
               <label>Milk Quantity (L):</label>
               {/* ✅ FIXED: Added missing value attribute */}
