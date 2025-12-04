@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "@/css/production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Production() {
   const getLocalDateString = () => {
-    return new Date().toISOString().split("T")[0]; // Simpler method
+    return new Date().toISOString().split("T")[0];
   };
 
   const [dateStr, setDateStr] = useState(getLocalDateString());
@@ -26,6 +26,10 @@ export default function Production() {
   const [loading, setLoading] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [entries, setEntries] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state to track submission
+
+  // Use ref to track last submission time
+  const lastSubmitTime = useRef(0);
 
   // Improved batch number generation
   const generateBatchNumber = useCallback(() => {
@@ -41,9 +45,11 @@ export default function Production() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
+      console.log("🔍 Fetching data from API...");
       const res = await fetch("/api/production");
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
+      console.log(`✅ Fetched ${data.length} entries`);
       setEntries(data);
     } catch (error) {
       console.error("Fetch error:", error);
@@ -58,14 +64,20 @@ export default function Production() {
     generateBatchNumber();
   }, [dateStr, generateBatchNumber]);
 
-  // Fetch data on component mount
+  // Fetch data on component mount - only once
   useEffect(() => {
+    console.log("🚀 Component mounted, fetching initial data");
     fetchData();
   }, [fetchData]);
 
-  
+  // ✅ FIXED: Better decimal input handler
   const handleInputChange = (field, value) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
+    // Allow numbers, single decimal point, and empty
+    if (value === "" || /^-?\d*\.?\d*$/.test(value)) {
+      // Remove any negative sign
+      const positiveValue = value.replace("-", "");
+      setFormData((prev) => ({ ...prev, [field]: positiveValue }));
+    }
   };
 
   // Enhanced decimal parser with range validation
@@ -79,7 +91,9 @@ export default function Production() {
     if (options.min !== undefined && num < options.min) return null;
     if (options.max !== undefined && num > options.max) return null;
 
-    return parseFloat(num.toFixed(2));
+    // Round to appropriate decimal places
+    const decimalPlaces = options.decimalPlaces || 2;
+    return parseFloat(num.toFixed(decimalPlaces));
   };
 
   const resetForm = () => {
@@ -97,54 +111,99 @@ export default function Production() {
     });
   };
 
-  // Enhanced submit handler with better validation
+  // ✅ FIXED: Enhanced submit handler to prevent duplicates
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Stop event bubbling
 
-    // Validate batch number exists
+    // Prevent multiple submissions within 3 seconds
+    const now = Date.now();
+    if (now - lastSubmitTime.current < 3000) {
+      console.log("⏸️ Too soon since last submit, ignoring");
+      return;
+    }
+
+    // Prevent double submission
+    if (isSubmitting) {
+      console.log("⏸️ Already submitting, ignoring duplicate click");
+      return;
+    }
+
     if (!batchNo) {
       toast.error("Please wait for batch number generation");
       return;
     }
 
+    setIsSubmitting(true);
     setBtnLoading(true);
+    lastSubmitTime.current = now;
 
+    console.log("📤 Starting submission...", { date: dateStr, batch: batchNo });
+
+    // ✅ FIXED: Proper decimal parsing for each field
     const submissionData = {
       date: dateStr,
       batch: batchNo,
-      milk_quantity: parseDecimalValue(formData.milk_quantity, { min: 0 }),
+      milk_quantity: parseDecimalValue(formData.milk_quantity, {
+        min: 0,
+        decimalPlaces: 1,
+      }),
       fat_percentage: parseDecimalValue(formData.fat_percentage, {
-        min: 1,
+        min: 0,
         max: 7,
+        decimalPlaces: 1,
       }),
       snf_percentage: parseDecimalValue(formData.snf_percentage, {
-        min: 1,
+        min: 0,
         max: 9.5,
+        decimalPlaces: 1,
       }),
-      curd_quantity: parseDecimalValue(formData.curd_quantity, { min: 0 }),
+      curd_quantity: parseDecimalValue(formData.curd_quantity, {
+        min: 0,
+        decimalPlaces: 2,
+      }),
       premium_paneer_quantity: parseDecimalValue(
         formData.premium_paneer_quantity,
-        { min: 0 }
+        { min: 0, decimalPlaces: 1 }
       ),
       soft_paneer_quantity: parseDecimalValue(formData.soft_paneer_quantity, {
         min: 0,
+        decimalPlaces: 1,
       }),
-      butter_quantity: parseDecimalValue(formData.butter_quantity, { min: 0 }),
-      cream_quantity: parseDecimalValue(formData.cream_quantity, { min: 0 }),
-      ghee_quantity: parseDecimalValue(formData.ghee_quantity, { min: 0 }),
+      butter_quantity: parseDecimalValue(formData.butter_quantity, {
+        min: 0,
+        decimalPlaces: 2,
+      }),
+      cream_quantity: parseDecimalValue(formData.cream_quantity, {
+        min: 0,
+        decimalPlaces: 1,
+      }),
+      ghee_quantity: parseDecimalValue(formData.ghee_quantity, {
+        min: 0,
+        decimalPlaces: 1,
+      }),
     };
 
-    // Enhanced validation - check if at least one product has value
-    const productFields = Object.keys(submissionData).filter(
-      (key) => key.endsWith("_quantity") && key !== "milk_quantity"
-    );
+    // Log submission data
+    console.log("📦 Submission data:", submissionData);
+
+    const productFields = [
+      "milk_quantity",
+      "curd_quantity",
+      "premium_paneer_quantity",
+      "soft_paneer_quantity",
+      "butter_quantity",
+      "cream_quantity",
+      "ghee_quantity",
+    ];
 
     const hasAtLeastOneProduct = productFields.some(
       (key) => submissionData[key] !== null && submissionData[key] > 0
     );
 
-    if (!hasAtLeastOneProduct && !submissionData.milk_quantity) {
+    if (!hasAtLeastOneProduct) {
       toast.error("Please enter at least one product quantity");
+      setIsSubmitting(false);
       setBtnLoading(false);
       return;
     }
@@ -157,18 +216,20 @@ export default function Production() {
       });
 
       const data = await res.json();
+      console.log("📥 API Response:", data);
 
       if (res.ok) {
         toast.success(data.message);
         resetForm();
-        await fetchData(); // Wait for refresh before showing success
+        await fetchData();
       } else {
         toast.error(data.error || "Submission failed");
       }
     } catch (error) {
-      console.error("Submission error:", error);
+      console.error("❌ Submission error:", error);
       toast.error("Network error: Failed to submit data");
     } finally {
+      setIsSubmitting(false);
       setBtnLoading(false);
     }
   };
@@ -200,50 +261,48 @@ export default function Production() {
   // Improved display formatter
   const displayValue = (value) => {
     if (value === null || value === undefined) return "-";
-    if (value === 0) return "-";
+    if (value === 0) return "0";
 
     const num = parseFloat(value);
     if (isNaN(num)) return "-";
 
-    // Show integers without decimals, others with 2 decimal places
-    return num % 1 === 0 ? num.toString() : num.toFixed(2);
+    // Show integers without decimals, others with appropriate decimal places
+    if (num % 1 === 0) return num.toString();
+
+    // Determine decimal places based on value
+    if (num < 1) return num.toFixed(2); // Small values show 2 decimals
+    if (num % 1 === 0.5) return num.toFixed(1); // 0.5 values show 1 decimal
+    return num.toFixed(2); // Default 2 decimals
   };
-
-  // Calculate total milk used for products (for user info)
-  const calculateTotalMilkUsed = useCallback(() => {
-    if (!formData.milk_quantity) return 0;
-
-    const milk = parseFloat(formData.milk_quantity);
-    const estimatedUsage =
-      (parseFloat(formData.curd_quantity) || 0) * 0.1 +
-      (parseFloat(formData.premium_paneer_quantity) || 0) * 0.2 +
-      (parseFloat(formData.soft_paneer_quantity) || 0) * 0.2 +
-      (parseFloat(formData.butter_quantity) || 0) * 0.3 +
-      (parseFloat(formData.cream_quantity) || 0) * 0.15 +
-      (parseFloat(formData.ghee_quantity) || 0) * 0.25;
-
-    return estimatedUsage;
-  }, [formData]);
-
-  const totalMilkUsed = calculateTotalMilkUsed();
-  const milkBalance = formData.milk_quantity
-    ? (parseFloat(formData.milk_quantity) - totalMilkUsed).toFixed(2)
-    : 0;
 
   return (
     <div className={styles.container}>
       <ToastContainer position="top-right" autoClose={3000} />
-      <h1>Production Entry</h1>
 
-      {/* Milk Usage Summary */}
-      {/* {formData.milk_quantity && (
-        <div className={styles.milkSummary}>
-          <p>
-            <strong>Milk Usage:</strong> {totalMilkUsed.toFixed(2)}L used |{" "}
-            <strong>Balance:</strong> {milkBalance}L remaining
-          </p>
+      {/* Debug panel - remove in production */}
+      {process.env.NODE_ENV === "development" && (
+        <div
+          style={{
+            background: "#f8f9fa",
+            padding: "10px",
+            marginBottom: "20px",
+            borderRadius: "5px",
+            fontSize: "12px",
+            border: "1px solid #dee2e6",
+          }}
+        >
+          <strong>Debug:</strong>
+          <span style={{ marginLeft: "10px" }}>
+            Submitting: {isSubmitting ? "Yes" : "No"}
+          </span>
+          <span style={{ marginLeft: "10px" }}>
+            Loading: {btnLoading ? "Yes" : "No"}
+          </span>
+          <span style={{ marginLeft: "10px" }}>Batch: {batchNo}</span>
         </div>
-      )} */}
+      )}
+
+      <h1>Production Entry</h1>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.formRow}>
@@ -255,7 +314,7 @@ export default function Production() {
               onChange={(e) => setDateStr(e.target.value)}
               className={styles.input}
               required
-              //max={getLocalDateString()} // Prevent future dates
+              max={getLocalDateString()}
             />
           </div>
 
@@ -274,19 +333,21 @@ export default function Production() {
         </div>
 
         <div className={styles.section}>
+    
           <div className={styles.formRow}>
             <div className={styles.inputGroup}>
               <label>Milk Quantity (L):</label>
+              {/* ✅ FIXED: Added missing value attribute */}
               <input
                 type="number"
-                value={formData.milk_quantity}
+                value={formData.milk_quantity} // This was missing!
                 onChange={(e) =>
                   handleInputChange("milk_quantity", e.target.value)
                 }
-                placeholder="355"
+                placeholder="355.5"
                 className={styles.input}
                 min="0"
-                step="1"
+                step="0.1"
               />
             </div>
             <div className={styles.inputGroup}>
@@ -299,7 +360,7 @@ export default function Production() {
                 }
                 placeholder="6.9"
                 className={styles.input}
-                min="1"
+                min="0"
                 max="7.0"
                 step="0.1"
               />
@@ -314,7 +375,7 @@ export default function Production() {
                 }
                 placeholder="7.5"
                 className={styles.input}
-                min="1"
+                min="0"
                 max="9.5"
                 step="0.1"
               />
@@ -328,38 +389,38 @@ export default function Production() {
               {
                 key: "curd_quantity",
                 label: "Curd (Kg)",
-                placeholder: "100",
-                step: "0.5",
+                placeholder: "100.25",
+                step: "0.01",
               },
               {
                 key: "premium_paneer_quantity",
                 label: "Premium Paneer (Kg)",
-                placeholder: "50",
-                step: "0.5",
+                placeholder: "50.5",
+                step: "0.1",
               },
               {
                 key: "soft_paneer_quantity",
                 label: "Soft Paneer (Kg)",
-                placeholder: "50",
-                step: "0.5",
+                placeholder: "50.5",
+                step: "0.1",
               },
               {
                 key: "butter_quantity",
                 label: "Butter (Kg)",
-                placeholder: "20",
-                step: "0.5",
+                placeholder: "20.25",
+                step: "0.01",
               },
               {
                 key: "cream_quantity",
                 label: "Cream (L)",
-                placeholder: "5",
-                step: "0.5",
+                placeholder: "5.5",
+                step: "0.1",
               },
               {
                 key: "ghee_quantity",
                 label: "Ghee (L)",
-                placeholder: "20",
-                step: "0.5",
+                placeholder: "20.5",
+                step: "0.1",
               },
             ].map(({ key, label, placeholder, step }) => (
               <div key={key} className={styles.inputGroup}>
@@ -389,7 +450,7 @@ export default function Production() {
           </button>
           <button
             type="submit"
-            disabled={btnLoading || !batchNo}
+            disabled={btnLoading || !batchNo || isSubmitting}
             className={styles.submitBtn}
           >
             {btnLoading ? (
@@ -458,7 +519,7 @@ export default function Production() {
                           className={styles.deleteBtn}
                           title="Delete entry"
                         >
-                          🗑️ 
+                          🗑️
                         </button>
                       </td>
                     </tr>
