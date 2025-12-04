@@ -6,6 +6,27 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function Production() {
+ const [theme, setTheme] = useState("light");
+  
+  // Initialize theme
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("dairy-theme");
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else if (systemPrefersDark) {
+      setTheme("dark");
+    }
+  }, []);
+  
+  const toggleTheme = () => {
+    setTheme(prev => {
+      const newTheme = prev === "light" ? "dark" : "light";
+      localStorage.setItem("dairy-theme", newTheme);
+      return newTheme;
+    });
+  };
   const getLocalDateString = () => {
     return new Date().toISOString().split("T")[0];
   };
@@ -302,24 +323,43 @@ export default function Production() {
         </div>
       )}
 
-      <h1>Production Entry</h1>
-
+     {/* <div className={`${styles.container} ${theme === "dark" ? styles.containerDark : ""}`}> */}
+      <div className={styles.headerSection}>
+        <h1>Production Entry</h1>
+        {/* <button 
+          className={styles.themeToggle}
+          onClick={toggleTheme}
+          title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+        >
+          {theme === "light" ? "🌙" : "☀️"}
+          <span>{theme === "light" ? "Dark Mode" : "Light Mode"}</span>
+        </button>
+        */ }
+      </div> 
+      
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000}
+        theme={theme} // This automatically adapts react-toastify
+      />
+      
+      {/* Your form content here */}
       <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.formRow}>
+        <div className={styles.dateBatchRow}>
           <div className={styles.inputGroup}>
-            <label>Date:</label>
+            <label>Date</label>
             <input
               type="date"
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
-              className={`${styles.input} ${styles.dateInput}`}
+              className={styles.input}
               required
               max={getLocalDateString()}
             />
           </div>
-
+          
           <div className={styles.inputGroup}>
-            <label>Batch No:</label>
+            <label>Batch No</label>
             <input
               type="text"
               value={batchNo}
@@ -331,12 +371,10 @@ export default function Production() {
             <small className={styles.helperText}>Based on selected date</small>
           </div>
         </div>
-
         <div className={styles.section}>
-    
-          <div className={styles.formRow_1}>
+          <div className={styles.milkQualityRow}>
             <div className={styles.inputGroup}>
-              <label>Milk Quantity (L):</label>
+              <label>Milk Quantity (L)</label>
               <input
                 type="number"
                 value={formData.milk_quantity}
@@ -349,8 +387,9 @@ export default function Production() {
                 step="0.1"
               />
             </div>
+
             <div className={styles.inputGroup}>
-              <label>Fat Percentage (%):</label>
+              <label>Fat Percentage (%)</label>
               <input
                 type="number"
                 value={formData.fat_percentage}
@@ -359,13 +398,14 @@ export default function Production() {
                 }
                 placeholder="6.9"
                 className={styles.input}
-                min="0"
+                min="3.0"
                 max="7.0"
                 step="0.1"
               />
             </div>
+
             <div className={styles.inputGroup}>
-              <label>SNF Percentage (%):</label>
+              <label>SNF Percentage (%)</label>
               <input
                 type="number"
                 value={formData.snf_percentage}
@@ -374,7 +414,7 @@ export default function Production() {
                 }
                 placeholder="7.5"
                 className={styles.input}
-                min="0"
+                min="8.0"
                 max="9.5"
                 step="0.1"
               />
