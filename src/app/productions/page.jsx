@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "@/css/production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRouter } from "next/navigation";
 
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === 0 || value === "")
@@ -40,6 +41,7 @@ const NumberInput = ({
     />
   </div>
 );
+
 const generateDateString = () => {
   const date = new Date();
   const day = String(date.getDay()).padStart(2, "0");
@@ -48,7 +50,9 @@ const generateDateString = () => {
   const dateString = `${year}-${month}-${day}`;
   return dateString;
 };
+
 export default function Production() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState("light");
   const [loading, setLoading] = useState(false);
@@ -304,7 +308,7 @@ export default function Production() {
             />
             <NumberInput
               label="Cream"
-              suffix="L"
+              suffix="kg"
               value={formData.cream_quantity}
               onChange={(v) => handleInputChange("cream_quantity", v)}
               placeholder="50"
@@ -336,6 +340,15 @@ export default function Production() {
             className={styles.submitBtn}
           >
             {isSubmitting ? "Submitting..." : "Submit Production"}
+          </button>
+
+          <button
+            type="button"
+            disabled={!batchNo || isSubmitting}
+            className={styles.infoBtn}
+            onClick={() => router.push("https://magizhdairy.vercel.app/productions/history")}
+          >
+            More Info
           </button>
         </div>
       </form>
@@ -371,7 +384,7 @@ export default function Production() {
                     <th>P. Paneer (Kg)</th>
                     <th>S. Paneer (Kg)</th>
                     <th>Butter (Kg)</th>
-                    <th>Cream (L)</th>
+                    <th>Cream (kg)</th>
                     <th>Ghee (L)</th>
                     <th>Actions</th>
                   </tr>

@@ -61,7 +61,7 @@
 /* Form Grid - FIXED EQUAL WIDTH */
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -139,8 +139,10 @@
 
 .submitBtn,
 .resetBtn,
+.infoBtn,
 .deleteBtn,
-.refreshBtn {
+.refreshBtn
+ {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -184,6 +186,18 @@
 .resetBtn:hover:not(:disabled) {
   background-color: #f1f5f9;
   border-color: #94a3b8;
+}
+
+.infoBtn {
+  background-color: #4b8442;
+  color: white;
+  min-width: 180px;
+}
+
+.infoBtn:hover:not(:disabled) {
+  background-color: #376e43;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
 
 .deleteBtn {
@@ -298,7 +312,7 @@
 
 /* Batch Cell Special Styling */
 .batchCell {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-weight: 600;
   color: #3b82f6;
   letter-spacing: 0.5px;
@@ -307,7 +321,7 @@
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: right;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875rem;
 }
 
@@ -405,7 +419,7 @@
   .resetBtn {
     width: 100%;
     min-width: unset;
-  }
+      }
 
   .tableWrapper {
     padding: 1.5rem;
@@ -476,3 +490,4 @@
     color: black !important;
   }
 }
+
