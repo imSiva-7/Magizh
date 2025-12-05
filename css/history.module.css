@@ -264,7 +264,6 @@
 
 .tableContainer {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -298,6 +297,7 @@
   background-color: #f8fafc;
 }
 
+
 .table td {
   padding: 0.75rem;
   color: #334155;
@@ -308,6 +308,12 @@
 .table td:first-child {
   font-weight: 500;
   color: #1e293b;
+}
+
+.table td:not(:first-child):not(:last-child):not(.batchCell) {
+  text-align: right;
+  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
+  font-size: 0.875rem;
 }
 
 /* Loading State */
@@ -512,6 +518,5 @@
   
   .table th {
     background: #f1f1f1 !important;
-    -webkit-print-color-adjust: exact;
   }
 }

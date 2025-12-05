@@ -341,15 +341,6 @@ export default function Production() {
           >
             {isSubmitting ? "Submitting..." : "Submit Production"}
           </button>
-
-          <button
-            type="button"
-            disabled={!batchNo || isSubmitting}
-            className={styles.infoBtn}
-            onClick={() => router.push("https://magizhdairy.vercel.app/productions/history")}
-          >
-            More Info
-          </button>
         </div>
       </form>
 
@@ -367,10 +358,25 @@ export default function Production() {
               <h3 className={styles.tableH3}>
                 Recent Production Entries ({entries.length}){" "}
               </h3>
-              <button onClick={fetchData} className={styles.refreshBtn}>
-                🔄
-              </button>
+              <span className={styles.tableBtnGroup}>
+                <button
+                  type="button"
+                  disabled={!batchNo || isSubmitting}
+                  className={styles.infoBtn}
+                  onClick={() =>
+                    router.push(
+                      "https://magizhdairy.vercel.app/productions/history"
+                    )
+                  }
+                >
+                  More Info
+                </button>
+                <button onClick={fetchData} className={styles.refreshBtn}>
+                  🔄
+                </button>
+              </span>
             </div>
+
             <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>

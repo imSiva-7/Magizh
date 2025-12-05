@@ -229,14 +229,7 @@ export default function History() {
             disabled={loading}
             className={styles.primaryBtn}
           >
-            {loading ? (
-              <>
-                <span className={styles.spinner}></span>
-                Loading...
-              </>
-            ) : (
-              "Show History"
-            )}
+            {loading ? <>Loading...</> : "Show History"}
           </button>
 
           <button
@@ -309,7 +302,6 @@ export default function History() {
         {loading ? (
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
-            Loading production history...
           </div>
         ) : entries.length === 0 ? (
           <div className={styles.emptyState}>
@@ -344,7 +336,7 @@ export default function History() {
                         year: "numeric",
                       })}
                     </td>
-                    <td>{entry.batch}</td>
+                    <td className={styles.batchCell}>{entry.batch}</td>
                     <td>{entry.milk_quantity || "-"}</td>
                     <td>{entry.curd_quantity || "-"}</td>
                     <td>{entry.premium_paneer_quantity || "-"}</td>
