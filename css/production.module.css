@@ -141,7 +141,8 @@
 .resetBtn,
 .infoBtn,
 .deleteBtn,
-.refreshBtn
+.refreshBtn,
+.supplierBtn
  {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -200,6 +201,20 @@
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
 
+.supplierBtn{
+  background-color: #fc7fd1;
+  color: white;
+  min-width: 180px;
+
+}
+
+
+.supplierBtn:hover:not(:disabled) {
+  background-color: #fc5acb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
+}
+
 .deleteBtn {
   background-color: transparent;
   color: #ef4444;
@@ -231,16 +246,19 @@
   padding-bottom: 1rem;
   border-bottom: 2px solid #e2e8f0;
 }
-.tableBtnGroup{
-  display: flex;
-  
-}
+
 
 .tableHeader h3 {
   font-size: 1.25rem;
   font-weight: 600;
   color: #1e293b;
   margin: 0;
+}
+
+.tableBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .refreshBtn {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import styles from "@/css/production.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
+import { useEffect, useState, useCallback, useRef } from "react";
+import styles from "@/css/production.module.css";
+import { getTodayDate } from "@/utils/dateUtils.js";
 
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === 0 || value === "")
@@ -42,15 +43,6 @@ const NumberInput = ({
   </div>
 );
 
-const generateDateString = () => {
-  const date = new Date();
-  const day = String(date.getDay()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = String(date.getFullYear());
-  const dateString = `${year}-${month}-${day}`;
-  return dateString;
-};
-
 export default function Production() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -59,7 +51,7 @@ export default function Production() {
   const [entries, setEntries] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dateStr, setDateStr] = useState(generateDateString());
+  const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
 
   const initialFormState = {
@@ -327,6 +319,18 @@ export default function Production() {
 
         <div className={styles.buttonGroup}>
           <button
+                type="button"
+                disabled={!batchNo || isSubmitting}
+                className={styles.supplierBtn}
+                onClick={() =>
+                  router.push(
+                    "https://magizhdairy.vercel.app/supplier"
+                  )
+                }
+              >
+               Suppliers!!!
+              </button>
+          <button
             type="button"
             onClick={() => setFormData(initialFormState)}
             className={styles.resetBtn}
@@ -358,22 +362,22 @@ export default function Production() {
               <h3 className={styles.tableH3}>
                 Recent Production Entries ({entries.length}){" "}
               </h3>
-              <span className={styles.tableBtnGroup}>
-                <button
-                  type="button"
-                  disabled={!batchNo || isSubmitting}
-                  className={styles.infoBtn}
-                  onClick={() =>
-                    router.push(
-                      "https://magizhdairy.vercel.app/productions/history"
-                    )
-                  }
-                >
-                  More Info
-                </button>
-                <button onClick={fetchData} className={styles.refreshBtn}>
-                  🔄
-                </button>
+              <span className={styles.tableBtn}>
+              <button
+                type="button"
+                disabled={!batchNo || isSubmitting}
+                className={styles.infoBtn}
+                onClick={() =>
+                  router.push(
+                    "https://magizhdairy.vercel.app/productions/history"
+                  )
+                }
+              >
+                More Info
+              </button>
+              <button onClick={fetchData} className={styles.refreshBtn}>
+                🔄
+              </button>
               </span>
             </div>
 

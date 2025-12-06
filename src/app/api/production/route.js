@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
 
-
 const VALID_PRODUCTS = [
   "milk",
   "fat",
@@ -41,7 +40,6 @@ const parseQuantity = (val, isPercentage = false) => {
   } else {
     return parseFloat(num.toFixed(2));
   }
-
 };
 
 const validateRequiredFields = (data, fields) => {
@@ -65,23 +63,20 @@ const validateAtLeastOneProduct = (data) => {
 
 const validatePercentageFields = (data) => {
   const errors = [];
-  
-  // Validate fat percentage (typical range 3.0 - 7.0)
+
   if (data.fat_percentage) {
     const fat = parseFloat(data.fat_percentage);
     if (isNaN(fat) || fat > 7.0) {
       errors.push("Fat percentage should be below 7.0");
     }
   }
-  
-  // Validate SNF percentage (typical range 8.0 - 9.5)
   if (data.snf_percentage) {
     const snf = parseFloat(data.snf_percentage);
     if (isNaN(snf) || snf > 9.5) {
       errors.push("SNF percentage should be below 9.5");
     }
   }
-  
+
   return errors.length > 0 ? errors.join(", ") : null;
 };
 
@@ -96,9 +91,6 @@ const getDatabase = async () => {
 };
 
 const generateUniqueBatchName = async (db, batch, date) => {
-  // Escape special regex characters in batch name
-  // const escapedBatch = batch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  
   const existingEntries = await db
     .collection("entries")
     .find({
@@ -110,7 +102,6 @@ const generateUniqueBatchName = async (db, batch, date) => {
 
   if (existingEntries.length === 0) return batch;
 
-  // Extract the highest number from existing batches
   let maxNumber = 0;
   existingEntries.forEach((entry) => {
     const match = entry.batch.match(/\((\d+)\)$/);
@@ -147,7 +138,7 @@ export async function GET(request) {
       .collection("entries")
       .find(query)
       .sort({ date: -1, createdAt: -1 })
-      .limit(100)
+      .limit(30)
       .toArray();
 
     logger(METHOD, `Success. Found ${entries.length} entries`);
@@ -156,10 +147,11 @@ export async function GET(request) {
   } catch (error) {
     logger(METHOD, "CRITICAL ERROR", error.message);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch production records",
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      }, 
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
       { status: 500 }
     );
   }
@@ -194,7 +186,11 @@ export async function POST(request) {
     const db = await getDatabase();
 
     // Generate unique batch name
-    const finalBatchName = await generateUniqueBatchName(db, data.batch, data.date);
+    const finalBatchName = await generateUniqueBatchName(
+      db,
+      data.batch,
+      data.date
+    );
     if (finalBatchName !== data.batch) {
       logger(METHOD, `Batch renamed to: ${finalBatchName}`);
     }

@@ -16,12 +16,11 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const fromDate = searchParams.get('fromDate');
     const toDate = searchParams.get('toDate');
-    const product = searchParams.get('product');
 
     const db = await connectToDatabase();
     const collection = db.collection('entries');
 
-    // Build query based on filters
+    
     let query = {};
 
     // Date range filter
@@ -31,12 +30,6 @@ export async function GET(request) {
         $lte: toDate
       };
     }
-
-    // Product filter
-    if (product) {
-      query[product] = { $exists: true, $ne: "" };
-    }
-
     const entries = await collection.find(query)
       .sort({ date: -1, createdAt: -1 })
       .toArray();

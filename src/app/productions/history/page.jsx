@@ -4,13 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import styles from "@/css/history.module.css";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  getPreviousMonthDate,
-  getTodayDate,
-  formatDateToLocalString,
-} from "@/utils/dateUtils";
+
+import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 
 export default function History() {
+
   const [fromDate, setFromDate] = useState(getPreviousMonthDate());
   const [toDate, setToDate] = useState(getTodayDate());
   const [entries, setEntries] = useState([]);
@@ -109,6 +107,8 @@ export default function History() {
       "Date",
       "Batch",
       "Milk Quantity (L)",
+      "Fat Percent (%)",
+      "SNF Percent (%)",
       "Curd Quantity (L)",
       "Premium Paneer Quantity (Kg)",
       "Soft Paneer Quantity (Kg)",
@@ -122,6 +122,8 @@ export default function History() {
       entry.date,
       entry.batch,
       entry.milk_quantity || "0",
+      entry.fat_percentage || "0",
+      entry.snf_percentage || "0",
       entry.curd_quantity || "0",
       entry.premium_paneer_quantity || "0",
       entry.soft_paneer_quantity || "0",
@@ -135,7 +137,9 @@ export default function History() {
     csvRows.push([
       "TOTAL",
       "",
-      totalStats.totalMilk.toFixed(2),
+      totalStats.totalMilk.toFixed(2), 
+      "", 
+      "",
       totalStats.totalCurd.toFixed(2),
       totalStats.totalPremiumPaneer.toFixed(2),
       totalStats.totalSoftPaneer.toFixed(2),
@@ -317,6 +321,8 @@ export default function History() {
                   <th>Date</th>
                   <th>Batch</th>
                   <th>Milk (L)</th>
+                  <th>Fat (%)</th>
+                  <th>Snf (%)</th>
                   <th>Curd (L)</th>
                   <th>P. Paneer (Kg)</th>
                   <th>S. Paneer (Kg)</th>
@@ -338,6 +344,8 @@ export default function History() {
                     </td>
                     <td className={styles.batchCell}>{entry.batch}</td>
                     <td>{entry.milk_quantity || "-"}</td>
+                    <td>{entry.fat_percentage || "-"}</td>
+                    <td>{entry.snf_percentage || "-"}</td>
                     <td>{entry.curd_quantity || "-"}</td>
                     <td>{entry.premium_paneer_quantity || "-"}</td>
                     <td>{entry.soft_paneer_quantity || "-"}</td>

@@ -287,6 +287,14 @@
   border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
 }
+.table th:nth-child(1) {
+  min-width:  90px;
+}
+
+.table th:nth-child(2)
+{
+  min-width: 80px;
+}
 
 .table tbody tr {
   border-bottom: 1px solid #f1f5f9;
