@@ -488,7 +488,7 @@ export default function Supplier() {
                       <div className={styles.actionButtons}>
                         <button
                           onClick={() =>
-                            router.push(`/supplier/${item._id}/procurement`)
+                            router.push(`/supplier`) //${item._id}/procurement`)
                           }
                           className={styles.procurementButton}
                           disabled={true || loading}
