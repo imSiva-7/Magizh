@@ -356,118 +356,33 @@ export default function Supplier() {
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
           <h1>Suppliers</h1>
-          <div className={styles.headerActions}>
-            <button
-              type="button"
-              onClick={handleProcurementHistory}
-              className={styles.historyButton}
-              disabled={loading}
-              title="View production history"
-            >
-              PRODUCTION HISTORY
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className={styles.searchSection}>
-        <div className={styles.searchWrapper}>
-          <label
-            htmlFor="searchInput"
-            className={styles.searchLabel}
-            onClick={handleFocusSearch}
-          >
-            Search Suppliers:
-          </label>
-          <div className={styles.searchInputGroup}>
-            <input
-              id="searchInput"
-              ref={searchInputRef}
-              type="text"
-              placeholder="Type to search by name, type, phone, or address..."
-              value={searchByName}
-              onChange={(e) => setSearchByName(e.target.value)}
-              className={styles.searchInput}
-              disabled={loading}
-              aria-label="Search suppliers"
-            />
-            {searchByName && (
+          {!createSupplier && (
+            <div className={styles.createSection}>
               <button
-                type="button"
-                onClick={handleClearSearch}
-                className={styles.clearSearchButton}
-                aria-label="Clear search"
+                onClick={() => {
+                  setCreateSupplier(true);
+                  setIsEditing(false);
+                  setFormData(initialFormState);
+                  setFormErrors({}); // Clear any errors
+                }}
+                className={styles.createButton}
                 disabled={loading}
+                aria-label="Create new supplier"
               >
-                ✕
+                <span className={styles.plusIcon}>+</span>
+                Create New Supplier
               </button>
-            )}
-          </div>
-          {searchDebounced &&
-            filteredEntries.length === 0 &&
-            entries.length > 0 && (
-              <div className={styles.searchHint}>
-                No suppliers match {`"${searchDebounced}"`}
-              </div>
-            )}
-        </div>
-        <div className={styles.searchStats}>
-          {loading ? (
-            <span className={styles.loadingText}>Searching...</span>
-          ) : (
-            <>
-              <span className={styles.resultCount}>
-                Showing {filteredEntries.length} of {entries.length} supplier
-                {entries.length !== 1 ? "s" : ""}
-              </span>
-              {searchDebounced && (
-                <span className={styles.searchTerm}>
-                  for <strong>{`"${searchDebounced}"`}</strong>
-                </span>
-              )}
-            </>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Create Button */}
-      {!createSupplier && (
-        <div className={styles.createSection}>
-          <button
-            onClick={() => {
-              setCreateSupplier(true);
-              setIsEditing(false);
-              setFormData(initialFormState);
-              setFormErrors({}); // Clear any errors
-            }}
-            className={styles.createButton}
-            disabled={loading}
-            aria-label="Create new supplier"
-          >
-            <span className={styles.plusIcon}>+</span>
-            Create New Supplier
-          </button>
-        </div>
-      )}
 
       {/* Create/Edit Form */}
       {createSupplier && (
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formHeader}>
             <h2>{isEditing ? "Edit Supplier" : "Create New Supplier"}</h2>
-            <div className={styles.formHeaderActions}>
-              <button
-                type="button"
-                onClick={() => router.push("/productions/history")}
-                className={styles.historyButton}
-                disabled={isSubmitting}
-              >
-                PRODUCTION HISTORY
-              </button>
-            </div>
           </div>
-
           <div className={styles.formGrid}>
             <NumberInput
               label="Supplier Name"
@@ -561,6 +476,65 @@ export default function Supplier() {
           </div>
         </form>
       )}
+      <div className={styles.searchSection}>
+        <div className={styles.searchWrapper}>
+          <label
+            htmlFor="searchInput"
+            className={styles.searchLabel}
+            onClick={handleFocusSearch}
+          >
+            Search Suppliers:
+          </label>
+          <div className={styles.searchInputGroup}>
+            <input
+              id="searchInput"
+              ref={searchInputRef}
+              type="text"
+              placeholder="Type to search by name, type, phone, or address..."
+              value={searchByName}
+              onChange={(e) => setSearchByName(e.target.value)}
+              className={styles.searchInput}
+              disabled={loading}
+              aria-label="Search suppliers"
+            />
+            {searchByName && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className={styles.clearSearchButton}
+                aria-label="Clear search"
+                disabled={loading}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {searchDebounced &&
+            filteredEntries.length === 0 &&
+            entries.length > 0 && (
+              <div className={styles.searchHint}>
+                No suppliers match {`"${searchDebounced}"`}
+              </div>
+            )}
+        </div>
+        <div className={styles.searchStats}>
+          {loading ? (
+            <span className={styles.loadingText}>Searching...</span>
+          ) : (
+            <>
+              <span className={styles.resultCount}>
+                Showing {filteredEntries.length} of {entries.length} supplier
+                {entries.length !== 1 ? "s" : ""}
+              </span>
+              {searchDebounced && (
+                <span className={styles.searchTerm}>
+                  for <strong>{`"${searchDebounced}"`}</strong>
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Suppliers Table */}
       <div className={styles.tableContainer}>
@@ -570,7 +544,7 @@ export default function Supplier() {
               <tr>
                 <th>Name</th>
                 <th>Type</th>
-                <th>Phone Number</th>
+                <th>Phone</th>
                 <th>Address</th>
                 <th>Actions</th>
               </tr>
@@ -648,12 +622,12 @@ export default function Supplier() {
                             router.push(`/supplier/${item._id}/procurement`)
                           }
                           className={styles.procurementButton}
-                          disabled={loading || deleteLoading === item._id}
+                          disabled={true}
+                          // disabled={loading || deleteLoading === item._id}
                           title="Add procurement for this supplier"
                           aria-label={`Add procurement for ${item.supplierName}`}
                         >
                           <span className={styles.buttonIcon}>➕</span>
-                          Add Procurement
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
@@ -663,7 +637,6 @@ export default function Supplier() {
                           aria-label={`Edit ${item.supplierName}`}
                         >
                           <span className={styles.buttonIcon}>✏️</span>
-                          Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}
@@ -675,12 +648,10 @@ export default function Supplier() {
                           {deleteLoading === item._id ? (
                             <>
                               <span className={styles.deleteSpinner}></span>
-                              Deleting...
                             </>
                           ) : (
                             <>
                               <span className={styles.buttonIcon}>🗑️</span>
-                              Delete
                             </>
                           )}
                         </button>

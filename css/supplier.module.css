@@ -3,7 +3,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8fafc;
   min-height: 100vh;
 }
@@ -24,12 +24,12 @@
 
 .headerContent h1 {
   color: #1e293b;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
 }
 
-.headerActions {
+.createSection {
   display: flex;
   gap: 1rem;
 }
@@ -56,6 +56,7 @@
   color: #475569;
   font-size: 0.95rem;
   cursor: pointer;
+  margin-left: 5px;
 }
 
 .searchInputGroup {
@@ -92,10 +93,11 @@
   right: 0.75rem;
   background: none;
   border: none;
+  border-radius: 10px;
   color: #64748b;
   cursor: pointer;
   font-size: 1.25rem;
-  padding: 0.25rem;
+  padding: 0.5rem;
   transition: color 0.2s ease;
 }
 
@@ -124,6 +126,7 @@
 
 .resultCount {
   font-weight: 500;
+  margin-left: 5px;
 }
 
 .searchTerm strong {
@@ -136,10 +139,6 @@
   gap: 0.5rem;
 }
 
-/* Create Section */
-.createSection {
-  margin-bottom: 1.5rem;
-}
 
 .createButton {
   display: flex;
@@ -424,11 +423,11 @@
 .nameCell {
   font-weight: 500;
   color: #1e293b;
-  min-width: 180px;
+  width: 100px;
 }
 
 .typeCell {
-  min-width: 120px;
+  width: 80px;
 }
 
 .typeBadge {
@@ -462,19 +461,19 @@
 }
 
 .phoneCell {
-  min-width: 130px;
-  font-family: 'Courier New', monospace;
+  width: 90px;
+  font-family: "Courier New", monospace;
   color: #475569;
 }
 
 .addressCell {
-  min-width: 200px;
-  max-width: 300px;
+  max-width: 100px;
+  min-width: 90px;
   word-wrap: break-word;
 }
 
 .actionsCell {
-  min-width: 280px;
+  min-width: 160px;
 }
 
 /* Action Buttons - Similar to Productions */
@@ -504,8 +503,6 @@
 .procurementButton {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  flex: 1;
-  min-width: 120px;
 }
 
 .procurementButton:hover:not(:disabled) {
@@ -516,7 +513,6 @@
 .editButton {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: white;
-  min-width: 70px;
 }
 
 .editButton:hover:not(:disabled) {
@@ -527,7 +523,6 @@
 .deleteButton {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  min-width: 70px;
 }
 
 .deleteButton:hover:not(:disabled) {
@@ -558,7 +553,6 @@
   animation: spin 1s linear infinite;
 }
 
-/* Loading and Empty States */
 .loadingCell {
   text-align: center;
   padding: 3rem !important;
@@ -668,15 +662,15 @@
   .container {
     padding: 1.5rem;
   }
-  
+
   .headerContent h1 {
     font-size: 2rem;
   }
-  
+
   .formGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .actionButtons {
     flex-wrap: nowrap;
   }
@@ -686,29 +680,29 @@
   .headerContent {
     flex-wrap: nowrap;
   }
-  
+
   .searchWrapper {
     flex-direction: row;
     align-items: center;
     gap: 1rem;
   }
-  
+
   .searchLabel {
     white-space: nowrap;
   }
-  
+
   .searchInput {
     min-width: 300px;
   }
-  
+
   .formGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .formActions {
     justify-content: flex-start;
   }
-  
+
   .submitButton,
   .cancelButton {
     width: auto;
@@ -720,15 +714,15 @@
   .container {
     padding: 2rem;
   }
-  
+
   .headerContent h1 {
     font-size: 2.25rem;
   }
-  
+
   .formGrid {
     grid-template-columns: repeat(4, 1fr);
   }
-  
+
   .supplierTable {
     min-width: 1000px;
   }
@@ -742,17 +736,17 @@
   .actionsCell {
     display: none;
   }
-  
+
   .container {
     padding: 0;
     background: white;
   }
-  
+
   .tableContainer {
     box-shadow: none;
     border: 1px solid #ddd;
   }
-  
+
   .supplierTable th {
     background: #f1f1f1 !important;
   }

@@ -418,7 +418,7 @@
   text-align: left;
   color: #475569;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 2px solid #e2e8f0;
@@ -431,6 +431,9 @@
 
 .table th:nth-child(2) {
   min-width: 90px;
+}
+.table th:nth-child(12) {
+  min-width: 130px;
 }
 
 .table tbody tr {

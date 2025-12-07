@@ -142,8 +142,7 @@
 .infoBtn,
 .deleteBtn,
 .refreshBtn,
-.supplierBtn
- {
+.supplierBtn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -201,13 +200,11 @@
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
 
-.supplierBtn{
-  background-color: #fc7fd1;
+.supplierBtn {
+  background-color: #fb3434;
   color: white;
   min-width: 180px;
-
 }
-
 
 .supplierBtn:hover:not(:disabled) {
   background-color: #fc5acb;
@@ -246,7 +243,6 @@
   padding-bottom: 1rem;
   border-bottom: 2px solid #e2e8f0;
 }
-
 
 .tableHeader h3 {
   font-size: 1.25rem;
@@ -335,7 +331,7 @@
 
 /* Batch Cell Special Styling */
 .batchCell {
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
   font-weight: 600;
   color: #3b82f6;
   letter-spacing: 0.5px;
@@ -442,7 +438,7 @@
   .resetBtn {
     width: 100%;
     min-width: unset;
-      }
+  }
 
   .tableWrapper {
     padding: 1.5rem;
@@ -514,4 +510,3 @@
     color: black !important;
   }
 }
-

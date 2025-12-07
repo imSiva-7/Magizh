@@ -16,7 +16,7 @@ const formatNumber = (value) => {
   }).format(value);
 };
 
-const NumberInput = ({
+const FormInput = ({
   label,
   value,
   onChange,
@@ -235,7 +235,7 @@ export default function Production() {
 
         <div className={styles.section}>
           <div className={styles.milkQualityRow}>
-            <NumberInput
+            <FormInput
               label="Milk Quantity"
               suffix="L"
               value={formData.milk_quantity}
@@ -243,7 +243,7 @@ export default function Production() {
               placeholder="400"
               step="0.1"
             />
-            <NumberInput
+            <FormInput
               label="Fat Percentage"
               suffix="%"
               value={formData.fat_percentage}
@@ -253,7 +253,7 @@ export default function Production() {
               max="7.0"
               step="0.1"
             />
-            <NumberInput
+            <FormInput
               label="SNF Percentage"
               suffix="%"
               value={formData.snf_percentage}
@@ -268,14 +268,14 @@ export default function Production() {
 
         <div className={styles.section}>
           <div className={styles.formGrid}>
-            <NumberInput
+            <FormInput
               label="Curd"
               suffix="Kg"
               value={formData.curd_quantity}
               onChange={(v) => handleInputChange("curd_quantity", v)}
               placeholder="100"
             />
-            <NumberInput
+            <FormInput
               label="Premium Paneer"
               suffix="Kg"
               value={formData.premium_paneer_quantity}
@@ -283,7 +283,7 @@ export default function Production() {
               placeholder="100"
               step="0.1"
             />
-            <NumberInput
+            <FormInput
               label="Soft Paneer"
               suffix="Kg"
               value={formData.soft_paneer_quantity}
@@ -291,14 +291,14 @@ export default function Production() {
               placeholder="100"
               step="0.1"
             />
-            <NumberInput
+            <FormInput
               label="Butter"
               suffix="Kg"
               value={formData.butter_quantity}
               onChange={(v) => handleInputChange("butter_quantity", v)}
               placeholder="100"
             />
-            <NumberInput
+            <FormInput
               label="Cream"
               suffix="kg"
               value={formData.cream_quantity}
@@ -306,7 +306,7 @@ export default function Production() {
               placeholder="50"
               step="0.1"
             />
-            <NumberInput
+            <FormInput
               label="Ghee"
               suffix="L"
               value={formData.ghee_quantity}
@@ -328,7 +328,7 @@ export default function Production() {
                   )
                 }
               >
-               Suppliers!!!
+               Suppliers
               </button>
           <button
             type="button"
