@@ -4,11 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import styles from "@/css/history.module.css";
 import "react-toastify/dist/ReactToastify.css";
-
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 
 export default function History() {
-
   const [fromDate, setFromDate] = useState(getPreviousMonthDate());
   const [toDate, setToDate] = useState(getTodayDate());
   const [entries, setEntries] = useState([]);
@@ -93,8 +91,6 @@ export default function History() {
   const resetForm = () => {
     setFromDate(getPreviousMonthDate());
     setToDate(getTodayDate());
-    // Optionally fetch data immediately after reset
-    // fetchData();
   };
 
   const downloadCSV = () => {
@@ -133,12 +129,12 @@ export default function History() {
       new Date(entry.createdAt).toLocaleString("en-IN"),
     ]);
 
-    // Add total row with better formatting
+    // Add total row
     csvRows.push([
       "TOTAL",
       "",
-      totalStats.totalMilk.toFixed(2), 
-      "", 
+      totalStats.totalMilk.toFixed(2),
+      "",
       "",
       totalStats.totalCurd.toFixed(2),
       totalStats.totalPremiumPaneer.toFixed(2),
@@ -200,54 +196,90 @@ export default function History() {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.filterForm}>
+        <div className={styles.filterHeader}>
+          <h2>Filter by Date Range</h2>
+        </div>
+
         <div className={styles.filterRow}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="fromDate">From</label>
-            <input
-              id="fromDate"
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className={styles.input}
-              max={toDate}
-              required
-            />
+          <div className={styles.dateFilterSection}>
+            <div className={styles.dateInputGroup}>
+              <div className={styles.dateField}>
+                <label htmlFor="fromDate">
+                  From Date
+                </label>
+                <input
+                  id="fromDate"
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className={styles.dateInput}
+                  max={toDate}
+                  required
+                  aria-label="Select start date"
+                />
+              </div>
+
+              <div className={styles.dateField}>
+                <label htmlFor="toDate">
+                  To Date
+                </label>
+                <input
+                  id="toDate"
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className={styles.dateInput}
+                  min={fromDate}
+                  max={getTodayDate()}
+                  required
+                  aria-label="Select end date"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className={styles.inputGroup}>
-            <label htmlFor="toDate">To</label>
-            <input
-              id="toDate"
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className={styles.input}
-              min={fromDate}
-              max={getTodayDate()}
-              required
-            />
+          <div className={styles.filterActions}>
+            <div className={styles.buttonGroup}>
+              <button
+                type="submit"
+                disabled={loading}
+                className={styles.primaryBtn}
+                aria-label="Show production history"
+              >
+                {loading ? (
+                  <>
+                    <span className={styles.buttonSpinner}></span>
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.buttonIcon}>📊</span>
+                    Show History
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.secondaryBtn}
+                disabled={loading}
+                aria-label="Reset date filters"
+              >
+                <span className={styles.buttonIcon}>🔄</span>
+                Reset
+              </button>
+            </div>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className={styles.primaryBtn}
-          >
-            {loading ? <>Loading...</> : "Show History"}
-          </button>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            className={styles.secondaryBtn}
-            disabled={loading}
-          >
-            Reset
-          </button>
         </div>
       </form>
 
-      {error && <div className={styles.errorAlert}>Error: {error}</div>}
+      {error && (
+        <div className={styles.errorAlert}>
+          <span className={styles.errorIcon}>⚠️</span>
+          Error: {error}
+        </div>
+      )}
 
       {entries.length > 0 && (
         <>
@@ -275,10 +307,10 @@ export default function History() {
                 };
                 return (
                   <div key={key} className={styles.statItem}>
-                    <span className={styles.statLabel}>{labels[key]}:</span>
+                    <span className={styles.statLabel}>{labels[key]}</span>
                     <span className={styles.statValue}>
                       {formatNumber(value)}
-                      {units[key]}
+                      <span className={styles.statUnit}>{units[key]}</span>
                     </span>
                   </div>
                 );
@@ -291,12 +323,13 @@ export default function History() {
               onClick={downloadCSV}
               disabled={entries.length === 0 || loading}
               className={styles.exportBtn}
+              aria-label="Download CSV file"
             >
+              <span className={styles.exportIcon}></span>
               Download CSV
             </button>
             <span className={styles.entryCount}>
-              {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
-              found
+              {entries.length} {entries.length === 1 ? "entry" : "entries"} found
             </span>
           </div>
         </>
@@ -306,12 +339,23 @@ export default function History() {
         {loading ? (
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
+            <span className={styles.loadingText}>
+              Loading production history...
+            </span>
           </div>
         ) : entries.length === 0 ? (
           <div className={styles.emptyState}>
-            {error
-              ? "Unable to load data. Please try again."
-              : "No production data found for the selected criteria"}
+            {error ? (
+              <>
+                <span className={styles.emptyIcon}>⚠️</span>
+                <p>Unable to load data. Please try again.</p>
+              </>
+            ) : (
+              <>
+                <span className={styles.emptyIcon}>📭</span>
+                <p>No production data found for the selected criteria</p>
+              </>
+            )}
           </div>
         ) : (
           <div className={styles.tableContainer}>
@@ -334,8 +378,8 @@ export default function History() {
               </thead>
               <tbody>
                 {entries.map((entry) => (
-                  <tr key={entry._id || entry.id}>
-                    <td>
+                  <tr key={entry._id || entry.id} className={styles.tableRow}>
+                    <td className={styles.dateCell}>
                       {new Date(entry.date).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
@@ -343,16 +387,26 @@ export default function History() {
                       })}
                     </td>
                     <td className={styles.batchCell}>{entry.batch}</td>
-                    <td>{entry.milk_quantity || "-"}</td>
-                    <td>{entry.fat_percentage || "-"}</td>
-                    <td>{entry.snf_percentage || "-"}</td>
-                    <td>{entry.curd_quantity || "-"}</td>
-                    <td>{entry.premium_paneer_quantity || "-"}</td>
-                    <td>{entry.soft_paneer_quantity || "-"}</td>
-                    <td>{entry.butter_quantity || "-"}</td>
-                    <td>{entry.cream_quantity || "-"}</td>
-                    <td>{entry.ghee_quantity || "-"}</td>
-                    <td>
+                    <td className={styles.milkCell}>{entry.milk_quantity || "-"}</td>
+                    <td className={styles.fatCell}>{entry.fat_percentage || "-"}</td>
+                    <td className={styles.snfCell}>{entry.snf_percentage || "-"}</td>
+                    <td className={styles.curdCell}>{entry.curd_quantity || "-"}</td>
+                    <td className={styles.premiumPaneerCell}>
+                      {entry.premium_paneer_quantity || "-"}
+                    </td>
+                    <td className={styles.softPaneerCell}>
+                      {entry.soft_paneer_quantity || "-"}
+                    </td>
+                    <td className={styles.butterCell}>
+                      {entry.butter_quantity || "-"}
+                    </td>
+                    <td className={styles.creamCell}>
+                      {entry.cream_quantity || "-"}
+                    </td>
+                    <td className={styles.gheeCell}>
+                      {entry.ghee_quantity || "-"}
+                    </td>
+                    <td className={styles.createdAtCell}>
                       {new Date(entry.createdAt).toLocaleString("en-IN", {
                         dateStyle: "short",
                         timeStyle: "short",

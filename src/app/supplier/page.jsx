@@ -3,8 +3,8 @@
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { getTodayDate } from "@/utils/dateUtils";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+// import { getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/supplier.module.css";
 
 const NumberInput = ({
@@ -34,11 +34,19 @@ const NumberInput = ({
       max={max}
       step={step}
       disabled={disabled}
-      className={error ? styles.inputError : ""}
+      className={`${styles.input} ${error ? styles.inputError : ""}`}
     />
     {error && <span className={styles.errorText}>{error}</span>}
   </div>
 );
+
+const SUPPLIER_TYPES = [
+  { value: "", label: "Select Type" },
+  { value: "Society", label: "Society" },
+  { value: "Milkman", label: "Milk-man" },
+  { value: "Farmer", label: "Farmer" },
+  { value: "Other", label: "Other" },
+];
 
 export default function Supplier() {
   const router = useRouter();
@@ -47,67 +55,111 @@ export default function Supplier() {
   const [entries, setEntries] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const searchInputRef = useRef(null);
+  const [searchDebounced, setSearchDebounced] = useState("");
 
-  const initialFormState = {
-    supplierId: null,
-    supplierFirstName: "",
-    supplierLastName: "",
-    supplierNumber: "",
-    supplierAddress: "",
-  };
+  // Wrap initialFormState in useMemo
+  const initialFormState = useMemo(
+    () => ({
+      supplierId: null,
+      supplierName: "",
+      supplierType: "",
+      supplierNumber: "",
+      supplierAddress: "",
+    }),
+    []
+  ); // Empty dependency array means this never changes
 
   const [formData, setFormData] = useState(initialFormState);
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
 
-  // Form validation
-  const validateForm = () => {
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchDebounced(searchByName);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchByName]);
+
+  // Separate validation for individual fields
+  const validateField = useCallback((field, value) => {
+    switch (field) {
+      case "supplierName":
+        if (!value?.trim()) return "Name is required";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters";
+        return "";
+
+      case "supplierType":
+        if (!value?.trim()) return "Type is required";
+        if (value.trim().length < 2)
+          return "Type must be at least 2 characters";
+        return "";
+
+      case "supplierNumber":
+        if (value && value.trim()) {
+          const phoneRegex = /^[0-9]{10}$/;
+          if (!phoneRegex.test(value.trim())) {
+            return "Please enter a valid 10-digit phone number";
+          }
+        }
+        return "";
+
+      case "supplierAddress":
+        if (value?.trim() && value.trim().length < 5) {
+          return "Address must be at least 5 characters";
+        }
+        return "";
+
+      default:
+        return "";
+    }
+  }, []);
+
+  // Full form validation only when submitting
+  const validateFullForm = useCallback(() => {
     const errors = {};
 
-    if (!formData.supplierFirstName?.trim()) {
-      errors.supplierFirstName = "First name is required";
-    } else if (formData.supplierFirstName.trim().length < 2) {
-      errors.supplierFirstName = "First name must be at least 2 characters";
-    }
+    const nameError = validateField("supplierName", formData.supplierName);
+    if (nameError) errors.supplierName = nameError;
 
-    if (
-      formData.supplierNumber &&
-      formData.supplierNumber?.trim().length <= 9
-    ) {
-      // errors.supplierNumber = "Phone number is required";
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(formData.supplierNumber.trim())) {
-        errors.supplierNumber = "Please enter a valid 10-digit phone number";
-      }
-    }
+    const typeError = validateField("supplierType", formData.supplierType);
+    if (typeError) errors.supplierType = typeError;
 
-    if (
-      formData.supplierAddress?.trim() &&
-      formData.supplierAddress.trim().length < 5
-    ) {
-      errors.supplierAddress = "Address must be at least 5 characters";
-    }
+    const phoneError = validateField("supplierNumber", formData.supplierNumber);
+    if (phoneError) errors.supplierNumber = phoneError;
 
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
+    const addressError = validateField(
+      "supplierAddress",
+      formData.supplierAddress
+    );
+    if (addressError) errors.supplierAddress = addressError;
+
+    return errors;
+  }, [formData, validateField]);
 
   // Filter entries with memoization
   const filteredEntries = useMemo(() => {
+    if (!searchDebounced.trim()) return entries;
+
+    const searchTerm = searchDebounced.toLowerCase().trim();
     return entries.filter((entry) => {
-      if (!searchByName.trim()) return true;
-      const fullName = `${entry.supplierFirstName || ""} ${
-        entry.supplierLastName || ""
-      }`.toLowerCase();
-      const searchTerm = searchByName.toLowerCase().trim();
+      const name = (entry.supplierName || "").toLowerCase();
+      const type = (entry.supplierType || "").toLowerCase();
+      const number = (entry.supplierNumber || "").toLowerCase();
+      const address = (entry.supplierAddress || "").toLowerCase();
+
       return (
-        fullName.includes(searchTerm) ||
-        entry.supplierNumber?.includes(searchTerm) ||
-        entry.supplierAddress?.toLowerCase().includes(searchTerm)
+        name.includes(searchTerm) ||
+        type.includes(searchTerm) ||
+        number.includes(searchTerm) ||
+        address.includes(searchTerm)
       );
     });
-  }, [entries, searchByName]);
+  }, [entries, searchDebounced]);
 
   // Fetch suppliers
   const fetchData = useCallback(async () => {
@@ -135,21 +187,30 @@ export default function Supplier() {
     fetchData();
   }, [fetchData]);
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    // Clear error for this field when user starts typing
-    if (formErrors[field]) {
-      setFormErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
+  const handleInputChange = useCallback(
+    (field, value) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+
+      // Validate only the changed field in real-time
+      const error = validateField(field, value);
+      setFormErrors((prev) => ({
+        ...prev,
+        [field]: error || undefined,
+      }));
+    },
+    [validateField]
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    // Validate all fields before submitting
+    const errors = validateFullForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       toast.error("Please fix the form errors");
       return;
     }
@@ -157,9 +218,8 @@ export default function Supplier() {
     setIsSubmitting(true);
 
     const payload = {
-      date: getTodayDate(),
-      supplierFirstName: formData.supplierFirstName.trim(),
-      supplierLastName: formData.supplierLastName.trim(),
+      supplierName: formData.supplierName.trim(),
+      supplierType: formData.supplierType.trim(),
       supplierNumber: formData.supplierNumber.trim(),
       supplierAddress: formData.supplierAddress.trim(),
     };
@@ -179,7 +239,7 @@ export default function Supplier() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
 
       if (!res.ok) {
         throw new Error(
@@ -204,18 +264,19 @@ export default function Supplier() {
     }
   };
 
-  const handleEdit = (supplier) => {
+  const handleEdit = useCallback((supplier) => {
     setCreateSupplier(true);
     setIsEditing(true);
     setFormData({
       supplierId: supplier._id,
-      supplierFirstName: supplier.supplierFirstName || "",
-      supplierLastName: supplier.supplierLastName || "",
+      supplierName: supplier.supplierName || "",
+      supplierType: supplier.supplierType || "",
       supplierNumber: supplier.supplierNumber || "",
       supplierAddress: supplier.supplierAddress || "",
     });
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+    // Clear any existing errors when editing
+    setFormErrors({});
+  }, []);
 
   const handleDelete = async (id) => {
     if (
@@ -233,7 +294,7 @@ export default function Supplier() {
         method: "DELETE",
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json();
 
       if (!res.ok) {
         throw new Error(
@@ -257,12 +318,12 @@ export default function Supplier() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData(initialFormState);
     setFormErrors({});
     setIsEditing(false);
     setCreateSupplier(false);
-  };
+  }, [initialFormState]); // Now initialFormState is memoized, so this is stable
 
   const handleCancel = () => {
     resetForm();
@@ -270,10 +331,15 @@ export default function Supplier() {
 
   const handleClearSearch = () => {
     setSearchByName("");
+    searchInputRef.current?.focus();
   };
 
   const handleProcurementHistory = () => {
-    router.push("https://magizhdairy.vercel.app/productions/history");
+    router.push("/productions/history");
+  };
+
+  const handleFocusSearch = () => {
+    searchInputRef.current?.focus();
   };
 
   return (
@@ -296,8 +362,9 @@ export default function Supplier() {
               onClick={handleProcurementHistory}
               className={styles.historyButton}
               disabled={loading}
+              title="View production history"
             >
-              PRODUCTION History
+              PRODUCTION HISTORY
             </button>
           </div>
         </div>
@@ -306,42 +373,80 @@ export default function Supplier() {
       {/* Search Bar */}
       <div className={styles.searchSection}>
         <div className={styles.searchWrapper}>
-          <input
-            type="text"
-            placeholder="Search by name, phone, or address..."
-            value={searchByName}
-            onChange={(e) => setSearchByName(e.target.value)}
-            className={styles.searchInput}
-            disabled={loading}
-          />
-          {searchByName && (
-            <button
-              onClick={handleClearSearch}
-              className={styles.clearSearchButton}
-              aria-label="Clear search"
+          <label
+            htmlFor="searchInput"
+            className={styles.searchLabel}
+            onClick={handleFocusSearch}
+          >
+            Search Suppliers:
+          </label>
+          <div className={styles.searchInputGroup}>
+            <input
+              id="searchInput"
+              ref={searchInputRef}
+              type="text"
+              placeholder="Type to search by name, type, phone, or address..."
+              value={searchByName}
+              onChange={(e) => setSearchByName(e.target.value)}
+              className={styles.searchInput}
               disabled={loading}
-            >
-              ✕
-            </button>
+              aria-label="Search suppliers"
+            />
+            {searchByName && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className={styles.clearSearchButton}
+                aria-label="Clear search"
+                disabled={loading}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          {searchDebounced &&
+            filteredEntries.length === 0 &&
+            entries.length > 0 && (
+              <div className={styles.searchHint}>
+                No suppliers match {`"${searchDebounced}"`}
+              </div>
+            )}
+        </div>
+        <div className={styles.searchStats}>
+          {loading ? (
+            <span className={styles.loadingText}>Searching...</span>
+          ) : (
+            <>
+              <span className={styles.resultCount}>
+                Showing {filteredEntries.length} of {entries.length} supplier
+                {entries.length !== 1 ? "s" : ""}
+              </span>
+              {searchDebounced && (
+                <span className={styles.searchTerm}>
+                  for <strong>{`"${searchDebounced}"`}</strong>
+                </span>
+              )}
+            </>
           )}
         </div>
-        {filteredEntries.length > 0 && (
-          <span className={styles.resultCount}>
-            {filteredEntries.length} supplier
-            {filteredEntries.length !== 1 ? "s" : ""} found
-          </span>
-        )}
       </div>
 
       {/* Create Button */}
       {!createSupplier && (
         <div className={styles.createSection}>
           <button
-            onClick={() => setCreateSupplier(true)}
+            onClick={() => {
+              setCreateSupplier(true);
+              setIsEditing(false);
+              setFormData(initialFormState);
+              setFormErrors({}); // Clear any errors
+            }}
             className={styles.createButton}
             disabled={loading}
+            aria-label="Create new supplier"
           >
-            + Create New Supplier
+            <span className={styles.plusIcon}>+</span>
+            Create New Supplier
           </button>
         </div>
       )}
@@ -352,46 +457,65 @@ export default function Supplier() {
           <div className={styles.formHeader}>
             <h2>{isEditing ? "Edit Supplier" : "Create New Supplier"}</h2>
             <div className={styles.formHeaderActions}>
-              {/* <button
+              <button
                 type="button"
-                onClick={handleProcurementHistory}
+                onClick={() => router.push("/productions/history")}
                 className={styles.historyButton}
                 disabled={isSubmitting}
               >
-                PRODUCTION History
-              </button> */}
+                PRODUCTION HISTORY
+              </button>
             </div>
           </div>
 
           <div className={styles.formGrid}>
             <NumberInput
-              label="First Name"
+              label="Supplier Name"
               type="text"
-              value={formData.supplierFirstName}
-              onChange={(value) =>
-                handleInputChange("supplierFirstName", value)
-              }
-              placeholder="Enter first name"
-              error={formErrors.supplierFirstName}
+              value={formData.supplierName}
+              onChange={(value) => handleInputChange("supplierName", value)}
+              placeholder="Enter supplier name"
+              error={formErrors.supplierName}
               required
               disabled={isSubmitting}
+              autoFocus
             />
 
-            <NumberInput
-              label="Last Name"
-              type="text"
-              value={formData.supplierLastName}
-              onChange={(value) => handleInputChange("supplierLastName", value)}
-              placeholder="Enter last name (optional)"
-              disabled={isSubmitting}
-            />
+            <div className={styles.inputGroup}>
+              <label>
+                Supplier Type
+                <span className={styles.required}>*</span>
+              </label>
+              <select
+                value={formData.supplierType}
+                onChange={(e) =>
+                  handleInputChange("supplierType", e.target.value)
+                }
+                className={`${styles.selectInput} ${
+                  formErrors.supplierType ? styles.inputError : ""
+                }`}
+                disabled={isSubmitting}
+                required
+              >
+                {SUPPLIER_TYPES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {formErrors.supplierType && (
+                <span className={styles.errorText}>
+                  {formErrors.supplierType}
+                </span>
+              )}
+            </div>
 
             <NumberInput
               label="Phone Number"
               type="tel"
               value={formData.supplierNumber}
               onChange={(value) => handleInputChange("supplierNumber", value)}
-              placeholder="10-digit phone number (optional)"
+              placeholder="10-digit phone number"
               error={formErrors.supplierNumber}
               disabled={isSubmitting}
             />
@@ -401,7 +525,7 @@ export default function Supplier() {
               type="text"
               value={formData.supplierAddress}
               onChange={(value) => handleInputChange("supplierAddress", value)}
-              placeholder="Enter address (optional)"
+              placeholder="Enter complete address"
               error={formErrors.supplierAddress}
               disabled={isSubmitting}
             />
@@ -412,6 +536,7 @@ export default function Supplier() {
               type="submit"
               disabled={isSubmitting}
               className={styles.submitButton}
+              aria-label={isEditing ? "Update supplier" : "Add supplier"}
             >
               {isSubmitting ? (
                 <>
@@ -429,6 +554,7 @@ export default function Supplier() {
               onClick={handleCancel}
               className={styles.cancelButton}
               disabled={isSubmitting}
+              aria-label="Cancel"
             >
               Cancel
             </button>
@@ -442,8 +568,8 @@ export default function Supplier() {
           <table className={styles.supplierTable}>
             <thead>
               <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
+                <th>Name</th>
+                <th>Type</th>
                 <th>Phone Number</th>
                 <th>Address</th>
                 <th>Actions</th>
@@ -463,15 +589,30 @@ export default function Supplier() {
                 <tr>
                   <td colSpan="5" className={styles.noDataCell}>
                     <div className={styles.emptyState}>
-                      {searchByName
-                        ? "No matching suppliers found"
-                        : "No suppliers found"}
-                      {!searchByName && !loading && !createSupplier && (
+                      <div className={styles.emptyIcon}>📭</div>
+                      <p className={styles.emptyText}>
+                        {searchDebounced
+                          ? `No suppliers found for "${searchDebounced}"`
+                          : "No suppliers found"}
+                      </p>
+                      {!searchDebounced && !createSupplier && (
                         <button
-                          onClick={() => setCreateSupplier(true)}
+                          onClick={() => {
+                            setCreateSupplier(true);
+                            setIsEditing(false);
+                            setFormErrors({});
+                          }}
                           className={styles.createEmptyButton}
                         >
-                          Create First Supplier
+                          Create Your First Supplier
+                        </button>
+                      )}
+                      {searchDebounced && (
+                        <button
+                          onClick={handleClearSearch}
+                          className={styles.clearSearchLink}
+                        >
+                          Clear search to see all suppliers
                         </button>
                       )}
                     </div>
@@ -480,35 +621,56 @@ export default function Supplier() {
               ) : (
                 filteredEntries.map((item) => (
                   <tr key={item._id} className={styles.tableRow}>
-                    <td>{item.supplierFirstName || "-"}</td>
-                    <td>{item.supplierLastName || "-"}</td>
-                    <td>{item.supplierNumber || "-"}</td>
-                    <td>{item.supplierAddress || "-"}</td>
-                    <td>
+                    <td className={styles.nameCell}>
+                      <span className={styles.supplierName}>
+                        {item.supplierName || "-"}
+                      </span>
+                    </td>
+                    <td className={styles.typeCell}>
+                      <span
+                        className={`${styles.typeBadge} ${
+                          styles[`type-${item.supplierType?.toLowerCase()}`]
+                        }`}
+                      >
+                        {item.supplierType || "-"}
+                      </span>
+                    </td>
+                    <td className={styles.phoneCell}>
+                      {item.supplierNumber || "-"}
+                    </td>
+                    <td className={styles.addressCell}>
+                      {item.supplierAddress || "-"}
+                    </td>
+                    <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
                         <button
                           onClick={() =>
-                            router.push(`/supplier`) //${item._id}/procurement`)
+                            router.push(`/supplier/${item._id}/procurement`)
                           }
                           className={styles.procurementButton}
-                          disabled={true || loading}
+                          disabled={loading || deleteLoading === item._id}
                           title="Add procurement for this supplier"
+                          aria-label={`Add procurement for ${item.supplierName}`}
                         >
+                          <span className={styles.buttonIcon}>➕</span>
                           Add Procurement
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
                           className={styles.editButton}
-                          disabled={loading}
-                          title="Edit supplier"
+                          disabled={loading || deleteLoading === item._id}
+                          title={`Edit ${item.supplierName}`}
+                          aria-label={`Edit ${item.supplierName}`}
                         >
+                          <span className={styles.buttonIcon}>✏️</span>
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteButton}
                           disabled={deleteLoading === item._id || loading}
-                          title="Delete supplier"
+                          title={`Delete ${item.supplierName}`}
+                          aria-label={`Delete ${item.supplierName}`}
                         >
                           {deleteLoading === item._id ? (
                             <>
@@ -516,7 +678,10 @@ export default function Supplier() {
                               Deleting...
                             </>
                           ) : (
-                            "Delete"
+                            <>
+                              <span className={styles.buttonIcon}>🗑️</span>
+                              Delete
+                            </>
                           )}
                         </button>
                       </div>

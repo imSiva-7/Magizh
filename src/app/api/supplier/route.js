@@ -27,30 +27,30 @@ export async function GET(request) {
     const query = {};
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
-    const supplierFirstName = searchParams.get("supplierFirstName");
-    const supplierLastName = searchParams.get("supplierLastName");
+    const supplierName = searchParams.get("supplierName");
+    const supplierType = searchParams.get("supplierType");
 
-    // Search by first name if provided
-    if (supplierFirstName) {
-      query.supplierFirstName = {
-        $regex: supplierFirstName,
+    // Search by supplier name if provided
+    if (supplierName) {
+      query.supplierName = {
+        $regex: supplierName,
         $options: "i", // case-insensitive
       };
     }
 
-    // Search by last name if provided
-    if (supplierLastName) {
-      query.supplierLastName = {
-        $regex: supplierLastName,
+    // Search by supplier type if provided
+    if (supplierType) {
+      query.supplierType = {
+        $regex: supplierType,
         $options: "i",
       };
     }
 
-    // General search across both first and last name
+    // General search across supplier name, type, and number
     if (search) {
       query.$or = [
-        { supplierFirstName: { $regex: search, $options: "i" } },
-        { supplierLastName: { $regex: search, $options: "i" } },
+        { supplierName: { $regex: search, $options: "i" } },
+        { supplierType: { $regex: search, $options: "i" } },
         { supplierNumber: { $regex: search, $options: "i" } },
       ];
     }
@@ -84,23 +84,34 @@ export async function POST(request) {
     const db = await getDatabase();
     const data = await request.json();
 
-    // Validate required fields - ONLY first name is required
-    if (!data.supplierFirstName?.trim()) {
+    // Validate required fields
+    if (!data.supplierName?.trim()) {
       return NextResponse.json(
         {
-          error: "First name is required",
+          error: "Supplier name is required",
           details: "Missing required field",
         },
         { status: 400 }
       );
     }
 
-    // Validate first name length
-    if (data.supplierFirstName.trim().length < 2) {
+    // Validate supplier name length
+    if (data.supplierName.trim().length < 2) {
       return NextResponse.json(
         {
-          error: "First name must be at least 2 characters",
-          details: "Invalid first name",
+          error: "Supplier name must be at least 2 characters",
+          details: "Invalid supplier name",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate supplier type if provided
+    if (data.supplierType && data.supplierType.trim().length < 2) {
+      return NextResponse.json(
+        {
+          error: "Supplier type must be at least 2 characters if provided",
+          details: "Invalid supplier type",
         },
         { status: 400 }
       );
@@ -148,8 +159,8 @@ export async function POST(request) {
 
     // Add timestamp
     const supplierData = {
-      supplierFirstName: data.supplierFirstName.trim(),
-      supplierLastName: data.supplierLastName?.trim() || "",
+      supplierName: data.supplierName.trim(),
+      supplierType: data.supplierType?.trim() || "",
       supplierNumber: data.supplierNumber?.trim() || "",
       supplierAddress: data.supplierAddress?.trim() || "",
       createdAt: new Date(),
@@ -212,24 +223,37 @@ export async function PUT(request) {
       );
     }
 
-    // Validate required fields - ONLY first name is required
-    if (data.supplierFirstName !== undefined) {
-      if (!data.supplierFirstName.trim()) {
+    // Validate supplier name if provided
+    if (data.supplierName !== undefined) {
+      if (!data.supplierName.trim()) {
         return NextResponse.json(
           {
-            error: "First name is required",
+            error: "Supplier name is required",
             details: "Missing required field",
           },
           { status: 400 }
         );
       }
 
-      // Validate first name length
-      if (data.supplierFirstName.trim().length < 2) {
+      // Validate supplier name length
+      if (data.supplierName.trim().length < 2) {
         return NextResponse.json(
           {
-            error: "First name must be at least 2 characters",
-            details: "Invalid first name",
+            error: "Supplier name must be at least 2 characters",
+            details: "Invalid supplier name",
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate supplier type if provided
+    if (data.supplierType !== undefined && data.supplierType.trim()) {
+      if (data.supplierType.trim().length < 2) {
+        return NextResponse.json(
+          {
+            error: "Supplier type must be at least 2 characters if provided",
+            details: "Invalid supplier type",
           },
           { status: 400 }
         );
@@ -282,11 +306,11 @@ export async function PUT(request) {
 
     // Prepare update data
     const updateData = {
-      ...(data.supplierFirstName !== undefined && {
-        supplierFirstName: data.supplierFirstName.trim(),
+      ...(data.supplierName !== undefined && {
+        supplierName: data.supplierName.trim(),
       }),
-      ...(data.supplierLastName !== undefined && {
-        supplierLastName: data.supplierLastName.trim() || "",
+      ...(data.supplierType !== undefined && {
+        supplierType: data.supplierType.trim() || "",
       }),
       ...(data.supplierNumber !== undefined && {
         supplierNumber: data.supplierNumber.trim() || "",
@@ -330,6 +354,7 @@ export async function PUT(request) {
   }
 }
 
+// DELETE a supplier
 export async function DELETE(request) {
   const METHOD = METHOD_NAMES.DELETE;
 
