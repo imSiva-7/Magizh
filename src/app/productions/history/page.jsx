@@ -114,7 +114,7 @@ export default function History() {
       "Created At",
     ];
 
-    const csvRows = entries.map((entry) => [
+    const csvRows = entries.reverse().map((entry) => [
       entry.date,
       entry.batch,
       entry.milk_quantity || "0",
@@ -204,9 +204,7 @@ export default function History() {
           <div className={styles.dateFilterSection}>
             <div className={styles.dateInputGroup}>
               <div className={styles.dateField}>
-                <label htmlFor="fromDate">
-                  From Date
-                </label>
+                <label htmlFor="fromDate">From Date</label>
                 <input
                   id="fromDate"
                   type="date"
@@ -220,9 +218,7 @@ export default function History() {
               </div>
 
               <div className={styles.dateField}>
-                <label htmlFor="toDate">
-                  To Date
-                </label>
+                <label htmlFor="toDate">To Date</label>
                 <input
                   id="toDate"
                   type="date"
@@ -253,7 +249,7 @@ export default function History() {
                   </>
                 ) : (
                   <>
-                    <span className={styles.buttonIcon}>📊</span>
+                    <span className={styles.buttonIcon}></span>
                     Show History
                   </>
                 )}
@@ -266,7 +262,7 @@ export default function History() {
                 disabled={loading}
                 aria-label="Reset date filters"
               >
-                <span className={styles.buttonIcon}>🔄</span>
+                <span className={styles.buttonIcon}></span>
                 Reset
               </button>
             </div>
@@ -290,8 +286,8 @@ export default function History() {
                 const labels = {
                   totalMilk: "Milk",
                   totalCurd: "Curd",
-                  totalPremiumPaneer: "Premium Paneer",
-                  totalSoftPaneer: "Soft Paneer",
+                  totalPremiumPaneer: "P. Paneer",
+                  totalSoftPaneer: "S. Paneer",
                   totalButter: "Butter",
                   totalCream: "Cream",
                   totalGhee: "Ghee",
@@ -325,11 +321,12 @@ export default function History() {
               className={styles.exportBtn}
               aria-label="Download CSV file"
             >
-              <span className={styles.exportIcon}></span>
+              {/* <span className={styles.exportIcon}></span> */}
               Download CSV
             </button>
             <span className={styles.entryCount}>
-              {entries.length} {entries.length === 1 ? "entry" : "entries"} found
+              {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
+              found
             </span>
           </div>
         </>
@@ -352,7 +349,7 @@ export default function History() {
               </>
             ) : (
               <>
-                <span className={styles.emptyIcon}>📭</span>
+                <span className={styles.emptyIcon}></span>
                 <p>No production data found for the selected criteria</p>
               </>
             )}
@@ -362,7 +359,7 @@ export default function History() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Date</th>
+                  {/* <th>Date</th> */}
                   <th>Batch</th>
                   <th>Milk (L)</th>
                   <th>Fat (%)</th>
@@ -379,18 +376,26 @@ export default function History() {
               <tbody>
                 {entries.map((entry) => (
                   <tr key={entry._id || entry.id} className={styles.tableRow}>
-                    <td className={styles.dateCell}>
+                    {/* <td className={styles.dateCell}>
                       {new Date(entry.date).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
                       })}
-                    </td>
+                    </td> */}
                     <td className={styles.batchCell}>{entry.batch}</td>
-                    <td className={styles.milkCell}>{entry.milk_quantity || "-"}</td>
-                    <td className={styles.fatCell}>{entry.fat_percentage || "-"}</td>
-                    <td className={styles.snfCell}>{entry.snf_percentage || "-"}</td>
-                    <td className={styles.curdCell}>{entry.curd_quantity || "-"}</td>
+                    <td className={styles.milkCell}>
+                      {entry.milk_quantity || "-"}
+                    </td>
+                    <td className={styles.fatCell}>
+                      {entry.fat_percentage || "-"}
+                    </td>
+                    <td className={styles.snfCell}>
+                      {entry.snf_percentage || "-"}
+                    </td>
+                    <td className={styles.curdCell}>
+                      {entry.curd_quantity || "-"}
+                    </td>
                     <td className={styles.premiumPaneerCell}>
                       {entry.premium_paneer_quantity || "-"}
                     </td>

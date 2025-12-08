@@ -19,50 +19,74 @@ const getDatabase = async () => {
   }
 };
 
-// GET all suppliers or filter by name
+// GET all suppliers OR single supplier by ID
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
   try {
-    const query = {};
     const { searchParams } = new URL(request.url);
+    const supplierId = searchParams.get("supplierId");
     const search = searchParams.get("search");
-    const supplierName = searchParams.get("supplierName");
-    const supplierType = searchParams.get("supplierType");
 
-    // Search by supplier name if provided
-    if (supplierName) {
-      query.supplierName = {
-        $regex: supplierName,
-        $options: "i", // case-insensitive
-      };
+    const db = await getDatabase();
+
+    // CASE 1: Get single supplier by ID
+    if (supplierId) {
+      console.log("Fetching single supplier with ID:", supplierId);
+
+      // Validate ObjectId format
+      if (!ObjectId.isValid(supplierId)) {
+        return NextResponse.json(
+          {
+            error: "Invalid supplier ID format",
+            details: "Supplier ID must be a valid 24-character hex string",
+          },
+          { status: 400 }
+        );
+      }
+
+      const supplier = await db
+        .collection("suppliers")
+        .findOne({ _id: new ObjectId(supplierId) });
+
+      if (!supplier) {
+        return NextResponse.json(
+          {
+            error: "Supplier not found",
+            details: `No supplier found with ID: ${supplierId}`,
+          },
+          { status: 404 }
+        );
+      }
+
+      console.log("Found supplier:", supplier.supplierName);
+      return NextResponse.json(supplier); // Return single object
     }
 
-    // Search by supplier type if provided
-    if (supplierType) {
-      query.supplierType = {
-        $regex: supplierType,
-        $options: "i",
-      };
-    }
+    // CASE 2: Get all suppliers (with optional search)
+    console.log("Fetching all suppliers, search term:", search || "none");
 
-    // General search across supplier name, type, and number
-    if (search) {
+    const query = {};
+
+    // Add search filter if provided
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
       query.$or = [
-        { supplierName: { $regex: search, $options: "i" } },
-        { supplierType: { $regex: search, $options: "i" } },
-        { supplierNumber: { $regex: search, $options: "i" } },
+        { supplierName: { $regex: searchTerm, $options: "i" } },
+        { supplierType: { $regex: searchTerm, $options: "i" } },
+        { supplierNumber: { $regex: searchTerm, $options: "i" } },
+        { supplierAddress: { $regex: searchTerm, $options: "i" } },
       ];
     }
 
-    const db = await getDatabase();
-    const entries = await db
+    const suppliers = await db
       .collection("suppliers")
       .find(query)
       .sort({ createdAt: -1 })
       .toArray();
 
-    return NextResponse.json(entries);
+    console.log(`Found ${suppliers.length} suppliers`);
+    return NextResponse.json(suppliers); // Return array
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json(
@@ -84,80 +108,69 @@ export async function POST(request) {
     const db = await getDatabase();
     const data = await request.json();
 
+    // Validation helper
+    const validateField = (field, value, minLength = 0) => {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value.toString().trim().length < minLength
+      ) {
+        return `must be at least ${minLength} characters`;
+      }
+      return null;
+    };
+
     // Validate required fields
+    const errors = [];
+
     if (!data.supplierName?.trim()) {
-      return NextResponse.json(
-        {
-          error: "Supplier name is required",
-          details: "Missing required field",
-        },
-        { status: 400 }
-      );
+      errors.push("Supplier name is required");
+    } else {
+      const nameError = validateField("supplierName", data.supplierName, 2);
+      if (nameError) errors.push(`Supplier name ${nameError}`);
     }
 
-    // Validate supplier name length
-    if (data.supplierName.trim().length < 2) {
-      return NextResponse.json(
-        {
-          error: "Supplier name must be at least 2 characters",
-          details: "Invalid supplier name",
-        },
-        { status: 400 }
-      );
+    if (data.supplierType) {
+      const typeError = validateField("supplierType", data.supplierType, 2);
+      if (typeError) errors.push(`Supplier type ${typeError}`);
     }
 
-    // Validate supplier type if provided
-    if (data.supplierType && data.supplierType.trim().length < 2) {
-      return NextResponse.json(
-        {
-          error: "Supplier type must be at least 2 characters if provided",
-          details: "Invalid supplier type",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Check if phone number is provided and validate format
     if (data.supplierNumber) {
       const phoneRegex = /^[0-9]{10}$/;
       if (!phoneRegex.test(data.supplierNumber.trim())) {
-        return NextResponse.json(
-          {
-            error: "Phone number must be a valid 10-digit number",
-            details: "Invalid phone number format",
-          },
-          { status: 400 }
-        );
-      }
+        errors.push("Phone number must be a valid 10-digit number");
+      } else {
+        // Check for duplicate phone number
+        const existingSupplier = await db
+          .collection("suppliers")
+          .findOne({ supplierNumber: data.supplierNumber.trim() });
 
-      // Check if supplier with same number already exists only if number is provided
-      const existingSupplier = await db
-        .collection("suppliers")
-        .findOne({ supplierNumber: data.supplierNumber });
-
-      if (existingSupplier) {
-        return NextResponse.json(
-          {
-            error: "Supplier with this phone number already exists",
-            details: "Duplicate phone number",
-          },
-          { status: 409 }
-        );
+        if (existingSupplier) {
+          errors.push("Supplier with this phone number already exists");
+        }
       }
     }
 
-    // Validate address if provided
-    if (data.supplierAddress && data.supplierAddress.trim().length < 5) {
+    if (data.supplierAddress) {
+      const addressError = validateField(
+        "supplierAddress",
+        data.supplierAddress,
+        5
+      );
+      if (addressError) errors.push(`Address ${addressError}`);
+    }
+
+    if (errors.length > 0) {
       return NextResponse.json(
         {
-          error: "Address must be at least 5 characters if provided",
-          details: "Invalid address",
+          error: "Validation failed",
+          details: errors,
         },
         { status: 400 }
       );
     }
 
-    // Add timestamp
+    // Prepare supplier data
     const supplierData = {
       supplierName: data.supplierName.trim(),
       supplierType: data.supplierType?.trim() || "",
@@ -205,11 +218,16 @@ export async function PUT(request) {
       );
     }
 
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid supplier ID format" },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
     const data = await request.json();
-
-    // Remove _id from update data if present
-    delete data._id;
 
     // Check if supplier exists
     const existingSupplier = await db
@@ -223,104 +241,75 @@ export async function PUT(request) {
       );
     }
 
-    // Validate supplier name if provided
+    // Prepare update data with validation
+    const updateData = { updatedAt: new Date() };
+    const errors = [];
+
+    // Validate and add fields that are being updated
     if (data.supplierName !== undefined) {
       if (!data.supplierName.trim()) {
-        return NextResponse.json(
-          {
-            error: "Supplier name is required",
-            details: "Missing required field",
-          },
-          { status: 400 }
-        );
-      }
-
-      // Validate supplier name length
-      if (data.supplierName.trim().length < 2) {
-        return NextResponse.json(
-          {
-            error: "Supplier name must be at least 2 characters",
-            details: "Invalid supplier name",
-          },
-          { status: 400 }
-        );
+        errors.push("Supplier name is required");
+      } else if (data.supplierName.trim().length < 2) {
+        errors.push("Supplier name must be at least 2 characters");
+      } else {
+        updateData.supplierName = data.supplierName.trim();
       }
     }
 
-    // Validate supplier type if provided
-    if (data.supplierType !== undefined && data.supplierType.trim()) {
-      if (data.supplierType.trim().length < 2) {
-        return NextResponse.json(
-          {
-            error: "Supplier type must be at least 2 characters if provided",
-            details: "Invalid supplier type",
-          },
-          { status: 400 }
-        );
+    if (data.supplierType !== undefined) {
+      if (data.supplierType.trim() && data.supplierType.trim().length < 2) {
+        errors.push("Supplier type must be at least 2 characters if provided");
+      } else {
+        updateData.supplierType = data.supplierType.trim() || "";
       }
     }
 
-    // Validate phone number if provided
-    if (data.supplierNumber !== undefined && data.supplierNumber.trim()) {
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(data.supplierNumber.trim())) {
-        return NextResponse.json(
-          {
-            error: "Phone number must be a valid 10-digit number",
-            details: "Invalid phone number format",
-          },
-          { status: 400 }
-        );
-      }
+    if (data.supplierNumber !== undefined) {
+      if (data.supplierNumber.trim()) {
+        const phoneRegex = /^[0-9]{10}$/;
+        if (!phoneRegex.test(data.supplierNumber.trim())) {
+          errors.push("Phone number must be a valid 10-digit number");
+        } else if (data.supplierNumber !== existingSupplier.supplierNumber) {
+          // Check for duplicate only if number is changing
+          const duplicateSupplier = await db.collection("suppliers").findOne({
+            supplierNumber: data.supplierNumber.trim(),
+            _id: { $ne: new ObjectId(id) },
+          });
 
-      // Check for duplicate phone number only if number is being updated and provided
-      if (data.supplierNumber !== existingSupplier.supplierNumber) {
-        const duplicateSupplier = await db.collection("suppliers").findOne({
-          supplierNumber: data.supplierNumber,
-          _id: { $ne: new ObjectId(id) },
-        });
-
-        if (duplicateSupplier) {
-          return NextResponse.json(
-            {
-              error: "Another supplier with this phone number already exists",
-            },
-            { status: 409 }
-          );
+          if (duplicateSupplier) {
+            errors.push(
+              "Another supplier with this phone number already exists"
+            );
+          }
         }
+        updateData.supplierNumber = data.supplierNumber.trim();
+      } else {
+        updateData.supplierNumber = "";
       }
     }
 
-    // Validate address if provided
-    if (data.supplierAddress !== undefined && data.supplierAddress.trim()) {
-      if (data.supplierAddress.trim().length < 5) {
-        return NextResponse.json(
-          {
-            error: "Address must be at least 5 characters if provided",
-            details: "Invalid address",
-          },
-          { status: 400 }
-        );
+    if (data.supplierAddress !== undefined) {
+      if (
+        data.supplierAddress.trim() &&
+        data.supplierAddress.trim().length < 5
+      ) {
+        errors.push("Address must be at least 5 characters if provided");
+      } else {
+        updateData.supplierAddress = data.supplierAddress.trim() || "";
       }
     }
 
-    // Prepare update data
-    const updateData = {
-      ...(data.supplierName !== undefined && {
-        supplierName: data.supplierName.trim(),
-      }),
-      ...(data.supplierType !== undefined && {
-        supplierType: data.supplierType.trim() || "",
-      }),
-      ...(data.supplierNumber !== undefined && {
-        supplierNumber: data.supplierNumber.trim() || "",
-      }),
-      ...(data.supplierAddress !== undefined && {
-        supplierAddress: data.supplierAddress.trim() || "",
-      }),
-      updatedAt: new Date(),
-    };
+    if (errors.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Validation failed",
+          details: errors,
+        },
+        { status: 400 }
+      );
+    }
 
+    // Update supplier
     const result = await db
       .collection("suppliers")
       .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
@@ -332,7 +321,7 @@ export async function PUT(request) {
       );
     }
 
-    // Fetch updated supplier
+    // Fetch and return updated supplier
     const updatedSupplier = await db
       .collection("suppliers")
       .findOne({ _id: new ObjectId(id) });
@@ -369,8 +358,17 @@ export async function DELETE(request) {
       );
     }
 
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid supplier ID format" },
+        { status: 400 }
+      );
+    }
+
     const db = await getDatabase();
 
+    // Check if supplier exists
     const existingSupplier = await db
       .collection("suppliers")
       .findOne({ _id: new ObjectId(id) });
@@ -379,6 +377,21 @@ export async function DELETE(request) {
       return NextResponse.json(
         { error: "Supplier not found" },
         { status: 404 }
+      );
+    }
+
+    // Check if supplier has associated procurements
+    const procurementCount = await db
+      .collection("procurements")
+      .countDocuments({ supplierId: new ObjectId(id) });
+
+    if (procurementCount > 0) {
+      return NextResponse.json(
+        {
+          error: "Cannot delete supplier with existing procurements",
+          details: `Supplier has ${procurementCount} associated procurement(s)`,
+        },
+        { status: 409 }
       );
     }
 
@@ -397,6 +410,7 @@ export async function DELETE(request) {
     return NextResponse.json({
       message: "Supplier deleted successfully",
       deletedId: id,
+      deletedName: existingSupplier.supplierName,
     });
   } catch (error) {
     console.error(`${METHOD} error:`, error);

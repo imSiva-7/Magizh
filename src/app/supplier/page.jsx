@@ -619,11 +619,11 @@ export default function Supplier() {
                       <div className={styles.actionButtons}>
                         <button
                           onClick={() =>
-                            router.push(`/supplier/${item._id}/procurement`)
+                            router.push(`/supplier/procurement?supplierId=${item._id}`)
                           }
                           className={styles.procurementButton}
-                          disabled={true}
-                          // disabled={loading || deleteLoading === item._id}
+                          // disabled={true}
+                          disabled={loading || deleteLoading === item._id}
                           title="Add procurement for this supplier"
                           aria-label={`Add procurement for ${item.supplierName}`}
                         >

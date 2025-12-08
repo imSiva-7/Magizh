@@ -257,7 +257,6 @@
 }
 
 .statsCard h3::before {
-  content: "📊";
   font-size: 1.1rem;
 }
 
@@ -372,7 +371,6 @@
 }
 
 .exportBtn::before {
-  content: "📥";
   font-size: 1rem;
 }
 
@@ -432,8 +430,8 @@
 .table th:nth-child(2) {
   min-width: 90px;
 }
-.table th:nth-child(12) {
-  min-width: 130px;
+.table th:nth-child(11) {
+  min-width: 140px;
 }
 
 .table tbody tr {
@@ -457,10 +455,10 @@
   color: #1e293b;
 }
 
-.table td:not(:first-child):not(:last-child):not(.batchCell) {
+/* .table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: right;
   font-variant-numeric: tabular-nums;
-}
+} */
 
 /* Loading State */
 .loading {

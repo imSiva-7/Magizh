@@ -207,7 +207,7 @@
 }
 
 .supplierBtn:hover:not(:disabled) {
-  background-color: #fc5acb;
+  background-color: #ff4444;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
@@ -253,8 +253,7 @@
 
 .tableBtn {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 9rem;
 }
 
 .refreshBtn {
@@ -339,7 +338,7 @@
 
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
-  text-align: right;
+  /* text-align: center; */
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875rem;
 }
