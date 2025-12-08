@@ -877,16 +877,18 @@ function ProcurementContent() {
                     <td className={styles.actionsCell}>
                       <button
                         onClick={() => handleEdit(item)}
-                        disabled={status.submitting || !!editingId}
+                        // disabled={status.submitting || !!editingId}
+                        disabled={true}
                         className={styles.editButton}
                       >
                         ✎
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}
-                        disabled={
-                          status.deletingId === item._id || status.submitting
-                        }
+                        // disabled={
+                        //   status.deletingId === item._id || status.submitting
+                        // }
+                        disabled={true}
                         className={styles.deleteButton}
                       >
                         {status.deletingId === item._id ? "..." : "🗑"}

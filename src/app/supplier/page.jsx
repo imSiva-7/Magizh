@@ -641,7 +641,8 @@ export default function Supplier() {
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteButton}
-                          disabled={deleteLoading === item._id || loading}
+                          // disabled={deleteLoading === item._id || loading}
+                          disabled={true}
                           title={`Delete ${item.supplierName}`}
                           aria-label={`Delete ${item.supplierName}`}
                         >
