@@ -311,7 +311,7 @@
 
 .tableContainer {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+ 
 }
 
 .table {
@@ -599,6 +599,6 @@
   
   .table th {
     background: #f1f1f1 !important;
-    -webkit-print-color-adjust: exact;
+ 
   }
 }
