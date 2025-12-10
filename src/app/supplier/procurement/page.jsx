@@ -479,18 +479,18 @@ const InputGroup = ({ label, error, ...props }) => (
   </div>
 );
 
-// --- MAIN CONTENT COMPONENT (Uses useSearchParams) ---
 function ProcurementContent() {
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const supplierId = searchParams.get("supplierId");
 
-  // Consolidated Loading State
   const [status, setStatus] = useState({
     loading: true,
     submitting: false,
     deletingId: null,
   });
+
   const [data, setData] = useState({ supplier: null, procurements: [] });
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
@@ -506,10 +506,8 @@ function ProcurementContent() {
 
   const [formData, setFormData] = useState(initialForm);
 
-  // 1. Fetch Initial Data
   useEffect(() => {
     if (!supplierId) {
-      // Small delay to ensure hydration before redirect
       const timer = setTimeout(() => {
         toast.error("No supplier selected");
         router.push("/supplier");
@@ -531,7 +529,6 @@ function ProcurementContent() {
 
         setData({
           supplier,
-          // Sort by date descending (newest first)
           procurements: Array.isArray(procurements)
             ? procurements.sort((a, b) => new Date(b.date) - new Date(a.date))
             : [],
