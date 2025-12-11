@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 // import { getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/supplier.module.css";
+import Link from "next/link";
 
 const NumberInput = ({
   label,
@@ -596,9 +597,9 @@ export default function Supplier() {
                 filteredEntries.map((item) => (
                   <tr key={item._id} className={styles.tableRow}>
                     <td className={styles.nameCell}>
-                      <span className={styles.supplierName}>
+                      <Link href={`/supplier/procurement/supplierId?=${item.supplierId}`} className={styles.supplierName}>
                         {item.supplierName || "-"}
-                      </span>
+                      </Link>
                     </td>
                     <td className={styles.typeCell}>
                       <span
@@ -617,18 +618,6 @@ export default function Supplier() {
                     </td>
                     <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
-                        <button
-                          onClick={() =>
-                            router.push(`/supplier/procurement?supplierId=${item._id}`)
-                          }
-                          className={styles.procurementButton}
-                          // disabled={true}
-                          disabled={loading || deleteLoading === item._id}
-                          title="Add procurement for this supplier"
-                          aria-label={`Add procurement for ${item.supplierName}`}
-                        >
-                          <span className={styles.buttonIcon}>➕</span>
-                        </button>
                         <button
                           onClick={() => handleEdit(item)}
                           className={styles.editButton}

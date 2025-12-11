@@ -385,7 +385,7 @@ export default function Production() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    {/* <th>Date</th> */}
+                    <th>Date</th>
                     <th>Batch</th>
                     <th>Milk (L)</th>
                     <th>Fat (%)</th>
@@ -402,7 +402,7 @@ export default function Production() {
                 <tbody>
                   {entries.map((item) => (
                     <tr key={item._id}>
-                      {/* <td>{new Date(item.date).toLocaleDateString("en-IN")}</td> */}
+                      <td>{new Date(item.date).toLocaleDateString("en-IN")}</td>
                       <td className={styles.batchCell}>{item.batch}</td>
                       <td>{formatNumber(item.milk_quantity)}</td>
                       <td>{formatNumber(item.fat_percentage)}</td>

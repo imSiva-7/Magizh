@@ -359,7 +359,7 @@ export default function History() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  {/* <th>Date</th> */}
+                  <th>Date</th>
                   <th>Batch</th>
                   <th>Milk (L)</th>
                   <th>Fat (%)</th>
@@ -376,13 +376,13 @@ export default function History() {
               <tbody>
                 {entries.map((entry) => (
                   <tr key={entry._id || entry.id} className={styles.tableRow}>
-                    {/* <td className={styles.dateCell}>
+                    <td className={styles.dateCell}>
                       {new Date(entry.date).toLocaleDateString("en-IN", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",
                       })}
-                    </td> */}
+                    </td>
                     <td className={styles.batchCell}>{entry.batch}</td>
                     <td className={styles.milkCell}>
                       {entry.milk_quantity || "-"}

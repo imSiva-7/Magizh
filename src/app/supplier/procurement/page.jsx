@@ -508,6 +508,7 @@ function ProcurementContent() {
 
   useEffect(() => {
     if (!supplierId) {
+      // want to add regular expression
       const timer = setTimeout(() => {
         toast.error("No supplier selected");
         router.push("/supplier");
@@ -522,7 +523,7 @@ function ProcurementContent() {
           fetch(`/api/supplier/procurement?supplierId=${supplierId}`),
         ]);
 
-        if (!suppRes.ok || !procRes.ok) throw new Error("Failed to load data");
+        if (!suppRes.ok || !procRes.ok) throw new Error("Failed to load data.");
 
         const supplier = await suppRes.json();
         const procurements = await procRes.json();
@@ -544,6 +545,7 @@ function ProcurementContent() {
   }, [supplierId, router]);
 
   // 2. Computed Summaries
+  // understand this, 
   const summary = useMemo(() => {
     return data.procurements.reduce(
       (acc, curr) => ({
@@ -554,13 +556,11 @@ function ProcurementContent() {
     );
   }, [data.procurements]);
 
-  // 3. Form Handling
+  // It seems e.target, gives two objects...
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const next = { ...prev, [name]: value };
-
-      // Auto-calculate Total
       if (name === "milkQuantity" || name === "rate") {
         const qty =
           parseFloat(name === "milkQuantity" ? value : prev.milkQuantity) || 0;
@@ -569,7 +569,6 @@ function ProcurementContent() {
       }
       return next;
     });
-    // Clear error on type
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
