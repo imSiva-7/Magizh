@@ -324,7 +324,7 @@ export default function Production() {
                 className={styles.supplierBtn}
                 onClick={() =>
                   router.push(
-                    "https://magizhdairy.vercel.app/supplier"
+                    "/supplier"
                   )
                 }
               >
@@ -369,7 +369,7 @@ export default function Production() {
                 className={styles.infoBtn}
                 onClick={() =>
                   router.push(
-                    "https://magizhdairy.vercel.app/productions/history"
+                    "/productions/history"
                   )
                 }
               >

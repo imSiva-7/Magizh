@@ -480,7 +480,6 @@ const InputGroup = ({ label, error, ...props }) => (
 );
 
 function ProcurementContent() {
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const supplierId = searchParams.get("supplierId");
@@ -545,7 +544,7 @@ function ProcurementContent() {
   }, [supplierId, router]);
 
   // 2. Computed Summaries
-  // understand this, 
+  // understand this,
   const summary = useMemo(() => {
     return data.procurements.reduce(
       (acc, curr) => ({
@@ -695,7 +694,10 @@ function ProcurementContent() {
   if (!data.supplier)
     return (
       <div className={styles.errorState}>
-        Supplier not found <button onClick={() => router.back()}>Back</button>
+        Supplier not found{" "}
+        <button className={styles.backButtonNoId} onClick={() => router.back()}>
+          Back
+        </button>
       </div>
     );
 
@@ -719,12 +721,20 @@ function ProcurementContent() {
             </span>
           </h1>
           <p>
-            {data.supplier.supplierNumber} | {data.supplier.supplierAddress}
+            {data.supplier.supplierNumber
+              ? `${data.supplier.supplierNumber} `
+              : ""}{" "}
+            {data.supplier.supplierAddress
+              ? data.supplier.supplierNumber
+                ? `| ${data.supplier.supplierAddress}`
+                : `${data.supplier.supplierAddress}`
+              : ""}
           </p>
         </div>
       </div>
 
       {/* Summary */}
+      {/* add filter here! */}
       {data.procurements.length > 0 && (
         <div className={styles.summaryCard}>
           <div className={styles.summaryGrid}>
@@ -768,6 +778,7 @@ function ProcurementContent() {
               label="Milk (L)"
               name="milkQuantity"
               type="number"
+              placeholder="100"
               value={formData.milkQuantity}
               onChange={handleInputChange}
               error={errors.milkQuantity}
@@ -778,6 +789,7 @@ function ProcurementContent() {
               label="Fat %"
               name="fatPercentage"
               type="number"
+              placeholder="2.5"
               value={formData.fatPercentage}
               onChange={handleInputChange}
               step="0.1"
@@ -786,6 +798,7 @@ function ProcurementContent() {
               label="SNF %"
               name="snfPercentage"
               type="number"
+              placeholder="8.1"
               value={formData.snfPercentage}
               onChange={handleInputChange}
               step="0.1"
@@ -794,6 +807,7 @@ function ProcurementContent() {
               label="Rate (₹/L)"
               name="rate"
               type="number"
+              placeholder="35"
               value={formData.rate}
               onChange={handleInputChange}
               error={errors.rate}
@@ -805,6 +819,7 @@ function ProcurementContent() {
               <input
                 value={formData.totalAmount}
                 readOnly
+                placeholder="Auto Generated"
                 className={`${styles.input} ${styles.readOnlyInput}`}
               />
             </div>

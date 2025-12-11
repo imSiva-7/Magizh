@@ -597,7 +597,10 @@ export default function Supplier() {
                 filteredEntries.map((item) => (
                   <tr key={item._id} className={styles.tableRow}>
                     <td className={styles.nameCell}>
-                      <Link href={`/supplier/procurement/supplierId?=${item.supplierId}`} className={styles.supplierName}>
+                      <Link
+                        href={`/supplier/procurement?supplierId=${item._id}`}
+                        className={styles.supplierName}
+                      >
                         {item.supplierName || "-"}
                       </Link>
                     </td>

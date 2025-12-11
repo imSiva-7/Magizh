@@ -3,7 +3,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8fafc;
   min-height: 100vh;
 }
@@ -82,7 +82,7 @@
 }
 
 .headerTitle p::before {
-  content: "📱";
+  content: "";
   font-size: 0.9rem;
 }
 
@@ -194,7 +194,8 @@
 }
 
 .input {
-  /* width: 100%; */
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.875rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
@@ -203,6 +204,7 @@
   background: white;
   transition: all 0.2s ease;
   font-family: inherit;
+  cursor: pointer;
 }
 
 .input:focus {
@@ -311,7 +313,6 @@
 
 .tableContainer {
   overflow-x: auto;
- 
 }
 
 .table {
@@ -357,31 +358,36 @@
   vertical-align: middle;
 }
 
-.table td:nth-child(1) { /* Date */
+.table td:nth-child(1) {
+  /* Date */
   min-width: 100px;
   font-weight: 500;
 }
 
-.table td:nth-child(2) { /* Milk */
+.table td:nth-child(2) {
+  /* Milk */
   min-width: 80px;
   font-variant-numeric: tabular-nums;
 }
 
 .table td:nth-child(3),
-.table td:nth-child(4) { /* Fat, SNF */
+.table td:nth-child(4) {
+  /* Fat, SNF */
   min-width: 70px;
   text-align: center;
   color: #64748b;
 }
 
-.table td:nth-child(5) { /* Rate */
+.table td:nth-child(5) {
+  /* Rate */
   min-width: 90px;
   font-variant-numeric: tabular-nums;
   color: #059669;
   font-weight: 500;
 }
 
-.table td:nth-child(6) { /* Total */
+.table td:nth-child(6) {
+  /* Total */
   min-width: 110px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
@@ -405,6 +411,25 @@
   margin: 0 0.25rem;
   min-width: 36px;
   min-height: 36px;
+}
+
+.backButtonNoId {
+  display: flex;
+  justify-self: center;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 10px;
+  min-width: 36px;
+  min-height: 36px;
+}
+.backButtonNoId {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
 }
 
 .editButton {
@@ -504,28 +529,28 @@
   .container {
     padding: 1.5rem;
   }
-  
+
   .header {
     flex-direction: row;
     align-items: flex-start;
   }
-  
+
   .headerTitle h1 {
     font-size: 2rem;
   }
-  
+
   .summaryGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .formGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .formActions {
     justify-content: flex-start;
   }
-  
+
   .submitButton,
   .resetButton {
     width: auto;
@@ -538,23 +563,23 @@
   .container {
     padding: 2rem;
   }
-  
+
   .headerTitle h1 {
     font-size: 2.25rem;
   }
-  
+
   .summaryGrid {
     grid-template-columns: repeat(4, 1fr);
   }
-  
+
   .formGrid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .table td:nth-child(1) {
     min-width: 120px;
   }
-  
+
   .table td:nth-child(2) {
     min-width: 100px;
   }
@@ -565,15 +590,15 @@
   .formGrid {
     grid-template-columns: repeat(6, 1fr);
   }
-  
+
   .summaryItem {
     padding: 1.5rem;
   }
-  
+
   .summaryLabel {
     font-size: 0.9rem;
   }
-  
+
   .summaryValue {
     font-size: 1.75rem;
   }
@@ -586,19 +611,18 @@
   .actionsCell {
     display: none;
   }
-  
+
   .container {
     padding: 0;
     background: white;
   }
-  
+
   .procurementsSection {
     box-shadow: none;
     border: 1px solid #ddd;
   }
-  
+
   .table th {
     background: #f1f1f1 !important;
- 
   }
 }
