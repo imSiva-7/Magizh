@@ -33,7 +33,7 @@ export async function GET(request) {
     const db = client.db("production");
 
     console.log("Querying procurements for supplier:", supplierId);
-    
+
     const procurements = await db
       .collection("procurements")
       .find({ supplierId: new ObjectId(supplierId) })
@@ -41,14 +41,15 @@ export async function GET(request) {
       .toArray();
 
     console.log(`Found ${procurements.length} procurements`);
-    
+
     return NextResponse.json(procurements);
   } catch (error) {
     console.error("GET /api/procurement error:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch procurements",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined 
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
     );
@@ -64,14 +65,14 @@ export async function POST(request) {
     console.log("POST Procurement - Received data:", data);
 
     // Validate required fields
-    const requiredFields = ['supplierId', 'date', 'milkQuantity', 'rate'];
-    const missingFields = requiredFields.filter(field => !data[field]);
-    
+    const requiredFields = ["supplierId", "date", "milkQuantity", "rate"];
+    const missingFields = requiredFields.filter((field) => !data[field]);
+
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
+        {
           error: "Missing required fields",
-          details: `Required: ${missingFields.join(', ')}`
+          details: `Required: ${missingFields.join(", ")}`,
         },
         { status: 400 }
       );
@@ -88,14 +89,14 @@ export async function POST(request) {
     // Validate numeric fields
     const milkQty = parseFloat(data.milkQuantity);
     const rate = parseFloat(data.rate);
-    
+
     if (isNaN(milkQty) || milkQty <= 0) {
       return NextResponse.json(
         { error: "Milk quantity must be a positive number" },
         { status: 400 }
       );
     }
-    
+
     if (isNaN(rate) || rate <= 0) {
       return NextResponse.json(
         { error: "Rate must be a positive number" },
@@ -104,14 +105,22 @@ export async function POST(request) {
     }
 
     // Validate percentages if provided
-    if (data.fatPercentage && (parseFloat(data.fatPercentage) < 0 || parseFloat(data.fatPercentage) > 100)) {
+    if (
+      data.fatPercentage &&
+      (parseFloat(data.fatPercentage) < 0 ||
+        parseFloat(data.fatPercentage) > 100)
+    ) {
       return NextResponse.json(
         { error: "Fat percentage must be between 0 and 100" },
         { status: 400 }
       );
     }
-    
-    if (data.snfPercentage && (parseFloat(data.snfPercentage) < 0 || parseFloat(data.snfPercentage) > 100)) {
+
+    if (
+      data.snfPercentage &&
+      (parseFloat(data.snfPercentage) < 0 ||
+        parseFloat(data.snfPercentage) > 100)
+    ) {
       return NextResponse.json(
         { error: "SNF percentage must be between 0 and 100" },
         { status: 400 }
@@ -135,13 +144,18 @@ export async function POST(request) {
     };
 
     console.log("Procurement data to insert:", procurementData);
-    console.log("Date type:", typeof procurementData.date, "Value:", procurementData.date);
+    console.log(
+      "Date type:",
+      typeof procurementData.date,
+      "Value:",
+      procurementData.date
+    );
 
     // Check if supplier exists
     const supplier = await db
       .collection("suppliers")
       .findOne({ _id: new ObjectId(data.supplierId) });
-    
+
     if (!supplier) {
       return NextResponse.json(
         { error: "Supplier not found" },
@@ -150,18 +164,20 @@ export async function POST(request) {
     }
 
     // Insert the procurement
-    const result = await db.collection("procurements").insertOne(procurementData);
-    
+    const result = await db
+      .collection("procurements")
+      .insertOne(procurementData);
+
     console.log("Insert result:", result);
 
     // Optional: Update supplier's last procurement date
     await db.collection("suppliers").updateOne(
       { _id: new ObjectId(data.supplierId) },
-      { 
-        $set: { 
+      {
+        $set: {
           lastProcurementDate: procurementData.date,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       }
     );
 
@@ -177,11 +193,81 @@ export async function POST(request) {
     console.error("POST /api/procurement error:", error);
     console.error("Error stack:", error.stack);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to add procurement",
-        details: process.env.NODE_ENV === "development" ? error.message : undefined 
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
       { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const procurementId = searchParams.get("procurementId");
+
+    const client = await clientPromise;
+    const db = client.db("production");
+    // const db = await clientPromise();
+
+    if (!procurementId) {
+      return NextResponse.json(
+        {
+          error: "Missing Supplier Id",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (!ObjectId.isValid(procurementId)) {
+      return NextResponse.json(
+        {
+          error: "Missing Supplier Id",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // const data = db.collection("procurement").deleteOne({supplierId: supplierId})
+    const result = db
+      .collection("procurements")
+      .deleteOne({ _id: new ObjectId(procurementId) });
+
+    if (result.deleteCount === 0) {
+      return NextResponse.json(
+        {
+          error: "Nothing Deleted",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        message: "Deleted",
+      },
+      {
+        status: 200,
+      }
+    );
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to delete supplier",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

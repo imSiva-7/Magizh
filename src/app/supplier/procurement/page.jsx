@@ -458,7 +458,6 @@ import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/procurement.module.css";
 import { getTodayDate } from "@/utils/dateUtils";
 
-// --- Sub-components (Keep these outside the main function) ---
 const SummaryItem = ({ label, value }) => (
   <div className={styles.summaryItem}>
     <span className={styles.summaryLabel}>{label}</span>
@@ -642,7 +641,7 @@ function ProcurementContent() {
 
     setStatus((prev) => ({ ...prev, deletingId: id }));
     try {
-      const res = await fetch(`/api/supplier/procurement?id=${id}`, {
+      const res = await fetch(`/api/supplier/procurement?procurementId=${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Delete failed");
@@ -711,7 +710,7 @@ function ProcurementContent() {
           onClick={() => router.push("/supplier")}
           className={styles.backButton}
         >
-          ← Back
+          Back
         </button>
         <div className={styles.headerTitle}>
           <h1>
@@ -896,10 +895,10 @@ function ProcurementContent() {
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}
-                        // disabled={
-                        //   status.deletingId === item._id || status.submitting
-                        // }
-                        disabled={true}
+                        disabled={
+                          status.deletingId === item._id || status.submitting
+                        }
+                        // disabled={true}
                         className={styles.deleteButton}
                       >
                         {status.deletingId === item._id ? "..." : "🗑"}
