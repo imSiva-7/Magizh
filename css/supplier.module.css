@@ -388,30 +388,25 @@
 }
 
 .supplierName {
-  color: #0a84ff;           
+  color: #f0f0f0;
+  background-color: dodgerblue;
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
-
-  padding: 4px 8px;        
+  padding: 8px 15px;
   border-radius: 6px;
-
-  transition: 
-    background-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: 0.2s ease;
 }
 
 .supplierName:hover {
-  background-color: #eaf4ff;     
-  color: #0066cc;                
+  background-color: #eaf4ff;
+  color: #0066cc;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .supplierName:active {
-  transform: scale(0.97);        
+  transform: scale(0.97);
 }
-
 
 .supplierTable thead {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);

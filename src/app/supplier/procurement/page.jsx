@@ -487,7 +487,7 @@ function ProcurementContent() {
     loading: true,
     submitting: false,
     deletingId: null,
-  });
+  }); 
 
   const [data, setData] = useState({ supplier: null, procurements: [] });
   const [editingId, setEditingId] = useState(null);
@@ -495,6 +495,7 @@ function ProcurementContent() {
 
   const initialForm = {
     date: getTodayDate(),
+    period: "",
     milkQuantity: "",
     fatPercentage: "",
     snfPercentage: "",

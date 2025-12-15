@@ -8,7 +8,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import styles from "@/css/supplier.module.css";
 import Link from "next/link";
 
-const NumberInput = ({
+const FormInput = ({
   label,
   type = "text",
   value,
@@ -64,6 +64,7 @@ export default function Supplier() {
     () => ({
       supplierId: null,
       supplierName: "",
+      supplierTotalSolids: "",
       supplierType: "",
       supplierNumber: "",
       supplierAddress: "",
@@ -385,7 +386,7 @@ export default function Supplier() {
             <h2>{isEditing ? "Edit Supplier" : "Create New Supplier"}</h2>
           </div>
           <div className={styles.formGrid}>
-            <NumberInput
+            <FormInput
               label="Supplier Name"
               type="text"
               value={formData.supplierName}
@@ -396,6 +397,17 @@ export default function Supplier() {
               disabled={isSubmitting}
               autoFocus
             />
+             {/* <FormInput
+              label="Total Solids Number"
+              type="text"
+              value={formData.supplierName}
+              onChange={(value) => handleInputChange("supplierName", value)}
+              placeholder="Enter supplier name"
+              error={formErrors.supplierName}
+              required
+              disabled={isSubmitting}
+              autoFocus
+            /> */}
 
             <div className={styles.inputGroup}>
               <label>
@@ -426,7 +438,7 @@ export default function Supplier() {
               )}
             </div>
 
-            <NumberInput
+            <FormInput
               label="Phone Number"
               type="tel"
               value={formData.supplierNumber}
@@ -436,7 +448,7 @@ export default function Supplier() {
               disabled={isSubmitting}
             />
 
-            <NumberInput
+            <FormInput
               label="Address"
               type="text"
               value={formData.supplierAddress}
@@ -628,7 +640,7 @@ export default function Supplier() {
                           title={`Edit ${item.supplierName}`}
                           aria-label={`Edit ${item.supplierName}`}
                         >
-                          <span className={styles.buttonIcon}>✏️</span>
+                          <span className={styles.buttonIcon}>Edit</span>
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}
@@ -644,7 +656,7 @@ export default function Supplier() {
                             </>
                           ) : (
                             <>
-                              <span className={styles.buttonIcon}>🗑️</span>
+                              <span className={styles.buttonIcon}>Delete</span>
                             </>
                           )}
                         </button>

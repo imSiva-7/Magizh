@@ -318,7 +318,7 @@ export default function Production() {
         </div>
 
         <div className={styles.buttonGroup}>
-          <button
+          {/* <button
                 type="button"
                 disabled={!batchNo || isSubmitting}
                 className={styles.supplierBtn}
@@ -329,7 +329,7 @@ export default function Production() {
                 }
               >
                Suppliers
-              </button>
+              </button> */}
           <button
             type="button"
             onClick={() => setFormData(initialFormState)}
