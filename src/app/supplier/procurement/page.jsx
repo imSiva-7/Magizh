@@ -487,7 +487,7 @@ function ProcurementContent() {
     loading: true,
     submitting: false,
     deletingId: null,
-  }); 
+  });
 
   const [data, setData] = useState({ supplier: null, procurements: [] });
   const [editingId, setEditingId] = useState(null);
@@ -611,7 +611,7 @@ function ProcurementContent() {
 
       toast.success(editingId ? "Updated successfully" : "Added successfully");
 
-      // Update local state without refetching to save bandwidth
+      // understand this siva,
       setData((prev) => {
         let newProcs = [...prev.procurements];
         if (editingId) {
@@ -656,10 +656,22 @@ function ProcurementContent() {
       toast.error(err.message);
     } finally {
       setStatus((prev) => ({ ...prev, deletingId: null }));
+
+      if (editingId && editingId == id) {
+        setFormData(initialForm);
+        setEditingId(null);
+        setErrors({});
+      }
     }
   };
 
   const handleEdit = (item) => {
+    if (editingId) {
+      setFormData(initialForm);
+      setEditingId(null);
+      setErrors({});
+      return;
+    }
     setEditingId(item._id);
     setFormData({
       date: item.date.split("T")[0],
@@ -888,11 +900,18 @@ function ProcurementContent() {
                     <td className={styles.actionsCell}>
                       <button
                         onClick={() => handleEdit(item)}
-                        // disabled={status.submitting || !!editingId}
+                        // disabled={
+                        //   status.submitting ||
+                        //   (editingId && editingId !== item._id)
+                        // }
                         disabled={true}
                         className={styles.editButton}
                       >
-                        ✎
+                        {editingId
+                          ? editingId == item._id
+                            ? "Cancel"
+                            : "Edit"
+                          : "Edit"}
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}

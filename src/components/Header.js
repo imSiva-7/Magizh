@@ -14,7 +14,6 @@ export default function Header() {
     { name: "Production", path: "/productions", icon: "" },
     { name: "History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
-    // { name: "Procurement", path: "/procurement", icon: "" },
   ];
 
   const isActive = (path) => {
@@ -35,7 +34,6 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
-        {/* Logo Section */}
         <div
           className={styles.logoSection}
           onClick={() => router.push("/productions")}
@@ -54,7 +52,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Desktop Navigation */}
         <nav className={styles.desktopNav}>
           <ul className={styles.navList}>
             {navItems.map((item) => (
@@ -66,7 +63,6 @@ export default function Header() {
                   }`}
                   aria-label={`Go to ${item.name}`}
                 >
-                  <span className={styles.navIcon}>{item.icon}</span>
                   <span className={styles.navText}>{item.name}</span>
                 </button>
               </li>
@@ -74,13 +70,7 @@ export default function Header() {
           </ul>
         </nav>
 
-        {/* Current Page & Mobile Menu Toggle */}
         <div className={styles.headerRight}>
-          <div className={styles.currentPage}>
-            {/* <span className={styles.currentPageIcon}>📍</span>
-            <span className={styles.currentPageText}>{currentPage}</span> */}
-          </div>
-
           <button
             className={styles.mobileMenuButton}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

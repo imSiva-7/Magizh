@@ -165,7 +165,7 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background-color: rgb(137, 235, 202);
+  background-color: rgb(39, 121, 93);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }

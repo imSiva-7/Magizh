@@ -64,7 +64,6 @@ export default function Supplier() {
     () => ({
       supplierId: null,
       supplierName: "",
-      supplierTotalSolids: "",
       supplierType: "",
       supplierNumber: "",
       supplierAddress: "",
@@ -646,12 +645,16 @@ export default function Supplier() {
                         <button
                           onClick={() => handleEdit(item)}
                           className={styles.editButton}
-                          disabled={loading || deleteLoading === item._id}
+                          disabled={loading || deleteLoading === item._id || (isEditing && formData.supplierId !== item._id)}
                           title={`Edit ${item.supplierName}`}
                           aria-label={`Edit ${item.supplierName}`}
                         >
                           <span className={styles.buttonIcon}>
-                            {isEditing ? "Cancel" : "Edit"}
+                            {isEditing
+                              ? formData.supplierId == item._id
+                                ? "Cancel"
+                                : "Edit"
+                              : "Edit"}
                           </span>
                         </button>
                         <button
