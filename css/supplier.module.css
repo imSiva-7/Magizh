@@ -23,7 +23,7 @@
 }
 
 .headerContent h1 {
-  color: #1e293b;
+  color: rgb(39, 121, 93);
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
@@ -80,7 +80,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -239,7 +239,7 @@
 
 .input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -277,7 +277,7 @@
 
 .selectInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -296,7 +296,7 @@
 .submitButton {
   flex: 1;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   color: white;
   border: none;
   border-radius: 8px;
@@ -326,7 +326,7 @@
 .cancelButton {
   flex: 1;
   padding: 0.875rem 1.5rem;
-  background: #64748b;
+  background: #5477a7;
   color: white;
   border: none;
   border-radius: 8px;
@@ -389,7 +389,7 @@
 
 .supplierName {
   color: #f0f0f0;
-  background-color: dodgerblue;
+  background-color: rgb(39, 121, 93);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -400,7 +400,7 @@
 
 .supplierName:hover {
   background-color: #eaf4ff;
-  color: #0066cc;
+  color: rgb(39, 121, 93);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
@@ -621,7 +621,7 @@
 
 .createEmptyButton {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   color: white;
   border: none;
   border-radius: 8px;
@@ -640,7 +640,7 @@
 .clearSearchLink {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: rgb(39, 121, 93);
   cursor: pointer;
   font-size: 0.875rem;
   text-decoration: underline;
@@ -649,7 +649,7 @@
 }
 
 .clearSearchLink:hover {
-  color: #1d4ed8;
+  color: rgb(39, 121, 93);
 }
 
 /* History Button */

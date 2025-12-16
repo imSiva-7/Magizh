@@ -19,7 +19,7 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
+  background: rgb(39, 121, 93);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -99,7 +99,7 @@
 
 .input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -159,13 +159,13 @@
 }
 
 .submitBtn {
-  background-color: #3b82f6;
+  background-color: rgb(39, 121, 93);
   color: white;
   min-width: 180px;
 }
 
 .submitBtn:hover:not(:disabled) {
-  background-color: #2563eb;
+  background-color: rgb(137, 235, 202);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
@@ -189,13 +189,13 @@
 }
 
 .infoBtn {
-  background-color: #4b8442;
+  background-color: rgb(39, 121, 93);
   color: white;
   min-width: 180px;
 }
 
 .infoBtn:hover:not(:disabled) {
-  background-color: #376e43;
+  background-color:rgb(140, 224, 196);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
@@ -253,7 +253,6 @@
 
 .tableBtn {
   display: flex;
-  gap: 9rem;
 }
 
 .refreshBtn {
@@ -332,7 +331,7 @@
 .batchCell {
   /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
   font-weight: 600;
-  color: #3b82f6;
+  color: rgb(39, 121, 93);
   letter-spacing: 0.5px;
 }
 

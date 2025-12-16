@@ -38,7 +38,10 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.headerContainer}>
         {/* Logo Section */}
-        <div className={styles.logoSection} onClick={() => router.push("/")}>
+        <div
+          className={styles.logoSection}
+          onClick={() => router.push("/productions")}
+        >
           <div className={styles.logo}>
             <div className={styles.logoImage}>
               <Image

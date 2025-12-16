@@ -18,7 +18,7 @@
 }
 
 .header h1 {
-  color: #1e293b;
+  color: rgb(39, 121, 93);
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0;
@@ -126,11 +126,11 @@
 }
 
 .dateField label[for="fromDate"]::before {
-  content: "📅";
+  content: "";
 }
 
 .dateField label[for="toDate"]::before {
-  content: "📅";
+  content: "";
 }
 
 .dateInput {
@@ -153,7 +153,7 @@
 
 .dateInput:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
@@ -201,7 +201,7 @@
 }
 
 .primaryBtn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   color: white;
   box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
 }
@@ -219,7 +219,7 @@
 }
 
 .secondaryBtn {
-  background: #64748b;
+  background: #5583c4;
   color: white;
   box-shadow: 0 4px 6px rgba(100, 116, 139, 0.2);
 }
@@ -281,7 +281,7 @@
 
 .statItem:hover {
   transform: translateY(-2px);
-  border-color: #3b82f6;
+  border-color: rgb(39, 121, 93);
   box-shadow: 0 6px 12px rgba(59, 130, 246, 0.15);
 }
 
@@ -292,7 +292,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -454,6 +454,13 @@
 .table td:first-child {
   font-weight: 500;
   color: #1e293b;
+}
+
+.batchCell {
+  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
+  font-weight: 600;
+  color: rgb(39, 121, 93);
+  letter-spacing: 0.5px;
 }
 
 /* .table td:not(:first-child):not(:last-child):not(.batchCell) {

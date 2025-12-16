@@ -380,7 +380,6 @@ export default function Production() {
               </button>
               </span>
             </div>
-
             <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>
