@@ -1,7 +1,7 @@
 /* footer.module.css */
 .footer {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #cbd5e1;
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  color: #000000;
   border-top: 1px solid #334155;
   margin-top: auto;
 }
@@ -19,7 +19,7 @@
   gap: 2rem;
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid #e1e1e1;
 }
 
 .footerSection {
@@ -49,8 +49,8 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
-  color: white;
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: rgb(255, 255, 255);
+  background: rgb(39, 121, 93);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -90,8 +90,8 @@
 .sectionTitle {
   font-size: 1.1rem;
   font-weight: 600;
-  color: white;
-  margin: 0 0 1rem 0;
+  color: rgb(0, 0, 0);
+  margin: 0 0 0.5rem 0;
   position: relative;
   padding-bottom: 0.5rem;
 }
@@ -103,7 +103,7 @@
   left: 0;
   width: 40px;
   height: 3px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   border-radius: 2px;
 }
 
@@ -117,7 +117,7 @@
 }
 
 .footerLink {
-  color: #cbd5e1;
+  color: #010101;
   text-decoration: none;
   font-size: 0.95rem;
   transition: all 0.3s ease;
@@ -132,12 +132,12 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: rgb(39, 121, 93);
   transition: width 0.3s ease;
 }
 
 .footerLink:hover {
-  color: white;
+  color: rgb(79, 79, 79);
   transform: translateX(5px);
 }
 
@@ -165,8 +165,8 @@
 }
 
 .statItem:hover {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: #3b82f6;
+  background: rgba(248, 248, 248, 0.1);
+  border-color: rgb(39, 121, 93);
   transform: translateY(-2px);
 }
 
@@ -205,8 +205,8 @@
 }
 
 .version {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgb(39, 121, 93);
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.8rem;
@@ -224,7 +224,7 @@
 
 .techItem {
   padding: 0.25rem 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(206, 206, 206, 0.05);
   border-radius: 12px;
   border: 1px solid #334155;
 }
