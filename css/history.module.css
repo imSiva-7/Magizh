@@ -134,8 +134,8 @@
 }
 
 .dateInput {
-   width: 100%; 
-   box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
   padding: 0.875rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
@@ -429,11 +429,11 @@
 }
 
 .table th:nth-child(2) {
+  min-width: 110px;
+}
+/* .table th:nth-child(11) {
   min-width: 90px;
-}
-.table th:nth-child(11) {
-  min-width: 140px;
-}
+} */
 
 .table tbody tr {
   border-bottom: 1px solid #f1f5f9;

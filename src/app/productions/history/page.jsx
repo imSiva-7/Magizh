@@ -114,20 +114,22 @@ export default function History() {
       "Created At",
     ];
 
-    const csvRows = entries.reverse().map((entry) => [
-      entry.date,
-      entry.batch,
-      entry.milk_quantity || "0",
-      entry.fat_percentage || "0",
-      entry.snf_percentage || "0",
-      entry.curd_quantity || "0",
-      entry.premium_paneer_quantity || "0",
-      entry.soft_paneer_quantity || "0",
-      entry.butter_quantity || "0",
-      entry.cream_quantity || "0",
-      entry.ghee_quantity || "0",
-      new Date(entry.createdAt).toLocaleString("en-IN"),
-    ]);
+    const csvRows = entries
+      .reverse()
+      .map((entry) => [
+        entry.date,
+        entry.batch,
+        entry.milk_quantity || "0",
+        entry.fat_percentage || "0",
+        entry.snf_percentage || "0",
+        entry.curd_quantity || "0",
+        entry.premium_paneer_quantity || "0",
+        entry.soft_paneer_quantity || "0",
+        entry.butter_quantity || "0",
+        entry.cream_quantity || "0",
+        entry.ghee_quantity || "0",
+        new Date(entry.createdAt).toLocaleString("en-IN"),
+      ]);
 
     // Add total row
     csvRows.push([
@@ -412,10 +414,12 @@ export default function History() {
                       {entry.ghee_quantity || "-"}
                     </td>
                     <td className={styles.createdAtCell}>
-                      {new Date(entry.createdAt).toLocaleString("en-IN", {
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      })}
+                      {new Date(entry.createdAt)
+                        .toLocaleString("en-IN", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })
+                        .slice(0, 8)}
                     </td>
                   </tr>
                 ))}

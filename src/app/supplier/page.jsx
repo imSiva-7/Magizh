@@ -51,7 +51,7 @@ const SUPPLIER_TYPES = [
 
 export default function Supplier() {
   const router = useRouter();
-  const [createSupplier, setCreateSupplier] = useState(false);
+  const [createSupplier, setCreateSupplier] = useState(true);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
   const [formErrors, setFormErrors] = useState({});
@@ -266,19 +266,29 @@ export default function Supplier() {
     }
   };
 
-  const handleEdit = useCallback((supplier) => {
-    setCreateSupplier(true);
-    setIsEditing(true);
-    setFormData({
-      supplierId: supplier._id,
-      supplierName: supplier.supplierName || "",
-      supplierType: supplier.supplierType || "",
-      supplierNumber: supplier.supplierNumber || "",
-      supplierAddress: supplier.supplierAddress || "",
-    });
-    // Clear any existing errors when editing
-    setFormErrors({});
-  }, []);
+  const handleEdit = useCallback(
+    (supplier) => {
+      if (isEditing) {
+        setFormData(initialFormState);
+        setFormErrors({});
+        setIsEditing(false);
+        setCreateSupplier(false);
+        return;
+      }
+      setCreateSupplier(true);
+      setIsEditing(true);
+      setFormData({
+        supplierId: supplier._id,
+        supplierName: supplier.supplierName || "",
+        supplierType: supplier.supplierType || "",
+        supplierNumber: supplier.supplierNumber || "",
+        supplierAddress: supplier.supplierAddress || "",
+      });
+      // Clear any existing errors when editing
+      setFormErrors({});
+    },
+    [initialFormState, isEditing]
+  );
 
   const handleDelete = async (id) => {
     if (
@@ -397,7 +407,7 @@ export default function Supplier() {
               disabled={isSubmitting}
               autoFocus
             />
-             {/* <FormInput
+            {/* <FormInput
               label="Total Solids Number"
               type="text"
               value={formData.supplierName}
@@ -640,7 +650,9 @@ export default function Supplier() {
                           title={`Edit ${item.supplierName}`}
                           aria-label={`Edit ${item.supplierName}`}
                         >
-                          <span className={styles.buttonIcon}>Edit</span>
+                          <span className={styles.buttonIcon}>
+                            {isEditing ? "Cancel" : "Edit"}
+                          </span>
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}

@@ -1,4 +1,3 @@
-// components/Header.js
 "use client";
 
 import { useState } from "react";
@@ -12,7 +11,6 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    // { name: "Dashboard", path: "/", icon: "" },
     { name: "Production", path: "/productions", icon: "" },
     { name: "History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
@@ -23,7 +21,7 @@ export default function Header() {
     if (path === "/") {
       return pathname === "/";
     }
-    return pathname.startsWith(path);
+    return pathname.endsWith(path);
   };
 
   const handleNavigation = (path) => {
@@ -31,8 +29,8 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  const currentPage =
-    navItems.find((item) => isActive(item.path))?.name || "Dashboard";
+  // const currentPage =
+  //   navItems.find((item) => isActive(item.path))?.name || "Dashboard";
 
   return (
     <header className={styles.header}>
@@ -47,16 +45,12 @@ export default function Header() {
               <Image
                 src="/favicon.ico"
                 alt="Magizh Dairy Logo"
-                width={150}
-                height={70}
+                width={180}
+                height={90}
                 priority
                 className={styles.logoIcon}
               />
             </div>
-            {/* <div className={styles.logoText}>
-              <h1 className={styles.logoTitle}>Magizh Dairy</h1>
-              <p className={styles.logoSubtitle}>Production Management</p>
-            </div> */}
           </div>
         </div>
 
