@@ -51,6 +51,7 @@ export default function Production() {
   const [entries, setEntries] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [disableDelete, setDisableDelete] = useState(true);
   const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
 
@@ -179,6 +180,8 @@ export default function Production() {
       setIsSubmitting(false);
     }
   };
+
+
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
@@ -363,21 +366,17 @@ export default function Production() {
                 Recent Production Entries ({entries.length}){" "}
               </h3>
               <span className={styles.tableBtn}>
-              <button
-                type="button"
-                disabled={!batchNo || isSubmitting}
-                className={styles.infoBtn}
-                onClick={() =>
-                  router.push(
-                    "/productions/history"
-                  )
-                }
-              >
-                More Info
-              </button>
-              <button onClick={fetchData} className={styles.refreshBtn}>
-                🔄
-              </button>
+                <button
+                  type="button"
+                  disabled={!batchNo || isSubmitting}
+                  className={styles.infoBtn}
+                  onClick={() => router.push("/productions/history")}
+                >
+                  More Info
+                </button>
+                <button onClick={fetchData} className={styles.refreshBtn}>
+                  🔄
+                </button>
               </span>
             </div>
             <div className={styles.tableContainer}>
@@ -416,9 +415,10 @@ export default function Production() {
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteBtn}
+                          disabled={true}
                           title="Delete entry"
                         >
-                          🗑️
+                          {disableDelete ? "Contact Admin" : "Delete"}
                         </button>
                       </td>
                     </tr>
