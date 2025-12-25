@@ -1,19 +1,36 @@
+// src/app/api/supplier/procurement/route.js
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
-import { ObjectId } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
-// Helper to validate ObjectId
-const isValidObjectId = (id) => {
-  return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
-};
+const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
 
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get("supplierId");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    const id = searchParams.get("id");
 
-    console.log("GET Procurement - Supplier ID:", supplierId);
+    // For single record
+    if (id) {
+      if (!ObjectId.isValid(id)) {
+        return NextResponse.json(
+          { error: "Invalid Record ID" },
+          { status: 400 }
+        );
+      }
 
+      const client = await clientPromise;
+      const db = client.db("production");
+      const procurement = await db
+        .collection("procurements")
+        .findOne({ _id: new ObjectId(id) });
+
+      return NextResponse.json(procurement || {});
+    }
+
+    // For multiple records with supplier filter
     if (!supplierId) {
       return NextResponse.json(
         { error: "Supplier ID is required" },
@@ -21,10 +38,9 @@ export async function GET(request) {
       );
     }
 
-    // Validate ObjectId format
-    if (!isValidObjectId(supplierId)) {
+    if (!ObjectId.isValid(supplierId)) {
       return NextResponse.json(
-        { error: "Invalid supplier ID format" },
+        { error: "Invalid Supplier ID" },
         { status: 400 }
       );
     }
@@ -32,25 +48,31 @@ export async function GET(request) {
     const client = await clientPromise;
     const db = client.db("production");
 
-    console.log("Querying procurements for supplier:", supplierId);
+    // Build the query
+    const query = { supplierId: new ObjectId(supplierId) };
+
+    // Add Date Filtering
+    if (startDate || endDate) {
+      query.date = {};
+      if (startDate) {
+        query.date.$gte = startDate;
+      }
+      if (endDate) {
+        query.date.$lte = endDate;
+      }
+    }
 
     const procurements = await db
       .collection("procurements")
-      .find({ supplierId: new ObjectId(supplierId) })
-      .sort({ date: -1 })
+      .find(query)
+      .sort({ date: -1, time: 1 }) // Sort by date descending, time ascending (AM first)
       .toArray();
-
-    console.log(`Found ${procurements.length} procurements`);
 
     return NextResponse.json(procurements);
   } catch (error) {
-    console.error("GET /api/procurement error:", error);
+    console.error("API Error - GET procurement:", error);
     return NextResponse.json(
-      {
-        error: "Failed to fetch procurements",
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      },
+      { error: "Failed to fetch data", details: error.message },
       { status: 500 }
     );
   }
@@ -58,216 +80,194 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const body = await request.json();
+    const {
+      supplierId,
+      date,
+      time,
+      milkQuantity,
+      fatPercentage,
+      snfPercentage,
+      rate,
+      totalAmount,
+    } = body;
+
+    // Validation
+    if (!supplierId || !ObjectId.isValid(supplierId)) {
+      return NextResponse.json(
+        { error: "Invalid Supplier ID" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !date ||
+      !time ||
+      !milkQuantity ||
+      !fatPercentage ||
+      !snfPercentage ||
+      !rate ||
+      !totalAmount
+    ) {
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 }
+      );
+    }
+
     const client = await clientPromise;
     const db = client.db("production");
-    const data = await request.json();
 
-    console.log("POST Procurement - Received data:", data);
-
-    // Validate required fields
-    const requiredFields = ["supplierId", "date", "milkQuantity", "rate"];
-    const missingFields = requiredFields.filter((field) => !data[field]);
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        {
-          error: "Missing required fields",
-          details: `Required: ${missingFields.join(", ")}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Validate ObjectId format
-    if (!isValidObjectId(data.supplierId)) {
-      return NextResponse.json(
-        { error: "Invalid supplier ID format" },
-        { status: 400 }
-      );
-    }
-
-    // Validate numeric fields
-    const milkQty = parseFloat(data.milkQuantity);
-    const rate = parseFloat(data.rate);
-
-    if (isNaN(milkQty) || milkQty <= 0) {
-      return NextResponse.json(
-        { error: "Milk quantity must be a positive number" },
-        { status: 400 }
-      );
-    }
-
-    if (isNaN(rate) || rate <= 0) {
-      return NextResponse.json(
-        { error: "Rate must be a positive number" },
-        { status: 400 }
-      );
-    }
-
-    // Validate percentages if provided
-    if (
-      data.fatPercentage &&
-      (parseFloat(data.fatPercentage) < 0 ||
-        parseFloat(data.fatPercentage) > 100)
-    ) {
-      return NextResponse.json(
-        { error: "Fat percentage must be between 0 and 100" },
-        { status: 400 }
-      );
-    }
-
-    if (
-      data.snfPercentage &&
-      (parseFloat(data.snfPercentage) < 0 ||
-        parseFloat(data.snfPercentage) > 100)
-    ) {
-      return NextResponse.json(
-        { error: "SNF percentage must be between 0 and 100" },
-        { status: 400 }
-      );
-    }
-
-    // Calculate total amount
-    const totalAmount = parseFloat((milkQty * rate).toFixed(2));
-
-    // Prepare procurement data - CRITICAL FIX: Convert date string to Date object
-    const procurementData = {
-      supplierId: new ObjectId(data.supplierId),
-      date: new Date(data.date), // Convert string to Date object
-      milkQuantity: milkQty,
-      fatPercentage: data.fatPercentage ? parseFloat(data.fatPercentage) : null,
-      snfPercentage: data.snfPercentage ? parseFloat(data.snfPercentage) : null,
-      rate: rate,
-      totalAmount: totalAmount,
+    const newProcurement = {
+      supplierId: new ObjectId(supplierId),
+      date,
+      time,
+      milkQuantity: parseFloat(milkQuantity),
+      fatPercentage: parseFloat(fatPercentage),
+      snfPercentage: parseFloat(snfPercentage),
+      rate: parseFloat(rate),
+      totalAmount: parseFloat(totalAmount),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    console.log("Procurement data to insert:", procurementData);
-    console.log(
-      "Date type:",
-      typeof procurementData.date,
-      "Value:",
-      procurementData.date
-    );
-
-    // Check if supplier exists
-    const supplier = await db
-      .collection("suppliers")
-      .findOne({ _id: new ObjectId(data.supplierId) });
-
-    if (!supplier) {
-      return NextResponse.json(
-        { error: "Supplier not found" },
-        { status: 404 }
-      );
-    }
-
-    // Insert the procurement
     const result = await db
       .collection("procurements")
-      .insertOne(procurementData);
-
-    console.log("Insert result:", result);
-
-    // Optional: Update supplier's last procurement date
-    await db.collection("suppliers").updateOne(
-      { _id: new ObjectId(data.supplierId) },
-      {
-        $set: {
-          lastProcurementDate: procurementData.date,
-          updatedAt: new Date(),
-        },
-      }
-    );
+      .insertOne(newProcurement);
 
     return NextResponse.json(
       {
-        _id: result.insertedId,
-        ...procurementData,
-        message: "Procurement added successfully",
+        success: true,
+        id: result.insertedId,
+        message: "Procurement record created successfully",
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("POST /api/procurement error:", error);
-    console.error("Error stack:", error.stack);
+    console.error("API Error - POST procurement:", error);
     return NextResponse.json(
-      {
-        error: "Failed to add procurement",
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      },
+      { error: "Failed to create record", details: error.message },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(req) {
+export async function PUT(request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const procurementId = searchParams.get("procurementId");
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    const body = await request.json();
+
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid Record ID" }, { status: 400 });
+    }
+
+    const {
+      date,
+      time,
+      milkQuantity,
+      fatPercentage,
+      snfPercentage,
+      rate,
+      totalAmount,
+    } = body;
+
+    if (
+      !date ||
+      !time ||
+      !milkQuantity ||
+      !fatPercentage ||
+      !snfPercentage ||
+      !rate ||
+      !totalAmount
+    ) {
+      return NextResponse.json(
+        { error: "All fields are required" },
+        { status: 400 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db("production");
-    // const db = await clientPromise();
 
-    if (!procurementId) {
+    // Check for duplicate (excluding current record)
+    const existing = await db.collection("procurements").findOne({
+      _id: { $ne: new ObjectId(id) },
+      supplierId: new ObjectId(body.supplierId),
+      date,
+      time,
+    });
+
+    if (existing) {
       return NextResponse.json(
         {
-          error: "Missing Supplier Id",
+          error: "Another record already exists for this date and time period",
         },
-        {
-          status: 400,
-        }
+        { status: 409 }
       );
     }
 
-    if (!ObjectId.isValid(procurementId)) {
-      return NextResponse.json(
-        {
-          error: "Missing Supplier Id",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
+    const updateData = {
+      date,
+      time,
+      milkQuantity: parseFloat(milkQuantity),
+      fatPercentage: parseFloat(fatPercentage),
+      snfPercentage: parseFloat(snfPercentage),
+      rate: parseFloat(rate),
+      totalAmount: parseFloat(totalAmount),
+      updatedAt: new Date(),
+    };
 
-    // const data = db.collection("procurement").deleteOne({supplierId: supplierId})
-    const result = db
+    const result = await db
       .collection("procurements")
-      .deleteOne({ _id: new ObjectId(procurementId) });
+      .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
 
-    if (result.deleteCount === 0) {
-      return NextResponse.json(
-        {
-          error: "Nothing Deleted",
-        },
-        {
-          status: 500,
-        }
-      );
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Record not found" }, { status: 404 });
     }
 
-    return NextResponse.json(
-      {
-        message: "Deleted",
-      },
-      {
-        status: 200,
-      }
-    );
+    return NextResponse.json({
+      success: true,
+      message: "Procurement record updated successfully",
+    });
   } catch (error) {
+    console.error("API Error - PUT procurement:", error);
     return NextResponse.json(
-      {
-        error: "Failed to delete supplier",
-        details:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      },
-      {
-        status: 500,
-      }
+      { error: "Failed to update record", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid Record ID" }, { status: 400 });
+    }
+
+    const client = await clientPromise;
+    const db = client.db("production");
+
+    const result = await db
+      .collection("procurements")
+      .deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Record not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Procurement record deleted successfully",
+    });
+  } catch (error) {
+    console.error("API Error - DELETE procurement:", error);
+    return NextResponse.json(
+      { error: "Failed to delete record", details: error.message },
+      { status: 500 }
     );
   }
 }

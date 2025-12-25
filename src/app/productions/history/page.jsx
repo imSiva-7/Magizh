@@ -41,10 +41,6 @@ export default function History() {
   }, [entries]);
 
   const fetchData = useCallback(async () => {
-    if (!fromDate || !toDate) {
-      toast.error("Please select both dates");
-      return;
-    }
 
     if (new Date(fromDate) > new Date(toDate)) {
       toast.error("From date cannot be after To date");
@@ -192,9 +188,6 @@ export default function History() {
 
       <div className={styles.header}>
         <h1>Production History</h1>
-        <div className={styles.dateRange}>
-          {fromDate} to {toDate}
-        </div>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.filterForm}>
@@ -282,7 +275,15 @@ export default function History() {
       {entries.length > 0 && (
         <>
           <div className={styles.statsCard}>
-            <h3>Total Production Summary</h3>
+            <h3>
+              Production Summary{" "}
+              <div className={styles.dateRange}>
+                {fromDate && !toDate && `From ${fromDate}`}
+                {!fromDate && toDate && `Till ${toDate}`}
+                {fromDate && toDate && `${fromDate} to ${toDate}`}
+                {!fromDate &&  !toDate && `All Records`}
+              </div>
+            </h3>
             <div className={styles.statsGrid}>
               {Object.entries(totalStats).map(([key, value]) => {
                 const labels = {
@@ -324,7 +325,7 @@ export default function History() {
               aria-label="Download CSV file"
             >
               {/* <span className={styles.exportIcon}></span> */}
-              Download CSV
+              Export as CSV
             </button>
             <span className={styles.entryCount}>
               {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
@@ -357,7 +358,7 @@ export default function History() {
             )}
           </div>
         ) : (
-          <div className={styles.tableContainer}>
+          <div className={styles.tableContainer}>        
             <table className={styles.table}>
               <thead>
                 <tr>

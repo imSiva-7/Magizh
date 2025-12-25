@@ -12,7 +12,7 @@
 /* ===== HEADER SECTION ===== */
 .headerSection {
   margin-bottom: 3rem;
-  text-align: center;
+  text-align: left;
 }
 
 .headerSection h1 {
@@ -195,7 +195,7 @@
 }
 
 .infoBtn:hover:not(:disabled) {
-  background-color:rgb(140, 224, 196);
+  background-color:rgb(39, 145, 110);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
