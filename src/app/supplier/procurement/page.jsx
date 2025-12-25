@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,13 +12,10 @@ import {
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 
-
-// --- HELPER FOR AUTO TIME ---
 const getCurrentTimePeriod = () => {
   const hour = new Date().getHours();
   return hour >= 12 ? "PM" : "AM";
 };
-
 
 const InputGroup = ({ label, error, required, readOnly, ...props }) => (
   <div className={styles.inputGroup}>
@@ -438,6 +435,32 @@ function ProcurementContent() {
     }
   };
 
+  if (!data.supplier && !loading) {
+    return (
+      <div className={styles.errorState}>
+        <div className={styles.errorIcon}>🚫</div>
+        <h2>Supplier Not Found</h2>
+        <p>{`The supplier you're looking for doesn't exist or has been removed.`}</p>
+        <div className={styles.errorActions}>
+          <button
+            onClick={() => router.push("/supplier")}
+            className={styles.primaryBtn}
+            aria-label="Go back to suppliers"
+          >
+            ← Back to Suppliers
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className={styles.secondaryBtn}
+            aria-label="Try again"
+          >
+            🔄 Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -453,14 +476,6 @@ function ProcurementContent() {
       />
 
       <div className={styles.header}>
-        <button
-          onClick={() => router.push("/supplier")}
-          className={styles.backButton}
-          disabled={submitting}
-          aria-label="Go back to suppliers"
-        >
-          Back
-        </button>
         <div className={styles.headerTitle}>
           <h1>{data.supplier?.supplierName}</h1>
           <div className={styles.supplierInfo}>
@@ -601,7 +616,7 @@ function ProcurementContent() {
               <button
                 type="button"
                 onClick={resetForm}
-                className={styles.secondaryBtn}
+                className={styles.secondaryFilterBtn}
                 disabled={submitting}
                 aria-label={editingId ? "Cancel edit" : "Clear form"}
               >
@@ -612,80 +627,71 @@ function ProcurementContent() {
         </form>
       </div>
 
-      {/* Filter Section */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-        className={styles.filterSection}
-      >
-        <div className={styles.filterHeader}>
-          <h2>Filter by Date Range</h2>
-        </div>
-        <div className={styles.filterRow}>
-          <div className={styles.dateFilterSection}>
-            <div className={styles.dateInputGroup}>
-              <div className={styles.dateField}>
-                <label htmlFor="startDate">From Date</label>
-                <input
-                  id="startDate"
-                  type="date"
-                  name="startDate"
-                  value={filters.startDate}
-                  onChange={handleFilterChange}
-                  className={styles.filterInput}
-                  max={filters.endDate || getTodayDate()}
-                  aria-label="Select start date"
-                />
-              </div>
+      {summary.count > 0 && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
+          className={styles.filterSection}
+        >
+          <div className={styles.filterHeader}>
+            <h2>Filter by Date Range</h2>
+          </div>
+          <div className={styles.filterRow}>
+            <div className={styles.dateFilterSection}>
+              <div className={styles.dateInputGroup}>
+                <div className={styles.dateField}>
+                  <label htmlFor="startDate">From Date</label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    name="startDate"
+                    value={filters.startDate}
+                    onChange={handleFilterChange}
+                    className={styles.filterInput}
+                    max={filters.endDate || getTodayDate()}
+                    aria-label="Select start date"
+                  />
+                </div>
 
-              <div className={styles.dateField}>
-                <label htmlFor="endDate">To Date</label>
-                <input
-                  id="endDate"
-                  type="date"
-                  name="endDate"
-                  value={filters.endDate}
-                  onChange={handleFilterChange}
-                  className={styles.filterInput}
-                  max={getTodayDate()}
-                  min={filters.startDate}
-                  aria-label="Select end date"
-                />
+                <div className={styles.dateField}>
+                  <label htmlFor="endDate">To Date</label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    name="endDate"
+                    value={filters.endDate}
+                    onChange={handleFilterChange}
+                    className={styles.filterInput}
+                    max={getTodayDate()}
+                    min={filters.startDate}
+                    aria-label="Select end date"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={resetFilterForm}
+                  className={styles.secondaryResetBtn}
+                  // disabled={!filters.startDate && !filters.endDate}
+                  aria-label="Clear date filters"
+                >
+                  Reset Filters
+                </button>
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className={styles.secondaryFilterBtn}
+                  disabled={!filters.startDate && !filters.endDate}
+                  aria-label="Clear date filters"
+                >
+                  Clear Filters
+                </button>
               </div>
-              {/* <div className={styles.filterActions}>
-            <button
-              type="button"
-              onClick={clearFilters}
-              className={styles.secondaryBtn}
-              disabled={!filters.startDate && !filters.endDate}
-              aria-label="Clear date filters"
-            >
-              Clear Filters
-            </button>
-          </div> */}
-              <button
-                type="button"
-                onClick={resetFilterForm}
-                className={styles.secondaryResetBtn}
-                // disabled={!filters.startDate && !filters.endDate}
-                aria-label="Clear date filters"
-              >
-                Reset Filters
-              </button>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className={styles.secondaryFilterBtn}
-                disabled={!filters.startDate && !filters.endDate}
-                aria-label="Clear date filters"
-              >
-                Clear Filters
-              </button>
             </div>
           </div>
-        </div>
-      </form>
+        </form>
+      )}
 
       {/* Summary Section - Production History Style */}
       {summary.count > 0 && (
@@ -714,7 +720,6 @@ function ProcurementContent() {
                 label: "Milk",
                 unit: "L",
               },
-
               dailyAvg: {
                 value: summary.daysWithData
                   ? (summary.milk / summary.daysWithData).toFixed(2)
@@ -722,11 +727,6 @@ function ProcurementContent() {
                 label: "Daily Avg",
                 unit: "L/day",
               },
-              // records: {
-              //   value: summary.count,
-              //   label: "Records",
-              //   unit: "Count",
-              // },
               avgRate: {
                 value: `₹${summary.avgRate}`,
                 label: "Avg Rate",
@@ -809,6 +809,12 @@ function ProcurementContent() {
                 >
                   Back to Suppliers
                 </button>
+              </>
+            ) : data.allProcurements.length === 0 ? (
+              <>
+                {" "}
+                <span className={styles.emptyIcon}>📊</span>
+                <p>No procurement records, start by adding the first record</p>
               </>
             ) : (
               <>
@@ -912,4 +918,21 @@ function ProcurementContent() {
   );
 }
 
-export default ProcurementContent;
+export default function ProcurementPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={styles.container}>
+          <div className={styles.loading}>
+            <div className={styles.spinner}></div>
+            <span className={styles.loadingText}>
+              Loading procurement page...
+            </span>
+          </div>
+        </div>
+      }
+    >
+      <ProcurementContent />
+    </Suspense>
+  );
+}

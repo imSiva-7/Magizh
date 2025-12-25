@@ -190,23 +190,6 @@ export async function PUT(request) {
     const client = await clientPromise;
     const db = client.db("production");
 
-    // Check for duplicate (excluding current record)
-    const existing = await db.collection("procurements").findOne({
-      _id: { $ne: new ObjectId(id) },
-      supplierId: new ObjectId(body.supplierId),
-      date,
-      time,
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        {
-          error: "Another record already exists for this date and time period",
-        },
-        { status: 409 }
-      );
-    }
-
     const updateData = {
       date,
       time,
