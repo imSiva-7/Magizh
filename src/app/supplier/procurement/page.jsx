@@ -668,7 +668,7 @@ function ProcurementContent() {
                 type="button"
                 onClick={resetFilterForm}
                 className={styles.secondaryResetBtn}
-                disabled={!filters.startDate && !filters.endDate}
+                // disabled={!filters.startDate && !filters.endDate}
                 aria-label="Clear date filters"
               >
                 Reset Filters

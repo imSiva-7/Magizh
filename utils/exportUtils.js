@@ -1,13 +1,11 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// --- Utility Functions ---
+
 const formatNumberWithCommas = (value, decimals = 2) => {
   const num = Number(value);
-
-  if (!Number.isFinite(num)) {
-    return (0).toFixed(decimals);
-  }
-
+  if (!Number.isFinite(num)) return (0).toFixed(decimals);
   return num.toLocaleString("en-IN", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -28,14 +26,6 @@ const formatDateForDisplay = (dateStr) => {
     month: "short",
     year: "numeric",
   });
-};
-
-const calculateFatKg = (liters, fatPercent) => {
-  return ((liters * fatPercent) / 100).toFixed(3);
-};
-
-const calculateSnfKg = (liters, snfPercent) => {C
-  return ((liters * snfPercent) / 100).toFixed(3);
 };
 
 const calculateTotals = (procurements) => {
@@ -62,98 +52,10 @@ const calculateTotals = (procurements) => {
   };
 };
 
-export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
-  if (!procurements.length) {
-    alert("No data to export");
-    return;
-  }
-
-  const sortedProcurements = [...procurements].sort((a, b) => {
-    const dateCompare = new Date(a.date) - new Date(b.date);
-    if (dateCompare !== 0) return dateCompare;
-    return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
-  });
-
-  const headers = [
-    "Date",
-    "AM/PM",
-    "Quantity (Kg)",
-    "Quantity (Ltr)",
-    "FAT %",
-    "SNF %",
-    "Rate/L (₹)",
-    "Net Amount (₹)",
-  ];
-
-  const csvRows = [];
-
-  csvRows.push(`"${supplier?.supplierName || "MAGIZH DAIRY PRIVATE LIMITED"}"`);
-
-  csvRows.push(`"GUDIYATHAM"`);
-  csvRows.push(
-    `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`
-  );
-
-  csvRows.push(
-    `"MILK BILL Date: ${formatDateForCSV(
-      dateRange.start
-    )} to ${formatDateForCSV(dateRange.end)}"`
-  );
-  csvRows.push("");
-
-  csvRows.push(headers.join(","));
-
-  let totalMilkLtr = 0;
-  let totalAmount = 0;
-  let totalFat = 0;
-  let totalSnf = 0;
-
-  sortedProcurements.forEach((record) => {
-    const kg = (record.milkQuantity * 1.03).toFixed(2);
-
-    const row = [
-      formatDateForCSV(record.date),
-      record.time || "AM",
-      kg,
-      record.milkQuantity.toFixed(2),
-      record.fatPercentage.toFixed(2),
-      record.rate.toFixed(2),
-      record.totalAmount.toFixed(2),
-    ];
-    csvRows.push(row.join(","));
-
-    totalMilkLtr += record.milkQuantity;
-    totalAmount += record.totalAmount;
-    totalFat += record.fatPercentage;
-    totalSnf += record.snfPercentage;
-  });
-
-  // Add summary
-  csvRows.push("");
-  csvRows.push("SUMMARY");
-  csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
-  csvRows.push(`Total Amount,₹${totalAmount.toFixed(2)}`);
-  csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
-  csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
-  csvRows.push(`Average Rate/L,₹${(totalAmount / totalMilkLtr).toFixed(2)}`);
-
-  // Convert to CSV string
-  const csvContent = csvRows.join("\n");
-
-  // Create download link
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${fileName || "procurement"}.csv`);
-  link.style.visibility = "hidden";
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-// Now update your exportToPDF function:
+// --- PDF Design Constants ---
+const COMPANY_COLOR = [39, 121, 93]; // Corporate Blue
+const TEXT_COLOR = [44, 62, 80]; // Dark Grey
+const ACCENT_COLOR = [241, 196, 15]; // Yellow/Gold for highlights (optional)
 
 export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   if (!procurements.length) {
@@ -162,105 +64,115 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   }
 
   const doc = new jsPDF();
-
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
 
-  doc.setFontSize(16);
+  doc.setFillColor(...COMPANY_COLOR);
+  doc.rect(0, 0, pageWidth, 40, "F"); 
+
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("MAGIZH DAIRY PRIVATE LIMITED", pageWidth / 2, 10, {
-    align: "center",
-  });
-
-  doc.setFontSize(12);
-  doc.text("GUDIYATHAM", pageWidth / 2, 16, { align: "center" });
+  doc.setFontSize(22);
+  doc.text("MAGIZH AGRO PRODUCT", 14, 18);
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Phone:  +91 75021 36314", pageWidth / 2, 22, { align: "center" });
+  doc.text("GUDIYATHAM | GST NO: XXXXXXXXXX", 14, 26);
+  doc.text("Phone: +91 93636 46314, +91 75021 36314", 14, 32);
 
+  // Bill Period Box (Top Right)
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(pageWidth - 70, 8, 60, 24, 2, 2, "F");
+
+  doc.setTextColor(...COMPANY_COLOR);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
+  doc.text("BILL PERIOD", pageWidth - 65, 14);
+
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
   doc.text(
-    `MILK BILL Date: ${formatDateForDisplay(
-      dateRange.start
-    )} to ${formatDateForDisplay(dateRange.end)}`,
-    pageWidth / 2,
-    28,
-    { align: "center" }
+    `From: ${formatDateForDisplay(dateRange.start)}`,
+    pageWidth - 65,
+    20
+  );
+  doc.text(
+    `To:     ${formatDateForDisplay(dateRange.end)}`,
+    pageWidth - 65,
+    26
   );
 
+  // --- 2. Supplier Details Section (Boxed) ---
+  const infoStartY = 50;
+
+  doc.setDrawColor(200, 200, 200);
+  doc.setFillColor(250, 250, 250);
+  doc.roundedRect(14, infoStartY, pageWidth - 28, 25, 2, 2, "FD");
+
+  doc.setTextColor(...TEXT_COLOR);
+  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
+  doc.text("SUPPLIER DETAILS", 18, infoStartY + 6);
+
+  // Left side of box
+  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   if (supplier?.supplierName) {
-    doc.text(`Supplier Name: ${supplier.supplierName}`, 14, 36);
+    doc.text(`Name:   ${supplier.supplierName}`, 18, infoStartY + 14);
+  }
+  if (supplier?.bankDetails) {
+    doc.text(`Bank:    ${supplier.bankDetails}`, 18, infoStartY + 20);
   }
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  // Right side of box
   if (supplier?.supplierTSRate) {
     doc.text(
-      `Recent Total Solid Rate: ${formatNumberWithCommas(
-        supplier.supplierTSRate,
-        2
-      )}`,
-      14,
-      42
+      `Recent TS Rate: ${formatNumberWithCommas(supplier.supplierTSRate, 2)}`,
+      pageWidth / 2 + 10,
+      infoStartY + 14
     );
   }
 
-  if (supplier?.bankDetails) {
-    doc.text(`Bank: ${supplier.bankDetails}`, 14, 48);
-  }
-
+  // --- 3. Table Section ---
   const headers = [
     [
       "Date",
-      "AM/PM",
+      "Time",
       "Qty (Kg)",
       "Qty (Ltr)",
       "FAT %",
       "SNF %",
       "Rate/L",
-      "Amount ",
+      "Amount (Rs)",
     ],
   ];
 
-  // Prepare table data
   const tableData = [];
+  let totalMilkLtr = 0;
+  let totalAmount = 0;
+  let totalFat = 0;
+  let totalSnf = 0;
 
-  // Sort procurements by date and time
+  // Sorting
   const sortedProcurements = [...procurements].sort((a, b) => {
     const dateCompare = new Date(a.date) - new Date(b.date);
     if (dateCompare !== 0) return dateCompare;
     return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
   });
 
-  // Add rows to table
-  let totalMilkLtr = 0;
-  let totalAmount = 0;
-  let totalFat = 0;
-  let totalSnf = 0;
-
   sortedProcurements.forEach((record) => {
     const kg = (record.milkQuantity * 1.03).toFixed(2);
-
-    // Format values with commas
-    const formattedRate = formatNumberWithCommas(record.rate, 2);
-    const formattedAmount = formatNumberWithCommas(record.totalAmount, 2);
-    const formattedMilkQuantity = formatNumberWithCommas(
-      record.milkQuantity,
-      2
-    );
-    const formattedKg = formatNumberWithCommas(kg, 2);
 
     tableData.push([
       formatDateForCSV(record.date),
       record.time || "AM",
-      formattedKg,
-      formattedMilkQuantity,
-      parseFloat(record.fatPercentage).toFixed(2),
-      parseFloat(record.snfPercentage).toFixed(2),
-      formattedRate,
-      formattedAmount,
+      formatNumberWithCommas(kg, 2),
+      formatNumberWithCommas(record.milkQuantity, 2),
+      parseFloat(record.fatPercentage).toFixed(1), // Keep simple
+      parseFloat(record.snfPercentage).toFixed(1),
+      formatNumberWithCommas(record.rate, 2),
+      formatNumberWithCommas(record.totalAmount, 2),
     ]);
 
     totalMilkLtr += record.milkQuantity;
@@ -269,86 +181,216 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     totalSnf += record.snfPercentage;
   });
 
-  // Generate table using autoTable directly
   autoTable(doc, {
     head: headers,
     body: tableData,
-    startY: 50,
-    theme: "grid",
+    startY: infoStartY + 30,
+    theme: "striped",
     styles: {
-      fontSize: 8,
-      cellPadding: 2,
+      fontSize: 9,
+      cellPadding: 3,
+      valign: "middle",
+      lineColor: [220, 220, 220],
+      lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [41, 128, 185],
+      fillColor: COMPANY_COLOR,
       textColor: 255,
       fontStyle: "bold",
+      halign: "center", // Center headers
+    },
+    columnStyles: {
+      0: { halign: "center", cellWidth: 22 }, // Date
+      1: { halign: "center", cellWidth: 15 }, // Time
+      2: { halign: "right" }, // Numbers right aligned
+      3: { halign: "right", fontStyle: "bold" }, // Liters (Important)
+      4: { halign: "right" },
+      5: { halign: "right" },
+      6: { halign: "right" },
+      7: { halign: "right", fontStyle: "bold" }, // Amount (Important)
     },
     alternateRowStyles: {
-      fillColor: [245, 245, 245],
-    },
-    columnStyles: {
-      0: { cellWidth: 18 },
-      1: { cellWidth: 15 },
-      2: { cellWidth: 15 },
-      3: { cellWidth: 15 },
-      4: { cellWidth: 14 },
-      5: { cellWidth: 14 },
-      6: { cellWidth: 18 },
-      7: { cellWidth: 28 },
+      fillColor: [245, 248, 250],
     },
   });
 
-  // Add summary section
-  const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 120;
+  // --- 4. Summary & Totals Section ---
+  const finalY = doc.lastAutoTable.finalY + 10;
+
+  // Calculate Averages
+  const avgFat = (totalFat / procurements.length).toFixed(2);
+  const avgSnf = (totalSnf / procurements.length).toFixed(2);
+  const avgRate = totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0;
+
+  // Draw Summary Box (Right Aligned)
+  const summaryWidth = 90;
+  const summaryX = pageWidth - summaryWidth - 14;
+
+  // Box Background
+  doc.setFillColor(245, 245, 245);
+  doc.rect(summaryX, finalY, summaryWidth, 50, "F");
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(summaryX, finalY, summaryWidth, 50, "S");
+
+  doc.setTextColor(...TEXT_COLOR);
+  doc.setFontSize(10);
+
+  // Helper to draw summary row
+  const drawSummaryRow = (label, value, y, isBold = false) => {
+    doc.setFont("helvetica", isBold ? "bold" : "normal");
+    doc.text(label, summaryX + 5, y);
+    doc.text(value, pageWidth - 19, y, { align: "right" });
+  };
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("PAYMENT SUMMARY", summaryX + 5, finalY + 8);
+  doc.setDrawColor(...COMPANY_COLOR);
+  doc.line(summaryX + 5, finalY + 10, pageWidth - 19, finalY + 10);
 
   doc.setFontSize(10);
+  drawSummaryRow(
+    "Total Milk:",
+    `${formatNumberWithCommas(totalMilkLtr, 2)} Ltr`,
+    finalY + 18
+  );
+  drawSummaryRow("Avg FAT:", `${avgFat} %`, finalY + 24);
+  drawSummaryRow("Avg SNF:", `${avgSnf} %`, finalY + 30);
+  drawSummaryRow(
+    "Avg Rate:",
+    `Rs. ${formatNumberWithCommas(avgRate, 2)}`,
+    finalY + 36
+  );
+
+  // Grand Total Highlight
+  doc.setFillColor(...COMPANY_COLOR);
+  doc.rect(summaryX, finalY + 41, summaryWidth, 9, "F");
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.text("NET PAYABLE", summaryX + 5, finalY + 47);
+  doc.text(
+    `Rs. ${formatNumberWithCommas(totalAmount, 2)}`,
+    pageWidth - 19,
+    finalY + 47,
+    { align: "right" }
+  );
 
-  // Format summary values with commas
-  const formattedTotalMilk = formatNumberWithCommas(totalMilkLtr, 1);
-  const formattedTotalAmount = formatNumberWithCommas(totalAmount, 1);
-  const avgRate = totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0;
-  const formattedAvgRate = formatNumberWithCommas(avgRate, 1);
+  // --- 5. Footer Section ---
+  const footerY = finalY + 65; // Position below summary
 
-  // Summary table with comma formatting
-  const summaryData = [
-    ["Total Milk (Ltr):", `${formattedTotalMilk} L`],
-    ["Total Amount:", `${formattedTotalAmount}`],
-    ["Average FAT:", `${(totalFat / procurements.length).toFixed(2)}%`],
-    ["Average SNF:", `${(totalSnf / procurements.length).toFixed(2)}%`],
-    ["Average Rate/L:", `${formattedAvgRate}`],
-  ];
+  // Check if we need a new page for footer
+  if (footerY > pageHeight - 20) {
+    doc.addPage();
+    // footerY = 30; // Reset Y for new page
+  }
 
-  // Create summary table
-  autoTable(doc, {
-    body: summaryData,
-    startY: finalY,
-    theme: "plain",
-    styles: {
-      fontSize: 10,
-      cellPadding: 3,
-    },
-    columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 60 },
-      1: { fontStyle: "normal", cellWidth: 50 },
-    },
-  });
-
-  // Footer
-  const lastAutoTableY = doc.lastAutoTable
-    ? doc.lastAutoTable.finalY
-    : finalY + 40;
-  const footerY = lastAutoTableY + 20;
-
+  doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Prepared by:", 20, footerY);
-  doc.text("Verified by:", pageWidth / 2, footerY, { align: "center" });
-  doc.text("Received Signature:", pageWidth - 20, footerY, { align: "right" });
 
-  // Save PDF
-  doc.save(`${fileName || "procurement"}.pdf`);
+  // Signature Lines
+  const sigY = footerY;
+  doc.setDrawColor(100, 100, 100);
+
+  // Prepared By
+  doc.line(20, sigY, 70, sigY);
+  doc.text("Prepared By", 45, sigY + 5, { align: "center" });
+
+  // Verified By
+  doc.line(pageWidth / 2 - 25, sigY, pageWidth / 2 + 25, sigY);
+  doc.text("Verified By", pageWidth / 2, sigY + 5, { align: "center" });
+
+  // Receiver
+  doc.line(pageWidth - 70, sigY, pageWidth - 20, sigY);
+  doc.text("Receiver Signature", pageWidth - 45, sigY + 5, { align: "center" });
+
+  // Timestamp footer
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text(
+    `Generated on: ${new Date().toLocaleString("en-IN")}`,
+    pageWidth / 2,
+    pageHeight - 5,
+    { align: "center" }
+  );
+
+  doc.save(`${fileName || "procurement_bill"}.pdf`);
+};
+
+// Original CSV Export (Preserved as is)
+export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
+  if (!procurements.length) {
+    alert("No data to export");
+    return;
+  }
+  const sortedProcurements = [...procurements].sort((a, b) => {
+    const dateCompare = new Date(a.date) - new Date(b.date);
+    if (dateCompare !== 0) return dateCompare;
+    return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
+  });
+  const headers = [
+    "Date",
+    "AM/PM",
+    "Quantity (Kg)",
+    "Quantity (Ltr)",
+    "FAT %",
+    "SNF %",
+    "Rate/L (Rs)",
+    "Net Amount (Rs)",
+  ];
+  const csvRows = [];
+  csvRows.push(`"${supplier?.supplierName || "MAGIZH DAIRY PRIVATE LIMITED"}"`);
+  csvRows.push(`"GUDIYATHAM"`);
+  csvRows.push(
+    `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`
+  );
+  csvRows.push(
+    `"MILK BILL Date: ${formatDateForCSV(
+      dateRange.start
+    )} to ${formatDateForCSV(dateRange.end)}"`
+  );
+  csvRows.push("");
+  csvRows.push(headers.join(","));
+  let totalMilkLtr = 0;
+  let totalAmount = 0;
+  let totalFat = 0;
+  let totalSnf = 0;
+  sortedProcurements.forEach((record) => {
+    const kg = (record.milkQuantity * 1.03).toFixed(2);
+    const row = [
+      formatDateForCSV(record.date),
+      record.time || "AM",
+      kg,
+      record.milkQuantity.toFixed(2),
+      record.fatPercentage.toFixed(2),
+      record.snfPercentage.toFixed(2),
+      record.rate.toFixed(2),
+      record.totalAmount.toFixed(2),
+    ];
+    csvRows.push(row.join(","));
+    totalMilkLtr += record.milkQuantity;
+    totalAmount += record.totalAmount;
+    totalFat += record.fatPercentage;
+    totalSnf += record.snfPercentage;
+  });
+  csvRows.push("");
+  csvRows.push("SUMMARY");
+  csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
+  csvRows.push(`Total Amount,Rs ${totalAmount.toFixed(2)}`);
+  csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
+  csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
+  csvRows.push(`Average Rate/L,Rs ${(totalAmount / totalMilkLtr).toFixed(2)}`);
+  const csvContent = csvRows.join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${fileName || "procurement"}.csv`);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 export { calculateTotals };
