@@ -3,11 +3,11 @@
 /* ===== BASE STYLES ===== */
 .container {
   max-width: 1400px;
-  min-height: 100vh;
-  padding: 2rem;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f8fafc;
-  color: #1e293b;
-  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
 }
 
 /* ===== HEADER SECTION ===== */
@@ -338,7 +338,7 @@
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: center;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
   font-size: 0.875rem;
 }
 
