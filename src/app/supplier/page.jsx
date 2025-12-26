@@ -469,7 +469,7 @@ export default function Supplier() {
 
             <FormInput
               id="f-rate"
-              label={`Total Solids Rate (₹${MIN_TS_RATE} - ₹${MAX_TS_RATE})`}
+              label={`Total Solids Rate (${MIN_TS_RATE} - ${MAX_TS_RATE})`}
               value={formData.supplierTSRate}
               onChange={(value) => handleInputChange("supplierTSRate", value)}
               placeholder={`e.g., ${DEFAULT_TS_RATE}`}

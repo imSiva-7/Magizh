@@ -441,6 +441,15 @@
   vertical-align: middle;
 }
 
+.supplierTable td:not(:first-child) {
+  text-align: center;
+  align-items: center;
+  /* font-variant-numeric: tabular-nums; */
+}
+.supplierTable th:not(:first-child):not(:last-child) {
+  text-align: center;
+  /* font-variant-numeric: tabular-nums; */
+}
 /* Table Cell Specific Styles */
 .nameCell {
   font-weight: 500;
@@ -494,9 +503,7 @@
   word-wrap: break-word;
 }
 
-.actionsCell {
-  min-width: 160px;
-}
+
 
 /* Action Buttons - Similar to Productions */
 .actionButtons {

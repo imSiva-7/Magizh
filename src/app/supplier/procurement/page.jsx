@@ -438,7 +438,6 @@ function ProcurementContent() {
   if (!data.supplier && !loading) {
     return (
       <div className={styles.errorState}>
-        <div className={styles.errorIcon}>🚫</div>
         <h2>Supplier Not Found</h2>
         <p>{`The supplier you're looking for doesn't exist or has been removed.`}</p>
         <div className={styles.errorActions}>
@@ -447,14 +446,7 @@ function ProcurementContent() {
             className={styles.primaryBtn}
             aria-label="Go back to suppliers"
           >
-            ← Back to Suppliers
-          </button>
-          <button
-            onClick={() => window.location.reload()}
-            className={styles.secondaryBtn}
-            aria-label="Try again"
-          >
-            🔄 Try Again
+            Back to Suppliers
           </button>
         </div>
       </div>
@@ -464,7 +456,7 @@ function ProcurementContent() {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner}></div>
-        <span className={styles.loadingText}>Loading procurement data...</span>
+        <span className={styles.loadingText}>Loading...</span>
       </div>
     );
   }
@@ -483,11 +475,23 @@ function ProcurementContent() {
         pauseOnHover
       />
 
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
+      <div className={`${styles.header} `}>
+        <div className={` ${styles.headerTitle}`}>
           <h1>{data.supplier?.supplierName}</h1>
           <div className={styles.supplierInfo}>
-            <span className={styles.supplierTypeBadge}>
+            <span
+              className={` ${
+                data.supplier?.supplierType === "Society"
+                  ? styles.type_society_badge
+                  : data.supplier?.supplierType === "Milkman"
+                  ? styles.type_milkman_badge
+                  : data.supplier?.supplierType === "Farmer"
+                  ? styles.type_farmer_badge
+                  : data.supplier?.supplierType === "Other"
+                  ? styles.type_other_badge
+                  : styles.defaultSupplier
+              }`}
+            >
               {data.supplier?.supplierType}
             </span>
             <span className={styles.tsRateTag}>
@@ -581,7 +585,7 @@ function ProcurementContent() {
               name="rate"
               value={formData.rate ? formatNumberWithCommas(formData.rate) : ""}
               readOnly
-              placeholder="Auto-calculated"
+              placeholder="Auto-calculated based on 'Total Solids' rate"
               error={errors.rate}
             />
 
@@ -624,7 +628,7 @@ function ProcurementContent() {
               <button
                 type="button"
                 onClick={resetForm}
-                className={styles.secondaryFilterBtn}
+                className={styles.secondaryFilterBtnForForm}
                 disabled={submitting}
                 aria-label={editingId ? "Cancel edit" : "Clear form"}
               >
@@ -686,6 +690,7 @@ function ProcurementContent() {
                 >
                   Reset Filters
                 </button>
+
                 <button
                   type="button"
                   onClick={clearFilters}

@@ -178,14 +178,13 @@
 }
 
 .resetBtn {
-  background-color: transparent;
-  color: #1e293b;
-  border: 2px solid #e2e8f0;
+  background-color: #5583c4;
+  color: #f8f8f8;
+  border: none;
 }
 
 .resetBtn:hover:not(:disabled) {
-  background-color: #f1f5f9;
-  border-color: #94a3b8;
+  background-color: #475569;
 }
 
 .infoBtn {
@@ -195,7 +194,7 @@
 }
 
 .infoBtn:hover:not(:disabled) {
-  background-color:rgb(39, 145, 110);
+  /* background-color: rgb(39, 145, 110); */
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(22, 50, 50, 0.3);
 }
@@ -257,7 +256,7 @@
 
 .refreshBtn {
   background-color: transparent;
-  color: #3b82f6;
+  color: #5583c4;
   padding: 0.5rem 1rem;
   margin: 0px 5px;
   border: 1px solid #e2e8f0;
