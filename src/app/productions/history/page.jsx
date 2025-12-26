@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import styles from "@/css/history.module.css";
 import "react-toastify/dist/ReactToastify.css";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 
 export default function History() {
   const [fromDate, setFromDate] = useState(getPreviousMonthDate());
@@ -41,7 +42,6 @@ export default function History() {
   }, [entries]);
 
   const fetchData = useCallback(async () => {
-
     if (new Date(fromDate) > new Date(toDate)) {
       toast.error("From date cannot be after To date");
       return;
@@ -168,10 +168,6 @@ export default function History() {
     fetchData();
   };
 
-  const formatNumber = (num) => {
-    return parseFloat(num).toFixed(2);
-  };
-
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -281,7 +277,7 @@ export default function History() {
                 {fromDate && !toDate && `From ${fromDate}`}
                 {!fromDate && toDate && `Till ${toDate}`}
                 {fromDate && toDate && `${fromDate} to ${toDate}`}
-                {!fromDate &&  !toDate && `All Records`}
+                {!fromDate && !toDate && `All Records`}
               </div>
             </h3>
             <div className={styles.statsGrid}>
@@ -308,7 +304,7 @@ export default function History() {
                   <div key={key} className={styles.statItem}>
                     <span className={styles.statLabel}>{labels[key]}</span>
                     <span className={styles.statValue}>
-                      {formatNumber(value)}
+                      {formatNumberWithCommas(value)}
                       <span className={styles.statUnit}>{units[key]}</span>
                     </span>
                   </div>
@@ -318,6 +314,10 @@ export default function History() {
           </div>
 
           <div className={styles.exportSection}>
+            <span className={styles.entryCount}>
+              {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
+              found
+            </span>
             <button
               onClick={downloadCSV}
               disabled={entries.length === 0 || loading}
@@ -327,10 +327,6 @@ export default function History() {
               {/* <span className={styles.exportIcon}></span> */}
               Export as CSV
             </button>
-            <span className={styles.entryCount}>
-              {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
-              found
-            </span>
           </div>
         </>
       )}
@@ -358,7 +354,7 @@ export default function History() {
             )}
           </div>
         ) : (
-          <div className={styles.tableContainer}>        
+          <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
                 <tr>

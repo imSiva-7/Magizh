@@ -250,8 +250,8 @@
 .statsCard h3 {
   color: #1e293b;
   margin: 0 0 1.25rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -430,10 +430,9 @@
 
 .table th:nth-child(2) {
   min-width: 110px;
+  
 }
-/* .table th:nth-child(11) {
-  min-width: 90px;
-} */
+
 
 .table tbody tr {
   border-bottom: 1px solid #f1f5f9;
@@ -456,17 +455,16 @@
   color: #1e293b;
 }
 
-.batchCell {
-  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
+.table td:nth-child(2){
   font-weight: 600;
   color: rgb(39, 121, 93);
   letter-spacing: 0.5px;
 }
 
-/* .table td:not(:first-child):not(:last-child):not(.batchCell) {
+.table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: right;
   font-variant-numeric: tabular-nums;
-} */
+}
 
 /* Loading State */
 .loading {

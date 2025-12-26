@@ -460,6 +460,14 @@ function ProcurementContent() {
       </div>
     );
   }
+  if (loading) {
+    return (
+      <div className={styles.loading}>
+        <div className={styles.spinner}></div>
+        <span className={styles.loadingText}>Loading procurement data...</span>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

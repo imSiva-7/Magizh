@@ -28,8 +28,7 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
-  // const currentPage =
-  //   navItems.find((item) => isActive(item.path))?.name || "Dashboard";
+  
 
   return (
     <header className={styles.header}>

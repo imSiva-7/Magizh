@@ -394,7 +394,7 @@ export default function Production() {
                     <th>Butter (Kg)</th>
                     <th>Cream (kg)</th>
                     <th>Ghee (L)</th>
-                    <th>Actions</th>
+                    {/* <th>Actions</th> */}
                   </tr>
                 </thead>
                 <tbody>
@@ -411,7 +411,7 @@ export default function Production() {
                       <td>{formatNumber(item.butter_quantity)}</td>
                       <td>{formatNumber(item.cream_quantity)}</td>
                       <td>{formatNumber(item.ghee_quantity)}</td>
-                      <td>
+                      {/* <td>
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteBtn}
@@ -420,7 +420,7 @@ export default function Production() {
                         >
                           {disableDelete ? "Contact Admin" : "Delete"}
                         </button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

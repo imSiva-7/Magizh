@@ -337,11 +337,15 @@
 
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
-  /* text-align: center; */
+  text-align: center;
   font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
   font-size: 0.875rem;
 }
 
+/* .table td:not(:first-child):not(:last-child):not(.batchCell) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+} */
 /* Action Cell */
 .table td:last-child {
   text-align: center;
