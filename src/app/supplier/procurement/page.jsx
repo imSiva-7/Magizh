@@ -221,13 +221,13 @@ function ProcurementContent() {
     if (!formData.fatPercentage) newErrors.fatPercentage = "Fat % is required";
     else if (parseFloat(formData.fatPercentage) <= 0)
       newErrors.fatPercentage = "Fat % must be greater than 0";
-    else if (parseFloat(formData.fatPercentage) > 7)
+    else if (parseFloat(formData.fatPercentage) > 9)
       newErrors.fatPercentage = "Fat % seems too high";
 
     if (!formData.snfPercentage) newErrors.snfPercentage = "SNF % is required";
     else if (parseFloat(formData.snfPercentage) <= 0)
       newErrors.snfPercentage = "SNF % must be greater than 0";
-    else if (parseFloat(formData.snfPercentage) > 9)
+    else if (parseFloat(formData.snfPercentage) > 12)
       newErrors.snfPercentage = "SNF % seems too high";
 
     if (!formData.rate || parseFloat(formData.rate) <= 0) {
