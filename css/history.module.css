@@ -410,12 +410,14 @@
 
 .table thead {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  position: sticky;
+  /* top: 0; */
 }
 
 .table th {
   padding: 1rem 1rem;
   text-align: left;
-  color: #475569;
+  color: #64748b;
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -430,14 +432,15 @@
 
 .table th:nth-child(2) {
   min-width: 110px;
-  
 }
 
-.table td:not(:first-child):not(:last-child):not(.batchCell) {
+.table td:not(:first-child):not(.batchCell) {
   text-align: center;
-  /* font-variant-numeric: tabular-nums; */
 }
 
+.table th:nth-child(11) {
+  text-align: center;
+}
 .table tbody tr {
   border-bottom: 1px solid #f1f5f9;
   transition: background-color 0.2s ease;
@@ -449,7 +452,7 @@
 
 .table td {
   padding: 1rem;
-  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.95rem;
   vertical-align: middle;
 }
@@ -459,10 +462,15 @@
   color: #1e293b;
 }
 
-.table td:nth-child(2){
+.table td:nth-child(2) {
   font-weight: 600;
   color: rgb(39, 121, 93);
   letter-spacing: 0.5px;
+}
+.table td:nth-child(12) {
+  display: flex;
+  text-align: center;
+  justify-content: center;
 }
 
 /* .table td:not(:first-child):not(:last-child):not(.batchCell) {

@@ -291,9 +291,9 @@
 }
 
 .table thead {
-  background-color: #f8fafc;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   position: sticky;
-  top: 0;
+  /* top: 0; */
 }
 
 .table th {
@@ -308,10 +308,14 @@
   white-space: nowrap;
 }
 
+.table th:not(:first-child):not(:nth-child(2)) {
+  text-align: center;
+}
+
 .table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 
@@ -338,7 +342,6 @@
 /* Number Cells */
 .table td:not(:first-child):not(:last-child):not(.batchCell) {
   text-align: center;
-  /* font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace; */
   font-size: 0.875rem;
 }
 

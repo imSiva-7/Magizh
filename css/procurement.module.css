@@ -1,6 +1,6 @@
 /* procurement.module.css - Supplier Procurement Page */
 .container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 1rem;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -490,7 +490,7 @@
 .summaryCard h3 {
   color: #1e293b;
   margin: 0 0 1.25rem 0;
-  font-size: 1.25rem;
+  font-size: 0.9rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -504,14 +504,14 @@
 }
 
 .dateRange {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #64748b;
   background: #f1f5f9;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 500;
   border: 1px solid #e2e8f0;
-  margin-left: 1rem;
+  margin-left: 0.4rem;
   display: inline-block;
 }
 
@@ -651,6 +651,8 @@
 
 .tableContainer {
   overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
 }
 
 .table {
@@ -662,9 +664,15 @@
 .table thead {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   position: sticky;
-  top: 0;
+  /* top: 0; */
 }
 
+.tableH3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-left: 1rem;
+}
 .table th {
   padding: 1rem;
   text-align: left;
@@ -689,6 +697,7 @@
 .table td {
   padding: 1rem;
   color: #334155;
+  border-bottom: 1px solid #e2e8f0;
   font-size: 0.95rem;
   vertical-align: middle;
 }
@@ -701,6 +710,10 @@
   text-align: left;
   /* font-variant-numeric: tabular-nums; */
 }
+.table th:nth-child(8) {
+  text-align: center;
+}
+
 .activeRow {
   background-color: #f0f9ff !important;
   border-left: 4px solid rgb(39, 121, 93);
@@ -710,11 +723,12 @@
 .dateCell {
   font-weight: 500;
   color: #1e293b;
-  min-width: 90px;
+  min-width: 70px;
 }
 
 .timeCell {
-  min-width: 60px;
+  max-width: 60px;
+  min-width: 50px;
 }
 
 .amBadge,
@@ -748,16 +762,18 @@
   font-weight: 600;
   color: #1e293b;
   font-variant-numeric: tabular-nums;
-  min-width: 120px;
+  min-width: 60px;
 }
 
 .actionsCell {
   min-width: 100px;
+  text-align: center;
 }
 
 .actionButtons {
   display: flex;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 .editBtn,
@@ -1033,31 +1049,3 @@
   }
 }
 
-/* Remove these duplicate classes - they're already defined above */
-/* 
-.input {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #334155;
-  background: white;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.inputError {
-  border-color: #dc2626;
-}
-
-.readOnlyInput {
-  background-color: #f8fafc;
-  cursor: not-allowed;
-  color: #64748b;
-}
-
-.summaryItem, .summaryLabel, .summaryValue {
-  // These are duplicates - use statItem, statLabel, statValue instead
-}
-*/

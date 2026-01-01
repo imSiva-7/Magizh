@@ -452,14 +452,6 @@ function ProcurementContent() {
       </div>
     );
   }
-  if (loading) {
-    return (
-      <div className={styles.loading}>
-        <div className={styles.spinner}></div>
-        <span className={styles.loadingText}>Loading...</span>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.container}>
@@ -740,16 +732,6 @@ function ProcurementContent() {
                 label: "Daily Avg",
                 unit: "L/day",
               },
-              avgRate: {
-                value: `₹${summary.avgRate}`,
-                label: "Avg Rate",
-                unit: "/L",
-              },
-              totalAmount: {
-                value: `${formatNumberWithCommasNoDecimal(summary.amount)}`,
-                label: "Total Amount",
-                unit: "₹",
-              },
               avgFat: {
                 value: `${summary.avgFat}`,
                 label: "Avg Fat",
@@ -759,6 +741,16 @@ function ProcurementContent() {
                 value: `${summary.avgSnf}`,
                 label: "Avg SNF",
                 unit: "%",
+              },
+              avgRate: {
+                value: `₹${summary.avgRate}`,
+                label: "Avg Rate",
+                unit: "/L",
+              },
+              totalAmount: {
+                value: `${formatNumberWithCommasNoDecimal(summary.amount)}`,
+                label: "Total Amount",
+                unit: "",
               },
             }).map(([key, { value, label, unit }]) => (
               <div key={key} className={styles.statItem}>
@@ -848,6 +840,9 @@ function ProcurementContent() {
           </div>
         ) : (
           <div className={styles.tableContainer}>
+           <h3 className={styles.tableH3}>
+                Recent Production Entries ({filteredProcurements.length}){" "}
+              </h3>
             <table className={styles.table} aria-label="Procurement history">
               <thead>
                 <tr>
@@ -907,7 +902,7 @@ function ProcurementContent() {
                           aria-label="Edit record"
                           title="Edit record"
                         >
-                          ✎
+                          Edit
                         </button>
                         <button
                           onClick={() => handleDelete(row._id)}
@@ -916,7 +911,7 @@ function ProcurementContent() {
                           aria-label="Delete record"
                           title="Delete record"
                         >
-                          🗑
+                          Delete
                         </button>
                       </div>
                     </td>
