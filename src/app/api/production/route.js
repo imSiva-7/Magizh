@@ -72,8 +72,8 @@ const validatePercentageFields = (data) => {
   }
   if (data.snf_percentage) {
     const snf = parseFloat(data.snf_percentage);
-    if (isNaN(snf) || snf > 9.5) {
-      errors.push("SNF percentage should be below 9.5");
+    if (isNaN(snf) || snf > 12) {
+      errors.push("SNF percentage should be below 12");
     }
   }
 

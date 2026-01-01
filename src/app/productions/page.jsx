@@ -263,7 +263,7 @@ export default function Production() {
               onChange={(v) => handleInputChange("snf_percentage", v)}
               placeholder="8.5"
               min="0"
-              max="9.5"
+              max="12"
               step="0.1"
             />
           </div>
@@ -394,7 +394,7 @@ export default function Production() {
                     <th>Butter (Kg)</th>
                     <th>Cream (kg)</th>
                     <th>Ghee (L)</th>
-                    {/* <th>Actions</th> */}
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -411,16 +411,16 @@ export default function Production() {
                       <td>{formatNumber(item.butter_quantity)}</td>
                       <td>{formatNumber(item.cream_quantity)}</td>
                       <td>{formatNumber(item.ghee_quantity)}</td>
-                      {/* <td>
+                      <td>
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteBtn}
-                          disabled={true}
+                          // disabled={true}
                           title="Delete entry"
                         >
-                          {disableDelete ? "Contact Admin" : "Delete"}
+                          {"Delete"}
                         </button>
-                      </td> */}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
