@@ -1,5 +1,4 @@
-
-"use client"
+"use client";
 
 import styles from "@/css/footer.module.css";
 import Image from "next/image";
@@ -52,14 +51,14 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.1.1</span>
+            <span className={styles.version}>v1.1.2</span>
           </div>
 
-          <div className={styles.technicalInfo}>
+          {/* <div className={styles.technicalInfo}>
             <span className={styles.techItem}>Database: MongoDB</span>
             <span className={styles.techItem}>Framework: Next.js</span>
             <span className={styles.techItem}>Hosting: Vercel</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

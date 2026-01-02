@@ -181,8 +181,6 @@ export default function Production() {
     }
   };
 
-
-
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
 
@@ -321,18 +319,6 @@ export default function Production() {
         </div>
 
         <div className={styles.buttonGroup}>
-          {/* <button
-                type="button"
-                disabled={!batchNo || isSubmitting}
-                className={styles.supplierBtn}
-                onClick={() =>
-                  router.push(
-                    "/supplier"
-                  )
-                }
-              >
-               Suppliers
-              </button> */}
           <button
             type="button"
             onClick={() => setFormData(initialFormState)}

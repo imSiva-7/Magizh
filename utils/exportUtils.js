@@ -2,7 +2,6 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // --- Utility Functions ---
-
 const formatNumberWithCommas = (value, decimals = 2) => {
   const num = Number(value);
   if (!Number.isFinite(num)) return (0).toFixed(decimals);
@@ -55,7 +54,6 @@ const calculateTotals = (procurements) => {
 // --- PDF Design Constants ---
 const COMPANY_COLOR = [39, 121, 93]; // Corporate Blue
 const TEXT_COLOR = [44, 62, 80]; // Dark Grey
-const ACCENT_COLOR = [241, 196, 15]; // Yellow/Gold for highlights (optional)
 
 export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   if (!procurements.length) {
@@ -66,9 +64,11 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
+  const marginBottom = 20; // Safe margin at bottom
 
+  // --- 1. Header Section ---
   doc.setFillColor(...COMPANY_COLOR);
-  doc.rect(0, 0, pageWidth, 40, "F"); 
+  doc.rect(0, 0, pageWidth, 40, "F");
 
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
@@ -169,7 +169,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
       record.time || "AM",
       formatNumberWithCommas(kg, 2),
       formatNumberWithCommas(record.milkQuantity, 2),
-      parseFloat(record.fatPercentage).toFixed(1), // Keep simple
+      parseFloat(record.fatPercentage).toFixed(1),
       parseFloat(record.snfPercentage).toFixed(1),
       formatNumberWithCommas(record.rate, 2),
       formatNumberWithCommas(record.totalAmount, 2),
@@ -186,6 +186,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     body: tableData,
     startY: infoStartY + 30,
     theme: "striped",
+    margin: { bottom: 20 }, // Ensure autoTable leaves space at bottom
     styles: {
       fontSize: 9,
       cellPadding: 3,
@@ -197,17 +198,17 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
       fillColor: COMPANY_COLOR,
       textColor: 255,
       fontStyle: "bold",
-      halign: "center", // Center headers
+      halign: "center",
     },
     columnStyles: {
-      0: { halign: "center", cellWidth: 22 }, // Date
-      1: { halign: "center", cellWidth: 15 }, // Time
-      2: { halign: "right" }, // Numbers right aligned
-      3: { halign: "right", fontStyle: "bold" }, // Liters (Important)
+      0: { halign: "center", cellWidth: 22 },
+      1: { halign: "center", cellWidth: 15 },
+      2: { halign: "right" },
+      3: { halign: "right", fontStyle: "bold" },
       4: { halign: "right" },
       5: { halign: "right" },
       6: { halign: "right" },
-      7: { halign: "right", fontStyle: "bold" }, // Amount (Important)
+      7: { halign: "right", fontStyle: "bold" },
     },
     alternateRowStyles: {
       fillColor: [245, 248, 250],
@@ -215,7 +216,17 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   });
 
   // --- 4. Summary & Totals Section ---
-  const finalY = doc.lastAutoTable.finalY + 10;
+  // Calculate final Y position after table
+  let finalY = doc.lastAutoTable.finalY + 10;
+
+  // Height needed for summary box (50) + Footer space (roughly 40)
+  // If we are too close to the bottom, start a new page
+  const requiredSpace = 100;
+
+  if (finalY + requiredSpace > pageHeight) {
+    doc.addPage();
+    finalY = 20; // Reset Y to top of new page
+  }
 
   // Calculate Averages
   const avgFat = (totalFat / procurements.length).toFixed(2);
@@ -279,10 +290,11 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   // --- 5. Footer Section ---
   const footerY = finalY + 65; // Position below summary
 
-  // Check if we need a new page for footer
-  if (footerY > pageHeight - 20) {
+  // Double check if footer fits (in case summary fits but footer doesn't)
+  if (footerY > pageHeight - 15) {
     doc.addPage();
-    // footerY = 30; // Reset Y for new page
+    // If we added a page for footer, we need to reset Y variables
+    // But usually, the check in step 4 handles this.
   }
 
   doc.setTextColor(0, 0, 0);
