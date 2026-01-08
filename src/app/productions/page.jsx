@@ -51,7 +51,7 @@ export default function Production() {
   const [entries, setEntries] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [disableDelete, setDisableDelete] = useState(true);
+  // const [disableDelete, setDisableDelete] = useState(true);
   const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
 

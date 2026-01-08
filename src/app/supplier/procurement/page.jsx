@@ -368,6 +368,9 @@ function ProcurementContent() {
 
       const payload = {
         supplierId,
+        supplierName: data.supplier.supplierName,
+        supplierType: data.supplier.supplierType,
+        supplierTSRate: data.supplier.supplierTSRate,
         date: formData.date,
         time: formData.time,
         milkQuantity: parseFloat(formData.milkQuantity),
@@ -452,7 +455,6 @@ function ProcurementContent() {
     setErrors({});
   };
 
-  // ========== DATA PROCESSING ==========
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
 
@@ -795,7 +797,7 @@ function ProcurementContent() {
       )}
 
       {/* EXPORT SECTION */}
-      {summary.count > 0 && (
+      {summary.count && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found

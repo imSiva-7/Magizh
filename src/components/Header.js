@@ -12,8 +12,9 @@ export default function Header() {
 
   const navItems = [
     { name: "Production", path: "/productions", icon: "" },
-    { name: "History", path: "/productions/history", icon: "" },
+    { name: "Production History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
+    {name: "Procurement History", path: "/supplier/procurement/history"}
   ];
 
   const isActive = (path) => {

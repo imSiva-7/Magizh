@@ -83,6 +83,9 @@ export async function POST(request) {
     const body = await request.json();
     const {
       supplierId,
+      supplierName,
+      supplierType,
+      supplierTSRate,
       date,
       time,
       milkQuantity,
@@ -120,6 +123,9 @@ export async function POST(request) {
 
     const newProcurement = {
       supplierId: new ObjectId(supplierId),
+      supplierName: supplierName,
+      supplierType: supplierType,
+      supplierTSRate: supplierTSRate,
       date,
       time,
       milkQuantity: parseFloat(milkQuantity),
