@@ -24,27 +24,27 @@ const getDateRangeLabel = (startDate, endDate) => {
   return "All Records";
 };
 
-const getSupplierTypeClass = (supplierType) => {
-  if (!supplierType || supplierType === "Unknown") {
-    return styles.type_unknown_badge;
-  }
+// const getSupplierTypeClass = (supplierType) => {
+//   if (!supplierType || supplierType === "Unknown") {
+//     return styles.type_unknown_badge;
+//   }
 
-  const typeClassMap = {
-    Society: styles.type_society_badge,
-    Milkman: styles.type_milkman_badge,
-    Farmer: styles.type_farmer_badge,
-    Other: styles.type_other_badge,
-  };
-  return typeClassMap[supplierType] || styles.type_other_badge;
-};
+//   const typeClassMap = {
+//     Society: styles.type_society_badge,
+//     Milkman: styles.type_milkman_badge,
+//     Farmer: styles.type_farmer_badge,
+//     Other: styles.type_other_badge,
+//   };
+//   return typeClassMap[supplierType] || styles.type_other_badge;
+// };
 
 const formatSupplierName = (name) => {
   return name || "Unknown";
 };
 
-const formatSupplierType = (type) => {
-  return type || "Unknown";
-};
+// const formatSupplierType = (type) => {
+//   return type || "Unknown";
+// };
 
 // ========== REUSABLE COMPONENTS ==========
 const StatItem = ({ label, value, unit, prefix = "" }) => (
@@ -236,62 +236,83 @@ function ProcurementHistoryContent() {
       </div>
 
       {/* FILTER SECTION */}
-      <div className={styles.filterSection}>
-        <div className={styles.filterGrid}>
-          <div className={styles.dateFilterRow}>
-            <div className={styles.dateField}>
-              <label htmlFor="startDate">From Date</label>
-              <input
-                id="startDate"
-                type="date"
-                name="startDate"
-                value={filters.startDate}
-                onChange={handleFilterChange}
-                className={styles.filterInput}
-                max={filters.endDate || getTodayDate()}
-                aria-label="Select start date"
-              />
-            </div>
+      <form className={styles.filterForm}>
+        <div className={styles.filterHeader}>
+          <h2>Filter by Date Range</h2>
+        </div>
 
-            <div className={styles.dateField}>
-              <label htmlFor="endDate">To Date</label>
-              <input
-                id="endDate"
-                type="date"
-                name="endDate"
-                value={filters.endDate}
-                onChange={handleFilterChange}
-                className={styles.filterInput}
-                max={getTodayDate()}
-                min={filters.startDate}
-                aria-label="Select end date"
-              />
-            </div>
+        <div className={styles.filterRow}>
+          <div className={styles.dateFilterSection}>
+            <div className={styles.dateInputGroup}>
+              <div className={styles.dateField}>
+                <label htmlFor="fromDate">From Date</label>
+                <input
+                  id="fromDate"
+                  name="startDate"
+                  type="date"
+                  value={filters.startDate}
+                  onChange={handleFilterChange}
+                  className={styles.dateInput}
+                  max={filters.endDate || getTodayDate()}
+                  required
+                  aria-label="Select start date"
+                />
+              </div>
 
-            <div className={styles.filterButtons}>
+              <div className={styles.dateField}>
+                <label htmlFor="toDate">To Date</label>
+                <input
+                  id="toDate"
+                  name="endDate"
+                  type="date"
+                  value={filters.endDate}
+                  onChange={handleFilterChange}
+                  className={styles.dateInput}
+                  min={filters.startDate}
+                  max={getTodayDate()}
+                  required
+                  aria-label="Select end date"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.filterActions}>
+            <div className={styles.buttonGroup}>
+              <button
+                type="button"
+                onClick={clearFilters}
+                disabled={loading}
+                className={styles.primaryBtn}
+                aria-label="Show production history"
+              >
+                {loading ? (
+                  <>
+                    <span className={styles.buttonSpinner}></span>
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.buttonIcon}></span>
+                    Clear Filter
+                  </>
+                )}
+              </button>
+
               <button
                 type="button"
                 onClick={resetFilters}
                 className={styles.secondaryBtn}
-                aria-label="Reset filters to default"
                 disabled={loading}
+                aria-label="Reset date filters"
               >
-                Reset
-              </button>
-
-              <button
-                type="button"
-                onClick={clearFilters}
-                className={styles.secondaryBtn}
-                disabled={(!filters.startDate && !filters.endDate) || loading}
-                aria-label="Clear date filters"
-              >
-                Clear
+                <span className={styles.buttonIcon}></span>
+                Reset Filter
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </form>
 
       {/* SUMMARY SECTION */}
       {summary.count > 0 && (

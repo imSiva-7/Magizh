@@ -415,7 +415,7 @@
 
 .supplierTable th {
   padding: 1rem;
-  text-align: left;
+  /* text-align: left; */
   color: #475569;
   font-weight: 600;
   font-size: 0.85rem;
@@ -446,9 +446,8 @@
   align-items: center;
   /* font-variant-numeric: tabular-nums; */
 }
-.supplierTable th:not(:first-child):not(:last-child) {
-  text-align: center;
-  /* font-variant-numeric: tabular-nums; */
+.supplierTable th:first-child {
+  text-align: left;
 }
 /* Table Cell Specific Styles */
 .nameCell {
@@ -503,13 +502,13 @@
   word-wrap: break-word;
 }
 
-
-
 /* Action Buttons - Similar to Productions */
 .actionButtons {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .procurementButton,
