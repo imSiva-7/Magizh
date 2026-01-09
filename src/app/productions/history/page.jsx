@@ -196,7 +196,7 @@ export default function History() {
             <div className={styles.dateInputGroup}>
               <div className={styles.dateField}>
                 <label htmlFor="fromDate">From Date</label>
-                <input
+                <input 
                   id="fromDate"
                   type="date"
                   value={fromDate}
