@@ -214,7 +214,7 @@
   flex-direction: column;
   transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .statItem:hover {
@@ -240,7 +240,7 @@
 }
 
 .statLabel {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #64748b;
   font-weight: 500;
   margin-bottom: 0.5rem;
@@ -249,7 +249,7 @@
 }
 
 .statValue {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
   display: flex;
@@ -337,7 +337,7 @@
 
 .table th {
   padding: 1rem 1rem;
-  text-align: left;
+  /* text-align: center; */
   color: #64748b;
   font-weight: 600;
   font-size: 0.75rem;
@@ -347,16 +347,19 @@
   white-space: nowrap;
 }
 
+
 /* Column specific min-widths */
 .dateHeader {
   min-width: 100px;
+text-align: left
 }
 .supplierHeader {
-  min-width: 150px;
+  min-width: 100px;
+  text-align: left;
 }
-.typeHeader {
+/* .typeHeader {
   min-width: 90px;
-}
+} */
 .timeHeader {
   min-width: 80px;
 }
@@ -369,14 +372,14 @@
 .snfHeader {
   min-width: 80px;
 }
+.tsRateHeader {
+  min-width: 100px;
+}
 .rateHeader {
   min-width: 100px;
 }
 .totalHeader {
   min-width: 120px;
-}
-.tsRateHeader {
-  min-width: 100px;
 }
 
 /* Table Body */
@@ -428,7 +431,7 @@
 .rateCell,
 .totalCell,
 .tsRateCell {
-  text-align: right;
+  text-align: center;
   font-variant-numeric: tabular-nums;
 }
 

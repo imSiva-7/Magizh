@@ -39,7 +39,7 @@ const getSupplierTypeClass = (supplierType) => {
 };
 
 const formatSupplierName = (name) => {
-  return name || "Unknown Supplier";
+  return name || "Unknown";
 };
 
 const formatSupplierType = (type) => {
@@ -60,8 +60,6 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 
 // ========== MAIN COMPONENT ==========
 function ProcurementHistoryContent() {
-  const searchParams = useSearchParams();
-
   // ========== STATE MANAGEMENT ==========
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(initialFilters);
@@ -71,16 +69,7 @@ function ProcurementHistoryContent() {
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-
-      // Add query parameters for filtering on server side
-      const params = new URLSearchParams();
-      if (filters.startDate) params.append("startDate", filters.startDate);
-      if (filters.endDate) params.append("endDate", filters.endDate);
-
-      const queryString = params.toString();
-      const url = `/api/supplier/procurement/history${
-        queryString ? `?${queryString}` : ""
-      }`;
+      const url = "/api/supplier/procurement/history";
 
       const response = await fetch(url, {
         cache: "no-store", // Prevent caching for fresh data
@@ -94,8 +83,6 @@ function ProcurementHistoryContent() {
       }
 
       const data = await response.json();
-
-      // Handle both array response and object with data property
       const responseData = Array.isArray(data) ? data : data.data || data;
 
       if (responseData && Array.isArray(responseData)) {
@@ -110,7 +97,7 @@ function ProcurementHistoryContent() {
     } finally {
       setLoading(false);
     }
-  }, [filters.startDate, filters.endDate]);
+  }, []);
 
   // ========== EFFECTS ==========
   useEffect(() => {
@@ -135,10 +122,8 @@ function ProcurementHistoryContent() {
   const filteredProcurements = useMemo(() => {
     if (!procurementData.length) return [];
 
-    // Server already filters by date, but we keep client-side filtering as fallback
     return procurementData
       .filter((record) => {
-        // Additional client-side date filter (if server filtering fails)
         const recordDate = new Date(record.date);
         const startDate = filters.startDate
           ? new Date(filters.startDate)
@@ -153,8 +138,6 @@ function ProcurementHistoryContent() {
       .sort((a, b) => {
         const dateCompare = new Date(b.date) - new Date(a.date);
         if (dateCompare !== 0) return dateCompare;
-
-        // Better time sorting: AM = 1, PM = 2
         const timeValue = (time) => {
           if (time === "AM") return 1;
           if (time === "PM") return 2;
@@ -248,10 +231,7 @@ function ProcurementHistoryContent() {
       {/* HEADER */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
-          <h1>All Procurement History</h1>
-          <p className={styles.subtitle}>
-            Complete record of all milk procurement across all suppliers
-          </p>
+          <h1>Procurement History</h1>
         </div>
       </div>
 
@@ -324,21 +304,12 @@ function ProcurementHistoryContent() {
           </h3>
           <div className={styles.statsGrid}>
             <StatItem
-              label="Total Records"
-              value={summary.count.toLocaleString()}
-            />
-            <StatItem
               label="Total Milk"
               value={summary.milk.toFixed(2)}
               unit="L"
             />
-            <StatItem
-              label="Total Amount"
-              value={formatNumberWithCommasNoDecimal(summary.amount)}
-              unit=""
-              prefix="₹"
-            />
-            <StatItem label="Days with Data" value={summary.daysWithData} />
+            <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
+            <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
             <StatItem
               label="Avg Milk/Day"
               value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
@@ -350,8 +321,14 @@ function ProcurementHistoryContent() {
               unit="/L"
               prefix="₹"
             />
-            <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
-            <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
+            <StatItem
+              label="Total Amount"
+              value={formatNumberWithCommasNoDecimal(summary.amount)}
+              unit=""
+              prefix="₹"
+            />
+
+            {/* <StatItem label="Days with Data" value={summary.daysWithData} /> */}
           </div>
         </div>
       )}
@@ -414,9 +391,9 @@ function ProcurementHistoryContent() {
                     <th scope="col" className={styles.supplierHeader}>
                       Supplier
                     </th>
-                    <th scope="col" className={styles.typeHeader}>
+                    {/* <th scope="col" className={styles.typeHeader}>
                       Type
-                    </th>
+                    </th> */}
                     <th scope="col" className={styles.timeHeader}>
                       Time
                     </th>
@@ -429,14 +406,14 @@ function ProcurementHistoryContent() {
                     <th scope="col" className={styles.snfHeader}>
                       SNF %
                     </th>
+                    <th scope="col" className={styles.tsRateHeader}>
+                      TS Rate
+                    </th>
                     <th scope="col" className={styles.rateHeader}>
                       Rate/L
                     </th>
                     <th scope="col" className={styles.totalHeader}>
                       Total (₹)
-                    </th>
-                    <th scope="col" className={styles.tsRateHeader}>
-                      TS Rate
                     </th>
                   </tr>
                 </thead>
@@ -475,14 +452,14 @@ function ProcurementHistoryContent() {
                         </div>
                       </td>
 
-                      <td className={styles.typeCell}>
+                      {/* <td className={styles.typeCell}>
                         <span
                           className={getSupplierTypeClass(row.supplierType)}
                           title={row.supplierType || "Unknown type"}
                         >
                           {formatSupplierType(row.supplierType)}
                         </span>
-                      </td>
+                      </td> */}
 
                       <td className={styles.timeCell}>
                         <span
@@ -506,6 +483,11 @@ function ProcurementHistoryContent() {
                       <td className={styles.snfCell} data-label="SNF %">
                         {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
                       </td>
+                      <td className={styles.tsRateCell} data-label="TS Rate">
+                        {row.supplierTSRate
+                          ? `${parseInt(row.supplierTSRate)}`
+                          : "N/A"}
+                      </td>
 
                       <td className={styles.rateCell} data-label="Rate/L">
                         ₹{(parseFloat(row.rate) || 0).toFixed(1)}
@@ -513,12 +495,6 @@ function ProcurementHistoryContent() {
 
                       <td className={styles.totalCell} data-label="Total (₹)">
                         ₹{formatNumberWithCommasNoDecimal(row.totalAmount || 0)}
-                      </td>
-
-                      <td className={styles.tsRateCell} data-label="TS Rate">
-                        {row.supplierTSRate
-                          ? `₹${parseInt(row.supplierTSRate)}`
-                          : "N/A"}
                       </td>
                     </tr>
                   ))}
