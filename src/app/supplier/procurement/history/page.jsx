@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/procurementHistory.module.css";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
+import Link from "next/link";
 
 // ========== CONSTANTS ==========
 const initialFilters = {
@@ -459,18 +460,16 @@ function ProcurementHistoryContent() {
                       </td>
 
                       <td className={styles.supplierCell}>
-                        <div
-                          className={`${styles.supplierName} ${
-                            !row.supplierName ? styles.unknownSupplier : ""
-                          }`}
-                          title={
-                            row.supplierId
-                              ? `Supplier ID: ${row.supplierId}`
-                              : "No supplier ID"
-                          }
-                        >
-                          {formatSupplierName(row.supplierName)}
-                        </div>
+                        {row.supplierName ? (
+                          <Link
+                            href={`/supplier/procurement?supplierId=${row.supplierId}`}
+                            className={styles.supplierName}
+                          >
+                            {row.supplierName}
+                          </Link>
+                        ) : (
+                          "Unknown"
+                        )}
                       </td>
 
                       {/* <td className={styles.typeCell}>

@@ -417,11 +417,31 @@
   white-space: nowrap;
 }
 
+.supplierName {
+  color: #f0f0f0;
+  background-color: rgb(39, 121, 93);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 6px;
+  box-shadow: 0.2s ease;
+}
+
+.supplierName:hover {
+  background-color: #eaf4ff;
+  color: rgb(39, 121, 93);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.supplierName:active {
+  transform: scale(0.97);
+}
 
 /* Column specific min-widths */
 .dateHeader {
   min-width: 100px;
-text-align: left
+  text-align: left;
 }
 .supplierHeader {
   min-width: 100px;
@@ -552,7 +572,7 @@ text-align: left
 
 /* Supplier Name */
 .supplierName {
-  color: rgb(39, 121, 93);
+  /* color: rgb(39, 121, 93); */
   font-weight: 600;
 }
 
