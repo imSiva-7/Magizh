@@ -797,7 +797,7 @@ function ProcurementContent() {
       )}
 
       {/* EXPORT SECTION */}
-      {summary.count && (
+      {summary.count > 0 && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
