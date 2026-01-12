@@ -39,9 +39,9 @@ const getDateRangeLabel = (startDate, endDate) => {
 //   return typeClassMap[supplierType] || styles.type_other_badge;
 // };
 
-const formatSupplierName = (name) => {
-  return name || "Unknown";
-};
+// const formatSupplierName = (name) => {
+//   return name || "Unknown";
+// };
 
 // const formatSupplierType = (type) => {
 //   return type || "Unknown";
@@ -382,11 +382,11 @@ function ProcurementHistoryContent() {
                 <h3>No Records Found</h3>
                 <p>No procurement records found for the selected date range</p>
                 <button
-                  onClick={clearFilters}
+                  onClick={resetFilters}
                   className={styles.clearFilterBtn}
                   disabled={loading}
                 >
-                  Clear filters to see all{" "}
+                  Reset filters to see all{" "}
                   {procurementData.length.toLocaleString()} records
                 </button>
               </>
@@ -394,12 +394,12 @@ function ProcurementHistoryContent() {
           </div>
         ) : (
           <div className={styles.tableContainer}>
-            <div className={styles.tableHeader}>
+            {/* <div className={styles.tableHeader}>
               <h4>Procurement Records</h4>
               <span className={styles.tableInfo}>
                 Sorted by Date (Newest First)
               </span>
-            </div>
+            </div> */}
             <div className={styles.tableScroll}>
               <table
                 className={styles.table}

@@ -32,7 +32,7 @@ export async function GET(request) {
     // Fetch procurements with optimized query
     const procurements = await collection
       .find(query)
-      .sort({ date: -1, time: -1 }) // Sort by date then time for consistent ordering
+      // .sort({ date: -1, time: 1 })  Sort by date then time for consistent ordering
       .limit(5000) // Limit to prevent memory issues
       .project({
         _id: 1,

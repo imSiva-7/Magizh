@@ -84,33 +84,41 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 );
 
 const SummaryStats = ({ summary, filters }) => (
-  <div className={styles.statsCard}>
-    <h3>
-      Procurement Summary{" "}
-      <span className={styles.dateRange}>
-        {getDateRangeLabel(filters.startDate, filters.endDate)}
-      </span>
-    </h3>
-    <div className={styles.statsGrid}>
-      <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
-      <StatItem
-        label="Daily Avg"
-        value={
-          summary.daysWithData
-            ? (summary.milk / summary.daysWithData).toFixed(2)
-            : "0.00"
-        }
-        unit="L/day"
-      />
-      <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
-      <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
-      <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
-      <StatItem
-        label="Total Amount"
-        value={formatNumberWithCommasNoDecimal(summary.amount)}
-        unit=""
-        prefix="₹"
-      />
+  <div className={styles.summaryBox}>
+    {" "}
+    <div className={styles.statsCard}>
+      <h3>
+        Summary{" "}
+        <span className={styles.dateRange}>
+          {getDateRangeLabel(filters.startDate, filters.endDate)}
+        </span>
+      </h3>
+      <div className={styles.statsGrid}>
+        <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
+        <StatItem
+          label="Daily Avg"
+          value={
+            summary.daysWithData
+              ? (summary.milk / summary.daysWithData).toFixed(2)
+              : "0.00"
+          }
+          unit="L/day"
+        />
+        <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
+        <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
+        <StatItem
+          label="Avg Rate"
+          value={summary.avgRate}
+          unit="/L"
+          prefix="₹"
+        />
+        <StatItem
+          label="Total Amount"
+          value={formatNumberWithCommasNoDecimal(summary.amount)}
+          unit=""
+          prefix="₹"
+        />
+      </div>
     </div>
   </div>
 );
@@ -359,6 +367,19 @@ function ProcurementContent() {
       return;
     }
 
+    // try {
+    //   const method = "GET";
+    //   const uri = `/api/supplier/procurement?milkQuantity=${formData.milkQuantity}`;
+
+    //   const res = await fetch(uri, {
+    //     method,
+    //   });
+    //   const resData = await res.json();
+
+    //   if (!res.ok) return new Error("Checking Milk Quantity failing");
+    //   if (resData) alert("Milk procurement already entered, kindly check");
+    // } catch (error) {}
+
     setSubmitting(true);
     try {
       const method = editingId ? "PUT" : "POST";
@@ -458,23 +479,15 @@ function ProcurementContent() {
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
 
-    return data.allProcurements
-      .filter((record) => {
-        const recordDate = new Date(record.date);
-        const startDate = filters.startDate
-          ? new Date(filters.startDate)
-          : null;
-        const endDate = filters.endDate ? new Date(filters.endDate) : null;
+    return data.allProcurements.filter((record) => {
+      const recordDate = new Date(record.date);
+      const startDate = filters.startDate ? new Date(filters.startDate) : null;
+      const endDate = filters.endDate ? new Date(filters.endDate) : null;
 
-        if (startDate && recordDate < startDate) return false;
-        if (endDate && recordDate > endDate) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const dateCompare = new Date(b.date) - new Date(a.date);
-        if (dateCompare !== 0) return dateCompare;
-        return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
-      });
+      if (startDate && recordDate < startDate) return false;
+      if (endDate && recordDate > endDate) return false;
+      return true;
+    });
   }, [data.allProcurements, filters]);
 
   const summary = useMemo(() => {
@@ -568,7 +581,6 @@ function ProcurementContent() {
       </div>
     );
   }
-
   const isFormDirty = Object.values(formData).some(
     (val, idx) => idx > 1 && val && val !== ""
   );
@@ -607,7 +619,12 @@ function ProcurementContent() {
       {/* FORM SECTION */}
       <div className={styles.formSection}>
         <div className={styles.formHeader}>
-          <h2>{editingId ? "Edit Record" : "New Procurement Entry"}</h2>
+          <h2>
+            {editingId
+              ? "Edit Record"
+              : `New Procurement Entry (
+          ${data.supplier?.supplierName} )`}
+          </h2>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.procurementForm}>
@@ -729,6 +746,7 @@ function ProcurementContent() {
       </div>
 
       {/* FILTER SECTION */}
+     
       {summary.count > 0 && (
         <form className={styles.filterSection}>
           <div className={styles.filterHeader}>
@@ -857,10 +875,10 @@ function ProcurementContent() {
                 {(filters.startDate !== getPreviousMonthDate() ||
                   filters.endDate !== getTodayDate()) && (
                   <button
-                    onClick={clearFilters}
+                    onClick={resetFilterForm}
                     className={styles.clearFilterLink}
                   >
-                    Clear filters to see all {data.allProcurements.length}{" "}
+                    Reset filters to see all {data.allProcurements.length}{" "}
                     records
                   </button>
                 )}

@@ -8,8 +8,9 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get("supplierId");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const milkQuantity = searchParams.get("milkQuantity"); 
+    // const startDate = searchParams.get("startDate");
+    // const endDate = searchParams.get("endDate");
     const id = searchParams.get("id");
 
     // For single record
@@ -52,20 +53,19 @@ export async function GET(request) {
     const query = { supplierId: new ObjectId(supplierId) };
 
     // Add Date Filtering
-    if (startDate || endDate) {
-      query.date = {};
-      if (startDate) {
-        query.date.$gte = startDate;
-      }
-      if (endDate) {
-        query.date.$lte = endDate;
-      }
-    }
-
+    // if (startDate || endDate) {
+    //   query.date = {};
+    //   if (startDate) {
+    //     query.date.$gte = startDate;
+    //   }
+    //   if (endDate) {
+    //     query.date.$lte = endDate;
+    //   }
+    // }
     const procurements = await db
       .collection("procurements")
       .find(query)
-      .sort({ date: -1, time: 1 }) // Sort by date descending, time ascending (AM first)
+      .sort({ date: -1, time: 1 })
       .toArray();
 
     return NextResponse.json(procurements);

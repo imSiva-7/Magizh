@@ -272,7 +272,7 @@ export default function History() {
         <>
           <div className={styles.statsCard}>
             <h3>
-              Production Summary{" "}
+              Summary{" "}
               <div className={styles.dateRange}>
                 {fromDate && !toDate && `From ${fromDate}`}
                 {!fromDate && toDate && `Till ${toDate}`}
