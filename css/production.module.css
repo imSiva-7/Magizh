@@ -5,7 +5,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", sans-serif;
   background-color: #f8fafc;
   min-height: 100vh;
 }
@@ -62,7 +62,7 @@
 /* Form Grid - FIXED EQUAL WIDTH */
 .formGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
@@ -185,7 +185,9 @@
 }
 
 .resetBtn:hover:not(:disabled) {
-  background-color: #475569;
+  background-color: #5386cf;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .infoBtn {
@@ -229,7 +231,7 @@
 .tableWrapper {
   background-color: #ffffff;
   border-radius: 1rem;
-  padding: 2rem;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
 }

@@ -51,7 +51,6 @@ export default function Production() {
   const [entries, setEntries] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // const [disableDelete, setDisableDelete] = useState(true);
   const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
 
@@ -144,18 +143,15 @@ export default function Production() {
     const payload = {
       date: dateStr,
       batch: batchNo,
-      milk_quantity: parseDecimal(formData.milk_quantity, 1),
+      milk_quantity: parseDecimal(formData.milk_quantity, 2),
       fat_percentage: parseDecimal(formData.fat_percentage, 1),
       snf_percentage: parseDecimal(formData.snf_percentage, 1),
       curd_quantity: parseDecimal(formData.curd_quantity),
-      premium_paneer_quantity: parseDecimal(
-        formData.premium_paneer_quantity,
-        1
-      ),
-      soft_paneer_quantity: parseDecimal(formData.soft_paneer_quantity, 1),
+      premium_paneer_quantity: parseDecimal(formData.premium_paneer_quantity),
+      soft_paneer_quantity: parseDecimal(formData.soft_paneer_quantity),
       butter_quantity: parseDecimal(formData.butter_quantity),
-      cream_quantity: parseDecimal(formData.cream_quantity, 1),
-      ghee_quantity: parseDecimal(formData.ghee_quantity, 1),
+      cream_quantity: parseDecimal(formData.cream_quantity),
+      ghee_quantity: parseDecimal(formData.ghee_quantity),
     };
 
     try {
@@ -276,29 +272,7 @@ export default function Production() {
               onChange={(v) => handleInputChange("curd_quantity", v)}
               placeholder="100"
             />
-            <FormInput
-              label="Premium Paneer"
-              suffix="Kg"
-              value={formData.premium_paneer_quantity}
-              onChange={(v) => handleInputChange("premium_paneer_quantity", v)}
-              placeholder="100"
-              step="0.1"
-            />
-            <FormInput
-              label="Soft Paneer"
-              suffix="Kg"
-              value={formData.soft_paneer_quantity}
-              onChange={(v) => handleInputChange("soft_paneer_quantity", v)}
-              placeholder="100"
-              step="0.1"
-            />
-            <FormInput
-              label="Butter"
-              suffix="Kg"
-              value={formData.butter_quantity}
-              onChange={(v) => handleInputChange("butter_quantity", v)}
-              placeholder="100"
-            />
+
             <FormInput
               label="Cream"
               suffix="kg"
@@ -307,6 +281,33 @@ export default function Production() {
               placeholder="50"
               step="0.1"
             />
+
+            <FormInput
+              label="Soft Paneer"
+              suffix="Kg"
+              value={formData.soft_paneer_quantity}
+              onChange={(v) => handleInputChange("soft_paneer_quantity", v)}
+              placeholder="100"
+              step="0.1"
+            />
+
+            <FormInput
+              label="Premium Paneer"
+              suffix="Kg"
+              value={formData.premium_paneer_quantity}
+              onChange={(v) => handleInputChange("premium_paneer_quantity", v)}
+              placeholder="100"
+              step="0.1"
+            />
+
+            <FormInput
+              label="Butter"
+              suffix="Kg"
+              value={formData.butter_quantity}
+              onChange={(v) => handleInputChange("butter_quantity", v)}
+              placeholder="100"
+            />
+
             <FormInput
               label="Ghee"
               suffix="L"
@@ -365,6 +366,7 @@ export default function Production() {
                 </button>
               </span>
             </div>
+
             <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>
@@ -375,29 +377,35 @@ export default function Production() {
                     <th>Fat (%)</th>
                     <th>SNF (%)</th>
                     <th>Curd (Kg)</th>
-                    <th>P. Paneer (Kg)</th>
-                    <th>S. Paneer (Kg)</th>
-                    <th>Butter (Kg)</th>
                     <th>Cream (kg)</th>
+                    <th>S. Paneer (Kg)</th>
+                    <th>P. Paneer (Kg)</th>
+                    <th>Butter (Kg)</th>
                     <th>Ghee (L)</th>
-                    {/* <th>Actions</th> */}
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {entries.map((item) => (
                     <tr key={item._id}>
-                      <td>{new Date(item.date).toLocaleDateString("en-IN")}</td>
+                      <td>
+                        {new Date(item.date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
                       <td className={styles.batchCell}>{item.batch}</td>
                       <td>{formatNumber(item.milk_quantity)}</td>
                       <td>{formatNumber(item.fat_percentage)}</td>
                       <td>{formatNumber(item.snf_percentage)}</td>
                       <td>{formatNumber(item.curd_quantity)}</td>
-                      <td>{formatNumber(item.premium_paneer_quantity)}</td>
-                      <td>{formatNumber(item.soft_paneer_quantity)}</td>
-                      <td>{formatNumber(item.butter_quantity)}</td>
                       <td>{formatNumber(item.cream_quantity)}</td>
+                      <td>{formatNumber(item.soft_paneer_quantity)}</td>
+                      <td>{formatNumber(item.premium_paneer_quantity)}</td>
+                      <td>{formatNumber(item.butter_quantity)}</td>
                       <td>{formatNumber(item.ghee_quantity)}</td>
-                      {/* <td>
+                      <td>
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteBtn}
@@ -406,7 +414,7 @@ export default function Production() {
                         >
                           {"Delete"}
                         </button>
-                      </td> */}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

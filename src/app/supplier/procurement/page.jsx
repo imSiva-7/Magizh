@@ -126,10 +126,14 @@ const SummaryStats = ({ summary, filters }) => (
 // ========== HELPER FUNCTIONS ==========
 const getDateRangeLabel = (startDate, endDate) => {
   if (startDate && endDate) {
-    return startDate === endDate ? startDate : `${startDate} to ${endDate}`;
+    return startDate === endDate
+      ? startDate
+      : `${new Date(startDate).toLocaleDateString("en-IN")} to ${
+          new Date(endDate).toLocaleDateString("en-IN")
+        }`;
   }
-  if (startDate) return `From ${startDate}`;
-  if (endDate) return `Till ${endDate}`;
+  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
   return "All Records";
 };
 
@@ -603,6 +607,7 @@ function ProcurementContent() {
       {/* HEADER */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
+          {/* <button className={styles.backButton}>Back</button> */}
           <h1>{data.supplier?.supplierName}</h1>
           <div className={styles.supplierInfo}>
             <span className={getSupplierTypeClass(data.supplier?.supplierType)}>
@@ -622,7 +627,7 @@ function ProcurementContent() {
           <h2>
             {editingId
               ? "Edit Record"
-              : `New Procurement Entry (
+              : `Procurement Entry (
           ${data.supplier?.supplierName} )`}
           </h2>
         </div>
@@ -746,7 +751,7 @@ function ProcurementContent() {
       </div>
 
       {/* FILTER SECTION */}
-     
+
       {summary.count > 0 && (
         <form className={styles.filterSection}>
           <div className={styles.filterHeader}>

@@ -437,16 +437,20 @@
 .supplierName:active {
   transform: scale(0.97);
 }
-
-/* Column specific min-widths */
+.table td:nth-child(1) {
+  max-width: 60px;
+}
+.table td:nth-child(2) {
+  max-width: 40px;
+}
 .dateHeader {
-  min-width: 100px;
   text-align: left;
 }
+
 .supplierHeader {
-  min-width: 100px;
   text-align: left;
 }
+
 /* .typeHeader {
   min-width: 90px;
 } */

@@ -16,12 +16,19 @@ const initialFilters = {
 };
 
 // ========== HELPER FUNCTIONS ==========
-const getDateRangeLabel = (startDate, endDate) => {
+const getDateRangeLabel = () => {
+  const { startDate, endDate } = initialFilters;
+
   if (startDate && endDate) {
-    return startDate === endDate ? startDate : `${startDate} to ${endDate}`;
+    const from = new Date(startDate).toLocaleDateString("en-IN");
+    const to = new Date(endDate).toLocaleDateString("en-IN");
+    return from === to ? from : `${from} to ${to}`;
   }
-  if (startDate) return `From ${startDate}`;
-  if (endDate) return `Till ${endDate}`;
+
+  if (startDate)
+    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+
   return "All Records";
 };
 

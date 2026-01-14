@@ -491,7 +491,7 @@ export default function Supplier() {
               inputMode="numeric"
             />
 
-            <FormInput
+            {/* <FormInput
               id="f-addr"
               label="Address"
               value={formData.supplierAddress}
@@ -499,7 +499,7 @@ export default function Supplier() {
               placeholder="Enter complete address"
               error={formErrors.supplierAddress}
               disabled={isSubmitting}
-            />
+            /> */}
           </div>
 
           <div className={styles.formActions}>

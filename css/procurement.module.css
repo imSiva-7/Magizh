@@ -1,4 +1,3 @@
-/* procurement.module.css - Supplier Procurement Page */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -52,7 +51,7 @@
 
 .headerTitle {
   color: rgb(39, 121, 93);
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
 }
@@ -155,18 +154,21 @@
 .procurementForm {
   display: flex;
   flex-direction: column;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
 .formGrid {
   display: grid;
-  grid-template-columns: 2fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Allow shrinking on mobile */
+
   gap: 0.5rem;
 }
 
