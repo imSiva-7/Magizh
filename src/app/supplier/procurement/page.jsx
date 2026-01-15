@@ -128,11 +128,12 @@ const getDateRangeLabel = (startDate, endDate) => {
   if (startDate && endDate) {
     return startDate === endDate
       ? startDate
-      : `${new Date(startDate).toLocaleDateString("en-IN")} to ${
-          new Date(endDate).toLocaleDateString("en-IN")
-        }`;
+      : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(
+          endDate
+        ).toLocaleDateString("en-IN")}`;
   }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (startDate)
+    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
   return "All Records";
 };
@@ -627,8 +628,8 @@ function ProcurementContent() {
           <h2>
             {editingId
               ? "Edit Record"
-              : `Procurement Entry (
-          ${data.supplier?.supplierName} )`}
+              : `Procurement Entry 
+ `}
           </h2>
         </div>
 

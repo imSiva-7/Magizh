@@ -7,16 +7,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "@/css/production.module.css";
 import { getTodayDate } from "@/utils/dateUtils.js";
 
-const formatNumber = (value) => {
-  if (value === null || value === undefined || value === 0 || value === "")
-    return "-";
-  return new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 0,
-  }).format(value);
-};
-
-const FormInput = ({
+const ProductionFormInput = ({
   label,
   value,
   onChange,
@@ -25,31 +16,74 @@ const FormInput = ({
   max,
   step,
   suffix,
+  type = "number",
+  required = false,
 }) => (
   <div className={styles.inputGroup}>
     <label>
       {label} {suffix && `(${suffix})`}
     </label>
     <input
-      type="number"
+      type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       className={styles.input}
-      min="0"
+      min={min}
       max={max}
       step={step || "0.01"}
+      required={required}
     />
   </div>
 );
 
-export default function Production() {
+const ProductionTableRow = ({ entry, onDelete }) => {
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === "" || value === 0)
+      return "-";
+    return new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
+
+  return (
+    <tr>
+      <td>
+        {new Date(entry.date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}
+      </td>
+      <td className={styles.batchCell}>{entry.batch}</td>
+      <td>{formatValue(entry.milk_quantity)}</td>
+      <td>{formatValue(entry.fat_percentage)}</td>
+      <td>{formatValue(entry.snf_percentage)}</td>
+      <td>{formatValue(entry.curd_quantity)}</td>
+      <td>{formatValue(entry.cream_quantity)}</td>
+      <td>{formatValue(entry.soft_paneer_quantity)}</td>
+      <td>{formatValue(entry.premium_paneer_quantity)}</td>
+      <td>{formatValue(entry.butter_quantity)}</td>
+      <td>{formatValue(entry.ghee_quantity)}</td>
+      <td>
+        <button
+          onClick={() => onDelete(entry._id)}
+          className={styles.deleteBtn}
+          title="Delete entry"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+  );
+};
+
+export default function ProductionPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState("light");
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
@@ -65,17 +99,16 @@ export default function Production() {
     cream_quantity: "",
     ghee_quantity: "",
   };
+
   const [formData, setFormData] = useState(initialFormState);
   const lastSubmitTime = useRef(0);
 
+  // ========== EFFECTS ==========
   useEffect(() => {
     setMounted(true);
-    const savedTheme = localStorage.getItem("dairy-theme");
-
-    if (savedTheme) setTheme(savedTheme);
   }, []);
 
-  const generateBatchNumber = useCallback(() => {
+  useEffect(() => {
     if (!dateStr) return;
     const date = new Date(dateStr);
     const day = date.getDate().toString().padStart(2, "0");
@@ -84,17 +117,15 @@ export default function Production() {
     setBatchNo(`B${day}${month}${year}`);
   }, [dateStr]);
 
-  useEffect(() => {
-    generateBatchNumber();
-  }, [dateStr, generateBatchNumber]);
+ 
 
-  // Fetch Data
-  const fetchData = useCallback(async () => {
+  // ========== DATA FETCHING ==========
+  const fetchEntries = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/production");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
+      const response = await fetch("/api/production");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
       setEntries(data);
     } catch (error) {
       console.error(error);
@@ -103,15 +134,12 @@ export default function Production() {
       setLoading(false);
     }
   }, []);
+   useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  // --- Handlers ---
-
+  // ========== FORM HANDLERS ==========
   const handleInputChange = (field, value) => {
-    // Only allow valid numbers or empty string
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
@@ -127,7 +155,6 @@ export default function Production() {
     e.preventDefault();
     e.stopPropagation();
 
-    // 4. IMPROVED LOGIC: Debounce submit (prevent double clicks)
     const now = Date.now();
     if (isSubmitting || now - lastSubmitTime.current < 2000) return;
 
@@ -139,7 +166,6 @@ export default function Production() {
     setIsSubmitting(true);
     lastSubmitTime.current = now;
 
-    // Clean payload
     const payload = {
       date: dateStr,
       batch: batchNo,
@@ -155,18 +181,18 @@ export default function Production() {
     };
 
     try {
-      const res = await fetch("/api/production", {
+      const response = await fetch("/api/production", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (res.ok) {
+      if (response.ok) {
         toast.success("Entry saved successfully");
-        setFormData(initialFormState); // Reset form
-        fetchData(); // Refresh table
+        setFormData(initialFormState);
+        fetchEntries();
       } else {
         toast.error(data.error || "Submission failed");
       }
@@ -180,195 +206,210 @@ export default function Production() {
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this entry?")) return;
 
-    // 5. IMPROVED LOGIC: Optimistic UI Update (Remove immediately)
     const previousEntries = [...entries];
     setEntries((prev) => prev.filter((item) => item._id !== id));
 
     try {
-      const res = await fetch(`/api/production?id=${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Delete failed");
+      const response = await fetch(`/api/production?id=${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Delete failed");
       toast.success("Entry deleted");
     } catch (error) {
-      // Revert if API fails
       setEntries(previousEntries);
       toast.error("Error deleting entry");
     }
   };
 
+  const resetForm = () => {
+    setFormData(initialFormState);
+  };
+
+  const navigateToHistory = () => {
+    router.push("/productions/history");
+  };
+
   if (!mounted) return null;
 
   return (
-    <div className={styles.container} data-theme={theme}>
-      <ToastContainer position="top-right" autoClose={3000} theme={theme} />
+    <div className={styles.container}>
+      <ToastContainer position="top-right" autoClose={3000} />
 
-      <div className={styles.headerSection}>
-        <h1>Production Entry</h1>
-      </div>
+      {/* Header */}
+      <header className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>Production Entry</h1>
+      </header>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.dateBatchRow}>
-          <div className={styles.inputGroup}>
-            <label>Date</label>
-            <input
-              type="date"
-              value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
-              className={styles.input}
-              required
-              max={new Date().toISOString().split("T")[0]}
-            />
-          </div>
+      {/* Main Form */}
+      <main className={styles.mainContent}>
+        <form onSubmit={handleSubmit} className={styles.productionForm}>
+          {/* Date & Batch */}
+          <section className={styles.formSection}>
+            <div className={styles.dateBatchRow}>
+              <div className={styles.inputGroup}>
+                <label>Date</label>
+                <input
+                  type="date"
+                  value={dateStr}
+                  onChange={(e) => setDateStr(e.target.value)}
+                  className={styles.input}
+                  required
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
 
-          <div className={styles.inputGroup}>
-            <label>Batch No</label>
-            <input
-              type="text"
-              value={batchNo}
-              readOnly
-              className={`${styles.input} ${styles.batchInput}`}
-            />
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <div className={styles.milkQualityRow}>
-            <FormInput
-              label="Milk Quantity"
-              suffix="L"
-              value={formData.milk_quantity}
-              onChange={(v) => handleInputChange("milk_quantity", v)}
-              placeholder="400"
-              step="0.1"
-            />
-            <FormInput
-              label="Fat Percentage"
-              suffix="%"
-              value={formData.fat_percentage}
-              onChange={(v) => handleInputChange("fat_percentage", v)}
-              placeholder="6.5"
-              min="0"
-              max="7.0"
-              step="0.1"
-            />
-            <FormInput
-              label="SNF Percentage"
-              suffix="%"
-              value={formData.snf_percentage}
-              onChange={(v) => handleInputChange("snf_percentage", v)}
-              placeholder="8.5"
-              min="0"
-              max="12"
-              step="0.1"
-            />
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <div className={styles.formGrid}>
-            <FormInput
-              label="Curd"
-              suffix="Kg"
-              value={formData.curd_quantity}
-              onChange={(v) => handleInputChange("curd_quantity", v)}
-              placeholder="100"
-            />
-
-            <FormInput
-              label="Cream"
-              suffix="kg"
-              value={formData.cream_quantity}
-              onChange={(v) => handleInputChange("cream_quantity", v)}
-              placeholder="50"
-              step="0.1"
-            />
-
-            <FormInput
-              label="Soft Paneer"
-              suffix="Kg"
-              value={formData.soft_paneer_quantity}
-              onChange={(v) => handleInputChange("soft_paneer_quantity", v)}
-              placeholder="100"
-              step="0.1"
-            />
-
-            <FormInput
-              label="Premium Paneer"
-              suffix="Kg"
-              value={formData.premium_paneer_quantity}
-              onChange={(v) => handleInputChange("premium_paneer_quantity", v)}
-              placeholder="100"
-              step="0.1"
-            />
-
-            <FormInput
-              label="Butter"
-              suffix="Kg"
-              value={formData.butter_quantity}
-              onChange={(v) => handleInputChange("butter_quantity", v)}
-              placeholder="100"
-            />
-
-            <FormInput
-              label="Ghee"
-              suffix="L"
-              value={formData.ghee_quantity}
-              onChange={(v) => handleInputChange("ghee_quantity", v)}
-              placeholder="50"
-              step="0.1"
-            />
-          </div>
-        </div>
-
-        <div className={styles.buttonGroup}>
-          <button
-            type="button"
-            onClick={() => setFormData(initialFormState)}
-            className={styles.resetBtn}
-            disabled={isSubmitting}
-          >
-            Reset Form
-          </button>
-          <button
-            type="submit"
-            disabled={!batchNo || isSubmitting}
-            className={styles.submitBtn}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Production"}
-          </button>
-        </div>
-      </form>
-
-      <div className={styles.tableWrapper}>
-        {loading ? (
-          <div className={styles.loading}>Loading production data...</div>
-        ) : entries.length === 0 ? (
-          <div className={styles.emptyState}>
-            <h3>No production data found</h3>
-            <p>Start by submitting your first production entry above.</p>
-          </div>
-        ) : (
-          <>
-            <div className={styles.tableHeader}>
-              <h3 className={styles.tableH3}>
-                Recent Production Entries ({entries.length}){" "}
-              </h3>
-              <span className={styles.tableBtn}>
-                <button
-                  type="button"
-                  disabled={!batchNo || isSubmitting}
-                  className={styles.infoBtn}
-                  onClick={() => router.push("/productions/history")}
-                >
-                  More Info
-                </button>
-                <button onClick={fetchData} className={styles.refreshBtn}>
-                  🔄
-                </button>
-              </span>
+              <div className={styles.inputGroup}>
+                <label>Batch No</label>
+                <input
+                  type="text"
+                  value={batchNo}
+                  readOnly
+                  className={`${styles.input} ${styles.batchInput}`}
+                />
+              </div>
             </div>
+          </section>
 
+          {/* Milk Quality */}
+          <section className={styles.formSection}>
+            <div className={styles.milkQualityRow}>
+              <ProductionFormInput
+                label="Milk Quantity"
+                suffix="L"
+                value={formData.milk_quantity}
+                onChange={(v) => handleInputChange("milk_quantity", v)}
+                placeholder="400"
+                step="0.1"
+              />
+              <ProductionFormInput
+                label="Fat Percentage"
+                suffix="%"
+                value={formData.fat_percentage}
+                onChange={(v) => handleInputChange("fat_percentage", v)}
+                placeholder="6.5"
+                min="0"
+                max="7.0"
+                step="0.1"
+              />
+              <ProductionFormInput
+                label="SNF Percentage"
+                suffix="%"
+                value={formData.snf_percentage}
+                onChange={(v) => handleInputChange("snf_percentage", v)}
+                placeholder="8.5"
+                min="0"
+                max="12"
+                step="0.1"
+              />
+            </div>
+          </section>
+
+          {/* Production Quantities */}
+          <section className={styles.formSection}>
+            <div className={styles.quantitiesGrid}>
+              <ProductionFormInput
+                label="Curd"
+                suffix="Kg"
+                value={formData.curd_quantity}
+                onChange={(v) => handleInputChange("curd_quantity", v)}
+                placeholder="100"
+              />
+              <ProductionFormInput
+                label="Cream"
+                suffix="kg"
+                value={formData.cream_quantity}
+                onChange={(v) => handleInputChange("cream_quantity", v)}
+                placeholder="50"
+                step="0.1"
+              />
+              <ProductionFormInput
+                label="Soft Paneer"
+                suffix="Kg"
+                value={formData.soft_paneer_quantity}
+                onChange={(v) => handleInputChange("soft_paneer_quantity", v)}
+                placeholder="100"
+                step="0.1"
+              />
+              <ProductionFormInput
+                label="Premium Paneer"
+                suffix="Kg"
+                value={formData.premium_paneer_quantity}
+                onChange={(v) =>
+                  handleInputChange("premium_paneer_quantity", v)
+                }
+                placeholder="100"
+                step="0.1"
+              />
+              <ProductionFormInput
+                label="Butter"
+                suffix="Kg"
+                value={formData.butter_quantity}
+                onChange={(v) => handleInputChange("butter_quantity", v)}
+                placeholder="100"
+              />
+              <ProductionFormInput
+                label="Ghee"
+                suffix="L"
+                value={formData.ghee_quantity}
+                onChange={(v) => handleInputChange("ghee_quantity", v)}
+                placeholder="50"
+                step="0.1"
+              />
+            </div>
+          </section>
+
+          {/* Form Actions */}
+          <section className={styles.formActions}>
+            <button
+              type="button"
+              onClick={resetForm}
+              className={styles.resetBtn}
+              disabled={isSubmitting}
+            >
+              Reset Form
+            </button>
+            <button
+              type="submit"
+              disabled={!batchNo || isSubmitting}
+              className={styles.submitBtn}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Production"}
+            </button>
+          </section>
+        </form>
+
+        {/* Recent Entries */}
+        <section className={styles.recentEntries}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              Recent Production Entries ({entries.length})
+            </h2>
+            <div className={styles.sectionActions}>
+              <button onClick={navigateToHistory} className={styles.historyBtn}>
+                View History
+              </button>
+              <button
+                onClick={fetchEntries}
+                className={styles.refreshBtn}
+                disabled={loading}
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className={styles.loadingState}>
+              Loading production data...
+            </div>
+          ) : entries.length === 0 ? (
+            <div className={styles.emptyState}>
+              <h3>No production data found</h3>
+              <p>Start by submitting your first production entry above.</p>
+            </div>
+          ) : (
             <div className={styles.tableContainer}>
-              <table className={styles.table}>
+              <table className={styles.productionTable}>
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -387,42 +428,18 @@ export default function Production() {
                 </thead>
                 <tbody>
                   {entries.map((item) => (
-                    <tr key={item._id}>
-                      <td>
-                        {new Date(item.date).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className={styles.batchCell}>{item.batch}</td>
-                      <td>{formatNumber(item.milk_quantity)}</td>
-                      <td>{formatNumber(item.fat_percentage)}</td>
-                      <td>{formatNumber(item.snf_percentage)}</td>
-                      <td>{formatNumber(item.curd_quantity)}</td>
-                      <td>{formatNumber(item.cream_quantity)}</td>
-                      <td>{formatNumber(item.soft_paneer_quantity)}</td>
-                      <td>{formatNumber(item.premium_paneer_quantity)}</td>
-                      <td>{formatNumber(item.butter_quantity)}</td>
-                      <td>{formatNumber(item.ghee_quantity)}</td>
-                      <td>
-                        <button
-                          onClick={() => handleDelete(item._id)}
-                          className={styles.deleteBtn}
-                          // disabled={true}
-                          title="Delete entry"
-                        >
-                          {"Delete"}
-                        </button>
-                      </td>
-                    </tr>
+                    <ProductionTableRow
+                      key={item._id}
+                      entry={item}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </tbody>
               </table>
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 }

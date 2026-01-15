@@ -1,67 +1,56 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import styles from "@/css/procurementHistory.module.css";
+import styles from "@/css/procurement-history.module.css";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
 import Link from "next/link";
 
 // ========== CONSTANTS ==========
-const initialFilters = {
+const INITIAL_FILTERS = {
   startDate: getPreviousMonthDate(),
   endDate: getTodayDate(),
 };
 
 // ========== HELPER FUNCTIONS ==========
-const getDateRangeLabel = () => {
-  const { startDate, endDate } = initialFilters;
+const validateDateRange = (startDate, endDate) => {
+  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+    return "Start date cannot be after end date";
+  }
+  if (endDate && new Date(endDate) > new Date(getTodayDate())) {
+    return "End date cannot be in the future";
+  }
+  return null;
+};
 
+const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
     const from = new Date(startDate).toLocaleDateString("en-IN");
     const to = new Date(endDate).toLocaleDateString("en-IN");
     return from === to ? from : `${from} to ${to}`;
   }
-
-  if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-
   return "All Records";
 };
 
-// const getSupplierTypeClass = (supplierType) => {
-//   if (!supplierType || supplierType === "Unknown") {
-//     return styles.type_unknown_badge;
-//   }
-
-//   const typeClassMap = {
-//     Society: styles.type_society_badge,
-//     Milkman: styles.type_milkman_badge,
-//     Farmer: styles.type_farmer_badge,
-//     Other: styles.type_other_badge,
-//   };
-//   return typeClassMap[supplierType] || styles.type_other_badge;
-// };
-
-// const formatSupplierName = (name) => {
-//   return name || "Unknown";
-// };
-
-// const formatSupplierType = (type) => {
-//   return type || "Unknown";
-// };
+const formatTimeBadge = (time) => {
+  if (!time) return "AM";
+  const timeUpper = time.toUpperCase();
+  return timeUpper === "PM" ? "PM" : "AM";
+};
 
 // ========== REUSABLE COMPONENTS ==========
 const StatItem = ({ label, value, unit, prefix = "" }) => (
-  <div className={styles.statItem}>
-    <span className={styles.statLabel}>{label}</span>
-    <span className={styles.statValue}>
+  <div className={styles.stat_item}>
+    <span className={styles.stat_label}>{label}</span>
+    <span className={styles.stat_value}>
       {prefix}
       {value}
-      {unit && <span className={styles.statUnit}>{unit}</span>}
+      {unit && <span className={styles.stat_unit}>{unit}</span>}
     </span>
   </div>
 );
@@ -70,31 +59,29 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 function ProcurementHistoryContent() {
   // ========== STATE MANAGEMENT ==========
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState(initialFilters);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [procurementData, setProcurementData] = useState([]);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
   // ========== DATA FETCHING ==========
-  const fetchAllData = useCallback(async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
-      const url = "/api/supplier/procurement/history";
-
-      const response = await fetch(url, {
-        cache: "no-store", // Prevent caching for fresh data
+      const response = await fetch("/api/supplier/procurement/history", {
+        cache: "no-store",
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Failed to load procurement history"
-        );
+        throw new Error(errorData.error || "Failed to load procurement history");
       }
 
       const data = await response.json();
       const responseData = Array.isArray(data) ? data : data.data || data;
 
-      if (responseData && Array.isArray(responseData)) {
+      if (Array.isArray(responseData)) {
         setProcurementData(responseData);
+        setLastFetchTime(new Date());
       } else {
         throw new Error("Invalid data format received from server");
       }
@@ -105,21 +92,31 @@ function ProcurementHistoryContent() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   // ========== EFFECTS ==========
   useEffect(() => {
     fetchAllData();
-  }, [fetchAllData]);
+  }, []);
 
   // ========== FILTER HANDLERS ==========
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFilterSubmit = (e) => {
+    e.preventDefault();
+    const error = validateDateRange(filters.startDate, filters.endDate);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    // Filters are applied in real-time, no need for separate submit
   };
 
   const resetFilters = () => {
-    setFilters(initialFilters);
+    setFilters(INITIAL_FILTERS);
   };
 
   const clearFilters = () => {
@@ -127,36 +124,31 @@ function ProcurementHistoryContent() {
   };
 
   // ========== DATA PROCESSING ==========
-  const filteredProcurements = useMemo(() => {
-    if (!procurementData.length) return [];
+  const filteredProcurements = procurementData
+    .filter((record) => {
+      if (!record?.date) return false;
+      
+      const recordDate = new Date(record.date);
+      const startDate = filters.startDate ? new Date(filters.startDate) : null;
+      const endDate = filters.endDate ? new Date(filters.endDate) : null;
 
-    return procurementData
-      .filter((record) => {
-        const recordDate = new Date(record.date);
-        const startDate = filters.startDate
-          ? new Date(filters.startDate)
-          : null;
-        const endDate = filters.endDate ? new Date(filters.endDate) : null;
+      if (startDate && recordDate < startDate) return false;
+      if (endDate && recordDate > endDate) return false;
 
-        if (startDate && recordDate < startDate) return false;
-        if (endDate && recordDate > endDate) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      const dateCompare = new Date(b.date) - new Date(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      
+      const timeValueA = a.time === "PM" ? 2 : a.time === "AM" ? 1 : 0;
+      const timeValueB = b.time === "PM" ? 2 : b.time === "AM" ? 1 : 0;
+      return timeValueB - timeValueA;
+    });
 
-        return true;
-      })
-      .sort((a, b) => {
-        const dateCompare = new Date(b.date) - new Date(a.date);
-        if (dateCompare !== 0) return dateCompare;
-        const timeValue = (time) => {
-          if (time === "AM") return 1;
-          if (time === "PM") return 2;
-          return 0;
-        };
-        return timeValue(b.time) - timeValue(a.time);
-      });
-  }, [procurementData, filters]);
-
-  const summary = useMemo(() => {
-    if (!filteredProcurements.length) {
+  // ========== SUMMARY CALCULATION ==========
+  const calculateSummary = () => {
+    if (filteredProcurements.length === 0) {
       return {
         milk: 0,
         amount: 0,
@@ -169,51 +161,52 @@ function ProcurementHistoryContent() {
     }
 
     const uniqueDates = new Set();
+    let totalMilk = 0;
+    let totalAmount = 0;
+    let totalFat = 0;
+    let totalSnf = 0;
 
-    const totals = filteredProcurements.reduce(
-      (acc, curr) => {
-        const milkQty = parseFloat(curr.milkQuantity) || 0;
-        const amount = parseFloat(curr.totalAmount) || 0;
-        const date = curr.date?.split("T")[0];
+    filteredProcurements.forEach((record) => {
+      const milkQty = parseFloat(record.milkQuantity) || 0;
+      const amount = parseFloat(record.totalAmount) || 0;
+      const fat = parseFloat(record.fatPercentage) || 0;
+      const snf = parseFloat(record.snfPercentage) || 0;
+      const date = record.date?.split("T")[0];
 
-        if (date) uniqueDates.add(date);
+      if (date) uniqueDates.add(date);
+      
+      totalMilk += milkQty;
+      totalAmount += amount;
+      totalFat += fat;
+      totalSnf += snf;
+    });
 
-        return {
-          milk: acc.milk + milkQty,
-          amount: acc.amount + amount,
-          count: acc.count + 1,
-          fatSum: acc.fatSum + (parseFloat(curr.fatPercentage) || 0),
-          snfSum: acc.snfSum + (parseFloat(curr.snfPercentage) || 0),
-        };
-      },
-      { milk: 0, amount: 0, count: 0, fatSum: 0, snfSum: 0 }
-    );
-
-    const avgFat =
-      totals.count > 0 ? (totals.fatSum / totals.count).toFixed(1) : "0.0";
-    const avgSnf =
-      totals.count > 0 ? (totals.snfSum / totals.count).toFixed(1) : "0.0";
+    const count = filteredProcurements.length;
+    const avgRate = totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00";
+    const avgFat = count > 0 ? (totalFat / count).toFixed(1) : "0.0";
+    const avgSnf = count > 0 ? (totalSnf / count).toFixed(1) : "0.0";
 
     return {
-      milk: totals.milk,
-      amount: totals.amount,
-      count: totals.count,
-      avgRate:
-        totals.milk > 0 ? (totals.amount / totals.milk).toFixed(2) : "0.00",
+      milk: totalMilk,
+      amount: totalAmount,
+      count,
+      avgRate,
       avgFat,
       avgSnf,
       daysWithData: uniqueDates.size,
     };
-  }, [filteredProcurements]);
+  };
+
+  const summary = calculateSummary();
 
   // ========== RENDER LOADING STATE ==========
   if (loading) {
     return (
-      <div className={styles.container}>
+      <div className={styles.page_container}>
         <ToastContainer />
-        <div className={styles.loading}>
+        <div className={styles.loading_container}>
           <div className={styles.spinner}></div>
-          <span className={styles.loadingText}>
+          <span className={styles.loading_text}>
             Loading procurement records...
           </span>
         </div>
@@ -223,7 +216,7 @@ function ProcurementHistoryContent() {
 
   // ========== RENDER ==========
   return (
-    <div className={styles.container}>
+    <div className={styles.page_container}>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -237,85 +230,86 @@ function ProcurementHistoryContent() {
       />
 
       {/* HEADER */}
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1>Procurement History</h1>
-        </div>
+      <div className={styles.page_header}>
+        <h1 className={styles.page_title}>Procurement History</h1>
+        {lastFetchTime && (
+          <div className={styles.last_updated}>
+            Last updated: {lastFetchTime.toLocaleTimeString("en-IN")}
+          </div>
+        )}
       </div>
 
       {/* FILTER SECTION */}
-      <form className={styles.filterForm}>
-        <div className={styles.filterHeader}>
+      <form onSubmit={handleFilterSubmit} className={styles.filter_card}>
+        <div className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
 
-        <div className={styles.filterRow}>
-          <div className={styles.dateFilterSection}>
-            <div className={styles.dateInputGroup}>
-              <div className={styles.dateField}>
-                <label htmlFor="fromDate">From Date</label>
+        <div className={styles.filter_content}>
+          <div className={styles.date_section}>
+            <div className={styles.date_inputs_grid}>
+              <div className={styles.date_field}>
+                <label htmlFor="startDate" className={styles.date_label}>
+                  From Date
+                </label>
                 <input
-                  id="fromDate"
+                  id="startDate"
                   name="startDate"
                   type="date"
                   value={filters.startDate}
                   onChange={handleFilterChange}
-                  className={styles.dateInput}
+                  className={styles.date_input}
                   max={filters.endDate || getTodayDate()}
-                  required
                   aria-label="Select start date"
                 />
               </div>
 
-              <div className={styles.dateField}>
-                <label htmlFor="toDate">To Date</label>
+              <div className={styles.date_field}>
+                <label htmlFor="endDate" className={styles.date_label}>
+                  To Date
+                </label>
                 <input
-                  id="toDate"
+                  id="endDate"
                   name="endDate"
                   type="date"
                   value={filters.endDate}
                   onChange={handleFilterChange}
-                  className={styles.dateInput}
+                  className={styles.date_input}
                   min={filters.startDate}
                   max={getTodayDate()}
-                  required
                   aria-label="Select end date"
                 />
               </div>
             </div>
           </div>
 
-          <div className={styles.filterActions}>
-            <div className={styles.buttonGroup}>
+          <div className={styles.filter_actions}>
+            <div className={styles.filter_buttons}>
               <button
                 type="button"
-                onClick={clearFilters}
+                onClick={resetFilters}
+                className={`${styles.btn} ${styles.btn_primary}`}
                 disabled={loading}
-                className={styles.primaryBtn}
-                aria-label="Show production history"
+                aria-label="Reset filters to default"
               >
                 {loading ? (
                   <>
-                    <span className={styles.buttonSpinner}></span>
+                    <span className={styles.button_spinner}></span>
                     Loading...
                   </>
                 ) : (
-                  <>
-                    <span className={styles.buttonIcon}></span>
-                    Clear Filter
-                  </>
+                  "Reset Filters"
                 )}
               </button>
 
               <button
                 type="button"
-                onClick={resetFilters}
-                className={styles.secondaryBtn}
-                disabled={loading}
-                aria-label="Reset date filters"
+                onClick={clearFilters}
+                className={`${styles.btn} ${styles.btn_secondary}`}
+                disabled={loading || (!filters.startDate && !filters.endDate)}
+                aria-label="Clear all filters"
               >
-                <span className={styles.buttonIcon}></span>
-                Reset Filter
+                Clear Filters
               </button>
             </div>
           </div>
@@ -324,28 +318,36 @@ function ProcurementHistoryContent() {
 
       {/* SUMMARY SECTION */}
       {summary.count > 0 && (
-        <div className={styles.statsCard}>
-          <h3>
-            Summary{" "}
-            <span className={styles.dateRange}>
-              {getDateRangeLabel(filters.startDate, filters.endDate)}
+        <div className={styles.stats_card}>
+          <h3 className={styles.stats_header}>
+            Summary
+            <span className={styles.date_range_badge}>
+              {getFormattedDateRange(filters.startDate, filters.endDate)}
             </span>
           </h3>
-          <div className={styles.statsGrid}>
+          <div className={styles.stats_grid}>
             <StatItem
               label="Total Milk"
               value={summary.milk.toFixed(2)}
               unit="L"
             />
-            <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
-            <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
             <StatItem
-              label="Avg Milk/Day"
+              label="Average Fat"
+              value={summary.avgFat}
+              unit="%"
+            />
+            <StatItem
+              label="Average SNF"
+              value={summary.avgSnf}
+              unit="%"
+            />
+            <StatItem
+              label="Milk per Day"
               value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
               unit="L"
             />
             <StatItem
-              label="Avg Rate"
+              label="Average Rate"
               value={summary.avgRate}
               unit="/L"
               prefix="₹"
@@ -356,15 +358,13 @@ function ProcurementHistoryContent() {
               unit=""
               prefix="₹"
             />
-
-            {/* <StatItem label="Days with Data" value={summary.daysWithData} /> */}
           </div>
         </div>
       )}
 
       {/* RECORD COUNT */}
       {summary.count > 0 && (
-        <div className={styles.recordCount}>
+        <div className={styles.record_count}>
           Showing {filteredProcurements.length.toLocaleString()} record
           {filteredProcurements.length !== 1 ? "s" : ""}
           {filters.startDate || filters.endDate
@@ -374,157 +374,123 @@ function ProcurementHistoryContent() {
       )}
 
       {/* TABLE SECTION */}
-      <div className={styles.tableWrapper}>
+      <div className={styles.table_wrapper}>
         {summary.count === 0 ? (
-          <div className={styles.emptyState}>
+          <div className={styles.empty_state}>
             {procurementData.length === 0 ? (
               <>
-                <span className={styles.emptyIcon}>📊</span>
-                <h3>No Procurement History</h3>
-                <p>No procurement records found in the system.</p>
+                <span className={styles.empty_icon}>📊</span>
+                <h3 className={styles.empty_title}>No Procurement History</h3>
+                <p className={styles.empty_message}>
+                  No procurement records found in the system.
+                </p>
               </>
             ) : (
               <>
-                <span className={styles.emptyIcon}>🔍</span>
-                <h3>No Records Found</h3>
-                <p>No procurement records found for the selected date range</p>
+                <span className={styles.empty_icon}>🔍</span>
+                <h3 className={styles.empty_title}>No Records Found</h3>
+                <p className={styles.empty_message}>
+                  No procurement records found for the selected date range
+                </p>
                 <button
                   onClick={resetFilters}
-                  className={styles.clearFilterBtn}
+                  className={styles.clear_filter_btn}
                   disabled={loading}
                 >
-                  Reset filters to see all{" "}
-                  {procurementData.length.toLocaleString()} records
+                  Reset filters to see all {procurementData.length.toLocaleString()} records
                 </button>
               </>
             )}
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            {/* <div className={styles.tableHeader}>
-              <h4>Procurement Records</h4>
-              <span className={styles.tableInfo}>
-                Sorted by Date (Newest First)
-              </span>
-            </div> */}
-            <div className={styles.tableScroll}>
+          <div className={styles.table_container}>
+            <div className={styles.table_scroll}>
               <table
                 className={styles.table}
                 aria-label="All procurement history"
               >
                 <thead>
                   <tr>
-                    <th scope="col" className={styles.dateHeader}>
-                      Date
-                    </th>
-                    <th scope="col" className={styles.supplierHeader}>
-                      Supplier
-                    </th>
-                    {/* <th scope="col" className={styles.typeHeader}>
-                      Type
-                    </th> */}
-                    <th scope="col" className={styles.timeHeader}>
-                      Time
-                    </th>
-                    <th scope="col" className={styles.quantityHeader}>
-                      Milk (L)
-                    </th>
-                    <th scope="col" className={styles.fatHeader}>
-                      Fat %
-                    </th>
-                    <th scope="col" className={styles.snfHeader}>
-                      SNF %
-                    </th>
-                    <th scope="col" className={styles.tsRateHeader}>
-                      TS Rate
-                    </th>
-                    <th scope="col" className={styles.rateHeader}>
-                      Rate/L
-                    </th>
-                    <th scope="col" className={styles.totalHeader}>
-                      Total (₹)
-                    </th>
+                    <th scope="col" className={styles.date_header}>Date</th>
+                    <th scope="col" className={styles.supplier_header}>Supplier</th>
+                    <th scope="col" className={styles.time_header}>Time</th>
+                    <th scope="col" className={styles.quantity_header}>Milk (L)</th>
+                    <th scope="col" className={styles.fat_header}>Fat %</th>
+                    <th scope="col" className={styles.snf_header}>SNF %</th>
+                    <th scope="col" className={styles.tsRate_header}>TS Rate</th>
+                    <th scope="col" className={styles.rate_header}>Rate/L</th>
+                    <th scope="col" className={styles.total_header}>Total (₹)</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredProcurements.map((row, index) => (
-                    <tr
-                      key={
-                        row._id ||
-                        `${row.date}-${row.supplierName || "unknown"}-${index}`
-                      }
-                      className={
-                        index % 2 === 0 ? styles.evenRow : styles.oddRow
-                      }
-                    >
-                      <td className={styles.dateCell}>
-                        {new Date(row.date).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
+                  {filteredProcurements.map((row, index) => {
+                    const timeBadge = formatTimeBadge(row.time);
+                    
+                    return (
+                      <tr
+                        key={row._id || `${row.date}-${row.supplierName || "unknown"}-${index}`}
+                      >
+                        <td className={styles.date_cell}>
+                          {new Date(row.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
 
-                      <td className={styles.supplierCell}>
-                        {row.supplierName ? (
-                          <Link
-                            href={`/supplier/procurement?supplierId=${row.supplierId}`}
-                            className={styles.supplierName}
+                        <td className={styles.supplier_cell}>
+                          {row.supplierName ? (
+                            <Link
+                              href={`/supplier/procurement?supplierId=${row.supplierId}`}
+                              className={styles.supplier_name}
+                            >
+                              {row.supplierName}
+                            </Link>
+                          ) : (
+                            "Unknown"
+                          )}
+                        </td>
+
+                        <td className={styles.time_cell}>
+                          <span
+                            className={
+                              timeBadge === "PM" ? styles.pm_badge : styles.am_badge
+                            }
+                            title={timeBadge === "PM" ? "Evening" : "Morning"}
                           >
-                            {row.supplierName}
-                          </Link>
-                        ) : (
-                          "Unknown"
-                        )}
-                      </td>
+                            {timeBadge}
+                          </span>
+                        </td>
 
-                      {/* <td className={styles.typeCell}>
-                        <span
-                          className={getSupplierTypeClass(row.supplierType)}
-                          title={row.supplierType || "Unknown type"}
-                        >
-                          {formatSupplierType(row.supplierType)}
-                        </span>
-                      </td> */}
+                        <td className={styles.quantity_cell}>
+                          {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
+                        </td>
 
-                      <td className={styles.timeCell}>
-                        <span
-                          className={
-                            row.time === "AM" ? styles.amBadge : styles.pmBadge
-                          }
-                          title={row.time === "AM" ? "Morning" : "Evening"}
-                        >
-                          {row.time || "AM"}
-                        </span>
-                      </td>
+                        <td className={styles.fat_cell}>
+                          {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
+                        </td>
 
-                      <td className={styles.quantityCell} data-label="Milk (L)">
-                        {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
-                      </td>
+                        <td className={styles.snf_cell}>
+                          {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
+                        </td>
 
-                      <td className={styles.fatCell} data-label="Fat %">
-                        {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
-                      </td>
+                        <td className={styles.tsRate_cell}>
+                          {row.supplierTSRate
+                            ? `${parseInt(row.supplierTSRate)}`
+                            : "N/A"}
+                        </td>
 
-                      <td className={styles.snfCell} data-label="SNF %">
-                        {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
-                      </td>
-                      <td className={styles.tsRateCell} data-label="TS Rate">
-                        {row.supplierTSRate
-                          ? `${parseInt(row.supplierTSRate)}`
-                          : "N/A"}
-                      </td>
+                        <td className={styles.rate_cell}>
+                          ₹{(parseFloat(row.rate) || 0).toFixed(1)}
+                        </td>
 
-                      <td className={styles.rateCell} data-label="Rate/L">
-                        ₹{(parseFloat(row.rate) || 0).toFixed(1)}
-                      </td>
-
-                      <td className={styles.totalCell} data-label="Total (₹)">
-                        ₹{formatNumberWithCommasNoDecimal(row.totalAmount || 0)}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className={styles.total_cell}>
+                          ₹{formatNumberWithCommasNoDecimal(row.totalAmount || 0)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -540,10 +506,10 @@ export default function ProcurementHistoryPage() {
   return (
     <Suspense
       fallback={
-        <div className={styles.container}>
-          <div className={styles.loading}>
+        <div className={styles.page_container}>
+          <div className={styles.loading_container}>
             <div className={styles.spinner}></div>
-            <span className={styles.loadingText}>
+            <span className={styles.loading_text}>
               Loading procurement history page...
             </span>
           </div>

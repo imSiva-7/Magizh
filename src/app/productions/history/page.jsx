@@ -270,7 +270,7 @@ export default function ProductionHistoryPage() {
     { key: "totalCurd", label: "Curd", unit: "L" },
     { key: "totalPremiumPaneer", label: "P. Paneer", unit: "Kg" },
     { key: "totalSoftPaneer", label: "S. Paneer", unit: "Kg" },
-    { key: "totalButter", label: "Butter", unit: "Kg" },
+    // { key: "totalButter", label: "Butter", unit: "Kg" },
     { key: "totalCream", label: "Cream", unit: "Kg" },
     { key: "totalGhee", label: "Ghee", unit: "L" },
   ];
@@ -360,15 +360,6 @@ export default function ProductionHistoryPage() {
 
           <div className={styles.filterActions}>
             <div className={styles.buttonGroup}>
-              {/* <button
-                type="submit"
-                disabled={loading}
-                className={styles.primaryBtn}
-                aria-label="Apply filters"
-              >
-                {loading ? "Loading..." : "Apply Filters"}
-              </button> */}
-
               <button
                 type="button"
                 onClick={resetFilters}
@@ -416,7 +407,7 @@ export default function ProductionHistoryPage() {
         <>
           <div className={styles.statsCard}>
             <h3>
-              Production Summary
+              Summary
               <div className={styles.dateRange}>{getDateRangeLabel()}</div>
             </h3>
             <div className={styles.statsGrid}>
