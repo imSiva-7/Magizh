@@ -17,13 +17,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  padding: 1rem 0;
   border-bottom: 2px solid #e2e8f0;
 }
 
 .headerContent h1 {
   color: rgb(39, 121, 93);
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0;
 }
@@ -38,7 +37,11 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -192,7 +195,11 @@
 }
 
 .submitButton {
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
   color: white;
 }
 
@@ -576,42 +583,42 @@
   .container {
     padding: 0.75rem;
   }
-  
+
   .headerContent {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .headerContent h1 {
     font-size: 1.5rem;
   }
-  
+
   .form {
     padding: 1.5rem;
   }
-  
+
   .formGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .formActions {
     flex-direction: column;
   }
-  
+
   .submitButton,
   .cancelButton {
     width: 100%;
   }
-  
+
   .supplierTable {
     min-width: 700px;
   }
-  
+
   .actionButtons {
     flex-direction: rows;
   }
-  
+
   .editButton,
   .deleteButton {
     width: 100%;

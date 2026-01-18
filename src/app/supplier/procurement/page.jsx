@@ -85,40 +85,32 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 
 const SummaryStats = ({ summary, filters }) => (
   <div className={styles.summaryBox}>
-    {" "}
-    <div className={styles.statsCard}>
-      <h3>
-        Summary{" "}
-        <span className={styles.dateRange}>
-          {getDateRangeLabel(filters.startDate, filters.endDate)}
-        </span>
-      </h3>
-      <div className={styles.statsGrid}>
-        <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
-        <StatItem
-          label="Daily Avg"
-          value={
-            summary.daysWithData
-              ? (summary.milk / summary.daysWithData).toFixed(2)
-              : "0.00"
-          }
-          unit="L/day"
-        />
-        <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
-        <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
-        <StatItem
-          label="Avg Rate"
-          value={summary.avgRate}
-          unit="/L"
-          prefix="₹"
-        />
-        <StatItem
-          label="Total Amount"
-          value={formatNumberWithCommasNoDecimal(summary.amount)}
-          unit=""
-          prefix="₹"
-        />
-      </div>
+    <h3>
+      Summary{" "}
+      <span className={styles.dateRange}>
+        {getDateRangeLabel(filters.startDate, filters.endDate)}
+      </span>
+    </h3>
+    <div className={styles.statsGrid}>
+      <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
+      <StatItem
+        label="Daily Avg"
+        value={
+          summary.daysWithData
+            ? (summary.milk / summary.daysWithData).toFixed(2)
+            : "0.00"
+        }
+        unit="L/day"
+      />
+      <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
+      <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
+      <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
+      <StatItem
+        label="Total Amount"
+        value={formatNumberWithCommasNoDecimal(summary.amount)}
+        unit=""
+        prefix="₹"
+      />
     </div>
   </div>
 );
@@ -129,7 +121,7 @@ const getDateRangeLabel = (startDate, endDate) => {
     return startDate === endDate
       ? startDate
       : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(
-          endDate
+          endDate,
         ).toLocaleDateString("en-IN")}`;
   }
   if (startDate)
@@ -254,7 +246,7 @@ function ProcurementContent() {
         formData.milkQuantity,
         formData.fatPercentage,
         formData.snfPercentage,
-        data.supplier?.supplierTSRate
+        data.supplier?.supplierTSRate,
       );
 
       setFormData((prev) => ({
@@ -430,7 +422,7 @@ function ProcurementContent() {
   const handleDelete = async (id) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this record? This action cannot be undone."
+        "Are you sure you want to delete this record? This action cannot be undone.",
       )
     ) {
       return;
@@ -509,7 +501,7 @@ function ProcurementContent() {
     }
 
     const uniqueDates = new Set(
-      filteredProcurements.map((record) => record.date.split("T")[0])
+      filteredProcurements.map((record) => record.date.split("T")[0]),
     );
 
     const totals = filteredProcurements.reduce(
@@ -518,20 +510,20 @@ function ProcurementContent() {
         amount: acc.amount + (parseFloat(curr.totalAmount) || 0),
         count: acc.count + 1,
       }),
-      { milk: 0, amount: 0, count: 0 }
+      { milk: 0, amount: 0, count: 0 },
     );
 
     const avgFat = (
       filteredProcurements.reduce(
         (sum, curr) => sum + parseFloat(curr.fatPercentage),
-        0
+        0,
       ) / filteredProcurements.length
     ).toFixed(1);
 
     const avgSnf = (
       filteredProcurements.reduce(
         (sum, curr) => sum + parseFloat(curr.snfPercentage),
-        0
+        0,
       ) / filteredProcurements.length
     ).toFixed(1);
 
@@ -587,7 +579,7 @@ function ProcurementContent() {
     );
   }
   const isFormDirty = Object.values(formData).some(
-    (val, idx) => idx > 1 && val && val !== ""
+    (val, idx) => idx > 1 && val && val !== "",
   );
 
   // ========== RENDER ==========
@@ -721,7 +713,7 @@ function ProcurementContent() {
             <button
               type="submit"
               disabled={submitting}
-              className={styles.primaryBtn}
+              className={styles.primaryBtn_}
               aria-label={editingId ? "Update record" : "Add new record"}
             >
               {submitting ? (
@@ -754,7 +746,7 @@ function ProcurementContent() {
       {/* FILTER SECTION */}
 
       {summary.count > 0 && (
-        <form className={styles.filterSection}>
+        <form className={styles.filterForm}>
           <div className={styles.filterHeader}>
             <h2>Filter by Date Range</h2>
           </div>
@@ -790,11 +782,15 @@ function ProcurementContent() {
                     aria-label="Select end date"
                   />
                 </div>
+              </div>
+            </div>
 
+            <div className={styles.filterActions}>
+              <div className={styles.buttonGroup}>
                 <button
                   type="button"
                   onClick={resetFilterForm}
-                  className={styles.secondaryResetBtn}
+                  className={styles.primaryBtn}
                   aria-label="Reset filters to default"
                 >
                   Reset Filters
@@ -803,7 +799,7 @@ function ProcurementContent() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className={styles.secondaryFilterBtn}
+                  className={styles.secondaryBtn}
                   disabled={!filters.startDate && !filters.endDate}
                   aria-label="Clear date filters"
                 >

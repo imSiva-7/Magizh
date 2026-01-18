@@ -242,12 +242,13 @@
 
 .formActions {
   display: flex;
+  justify-content: flex-end;
   gap: 1rem;
   padding-top: 1.5rem;
   border-top: 2px solid #e2e8f0;
 }
 
-.primaryBtn,
+.primaryBtn_,
 .secondaryFilterBtnForForm {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -264,7 +265,11 @@
 }
 
 .primaryBtn {
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
   color: white;
 }
 
@@ -300,6 +305,172 @@
   border-radius: 50%;
   border-top-color: white;
   animation: spin 1s linear infinite;
+}
+.filterForm {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.filterHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.filterHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.filterRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dateFilterSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.dateInputGroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.dateField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dateField label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background-color: #ffffff;
+  color: #1e293b;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.dateInput:hover {
+  border-color: #cbd5e1;
+}
+
+.filterActions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 140px;
+}
+
+.primaryBtn {
+  background: rgb(39, 121, 93);
+  color: white;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  background-color: #5583c4;
+  color: white;
+}
+
+.secondaryBtn:hover:not(:disabled) {
+  background-color: #475569;
+  transform: translateY(-2px);
+}
+
+.secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.errorAlert {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.errorIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.errorContent {
+  flex: 1;
+}
+
+.errorContent strong {
+  display: block;
+  margin-bottom: 0.25rem;
 }
 
 .filterSection {
@@ -399,7 +570,6 @@
   gap: 0.5rem;
 }
 
-
 .secondaryFilterBtn {
   background-color: #5583c4;
 }
@@ -454,12 +624,12 @@
 
 .statsGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
   gap: 1rem;
 }
 
 .statItem {
-  background: white;
+  background: #f8fafc;
   padding: 1.25rem;
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -530,7 +700,11 @@
 
 .exportBtn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -661,20 +835,20 @@
 
 .table th {
   padding: 1rem;
-  text-align: left;
+  text-align: center ;
   font-weight: 600;
   font-size: 0.875rem;
   color: #475569;
   border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
 }
-.table th:nth-child(8){
+.table th:nth-child(8) {
   text-align: center;
-
 }
 
 .table td {
   padding: 1rem;
+   text-align: center;
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
   color: #334155;
@@ -723,7 +897,7 @@
 .quantityCell,
 .fatCell,
 .snfCell,
-.rateCell { 
+.rateCell {
   font-variant-numeric: tabular-nums;
 }
 
@@ -822,71 +996,71 @@
   .container {
     padding: 0.75rem;
   }
-  
+
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
     padding: 1.5rem;
   }
-  
+
   .headerTitle h1 {
     font-size: 1.5rem;
   }
-  
+
   .supplierInfo {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .formSection,
   .filterSection,
   .summaryBox,
   .exportSection {
     padding: 1.5rem;
   }
-  
+
   .formGrid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .formActions {
     flex-direction: column;
   }
-  
+
   .primaryBtn,
   .secondaryFilterBtnForForm {
     width: 100%;
   }
-  
+
   .dateInputGroup {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .statsGrid {
     grid-template-columns: 1fr;
   }
-  
+
   .exportSection {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .exportButtons {
     flex-direction: rows;
   }
-  
+
   .exportBtn {
     width: 100%;
   }
-  
+
   .table {
     min-width: 900px;
   }
-  
+
   .table th,
   .table td {
     padding: 0.75rem 0.5rem;
