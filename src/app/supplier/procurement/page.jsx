@@ -747,7 +747,7 @@ function ProcurementContent() {
 
       {summary.count > 0 && (
         <form className={styles.filterForm}>
-        <div className={styles.filterHeader}>
+          <div className={styles.filterHeader}>
             <h2>Filter by Date Range</h2>
           </div>
 
@@ -789,21 +789,20 @@ function ProcurementContent() {
               <div className={styles.buttonGroup}>
                 <button
                   type="button"
-                  onClick={resetFilterForm}
-                  className={styles.primaryBtn}
-                  aria-label="Reset filters to default"
-                >
-                  Reset Filters
-                </button>
-
-                <button
-                  type="button"
                   onClick={clearFilters}
                   className={styles.secondaryBtn}
                   disabled={!filters.startDate && !filters.endDate}
                   aria-label="Clear date filters"
                 >
                   Clear Filters
+                </button>
+                <button
+                  type="button"
+                  onClick={resetFilterForm}
+                  className={styles.primaryBtn}
+                  aria-label="Reset filters to default"
+                >
+                  Reset Filters
                 </button>
               </div>
             </div>
@@ -900,6 +899,7 @@ function ProcurementContent() {
                   <th scope="col">Milk (L)</th>
                   <th scope="col">Fat %</th>
                   <th scope="col">SNF %</th>
+                  <th scope="col">TS Rate</th>
                   <th scope="col">Rate/L (₹)</th>
                   <th scope="col">Total (₹)</th>
                   <th scope="col">Actions</th>
@@ -940,6 +940,9 @@ function ProcurementContent() {
 
                     <td className={styles.snfCell}>
                       {parseFloat(row.snfPercentage).toFixed(1)}
+                    </td>
+                    <td className={styles.rateCell}>
+                      {data.supplier?.supplierTSRate}
                     </td>
 
                     <td className={styles.rateCell}>

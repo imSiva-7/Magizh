@@ -117,8 +117,6 @@ export default function ProductionPage() {
     setBatchNo(`B${day}${month}${year}`);
   }, [dateStr]);
 
- 
-
   // ========== DATA FETCHING ==========
   const fetchEntries = useCallback(async () => {
     setLoading(true);
@@ -134,7 +132,7 @@ export default function ProductionPage() {
       setLoading(false);
     }
   }, []);
-   useEffect(() => {
+  useEffect(() => {
     fetchEntries();
   }, [fetchEntries]);
 
@@ -379,35 +377,38 @@ export default function ProductionPage() {
         </form>
 
         {/* Recent Entries */}
-        <section className={styles.recentEntries}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>
-              Recent Production Entries ({entries.length})
-            </h2>
-            <div className={styles.sectionActions}>
-              <button onClick={navigateToHistory} className={styles.historyBtn}>
-                View History
-              </button>
-              <button
-                onClick={fetchEntries}
-                className={styles.refreshBtn}
-                disabled={loading}
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
 
-          {loading ? (
-            <div className={styles.loadingState}>
-              Loading production data...
-            </div>
-          ) : entries.length === 0 ? (
-            <div className={styles.emptyState}>
-              <h3>No production data found</h3>
-              <p>Start by submitting your first production entry above.</p>
-            </div>
-          ) : (
+        {loading ? (
+          <div className={styles.loadingState}>Loading production data...</div>
+        ) : entries.length === 0 ? (
+          <div className={styles.emptyState}>
+            <h3>No production data found</h3>
+            <p>Start by submitting your first production entry above.</p>
+          </div>
+        ) : (
+          <>
+            <section className={styles.recentEntries}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>
+                  Recent Production Entries ({entries.length})
+                </h2>
+                <div className={styles.sectionActions}>
+                  <button
+                    onClick={navigateToHistory}
+                    className={styles.historyBtn}
+                  >
+                    View History
+                  </button>
+                  <button
+                    onClick={fetchEntries}
+                    className={styles.refreshBtn}
+                    disabled={loading}
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </section>
             <div className={styles.tableContainer}>
               <table className={styles.productionTable}>
                 <thead>
@@ -437,8 +438,9 @@ export default function ProductionPage() {
                 </tbody>
               </table>
             </div>
-          )}
-        </section>
+            ,
+          </>
+        )}
       </main>
     </div>
   );
