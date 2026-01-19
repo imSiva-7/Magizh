@@ -157,24 +157,23 @@
 }
 
 .btn_primary {
-  background: rgb(39, 121, 93);
+  background-color: #5583c4;
   color: white;
 }
 
 .btn_primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
-  background: rgb(30, 100, 80);
 }
 
 .btn_secondary {
-  background-color: #5583c4;
+  background: rgb(39, 121, 93);
   color: white;
 }
 
 .btn_secondary:hover:not(:disabled) {
-  background-color: #475569;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
 .btn:disabled {
@@ -347,9 +346,9 @@
   overflow-x: auto;
 }
 
-.table_scroll {
-  /* min-width: 1200px; */
-}
+/* .table_scroll {
+  min-width: 1200px;
+} */
 
 .table {
   width: 100%;
@@ -594,7 +593,7 @@
   .table td {
     font-size: 0.8125rem;
   }
-  .supplier_header{
+  .supplier_header {
     max-width: 90px;
   }
 

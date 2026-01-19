@@ -367,7 +367,7 @@ export default function ProductionHistoryPage() {
                 disabled={loading}
                 aria-label="Reset filters to default"
               >
-                Reset to Default
+                Reset Filters
               </button>
 
               <button

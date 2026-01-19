@@ -710,6 +710,18 @@ function ProcurementContent() {
           </div>
 
           <div className={styles.formActions}>
+            {(editingId || isFormDirty) && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.secondaryFilterBtnForForm}
+                disabled={submitting}
+                aria-label={editingId ? "Cancel edit" : "Clear form"}
+              >
+                {editingId ? "Cancel Edit" : "Clear Form"}
+              </button>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
@@ -727,18 +739,6 @@ function ProcurementContent() {
                 "Add Record"
               )}
             </button>
-
-            {(editingId || isFormDirty) && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.secondaryFilterBtnForForm}
-                disabled={submitting}
-                aria-label={editingId ? "Cancel edit" : "Clear form"}
-              >
-                {editingId ? "Cancel Edit" : "Clear Form"}
-              </button>
-            )}
           </div>
         </form>
       </div>
@@ -747,7 +747,7 @@ function ProcurementContent() {
 
       {summary.count > 0 && (
         <form className={styles.filterForm}>
-          <div className={styles.filterHeader}>
+        <div className={styles.filterHeader}>
             <h2>Filter by Date Range</h2>
           </div>
 

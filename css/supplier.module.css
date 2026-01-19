@@ -219,8 +219,8 @@
 }
 
 .cancelButton:hover:not(:disabled) {
-  background-color: #475569;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
 .cancelButton:disabled {
@@ -338,7 +338,7 @@
 .supplierTable {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  /* min-width: 800px; */
 }
 
 .supplierTable thead {
@@ -399,6 +399,7 @@
 }
 
 .typeBadge {
+  min-width: 70px;
   display: inline-block;
   padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;

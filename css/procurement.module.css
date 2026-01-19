@@ -66,6 +66,9 @@
 .type_milkman_badge,
 .type_farmer_badge,
 .type_other_badge {
+  min-width: 70px;
+  text-align: center;
+  /* justify-content: center; */
   display: inline-block;
   padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;
@@ -264,7 +267,7 @@
   min-width: 140px;
 }
 
-.primaryBtn {
+.primaryBtn_ {
   background: linear-gradient(
     135deg,
     rgb(39, 121, 93) 0%,
@@ -273,12 +276,12 @@
   color: white;
 }
 
-.primaryBtn:hover:not(:disabled) {
+.primaryBtn_:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
-.primaryBtn:disabled {
+.primaryBtn_:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -289,8 +292,8 @@
 }
 
 .secondaryFilterBtnForForm:hover:not(:disabled) {
-  background-color: #475569;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
 .secondaryFilterBtnForForm:disabled {
@@ -405,6 +408,7 @@
 .secondaryBtn {
   padding: 0.75rem 1.5rem;
   border: none;
+
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
@@ -414,11 +418,12 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-width: 140px;
+  min-width: none;
+  max-width: 140px !important;
 }
 
 .primaryBtn {
-  background: rgb(39, 121, 93);
+  background-color: #5583c4;
   color: white;
 }
 
@@ -433,13 +438,13 @@
 }
 
 .secondaryBtn {
-  background-color: #5583c4;
+  background: rgb(39, 121, 93) !important;
   color: white;
 }
 
 .secondaryBtn:hover:not(:disabled) {
-  background-color: #475569;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
 .secondaryBtn:disabled {
@@ -785,23 +790,6 @@
   margin: 0 auto 1rem;
 }
 
-.secondaryBtn {
-  padding: 0.75rem 1.5rem;
-  background-color: #5583c4;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.secondaryBtn:hover {
-  background-color: #475569;
-  transform: translateY(-2px);
-}
-
 .clearFilterLink {
   background: none;
   border: none;
@@ -835,20 +823,24 @@
 
 .table th {
   padding: 1rem;
-  text-align: center ;
+  text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
   color: #475569;
   border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
 }
+.table th:nth-child(1) {
+  text-align: left;
+}
+
 .table th:nth-child(8) {
   text-align: center;
 }
 
 .table td {
   padding: 1rem;
-   text-align: center;
+  text-align: center;
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
   color: #334155;
@@ -869,6 +861,7 @@
 
 .dateCell {
   font-weight: 500;
+  text-align: left !important;
 }
 
 .timeCell {

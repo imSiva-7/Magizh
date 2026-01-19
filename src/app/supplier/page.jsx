@@ -22,43 +22,45 @@ const DEFAULT_TS_RATE = 300;
 // --- Sub-Components ---
 
 // Moved outside to prevent re-creation on every render
-const FormInput = memo(({
-  label,
-  type = "text",
-  value,
-  onChange,
-  placeholder,
-  min,
-  max,
-  step,
-  error,
-  required = false,
-  disabled = false,
-  inputMode = "text",
-  id
-}) => (
-  <div className={styles.inputGroup}>
-    <label htmlFor={id}>
-      {label}
-      {required && <span className={styles.required}>*</span>}
-    </label>
-    <input
-      id={id}
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      min={min}
-      max={max}
-      step={step}
-      disabled={disabled}
-      inputMode={inputMode}
-      autoComplete="off"
-      className={`${styles.input} ${error ? styles.inputError : ""}`}
-    />
-    {error && <span className={styles.errorText}>{error}</span>}
-  </div>
-));
+const FormInput = memo(
+  ({
+    label,
+    type = "text",
+    value,
+    onChange,
+    placeholder,
+    min,
+    max,
+    step,
+    error,
+    required = false,
+    disabled = false,
+    inputMode = "text",
+    id,
+  }) => (
+    <div className={styles.inputGroup}>
+      <label htmlFor={id}>
+        {label}
+        {required && <span className={styles.required}>*</span>}
+      </label>
+      <input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        min={min}
+        max={max}
+        step={step}
+        disabled={disabled}
+        inputMode={inputMode}
+        autoComplete="off"
+        className={`${styles.input} ${error ? styles.inputError : ""}`}
+      />
+      {error && <span className={styles.errorText}>{error}</span>}
+    </div>
+  ),
+);
 
 FormInput.displayName = "FormInput";
 
@@ -83,7 +85,7 @@ export default function Supplier() {
       supplierNumber: "",
       supplierAddress: "",
     }),
-    []
+    [],
   );
 
   const [formData, setFormData] = useState(initialFormState);
@@ -105,41 +107,48 @@ export default function Supplier() {
     switch (field) {
       case "supplierName":
         if (!value?.trim()) return "Name is required";
-        if (value.trim().length < 2) return "Name must be at least 2 characters";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters";
         if (value.trim().length > 100) return "Name is too long";
         return "";
 
       case "supplierType":
         if (!value?.trim()) return "Type is required";
-        if (!SUPPLIER_TYPES.some(type => type.value === value.trim())) {
+        if (!SUPPLIER_TYPES.some((type) => type.value === value.trim())) {
           return "Please select a valid supplier type";
         }
         return "";
 
       case "supplierTSRate":
         if (!value?.toString().trim()) return "Total Solids Rate is required";
-        
+
         const tsRate = parseFloat(value);
         if (isNaN(tsRate)) return "Please enter a valid number";
-        if (tsRate < MIN_TS_RATE) return `TS Rate must be at least ${MIN_TS_RATE}`;
+        if (tsRate < MIN_TS_RATE)
+          return `TS Rate must be at least ${MIN_TS_RATE}`;
         if (tsRate > MAX_TS_RATE) return `TS Rate cannot exceed ${MAX_TS_RATE}`;
         // Regex to ensure max 2 decimal places
-        if (!/^\d+(\.\d{0,2})?$/.test(value)) return "Enter up to 2 decimal places";
+        if (!/^\d+(\.\d{0,2})?$/.test(value))
+          return "Enter up to 2 decimal places";
         return "";
 
       case "supplierNumber":
         if (value && value.trim()) {
           const trimmedValue = value.trim();
-          if (!/^\d+$/.test(trimmedValue)) return "Phone number must contain only digits";
-          if (trimmedValue.length !== 10) return "Phone number must be exactly 10 digits";
+          if (!/^\d+$/.test(trimmedValue))
+            return "Phone number must contain only digits";
+          if (trimmedValue.length !== 10)
+            return "Phone number must be exactly 10 digits";
           // Validate Indian mobile numbers (starts with 6-9)
-          if (!/^[6-9]/.test(trimmedValue)) return "Phone number must start with 6-9";
+          if (!/^[6-9]/.test(trimmedValue))
+            return "Phone number must start with 6-9";
         }
         return "";
 
       case "supplierAddress":
         if (value?.trim()) {
-          if (value.trim().length < 5) return "Address must be at least 5 characters";
+          if (value.trim().length < 5)
+            return "Address must be at least 5 characters";
           if (value.trim().length > 500) return "Address is too long";
         }
         return "";
@@ -152,13 +161,19 @@ export default function Supplier() {
   // Form Validation
   const validateFullForm = useCallback(() => {
     const errors = {};
-    
+
     // Iterate over keys to validate all
-    const fieldsToValidate = ['supplierName', 'supplierType', 'supplierTSRate', 'supplierNumber', 'supplierAddress'];
-    
-    fieldsToValidate.forEach(field => {
-       const error = validateField(field, formData[field]);
-       if (error) errors[field] = error;
+    const fieldsToValidate = [
+      "supplierName",
+      "supplierType",
+      "supplierTSRate",
+      "supplierNumber",
+      "supplierAddress",
+    ];
+
+    fieldsToValidate.forEach((field) => {
+      const error = validateField(field, formData[field]);
+      if (error) errors[field] = error;
     });
 
     return errors;
@@ -194,7 +209,7 @@ export default function Supplier() {
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
-          `Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`
+          `Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`,
         );
       }
       const data = await res.json();
@@ -220,22 +235,22 @@ export default function Supplier() {
       if (field === "supplierTSRate") {
         // Prevent multiple dots
         if ((value.match(/\./g) || []).length > 1) {
-          return; 
+          return;
         }
         // Allow numeric and dot only
-        processedValue = value.replace(/[^0-9.]/g, '');
-        
+        processedValue = value.replace(/[^0-9.]/g, "");
+
         // Split to check decimals
-        const parts = processedValue.split('.');
+        const parts = processedValue.split(".");
         if (parts[1] && parts[1].length > 2) {
-           // Cap at 2 decimal places
-           processedValue = `${parts[0]}.${parts[1].substring(0, 2)}`;
+          // Cap at 2 decimal places
+          processedValue = `${parts[0]}.${parts[1].substring(0, 2)}`;
         }
       }
 
       // Handle Phone Number: Digits only
       if (field === "supplierNumber") {
-        processedValue = value.replace(/\D/g, '').substring(0, 10);
+        processedValue = value.replace(/\D/g, "").substring(0, 10);
       }
 
       setFormData((prev) => ({
@@ -250,7 +265,7 @@ export default function Supplier() {
         [field]: error || undefined,
       }));
     },
-    [validateField]
+    [validateField],
   );
 
   const handleSubmit = async (e) => {
@@ -289,15 +304,25 @@ export default function Supplier() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || data.message || `Submission failed (HTTP ${res.status})`);
+        throw new Error(
+          data.error ||
+            data.message ||
+            `Submission failed (HTTP ${res.status})`,
+        );
       }
 
-      toast.success(isEditing ? "Supplier updated successfully" : "Supplier added successfully");
+      toast.success(
+        isEditing
+          ? "Supplier updated successfully"
+          : "Supplier added successfully",
+      );
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error(error.message || "Failed to save supplier. Please try again.");
+      toast.error(
+        error.message || "Failed to save supplier. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -316,7 +341,7 @@ export default function Supplier() {
         resetForm();
         return;
       }
-      
+
       setCreateSupplier(true);
       setIsEditing(true);
       setFormData({
@@ -327,21 +352,25 @@ export default function Supplier() {
         supplierNumber: supplier.supplierNumber || "",
         supplierAddress: supplier.supplierAddress || "",
       });
-      
+
       setFormErrors({});
-      
+
       setTimeout(() => {
-        document.querySelector(`.${styles.form}`)?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
+        document.querySelector(`.${styles.form}`)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
         });
       }, 100);
     },
-    [isEditing, formData.supplierId, resetForm]
+    [isEditing, formData.supplierId, resetForm],
   );
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this supplier?\nThis action cannot be undone.")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this supplier?\nThis action cannot be undone.",
+      )
+    ) {
       return;
     }
 
@@ -438,7 +467,7 @@ export default function Supplier() {
               required
               disabled={isSubmitting}
             />
-             
+
             <div className={styles.inputGroup}>
               <label htmlFor="f-type">
                 Supplier Type
@@ -447,7 +476,9 @@ export default function Supplier() {
               <select
                 id="f-type"
                 value={formData.supplierType}
-                onChange={(e) => handleInputChange("supplierType", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("supplierType", e.target.value)
+                }
                 className={`${styles.selectInput} ${
                   formErrors.supplierType ? styles.inputError : ""
                 }`}
@@ -504,6 +535,14 @@ export default function Supplier() {
 
           <div className={styles.formActions}>
             <button
+              type="button"
+              onClick={resetForm}
+              className={styles.cancelButton}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
               type="submit"
               disabled={isSubmitting}
               className={styles.submitButton}
@@ -519,24 +558,13 @@ export default function Supplier() {
                 "Add Supplier"
               )}
             </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className={styles.cancelButton}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
           </div>
         </form>
       )}
-      
+
       <div className={styles.searchSection}>
         <div className={styles.searchWrapper}>
-          <label
-            htmlFor="searchInput"
-            className={styles.searchLabel}
-          >
+          <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Suppliers:
           </label>
           <div className={styles.searchInputGroup}>
@@ -569,7 +597,8 @@ export default function Supplier() {
           ) : (
             <>
               <span className={styles.resultCount}>
-                Showing {filteredEntries.length} of {entries.length} supplier{entries.length !== 1 ? "s" : ""}
+                Showing {filteredEntries.length} of {entries.length} supplier
+                {entries.length !== 1 ? "s" : ""}
               </span>
             </>
           )}
@@ -638,7 +667,9 @@ export default function Supplier() {
                     <td className={styles.typeCell}>
                       <span
                         className={`${styles.typeBadge} ${
-                          styles[`type-${item.supplierType?.toLowerCase() || 'other'}`]
+                          styles[
+                            `type-${item.supplierType?.toLowerCase() || "other"}`
+                          ]
                         }`}
                       >
                         {item.supplierType || "-"}
@@ -655,19 +686,23 @@ export default function Supplier() {
                         <button
                           onClick={() => handleEdit(item)}
                           className={`${styles.editButton} ${
-                            isEditing && formData.supplierId === item._id 
-                              ? styles.editingActive 
-                              : ''
+                            isEditing && formData.supplierId === item._id
+                              ? styles.editingActive
+                              : ""
                           }`}
                           disabled={loading || deleteLoading === item._id}
                           title="Edit"
                         >
-                          {isEditing && formData.supplierId === item._id ? "Cancel" : "Edit"}
+                          {isEditing && formData.supplierId === item._id
+                            ? "Cancel"
+                            : "Edit"}
                         </button>
                         <button
                           onClick={() => handleDelete(item._id)}
                           className={styles.deleteButton}
-                          disabled={deleteLoading === item._id || loading || isEditing}
+                          disabled={
+                            deleteLoading === item._id || loading || isEditing
+                          }
                           title="Delete"
                         >
                           {deleteLoading === item._id ? (
