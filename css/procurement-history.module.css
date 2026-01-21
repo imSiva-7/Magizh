@@ -191,7 +191,7 @@
   animation: button_spin 0.8s linear infinite;
 }
 
-@keyframes button_spin {
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }

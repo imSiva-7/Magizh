@@ -401,7 +401,123 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-   /* flex-wrap: wrap; */
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .filterForm {
+    padding: 1.5rem;
+  }
+
+  .filterRow {
+    gap: 1rem;
+  }
+
+  .dateFilterSection {
+    padding: 1rem;
+  }
+
+  .dateInputGroup {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .filterActions {
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .buttonGroup {
+    justify-content: stretch; /* Changed from flex-end */
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%; /* Full width buttons */
+    min-width: unset; /* Remove min-width constraint */
+    justify-content: center;
+    padding: 0.875rem 1rem; /* Slightly larger for mobile */
+  }
+
+  /* Ensure date inputs are properly sized */
+  .dateField {
+    width: 100%;
+  }
+
+  .filterInput {
+    width: 100%;
+    font-size: 1rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .filterForm {
+    padding: 1.25rem;
+  }
+
+  .filterHeader h2 {
+    font-size: 1.25rem;
+  }
+
+  .buttonGroup {
+    gap: 0.5rem;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .dateField label {
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .buttonGroup {
+    flex-direction: row; /* Keep side-by-side on tablets */
+    justify-content: center; /* Center align on tablets */
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    flex: 1; /* Equal width buttons */
+    min-width: 150px; /* Reasonable minimum */
+    max-width: 200px; /* Maximum width */
+  }
+}
+
+.mobile-full-width {
+  width: 100% !important;
+}
+
+.mobile-stack {
+  flex-direction: column !important;
+}
+
+.mobile-center {
+  justify-content: center !important;
+}
+
+/* ========== SPECIFIC FIX FOR YOUR FILTER FORM ========== */
+/* Based on your HTML structure */
+.filterForm .buttonGroup {
+  margin-top: 1rem;
+}
+
+/* Ensure form doesn't overflow */
+.filterForm {
+  overflow: hidden;
+}
+
+/* Make sure buttons don't get cut off */
+.filterActions {
+  overflow: visible;
 }
 
 .primaryBtn,
@@ -450,12 +566,11 @@
   cursor: not-allowed;
 }
 
-/* @media (max-width: 480px) {
-  .buttonGroup{
+@media (max-width: 480px) {
+  .buttonGroup {
     width: 100% !important;
   }
-
-} */
+}
 
 .errorAlert {
   background-color: #fee2e2;

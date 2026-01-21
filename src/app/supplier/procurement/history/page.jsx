@@ -15,6 +15,18 @@ const INITIAL_FILTERS = {
   endDate: getTodayDate(),
 };
 
+// ========== LOADING SPINNER COMPONENT ==========
+const LoadingSpinner = () => (
+  <div className={styles.page_container}>
+    <div className={styles.loading_container}>
+      <div className={styles.spinner}></div>
+      <span className={styles.loading_text}>
+        Loading procurement records...
+      </span>
+    </div>
+  </div>
+);
+
 // ========== HELPER FUNCTIONS ==========
 const validateDateRange = (startDate, endDate) => {
   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
@@ -32,7 +44,8 @@ const getFormattedDateRange = (startDate, endDate) => {
     const to = new Date(endDate).toLocaleDateString("en-IN");
     return from === to ? from : `${from} to ${to}`;
   }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (startDate)
+    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
   return "All Records";
 };
@@ -67,13 +80,22 @@ function ProcurementHistoryContent() {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/supplier/procurement/history", {
-        cache: "no-store",
-      });
+      const queryParams = new URLSearchParams();
+      if (filters.startDate) queryParams.append("startDate", filters.startDate);
+      if (filters.endDate) queryParams.append("endDate", filters.endDate);
+      
+      const response = await fetch(
+        `/api/supplier/procurement/history?${queryParams}`,
+        {
+          cache: "no-store",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to load procurement history");
+        throw new Error(
+          errorData.error || "Failed to load procurement history",
+        );
       }
 
       const data = await response.json();
@@ -97,12 +119,12 @@ function ProcurementHistoryContent() {
   // ========== EFFECTS ==========
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [filters]);
 
   // ========== FILTER HANDLERS ==========
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFilterSubmit = (e) => {
@@ -112,7 +134,6 @@ function ProcurementHistoryContent() {
       toast.error(error);
       return;
     }
-    // Filters are applied in real-time, no need for separate submit
   };
 
   const resetFilters = () => {
@@ -123,32 +144,9 @@ function ProcurementHistoryContent() {
     setFilters({ startDate: "", endDate: "" });
   };
 
-  // ========== DATA PROCESSING ==========
-  const filteredProcurements = procurementData
-    .filter((record) => {
-      if (!record?.date) return false;
-      
-      const recordDate = new Date(record.date);
-      const startDate = filters.startDate ? new Date(filters.startDate) : null;
-      const endDate = filters.endDate ? new Date(filters.endDate) : null;
-
-      if (startDate && recordDate < startDate) return false;
-      if (endDate && recordDate > endDate) return false;
-
-      return true;
-    })
-    .sort((a, b) => {
-      const dateCompare = new Date(b.date) - new Date(a.date);
-      if (dateCompare !== 0) return dateCompare;
-      
-      const timeValueA = a.time === "PM" ? 2 : a.time === "AM" ? 1 : 0;
-      const timeValueB = b.time === "PM" ? 2 : b.time === "AM" ? 1 : 0;
-      return timeValueB - timeValueA;
-    });
-
   // ========== SUMMARY CALCULATION ==========
   const calculateSummary = () => {
-    if (filteredProcurements.length === 0) {
+    if (procurementData.length === 0) {
       return {
         milk: 0,
         amount: 0,
@@ -166,7 +164,7 @@ function ProcurementHistoryContent() {
     let totalFat = 0;
     let totalSnf = 0;
 
-    filteredProcurements.forEach((record) => {
+    procurementData.forEach((record) => {
       const milkQty = parseFloat(record.milkQuantity) || 0;
       const amount = parseFloat(record.totalAmount) || 0;
       const fat = parseFloat(record.fatPercentage) || 0;
@@ -174,15 +172,16 @@ function ProcurementHistoryContent() {
       const date = record.date?.split("T")[0];
 
       if (date) uniqueDates.add(date);
-      
+
       totalMilk += milkQty;
       totalAmount += amount;
       totalFat += fat;
       totalSnf += snf;
     });
 
-    const count = filteredProcurements.length;
-    const avgRate = totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00";
+    const count = procurementData.length;
+    const avgRate =
+      totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00";
     const avgFat = count > 0 ? (totalFat / count).toFixed(1) : "0.0";
     const avgSnf = count > 0 ? (totalSnf / count).toFixed(1) : "0.0";
 
@@ -201,17 +200,7 @@ function ProcurementHistoryContent() {
 
   // ========== RENDER LOADING STATE ==========
   if (loading) {
-    return (
-      <div className={styles.page_container}>
-        <ToastContainer />
-        <div className={styles.loading_container}>
-          <div className={styles.spinner}></div>
-          <span className={styles.loading_text}>
-            Loading procurement records...
-          </span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // ========== RENDER ==========
@@ -331,16 +320,8 @@ function ProcurementHistoryContent() {
               value={summary.milk.toFixed(2)}
               unit="L"
             />
-            <StatItem
-              label="Average Fat"
-              value={summary.avgFat}
-              unit="%"
-            />
-            <StatItem
-              label="Average SNF"
-              value={summary.avgSnf}
-              unit="%"
-            />
+            <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
+            <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
             <StatItem
               label="Milk per Day"
               value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
@@ -365,8 +346,8 @@ function ProcurementHistoryContent() {
       {/* RECORD COUNT */}
       {summary.count > 0 && (
         <div className={styles.record_count}>
-          Showing {filteredProcurements.length.toLocaleString()} record
-          {filteredProcurements.length !== 1 ? "s" : ""}
+          Showing {procurementData.length.toLocaleString()} record
+          {procurementData.length !== 1 ? "s" : ""}
           {filters.startDate || filters.endDate
             ? ` for selected date range`
             : ""}
@@ -397,7 +378,8 @@ function ProcurementHistoryContent() {
                   className={styles.clear_filter_btn}
                   disabled={loading}
                 >
-                  Reset filters to see all {procurementData.length.toLocaleString()} records
+                  Reset filters to see all{" "}
+                  {procurementData.length.toLocaleString()} records
                 </button>
               </>
             )}
@@ -411,25 +393,46 @@ function ProcurementHistoryContent() {
               >
                 <thead>
                   <tr>
-                    <th scope="col" className={styles.date_header}>Date</th>
-                    <th scope="col" className={styles.supplier_header}>Supplier</th>
-                    <th scope="col" className={styles.time_header}>Time</th>
-                    <th scope="col" className={styles.quantity_header}>Milk (L)</th>
-                    <th scope="col" className={styles.fat_header}>Fat %</th>
-                    <th scope="col" className={styles.snf_header}>SNF %</th>
-                    <th scope="col" className={styles.tsRate_header}>TS Rate</th>
-                    <th scope="col" className={styles.rate_header}>Rate/L</th>
-                    <th scope="col" className={styles.total_header}>Total (₹)</th>
+                    <th scope="col" className={styles.date_header}>
+                      Date
+                    </th>
+                    <th scope="col" className={styles.supplier_header}>
+                      Supplier
+                    </th>
+                    <th scope="col" className={styles.time_header}>
+                      Time
+                    </th>
+                    <th scope="col" className={styles.quantity_header}>
+                      Milk (L)
+                    </th>
+                    <th scope="col" className={styles.fat_header}>
+                      Fat %
+                    </th>
+                    <th scope="col" className={styles.snf_header}>
+                      SNF %
+                    </th>
+                    <th scope="col" className={styles.tsRate_header}>
+                      TS Rate
+                    </th>
+                    <th scope="col" className={styles.rate_header}>
+                      Rate/L
+                    </th>
+                    <th scope="col" className={styles.total_header}>
+                      Total (₹)
+                    </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredProcurements.map((row, index) => {
+                  {procurementData.map((row, index) => {
                     const timeBadge = formatTimeBadge(row.time);
-                    
+
                     return (
                       <tr
-                        key={row._id || `${row.date}-${row.supplierName || "unknown"}-${index}`}
+                        key={
+                          row._id ||
+                          `${row.date}-${row.supplierName || "unknown"}-${index}`
+                        }
                       >
                         <td className={styles.date_cell}>
                           {new Date(row.date).toLocaleDateString("en-IN", {
@@ -455,7 +458,9 @@ function ProcurementHistoryContent() {
                         <td className={styles.time_cell}>
                           <span
                             className={
-                              timeBadge === "PM" ? styles.pm_badge : styles.am_badge
+                              timeBadge === "PM"
+                                ? styles.pm_badge
+                                : styles.am_badge
                             }
                             title={timeBadge === "PM" ? "Evening" : "Morning"}
                           >
@@ -486,7 +491,10 @@ function ProcurementHistoryContent() {
                         </td>
 
                         <td className={styles.total_cell}>
-                          ₹{formatNumberWithCommasNoDecimal(row.totalAmount || 0)}
+                          ₹
+                          {formatNumberWithCommasNoDecimal(
+                            row.totalAmount || 0,
+                          )}
                         </td>
                       </tr>
                     );
@@ -504,18 +512,7 @@ function ProcurementHistoryContent() {
 // ========== EXPORT WITH SUSPENSE ==========
 export default function ProcurementHistoryPage() {
   return (
-    <Suspense
-      fallback={
-        <div className={styles.page_container}>
-          <div className={styles.loading_container}>
-            <div className={styles.spinner}></div>
-            <span className={styles.loading_text}>
-              Loading procurement history page...
-            </span>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingSpinner />}>
       <ProcurementHistoryContent />
     </Suspense>
   );

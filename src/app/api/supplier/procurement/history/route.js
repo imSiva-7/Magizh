@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
-// Cache the connection promise for better performance
 const clientPromise = MongoClient.connect(process.env.MONGODB_URI, {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
@@ -10,12 +9,10 @@ const clientPromise = MongoClient.connect(process.env.MONGODB_URI, {
 
 export async function GET(request) {
   try {
-    // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    // Connect to database
     const client = await clientPromise;
     const db = client.db("production");
     const collection = db.collection("procurements");
@@ -28,12 +25,9 @@ export async function GET(request) {
       if (startDate) query.date.$gte = startDate;
       if (endDate) query.date.$lte = endDate;
     }
-
-    // Fetch procurements with optimized query
     const procurements = await collection
       .find(query)
-      // .sort({ date: -1, time: 1 })  Sort by date then time for consistent ordering
-      .limit(5000) // Limit to prevent memory issues
+      // .limit(5000)
       .project({
         _id: 1,
         date: 1,
@@ -49,6 +43,7 @@ export async function GET(request) {
         supplierTSRate: 1,
         createdAt: 1,
       })
+      .sort({ date: -1, createdAt: -1 })
       .toArray();
 
     // Convert ObjectId to string for JSON serialization
@@ -74,12 +69,10 @@ export async function GET(request) {
         error: "Failed to fetch procurement data",
         message: error.message || "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
-// Optional: Add OPTIONS method for CORS
 export async function OPTIONS(request) {
   return new NextResponse(null, {
     status: 200,

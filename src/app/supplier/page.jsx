@@ -613,7 +613,7 @@ export default function Supplier() {
               <tr>
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
-                <th scope="col">TS Rate (₹)</th>
+                <th scope="col">TS Rate</th>
                 <th scope="col">Phone</th>
                 <th scope="col">Actions</th>
               </tr>
@@ -691,7 +691,7 @@ export default function Supplier() {
                               : ""
                           }`}
                           disabled={loading || deleteLoading === item._id}
-                          title="Edit"
+                          title= { isEditing && formData.supplierId === item._id ? "Cancel" : "Edit"}
                         >
                           {isEditing && formData.supplierId === item._id
                             ? "Cancel"
@@ -703,7 +703,7 @@ export default function Supplier() {
                           disabled={
                             deleteLoading === item._id || loading || isEditing
                           }
-                          title="Delete"
+                          title={isEditing ? "Delete disabled":" Delete"}
                         >
                           {deleteLoading === item._id ? (
                             <span className={styles.deleteSpinner}></span>

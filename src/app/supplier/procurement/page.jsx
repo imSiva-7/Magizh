@@ -789,20 +789,20 @@ function ProcurementContent() {
               <div className={styles.buttonGroup}>
                 <button
                   type="button"
+                  onClick={resetFilterForm}
+                  className={styles.primaryBtn}
+                  aria-label="Reset filters to default"
+                >
+                  Reset Filters
+                </button>
+                <button
+                  type="button"
                   onClick={clearFilters}
                   className={styles.secondaryBtn}
                   disabled={!filters.startDate && !filters.endDate}
                   aria-label="Clear date filters"
                 >
                   Clear Filters
-                </button>
-                <button
-                  type="button"
-                  onClick={resetFilterForm}
-                  className={styles.primaryBtn}
-                  aria-label="Reset filters to default"
-                >
-                  Reset Filters
                 </button>
               </div>
             </div>
@@ -942,7 +942,7 @@ function ProcurementContent() {
                       {parseFloat(row.snfPercentage).toFixed(1)}
                     </td>
                     <td className={styles.rateCell}>
-                      {data.supplier?.supplierTSRate}
+                      {row.supplierTSRate || "N/A"}
                     </td>
 
                     <td className={styles.rateCell}>
