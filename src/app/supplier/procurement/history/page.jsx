@@ -159,6 +159,8 @@ function ProcurementHistoryContent() {
     }
 
     const uniqueDates = new Set();
+
+
     let totalMilk = 0;
     let totalAmount = 0;
     let totalFat = 0;
@@ -197,6 +199,9 @@ function ProcurementHistoryContent() {
   };
 
   const summary = calculateSummary();
+  let summary_ = "hi";
+  var summary_i;
+
 
   // ========== RENDER LOADING STATE ==========
   if (loading) {
