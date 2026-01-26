@@ -710,7 +710,7 @@ function ProcurementContent() {
           </div>
 
           <div className={styles.formActions}>
-            {(editingId || isFormDirty) && (
+            {/* {(editingId || isFormDirty) && (
               <button
                 type="button"
                 onClick={resetForm}
@@ -720,7 +720,7 @@ function ProcurementContent() {
               >
                 {editingId ? "Cancel Edit" : "Clear Form"}
               </button>
-            )}
+            )} */}
 
             <button
               type="submit"

@@ -358,14 +358,14 @@ export default function ProductionPage() {
 
           {/* Form Actions */}
           <section className={styles.formActions}>
-            <button
+            {/* <button
               type="button"
               onClick={resetForm}
               className={styles.resetBtn}
               disabled={isSubmitting}
             >
               Reset Form
-            </button>
+            </button> */}
             <button
               type="submit"
               disabled={!batchNo || isSubmitting}

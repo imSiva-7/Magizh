@@ -393,6 +393,7 @@
 .supplier_header,
 .supplier_cell {
   text-align: left !important;
+  min-width: 170px;
 }
 /*
 .time_header,
