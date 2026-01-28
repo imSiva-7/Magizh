@@ -485,7 +485,7 @@ function ProcurementContent() {
       if (endDate && recordDate > endDate) return false;
       return true;
     });
-  }, [data.allProcurements, filters]);
+  }, [filters, data.allProcurements]);
 
   const summary = useMemo(() => {
     if (!filteredProcurements.length) {
@@ -543,9 +543,15 @@ function ProcurementContent() {
       return;
     }
 
-    const dateRange = { start: filters.startDate, end: filters.endDate };
+    const dateRange = {
+      start:
+        new Date(filteredProcurements.at(-1).date).toLocaleDateString() ||
+        "----",
+      end:
+        new Date(filteredProcurements[0].date).toLocaleDateString() || "----",
+    };
     const supplierName = data.supplier?.supplierName || "Unknown";
-    const fileName = `${supplierName}_${filters.startDate}_to_${filters.endDate}`;
+    const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
 
     if (format === "csv") {
       exportToCSV(filteredProcurements, data.supplier, dateRange, fileName);
@@ -599,19 +605,29 @@ function ProcurementContent() {
 
       {/* HEADER */}
       <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          {/* <button className={styles.backButton}>Back</button> */}
-          <h1>{data.supplier?.supplierName}</h1>
-          <div className={styles.supplierInfo}>
-            <span className={getSupplierTypeClass(data.supplier?.supplierType)}>
-              {data.supplier?.supplierType}
-            </span>
-            <span className={styles.tsRateTag}>
-              Total Solids Rate:{" "}
-              {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
-            </span>
+        {loading ? (
+          // <div className={styles.loading}>
+          //   <div className={styles.spinner}></div>
+            <span className={styles.loadingText}>Loading Supplier data...</span>
+          // </div>
+        ) : (
+          <div className={styles.headerTitle}>
+            {/* <button className={styles.backButton}>Back</button> */}
+
+            <h1> {data.supplier?.supplierName}</h1>
+            <div className={styles.supplierInfo}>
+              <span
+                className={getSupplierTypeClass(data.supplier?.supplierType)}
+              >
+                {data.supplier?.supplierType}
+              </span>
+              <span className={styles.tsRateTag}>
+                Total Solids Rate:{" "}
+                {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* FORM SECTION */}

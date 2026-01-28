@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/procurement-history.module.css";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
+import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import Link from "next/link";
 
-// ========== CONSTANTS ==========
 const INITIAL_FILTERS = {
   startDate: getPreviousMonthDate(),
   endDate: getTodayDate(),
 };
 
-// ========== LOADING SPINNER COMPONENT ==========
 const LoadingSpinner = () => (
   <div className={styles.page_container}>
     <div className={styles.loading_container}>
@@ -27,7 +25,6 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// ========== HELPER FUNCTIONS ==========
 const validateDateRange = (startDate, endDate) => {
   if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
     return "Start date cannot be after end date";
@@ -56,7 +53,6 @@ const formatTimeBadge = (time) => {
   return timeUpper === "PM" ? "PM" : "AM";
 };
 
-// ========== REUSABLE COMPONENTS ==========
 const StatItem = ({ label, value, unit, prefix = "" }) => (
   <div className={styles.stat_item}>
     <span className={styles.stat_label}>{label}</span>
@@ -68,27 +64,25 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
   </div>
 );
 
-// ========== MAIN COMPONENT ==========
 function ProcurementHistoryContent() {
-  // ========== STATE MANAGEMENT ==========
+
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [procurementData, setProcurementData] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // ========== DATA FETCHING ==========
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
       if (filters.startDate) queryParams.append("startDate", filters.startDate);
       if (filters.endDate) queryParams.append("endDate", filters.endDate);
-      
+
       const response = await fetch(
         `/api/supplier/procurement/history?${queryParams}`,
         {
           cache: "no-store",
-        }
+        },
       );
 
       if (!response.ok) {
@@ -114,14 +108,12 @@ function ProcurementHistoryContent() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ========== EFFECTS ==========
-  useEffect(() => {
-    fetchAllData();
   }, [filters]);
 
-  // ========== FILTER HANDLERS ==========
+  useEffect(() => {
+    fetchAllData();
+  }, [filters,fetchAllData]);
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -129,6 +121,7 @@ function ProcurementHistoryContent() {
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
+
     const error = validateDateRange(filters.startDate, filters.endDate);
     if (error) {
       toast.error(error);
@@ -144,7 +137,6 @@ function ProcurementHistoryContent() {
     setFilters({ startDate: "", endDate: "" });
   };
 
-  // ========== SUMMARY CALCULATION ==========
   const calculateSummary = () => {
     if (procurementData.length === 0) {
       return {
@@ -159,8 +151,6 @@ function ProcurementHistoryContent() {
     }
 
     const uniqueDates = new Set();
-
-
     let totalMilk = 0;
     let totalAmount = 0;
     let totalFat = 0;
@@ -199,14 +189,35 @@ function ProcurementHistoryContent() {
   };
 
   const summary = calculateSummary();
-  let summary_ = "hi";
-  var summary_i;
 
+  
+  const handleExport = (format) => {
+    if (!procurementData.length) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const dateRange = {
+      start:
+        new Date(procurementData.at(-1).date).toLocaleDateString() || "----",
+      end: new Date(procurementData[0].date).toLocaleDateString() || "----",
+    };
+    const supplierName = "All Suppliers records";
+    const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
+
+    if (format === "csv") {
+      exportToCSV(procurementData, supplierName, dateRange, fileName);
+      toast.success("CSV exported successfully");
+    } else if (format === "pdf") {
+      exportToPDF(procurementData, supplierName, dateRange, fileName);
+      toast.success("PDF exported successfully");
+    }
+  };
 
   // ========== RENDER LOADING STATE ==========
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  // if (loading) {
+  //   return <LoadingSpinner />;
+  // }
 
   // ========== RENDER ==========
   return (
@@ -311,45 +322,75 @@ function ProcurementHistoryContent() {
       </form>
 
       {/* SUMMARY SECTION */}
+      {loading ? (
+        <LoadingSpinner />
+      ) : (
+        summary.count > 0 && (
+          <div className={styles.stats_card}>
+            <h3 className={styles.stats_header}>
+              Summary
+              <span className={styles.date_range_badge}>
+                {getFormattedDateRange(filters.startDate, filters.endDate)}
+              </span>
+            </h3>
+            <div className={styles.stats_grid}>
+              <StatItem
+                label="Total Milk"
+                value={summary.milk.toFixed(2)}
+                unit="L"
+              />
+              <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
+              <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
+              <StatItem
+                label="Milk per Day"
+                value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
+                unit="L"
+              />
+              <StatItem
+                label="Average Rate"
+                value={summary.avgRate}
+                unit="/L"
+                prefix="₹"
+              />
+              <StatItem
+                label="Total Amount"
+                value={formatNumberWithCommasNoDecimal(summary.amount)}
+                unit=""
+                prefix="₹"
+              />
+            </div>
+          </div>
+        )
+      )}
+
       {summary.count > 0 && (
-        <div className={styles.stats_card}>
-          <h3 className={styles.stats_header}>
-            Summary
-            <span className={styles.date_range_badge}>
-              {getFormattedDateRange(filters.startDate, filters.endDate)}
-            </span>
-          </h3>
-          <div className={styles.stats_grid}>
-            <StatItem
-              label="Total Milk"
-              value={summary.milk.toFixed(2)}
-              unit="L"
-            />
-            <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
-            <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
-            <StatItem
-              label="Milk per Day"
-              value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
-              unit="L"
-            />
-            <StatItem
-              label="Average Rate"
-              value={summary.avgRate}
-              unit="/L"
-              prefix="₹"
-            />
-            <StatItem
-              label="Total Amount"
-              value={formatNumberWithCommasNoDecimal(summary.amount)}
-              unit=""
-              prefix="₹"
-            />
+        <div className={styles.exportSection}>
+          <span className={styles.entryCount}>
+            {summary.count} record{summary.count !== 1 ? "s" : ""} found
+          </span>
+          <div className={styles.exportButtons}>
+            <button
+              onClick={() => handleExport("csv")}
+              className={styles.exportBtn}
+              disabled={!procurementData.length}
+              aria-label="Export data as CSV"
+            >
+              Export as CSV
+            </button>
+            <button
+              onClick={() => handleExport("pdf")}
+              className={styles.exportBtn}
+              disabled={!procurementData.length}
+              aria-label="Export data as PDF"
+            >
+              Export as PDF
+            </button>
           </div>
         </div>
       )}
 
       {/* RECORD COUNT */}
-      {summary.count > 0 && (
+      {/* {summary.count > 0 && (
         <div className={styles.record_count}>
           Showing {procurementData.length.toLocaleString()} record
           {procurementData.length !== 1 ? "s" : ""}
@@ -357,7 +398,7 @@ function ProcurementHistoryContent() {
             ? ` for selected date range`
             : ""}
         </div>
-      )}
+      )} */}
 
       {/* TABLE SECTION */}
       <div className={styles.table_wrapper}>

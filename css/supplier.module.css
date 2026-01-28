@@ -7,10 +7,6 @@
   min-height: 100vh;
 }
 
-.headerSection {
-  margin-bottom: 1.5rem;
-}
-
 .headerContent {
   display: flex;
   justify-content: space-between;
@@ -18,14 +14,15 @@
   flex-wrap: wrap;
   gap: 1rem;
   border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 2rem;
   padding-bottom: 1rem;
 }
 
 .headerContent h1 {
   color: rgb(39, 121, 93);
   font-size: 2rem;
+  margin: 0;
   font-weight: 700;
-  
 }
 
 .createSection {
