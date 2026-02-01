@@ -112,7 +112,7 @@ function ProcurementHistoryContent() {
 
   useEffect(() => {
     fetchAllData();
-  }, [filters,fetchAllData]);
+  }, [filters, fetchAllData]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -196,13 +196,13 @@ function ProcurementHistoryContent() {
       toast.error("No data to export");
       return;
     }
-
+ 
     const dateRange = {
       start:
         new Date(procurementData.at(-1).date).toLocaleDateString() || "----",
       end: new Date(procurementData[0].date).toLocaleDateString() || "----",
     };
-    const supplierName = "All Suppliers records";
+    const supplierName = "All Suppliers records";d
     const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
 
     if (format === "csv") {
@@ -402,7 +402,7 @@ function ProcurementHistoryContent() {
 
       {/* TABLE SECTION */}
       <div className={styles.table_wrapper}>
-        {summary.count === 0 ? (
+        {!loading && summary.count === 0 ? (
           <div className={styles.empty_state}>
             {procurementData.length === 0 ? (
               <>
@@ -412,7 +412,7 @@ function ProcurementHistoryContent() {
                   No procurement records found in the system.
                 </p>
               </>
-            ) : (
+            ) :  (
               <>
                 <span className={styles.empty_icon}>🔍</span>
                 <h3 className={styles.empty_title}>No Records Found</h3>
@@ -430,7 +430,7 @@ function ProcurementHistoryContent() {
               </>
             )}
           </div>
-        ) : (
+        ) :!loading && (
           <div className={styles.table_container}>
             <div className={styles.table_scroll}>
               <table

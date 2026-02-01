@@ -312,6 +312,7 @@
 
 .entryCount {
   font-size: 0.875rem;
+  text-align: center;
   font-weight: 600;
   color: #475569;
   background: #f1f5f9;

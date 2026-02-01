@@ -145,6 +145,12 @@ export default function ProductionPage() {
 
   const parseDecimal = (value, decimalPlaces = 2) => {
     if (!value) return null;
+
+    7
+
+    7.89556
+
+    
     const num = parseFloat(value);
     return isNaN(num) ? null : parseFloat(num.toFixed(decimalPlaces));
   };

@@ -345,6 +345,8 @@
 
 .entryCount {
   color: #64748b;
+  /* justify-content: center; */
+  text-align: center;
   font-size: 0.875rem;
   font-weight: 600;
   background: #f1f5f9;
