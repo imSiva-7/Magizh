@@ -297,14 +297,9 @@ function ProcurementHistoryContent() {
                 disabled={loading}
                 aria-label="Reset filters to default"
               >
-                {loading ? (
-                  <>
-                    <span className={styles.button_spinner}></span>
-                    Loading...
-                  </>
-                ) : (
-                  "Reset Filters"
-                )}
+                
+                  Reset Filters
+             
               </button>
 
               <button
