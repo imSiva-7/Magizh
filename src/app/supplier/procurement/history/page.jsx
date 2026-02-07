@@ -8,6 +8,7 @@ import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import Link from "next/link";
+import { filter } from "lodash";
 
 const INITIAL_FILTERS = {
   startDate: getPreviousMonthDate(),
@@ -65,7 +66,6 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 );
 
 function ProcurementHistoryContent() {
-
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [procurementData, setProcurementData] = useState([]);
@@ -190,19 +190,18 @@ function ProcurementHistoryContent() {
 
   const summary = calculateSummary();
 
-  
   const handleExport = (format) => {
     if (!procurementData.length) {
       toast.error("No data to export");
       return;
     }
- 
+
     const dateRange = {
       start:
         new Date(procurementData.at(-1).date).toLocaleDateString() || "----",
       end: new Date(procurementData[0].date).toLocaleDateString() || "----",
     };
-    const supplierName = "All Suppliers records";d
+    const supplierName = "All Suppliers records";
     const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
 
     if (format === "csv") {
@@ -297,9 +296,7 @@ function ProcurementHistoryContent() {
                 disabled={loading}
                 aria-label="Reset filters to default"
               >
-                
-                  Reset Filters
-             
+                Reset Filters
               </button>
 
               <button
@@ -336,11 +333,20 @@ function ProcurementHistoryContent() {
               />
               <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
               <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
-              <StatItem
-                label="Milk per Day"
-                value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
-                unit="L"
-              />
+
+              {filters.startDate === filters.endDate ? (
+                <StatItem
+                  label="Ester Egg!"
+                  value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
+                  unit="LoL"
+                />
+              ) : (
+                <StatItem
+                  label="Milk per Day"
+                  value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
+                  unit="L"
+                />
+              )}
               <StatItem
                 label="Average Rate"
                 value={summary.avgRate}
@@ -399,15 +405,16 @@ function ProcurementHistoryContent() {
       <div className={styles.table_wrapper}>
         {!loading && summary.count === 0 ? (
           <div className={styles.empty_state}>
-            {procurementData.length === 0 ? (
+            {(procurementData.length === 0 && !filters.startDate) ||
+            !filters.endDate ? (
               <>
                 <span className={styles.empty_icon}>📊</span>
                 <h3 className={styles.empty_title}>No Procurement History</h3>
                 <p className={styles.empty_message}>
-                  No procurement records found in the system.
+                  No procurement records found.
                 </p>
               </>
-            ) :  (
+            ) : (
               <>
                 <span className={styles.empty_icon}>🔍</span>
                 <h3 className={styles.empty_title}>No Records Found</h3>
@@ -415,135 +422,136 @@ function ProcurementHistoryContent() {
                   No procurement records found for the selected date range
                 </p>
                 <button
-                  onClick={resetFilters}
+                  onClick={clearFilters}
                   className={styles.clear_filter_btn}
                   disabled={loading}
                 >
-                  Reset filters to see all{" "}
-                  {procurementData.length.toLocaleString()} records
+                  clear filters
                 </button>
               </>
             )}
           </div>
-        ) :!loading && (
-          <div className={styles.table_container}>
-            <div className={styles.table_scroll}>
-              <table
-                className={styles.table}
-                aria-label="All procurement history"
-              >
-                <thead>
-                  <tr>
-                    <th scope="col" className={styles.date_header}>
-                      Date
-                    </th>
-                    <th scope="col" className={styles.supplier_header}>
-                      Supplier
-                    </th>
-                    <th scope="col" className={styles.time_header}>
-                      Time
-                    </th>
-                    <th scope="col" className={styles.quantity_header}>
-                      Milk (L)
-                    </th>
-                    <th scope="col" className={styles.fat_header}>
-                      Fat %
-                    </th>
-                    <th scope="col" className={styles.snf_header}>
-                      SNF %
-                    </th>
-                    <th scope="col" className={styles.tsRate_header}>
-                      TS Rate
-                    </th>
-                    <th scope="col" className={styles.rate_header}>
-                      Rate/L
-                    </th>
-                    <th scope="col" className={styles.total_header}>
-                      Total (₹)
-                    </th>
-                  </tr>
-                </thead>
+        ) : (
+          !loading && (
+            <div className={styles.table_container}>
+              <div className={styles.table_scroll}>
+                <table
+                  className={styles.table}
+                  aria-label="All procurement history"
+                >
+                  <thead>
+                    <tr>
+                      <th scope="col" className={styles.date_header}>
+                        Date
+                      </th>
+                      <th scope="col" className={styles.supplier_header}>
+                        Supplier
+                      </th>
+                      <th scope="col" className={styles.time_header}>
+                        Time
+                      </th>
+                      <th scope="col" className={styles.quantity_header}>
+                        Milk (L)
+                      </th>
+                      <th scope="col" className={styles.fat_header}>
+                        Fat %
+                      </th>
+                      <th scope="col" className={styles.snf_header}>
+                        SNF %
+                      </th>
+                      <th scope="col" className={styles.tsRate_header}>
+                        TS Rate
+                      </th>
+                      <th scope="col" className={styles.rate_header}>
+                        Rate/L
+                      </th>
+                      <th scope="col" className={styles.total_header}>
+                        Total (₹)
+                      </th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {procurementData.map((row, index) => {
-                    const timeBadge = formatTimeBadge(row.time);
+                  <tbody>
+                    {procurementData.map((row, index) => {
+                      const timeBadge = formatTimeBadge(row.time);
 
-                    return (
-                      <tr
-                        key={
-                          row._id ||
-                          `${row.date}-${row.supplierName || "unknown"}-${index}`
-                        }
-                      >
-                        <td className={styles.date_cell}>
-                          {new Date(row.date).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </td>
+                      return (
+                        <tr
+                          key={
+                            row._id ||
+                            `${row.date}-${row.supplierName || "unknown"}-${index}`
+                          }
+                        >
+                          <td className={styles.date_cell}>
+                            {new Date(row.date).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </td>
 
-                        <td className={styles.supplier_cell}>
-                          {row.supplierName ? (
-                            <Link
-                              href={`/supplier/procurement?supplierId=${row.supplierId}`}
-                              className={styles.supplier_name}
+                          <td className={styles.supplier_cell}>
+                            {row.supplierName ? (
+                              <Link
+                                href={`/supplier/procurement?supplierId=${row.supplierId}`}
+                                className={styles.supplier_name}
+                              >
+                                {row.supplierName}
+                              </Link>
+                            ) : (
+                              "Unknown"
+                            )}
+                          </td>
+
+                          <td className={styles.time_cell}>
+                            <span
+                              className={
+                                timeBadge === "PM"
+                                  ? styles.pm_badge
+                                  : styles.am_badge
+                              }
+                              title={timeBadge === "PM" ? "Evening" : "Morning"}
                             >
-                              {row.supplierName}
-                            </Link>
-                          ) : (
-                            "Unknown"
-                          )}
-                        </td>
+                              {timeBadge}
+                            </span>
+                          </td>
 
-                        <td className={styles.time_cell}>
-                          <span
-                            className={
-                              timeBadge === "PM"
-                                ? styles.pm_badge
-                                : styles.am_badge
-                            }
-                            title={timeBadge === "PM" ? "Evening" : "Morning"}
-                          >
-                            {timeBadge}
-                          </span>
-                        </td>
+                          <td className={styles.quantity_cell}>
+                            {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
+                          </td>
 
-                        <td className={styles.quantity_cell}>
-                          {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
-                        </td>
+                          <td className={styles.fat_cell}>
+                            {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
+                          </td>
 
-                        <td className={styles.fat_cell}>
-                          {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
-                        </td>
+                          <td className={styles.snf_cell}>
+                            {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
+                          </td>
 
-                        <td className={styles.snf_cell}>
-                          {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
-                        </td>
+                          <td className={styles.tsRate_cell}>
+                            {row.supplierTSRate
+                              ? `${parseInt(row.supplierTSRate)}`
+                              : "N/A"}
+                          </td>
 
-                        <td className={styles.tsRate_cell}>
-                          {row.supplierTSRate
-                            ? `${parseInt(row.supplierTSRate)}`
-                            : "N/A"}
-                        </td>
+                          <td className={styles.rate_cell}>
+                            ₹{(parseFloat(row.rate) || 0).toFixed(1)}
+                          </td>
 
-                        <td className={styles.rate_cell}>
-                          ₹{(parseFloat(row.rate) || 0).toFixed(1)}
-                        </td>
-
-                        <td className={styles.total_cell}>
-                          ₹
-                          {formatNumberWithCommasNoDecimal(
-                            row.totalAmount || 0,
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                          <td className={styles.total_cell}>
+                            ₹
+                            {formatNumberWithCommasNoDecimal(
+                              row.totalAmount || 0,
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )
         )}
       </div>
     </div>

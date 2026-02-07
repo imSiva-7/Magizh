@@ -13,6 +13,17 @@ import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 
 // ========== CONSTANTS & UTILITIES ==========
+
+const LoadingSpinner = () => (
+  <div className={styles.page_container}>
+    <div className={styles.loading_container}>
+      <div className={`${styles.spinner}`}></div>
+      <span className={styles.loading_text}>
+        Loading procurement records...
+      </span>
+    </div>
+  </div>
+);
 const getCurrentTimePeriod = () => {
   const hour = new Date().getHours();
   return hour >= 12 ? "PM" : "AM";
@@ -606,10 +617,7 @@ function ProcurementContent() {
       {/* HEADER */}
       <div className={styles.header}>
         {loading ? (
-          // <div className={styles.loading}>
-          //   <div className={styles.spinner}></div>
-            <span className={styles.loadingText}>Loading Supplier data...</span>
-          // </div>
+          <span className={styles.loading_text}> Loading supplier info...</span>
         ) : (
           <div className={styles.headerTitle}>
             {/* <button className={styles.backButton}>Back</button> */}
@@ -861,12 +869,7 @@ function ProcurementContent() {
       {/* TABLE SECTION */}
       <div className={styles.tableWrapper}>
         {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.spinner}></div>
-            <span className={styles.loadingText}>
-              Loading procurement data...
-            </span>
-          </div>
+          <LoadingSpinner />
         ) : summary.count === 0 ? (
           <div className={styles.emptyState}>
             {!data.supplier ? (

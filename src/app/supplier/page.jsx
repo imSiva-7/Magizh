@@ -424,6 +424,7 @@ export default function Supplier() {
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
           <h1>Suppliers</h1>
+
           {!createSupplier && (
             <div className={styles.createSection}>
               <button
@@ -510,6 +511,17 @@ export default function Supplier() {
               inputMode="decimal"
             />
 
+            {/* <FormInput
+              id="f-Customrate"
+              label="Custom Rate (Rs: 39)" 
+              type="number"
+              value={formData.supplierNumber}
+              onChange={(value) => handleInputChange("supplierNumber", value)}
+              placeholder="10-digit phone number"
+              error={formErrors.supplierNumber}
+              disabled={isSubmitting}
+              inputMode="numeric"
+            /> */}
             <FormInput
               id="f-phone"
               label="Phone Number"
@@ -535,14 +547,6 @@ export default function Supplier() {
 
           <div className={styles.formActions}>
             <button
-              type="button"
-              onClick={resetForm}
-              className={styles.cancelButton}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button
               type="submit"
               disabled={isSubmitting}
               className={styles.submitButton}
@@ -557,6 +561,15 @@ export default function Supplier() {
               ) : (
                 "Add Supplier"
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={resetForm}
+              className={styles.cancelButton}
+              disabled={isSubmitting}
+            >
+              Cancel
             </button>
           </div>
         </form>
@@ -691,7 +704,11 @@ export default function Supplier() {
                               : ""
                           }`}
                           disabled={loading || deleteLoading === item._id}
-                          title= { isEditing && formData.supplierId === item._id ? "Cancel" : "Edit"}
+                          title={
+                            isEditing && formData.supplierId === item._id
+                              ? "Cancel"
+                              : "Edit"
+                          }
                         >
                           {isEditing && formData.supplierId === item._id
                             ? "Cancel"
@@ -703,7 +720,7 @@ export default function Supplier() {
                           disabled={
                             deleteLoading === item._id || loading || isEditing
                           }
-                          title={isEditing ? "Delete disabled":" Delete"}
+                          title={isEditing ? "Delete disabled" : " Delete"}
                         >
                           {deleteLoading === item._id ? (
                             <span className={styles.deleteSpinner}></span>

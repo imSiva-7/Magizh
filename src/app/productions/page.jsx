@@ -7,6 +7,17 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import styles from "@/css/production.module.css";
 import { getTodayDate } from "@/utils/dateUtils.js";
 
+const LoadingSpinner = () => (
+  <div className={styles.page_container}>
+    <div className={styles.loading_container}>
+      <div className={`${styles.spinner}`}></div>
+      <span className={styles.loading_text}>
+        Loading procurement records...
+      </span>
+    </div>
+  </div>
+);
+
 const ProductionFormInput = ({
   label,
   value,
@@ -146,11 +157,10 @@ export default function ProductionPage() {
   const parseDecimal = (value, decimalPlaces = 2) => {
     if (!value) return null;
 
-    7
+    7;
 
-    7.89556
+    7.89556;
 
-    
     const num = parseFloat(value);
     return isNaN(num) ? null : parseFloat(num.toFixed(decimalPlaces));
   };
@@ -385,7 +395,7 @@ export default function ProductionPage() {
         {/* Recent Entries */}
 
         {loading ? (
-          <div className={styles.loadingState}>Loading production data...</div>
+          <LoadingSpinner />
         ) : entries.length === 0 ? (
           <div className={styles.emptyState}>
             <h3>No production data found</h3>
