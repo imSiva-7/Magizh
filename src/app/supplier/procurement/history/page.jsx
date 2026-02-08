@@ -16,14 +16,14 @@ const INITIAL_FILTERS = {
 };
 
 const LoadingSpinner = () => (
-  <div className={styles.page_container}>
+  // <div className={styles.page_container}>
     <div className={styles.loading_container}>
       <div className={styles.spinner}></div>
       <span className={styles.loading_text}>
         Loading procurement records...
       </span>
     </div>
-  </div>
+  //  </div>
 );
 
 const validateDateRange = (startDate, endDate) => {
@@ -315,7 +315,11 @@ function ProcurementHistoryContent() {
 
       {/* SUMMARY SECTION */}
       {loading ? (
-        <LoadingSpinner />
+        <div className={styles.loadingSection}>
+        
+          <LoadingSpinner />
+          </div>
+  
       ) : (
         summary.count > 0 && (
           <div className={styles.stats_card}>

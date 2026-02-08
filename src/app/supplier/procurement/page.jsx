@@ -186,25 +186,36 @@ function ProcurementContent() {
   const [formData, setFormData] = useState(initialForm);
 
   // ========== DATA CALCULATIONS ==========
-  const calculateTotals = useCallback((quantity, fat, snf, supplierRate) => {
-    const q = parseFloat(quantity) || 0;
-    const f = parseFloat(fat) || 0;
-    const s = parseFloat(snf) || 0;
-    const tsRate = parseFloat(supplierRate) || 0;
+  const calculateTotals = useCallback(
+    (quantity, fat, snf, supplierRate, supplierCustomRate) => {
+      const q = parseFloat(quantity) || 0;
+      const f = parseFloat(fat) || 0;
+      const s = parseFloat(snf) || 0;
+      const tsRate = parseFloat(supplierRate) || 0;
+      let calculatedRate = 0;
+      let calculatedTotal = 0;
 
-    if (f > 0 && s > 0 && tsRate > 0 && q > 0) {
-      const totalSolids = f + s;
-      const calculatedRate = (totalSolids * tsRate) / 100;
-      const calculatedTotal = calculatedRate * q;
+      if (f > 0 && s > 0 && tsRate > 0 && q > 0) {
+        const totalSolids = f + s;
 
-      return {
-        rate: calculatedRate.toFixed(2),
-        totalAmount: calculatedTotal.toFixed(2),
-      };
-    }
+        if (supplierCustomRate) {
+          calculatedRate = supplierCustomRate;
+          calculatedTotal = supplierCustomRate * q;
+        } else {
+          calculatedRate = (totalSolids * tsRate) / 100;
+          calculatedTotal = calculatedRate * q;
+        }
 
-    return { rate: "", totalAmount: "" };
-  }, []);
+        return {
+          rate: calculatedRate.toFixed(2),
+          totalAmount: calculatedTotal.toFixed(2),
+        };
+      }
+
+      return { rate: "", totalAmount: "" };
+    },
+    [],
+  );
 
   // ========== DATA FETCHING ==========
   const fetchAllData = useCallback(async () => {
@@ -258,6 +269,7 @@ function ProcurementContent() {
         formData.fatPercentage,
         formData.snfPercentage,
         data.supplier?.supplierTSRate,
+        data.supplier?.supplierCustomRate,
       );
 
       setFormData((prev) => ({
@@ -271,6 +283,7 @@ function ProcurementContent() {
     formData.fatPercentage,
     formData.snfPercentage,
     data.supplier?.supplierTSRate,
+    data.supplier?.supplierCustomRate,
     calculateTotals,
   ]);
 
@@ -394,20 +407,37 @@ function ProcurementContent() {
       const url = editingId
         ? `/api/supplier/procurement?id=${editingId}`
         : "/api/supplier/procurement";
+      let payload;
 
-      const payload = {
-        supplierId,
-        supplierName: data.supplier.supplierName,
-        supplierType: data.supplier.supplierType,
-        supplierTSRate: data.supplier.supplierTSRate,
-        date: formData.date,
-        time: formData.time,
-        milkQuantity: parseFloat(formData.milkQuantity),
-        fatPercentage: parseFloat(formData.fatPercentage),
-        snfPercentage: parseFloat(formData.snfPercentage),
-        rate: parseFloat(formData.rate),
-        totalAmount: parseFloat(formData.totalAmount),
-      };
+      if (data.supplier?.supplierCustomRate) {
+        payload = {
+          supplierId,
+          supplierName: data.supplier.supplierName,
+          supplierType: data.supplier.supplierType,
+          supplierTSRate: "N/A",
+          date: formData.date,
+          time: formData.time,
+          milkQuantity: parseFloat(formData.milkQuantity),
+          fatPercentage: parseFloat(formData.fatPercentage),
+          snfPercentage: parseFloat(formData.snfPercentage),
+          rate: parseFloat(formData.rate),
+          totalAmount: parseFloat(formData.totalAmount),
+        };
+      } else {
+        payload = {
+          supplierId,
+          supplierName: data.supplier.supplierName,
+          supplierType: data.supplier.supplierType,
+          supplierTSRate: data.supplier.supplierTSRate,
+          date: formData.date,
+          time: formData.time,
+          milkQuantity: parseFloat(formData.milkQuantity),
+          fatPercentage: parseFloat(formData.fatPercentage),
+          snfPercentage: parseFloat(formData.snfPercentage),
+          rate: parseFloat(formData.rate),
+          totalAmount: parseFloat(formData.totalAmount),
+        };
+      }
 
       const res = await fetch(url, {
         method,
@@ -629,10 +659,20 @@ function ProcurementContent() {
               >
                 {data.supplier?.supplierType}
               </span>
-              <span className={styles.tsRateTag}>
-                Total Solids Rate:{" "}
-                {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
-              </span>
+
+              {data.supplier?.supplierCustomRate ? (
+                <span className={styles.tsRateTag}>
+                  Custom Rate Rs:{" "}
+                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
+                    0,
+                  )}
+                </span>
+              ) : (
+                <span className={styles.tsRateTag}>
+                  Total Solids Rate:{" "}
+                  {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -716,7 +756,11 @@ function ProcurementContent() {
               name="rate"
               value={formData.rate ? formatNumberWithCommas(formData.rate) : ""}
               readOnly
-              placeholder="Auto-calculated based on 'Total Solids' rate"
+              placeholder={
+                data.supplier?.supplierCustomRate
+                  ? ` Rs: ${data.supplier?.supplierCustomRate}`
+                  : "Auto-calculated based on 'Total Solids' rate"
+              }
               error={errors.rate}
             />
 

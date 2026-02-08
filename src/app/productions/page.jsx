@@ -11,9 +11,7 @@ const LoadingSpinner = () => (
   <div className={styles.page_container}>
     <div className={styles.loading_container}>
       <div className={`${styles.spinner}`}></div>
-      <span className={styles.loading_text}>
-        Loading procurement records...
-      </span>
+      <span className={styles.loading_text}>Loading production records...</span>
     </div>
   </div>
 );
@@ -268,7 +266,10 @@ export default function ProductionPage() {
                   onChange={(e) => setDateStr(e.target.value)}
                   className={styles.input}
                   required
-                  max={new Date().toISOString().split("T")[0]}
+                  max={new Date().toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 />
               </div>
 
@@ -395,7 +396,9 @@ export default function ProductionPage() {
         {/* Recent Entries */}
 
         {loading ? (
-          <LoadingSpinner />
+          <section className={styles.recentEntries}>
+            <LoadingSpinner />
+          </section>
         ) : entries.length === 0 ? (
           <div className={styles.emptyState}>
             <h3>No production data found</h3>

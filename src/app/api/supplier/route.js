@@ -99,6 +99,7 @@ export async function POST(request) {
       supplierName: data.supplierName.trim(),
       supplierType: data.supplierType?.trim() || "",
       supplierTSRate: data.supplierTSRate,
+      supplierCustomRate: data.supplierCustomRate || "",
       supplierNumber: data.supplierNumber?.trim() || "",
       supplierAddress: data.supplierAddress?.trim() || "",
       createdAt: new Date(),
@@ -160,6 +161,7 @@ export async function PUT(request) {
     if (data.supplierName !== undefined) updateData.supplierName = data.supplierName.trim();
     if (data.supplierType !== undefined) updateData.supplierType = data.supplierType.trim();
     if (data.supplierTSRate !== undefined) updateData.supplierTSRate = data.supplierTSRate;
+    if (data.supplierCustomRate !== undefined) updateData.supplierCustomRate = data.supplierCustomRate;
     if (data.supplierNumber !== undefined) updateData.supplierNumber = data.supplierNumber.trim();
     if (data.supplierAddress !== undefined) updateData.supplierAddress = data.supplierAddress.trim();
 

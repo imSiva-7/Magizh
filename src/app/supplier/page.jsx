@@ -82,6 +82,7 @@ export default function Supplier() {
       supplierName: "",
       supplierType: "",
       supplierTSRate: "",
+      supplierCustomRate: "",
       supplierNumber: "",
       supplierAddress: "",
     }),
@@ -132,6 +133,15 @@ export default function Supplier() {
           return "Enter up to 2 decimal places";
         return "";
 
+      case "supplierCustomRate":
+        const customRate = parseFloat(value);
+        if (!customRate) return "";
+        if (isNaN(customRate)) return "Please enter a valid number";
+        if (customRate < 30) return `Custom Rate must be at least 30`;
+        if (customRate > 40) return `Custom Rate cannot exceed 40`;
+        if (!/^\d+$/.test(value)) return "Enter up to 2 decimal places";
+        return "";
+
       case "supplierNumber":
         if (value && value.trim()) {
           const trimmedValue = value.trim();
@@ -167,6 +177,7 @@ export default function Supplier() {
       "supplierName",
       "supplierType",
       "supplierTSRate",
+      "supplierCustomRate",
       "supplierNumber",
       "supplierAddress",
     ];
@@ -284,6 +295,7 @@ export default function Supplier() {
       supplierName: formData.supplierName.trim(),
       supplierType: formData.supplierType.trim(),
       supplierTSRate: parseFloat(formData.supplierTSRate),
+      supplierCustomRate: parseFloat(formData.supplierCustomRate),
       supplierNumber: formData.supplierNumber.trim(),
       supplierAddress: formData.supplierAddress.trim(),
     };
@@ -349,6 +361,7 @@ export default function Supplier() {
         supplierName: supplier.supplierName || "",
         supplierType: supplier.supplierType || "",
         supplierTSRate: supplier.supplierTSRate?.toString() || "",
+        supplierCustomRate: supplier.supplierCustomRate?.toString() || "",
         supplierNumber: supplier.supplierNumber || "",
         supplierAddress: supplier.supplierAddress || "",
       });
@@ -508,20 +521,22 @@ export default function Supplier() {
               error={formErrors.supplierTSRate}
               required
               disabled={isSubmitting}
-              inputMode="decimal"
+              inputMode="numeric"
             />
 
-            {/* <FormInput
+            <FormInput
               id="f-Customrate"
-              label="Custom Rate (Rs: 39)" 
+              label="Custom Rate (Rs: 39)"
               type="number"
-              value={formData.supplierNumber}
-              onChange={(value) => handleInputChange("supplierNumber", value)}
-              placeholder="10-digit phone number"
-              error={formErrors.supplierNumber}
+              value={formData.supplierCustomRate}
+              onChange={(value) =>
+                handleInputChange("supplierCustomRate", value)
+              }
+              placeholder="Enter Rate"
+              error={formErrors.supplierCustomRate}
               disabled={isSubmitting}
               inputMode="numeric"
-            /> */}
+            />
             <FormInput
               id="f-phone"
               label="Phone Number"
@@ -534,15 +549,15 @@ export default function Supplier() {
               inputMode="numeric"
             />
 
-            {/* <FormInput
+            <FormInput
               id="f-addr"
               label="Address"
               value={formData.supplierAddress}
               onChange={(value) => handleInputChange("supplierAddress", value)}
-              placeholder="Enter complete address"
+              placeholder="Enter address"
               error={formErrors.supplierAddress}
               disabled={isSubmitting}
-            /> */}
+            />
           </div>
 
           <div className={styles.formActions}>
@@ -689,7 +704,9 @@ export default function Supplier() {
                       </span>
                     </td>
                     <td className={styles.tsRateCell}>
-                      {formatTSRate(item.supplierTSRate)}
+                      {item.supplierCustomRate
+                        ? `Rs: ${item.supplierCustomRate}`
+                        : formatTSRate(item.supplierTSRate)}
                     </td>
                     <td className={styles.phoneCell}>
                       {item.supplierNumber || "-"}

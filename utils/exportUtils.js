@@ -139,6 +139,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
       "Qty (Ltr)",
       "FAT %",
       "SNF %",
+      "TS Rate",
       "Rate/L",
       "Amount (Rs)",
     ],
@@ -183,6 +184,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         formatNumberWithCommas(record.milkQuantity, 2),
         parseFloat(record.fatPercentage).toFixed(1),
         parseFloat(record.snfPercentage).toFixed(1),
+        record.supplierTSRate || "N/A",
         formatNumberWithCommas(record.rate, 2),
         formatNumberWithCommas(record.totalAmount, 2),
       ]);
