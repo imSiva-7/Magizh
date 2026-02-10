@@ -24,6 +24,7 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
+
 const getCurrentTimePeriod = () => {
   const hour = new Date().getHours();
   return hour >= 12 ? "PM" : "AM";
@@ -258,26 +259,22 @@ function ProcurementContent() {
     fetchAllData();
   }, [supplierId, router, fetchAllData]);
 
-  useEffect(() => {
-    if (
-      formData.milkQuantity ||
-      formData.fatPercentage ||
-      formData.snfPercentage
-    ) {
-      const { rate, totalAmount } = calculateTotals(
-        formData.milkQuantity,
-        formData.fatPercentage,
-        formData.snfPercentage,
-        data.supplier?.supplierTSRate,
-        data.supplier?.supplierCustomRate,
-      );
+  // Fix: Optimized calculation with useMemo
+  const calculatedValues = useMemo(() => {
+    const hasValues =
+      formData.milkQuantity || formData.fatPercentage || formData.snfPercentage;
 
-      setFormData((prev) => ({
-        ...prev,
-        rate,
-        totalAmount,
-      }));
+    if (!hasValues) {
+      return { rate: "", totalAmount: "" };
     }
+
+    return calculateTotals(
+      formData.milkQuantity,
+      formData.fatPercentage,
+      formData.snfPercentage,
+      data.supplier?.supplierTSRate,
+      data.supplier?.supplierCustomRate,
+    );
   }, [
     formData.milkQuantity,
     formData.fatPercentage,
@@ -287,13 +284,28 @@ function ProcurementContent() {
     calculateTotals,
   ]);
 
+  // Fix: Only update when calculated values change
+  useEffect(() => {
+    if (
+      calculatedValues.rate !== formData.rate ||
+      calculatedValues.totalAmount !== formData.totalAmount
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        rate: calculatedValues.rate,
+        totalAmount: calculatedValues.totalAmount,
+      }));
+    }
+  }, [calculatedValues, formData.rate, formData.totalAmount]);
+
   // ========== FORM HANDLERS ==========
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
     // Validate negative values
     if (["milkQuantity", "fatPercentage", "snfPercentage"].includes(name)) {
-      if (parseFloat(value) < 0) return;
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue < 0) return;
     }
 
     // Sanitize numeric inputs
@@ -330,9 +342,7 @@ function ProcurementContent() {
     // Date validation
     if (!formData.date) {
       newErrors.date = "Date is required";
-    } else if (formData.date > getTodayDate()) {
-      newErrors.date = "Date cannot be in the future";
-    }
+    } 
 
     // Time validation
     if (!formData.time) {
@@ -345,7 +355,7 @@ function ProcurementContent() {
     const milkQty = parseFloat(formData.milkQuantity);
     if (!formData.milkQuantity) {
       newErrors.milkQuantity = "Quantity is required";
-    } else if (milkQty <= 0) {
+    } else if (isNaN(milkQty) || milkQty <= 0) {
       newErrors.milkQuantity = "Quantity must be greater than 0";
     } else if (milkQty > 10000) {
       newErrors.milkQuantity = "Quantity seems too high";
@@ -355,7 +365,7 @@ function ProcurementContent() {
     const fatPct = parseFloat(formData.fatPercentage);
     if (!formData.fatPercentage) {
       newErrors.fatPercentage = "Fat % is required";
-    } else if (fatPct <= 0) {
+    } else if (isNaN(fatPct) || fatPct <= 0) {
       newErrors.fatPercentage = "Fat % must be greater than 0";
     } else if (fatPct > 9) {
       newErrors.fatPercentage = "Fat % seems too high";
@@ -365,14 +375,15 @@ function ProcurementContent() {
     const snfPct = parseFloat(formData.snfPercentage);
     if (!formData.snfPercentage) {
       newErrors.snfPercentage = "SNF % is required";
-    } else if (snfPct <= 0) {
+    } else if (isNaN(snfPct) || snfPct <= 0) {
       newErrors.snfPercentage = "SNF % must be greater than 0";
     } else if (snfPct > 12) {
       newErrors.snfPercentage = "SNF % seems too high";
     }
 
     // Rate validation
-    if (!formData.rate || parseFloat(formData.rate) <= 0) {
+    const rateValue = parseFloat(formData.rate);
+    if (!formData.rate || isNaN(rateValue) || rateValue <= 0) {
       newErrors.rate = "Invalid calculation. Check Fat/SNF values";
     }
 
@@ -388,56 +399,28 @@ function ProcurementContent() {
       return;
     }
 
-    // try {
-    //   const method = "GET";
-    //   const uri = `/api/supplier/procurement?milkQuantity=${formData.milkQuantity}`;
-
-    //   const res = await fetch(uri, {
-    //     method,
-    //   });
-    //   const resData = await res.json();
-
-    //   if (!res.ok) return new Error("Checking Milk Quantity failing");
-    //   if (resData) alert("Milk procurement already entered, kindly check");
-    // } catch (error) {}
-
     setSubmitting(true);
     try {
       const method = editingId ? "PUT" : "POST";
       const url = editingId
         ? `/api/supplier/procurement?id=${editingId}`
         : "/api/supplier/procurement";
-      let payload;
 
-      if (data.supplier?.supplierCustomRate) {
-        payload = {
-          supplierId,
-          supplierName: data.supplier.supplierName,
-          supplierType: data.supplier.supplierType,
-          supplierTSRate: "N/A",
-          date: formData.date,
-          time: formData.time,
-          milkQuantity: parseFloat(formData.milkQuantity),
-          fatPercentage: parseFloat(formData.fatPercentage),
-          snfPercentage: parseFloat(formData.snfPercentage),
-          rate: parseFloat(formData.rate),
-          totalAmount: parseFloat(formData.totalAmount),
-        };
-      } else {
-        payload = {
-          supplierId,
-          supplierName: data.supplier.supplierName,
-          supplierType: data.supplier.supplierType,
-          supplierTSRate: data.supplier.supplierTSRate,
-          date: formData.date,
-          time: formData.time,
-          milkQuantity: parseFloat(formData.milkQuantity),
-          fatPercentage: parseFloat(formData.fatPercentage),
-          snfPercentage: parseFloat(formData.snfPercentage),
-          rate: parseFloat(formData.rate),
-          totalAmount: parseFloat(formData.totalAmount),
-        };
-      }
+      const payload = {
+        supplierId,
+        supplierName: data.supplier?.supplierName,
+        supplierType: data.supplier?.supplierType,
+        supplierTSRate: data.supplier?.supplierCustomRate
+          ? "N/A"
+          : data.supplier?.supplierTSRate,
+        date: formData.date,
+        time: formData.time,
+        milkQuantity: parseFloat(formData.milkQuantity),
+        fatPercentage: parseFloat(formData.fatPercentage),
+        snfPercentage: parseFloat(formData.snfPercentage),
+        rate: parseFloat(formData.rate),
+        totalAmount: parseFloat(formData.totalAmount),
+      };
 
       const res = await fetch(url, {
         method,
@@ -492,6 +475,11 @@ function ProcurementContent() {
   };
 
   const handleEdit = (item) => {
+    if (editingId) {
+      setEditingId(null);
+      resetForm();
+      return;
+    }
     setEditingId(item._id);
     setFormData({
       date: item.date.split("T")[0],
@@ -514,13 +502,18 @@ function ProcurementContent() {
     setErrors({});
   };
 
+  // Fix: Proper date filtering with timezone handling
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
 
     return data.allProcurements.filter((record) => {
-      const recordDate = new Date(record.date);
-      const startDate = filters.startDate ? new Date(filters.startDate) : null;
-      const endDate = filters.endDate ? new Date(filters.endDate) : null;
+      const recordDate = new Date(record.date.split("T")[0]); // Extract date only
+      const startDate = filters.startDate
+        ? new Date(filters.startDate + "T00:00:00")
+        : null;
+      const endDate = filters.endDate
+        ? new Date(filters.endDate + "T23:59:59")
+        : null;
 
       if (startDate && recordDate < startDate) return false;
       if (endDate && recordDate > endDate) return false;
@@ -584,15 +577,26 @@ function ProcurementContent() {
       return;
     }
 
+    // Fix: Handle cases where .at() might not be available
+    let fileName;
+    const firstRecord = filteredProcurements[0];
+    const lastRecord = filteredProcurements[filteredProcurements.length - 1];
+
     const dateRange = {
-      start:
-        new Date(filteredProcurements.at(-1).date).toLocaleDateString() ||
-        "----",
-      end:
-        new Date(filteredProcurements[0].date).toLocaleDateString() || "----",
+      start: firstRecord
+        ? new Date(firstRecord.date).toLocaleDateString()
+        : "----",
+      end: lastRecord ? new Date(lastRecord.date).toLocaleDateString() : "----",
     };
+
     const supplierName = data.supplier?.supplierName || "Unknown";
-    const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
+    dateRange.start == dateRange.end
+      ? (fileName = `${supplierName}_${dateRange.end}`.replace(/\//g, "-"))
+      : (fileName =
+          `${supplierName}_${dateRange.start}_to_${dateRange.end}`.replace(
+            /\//g,
+            "-",
+          ));
 
     if (format === "csv") {
       exportToCSV(filteredProcurements, data.supplier, dateRange, fileName);
@@ -604,7 +608,11 @@ function ProcurementContent() {
   };
 
   // ========== RENDER CONDITIONS ==========
-  if (!data.supplier && !loading) {
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!data.supplier) {
     return (
       <div className={styles.errorState}>
         <h2>Supplier Not Found</h2>
@@ -625,6 +633,7 @@ function ProcurementContent() {
       </div>
     );
   }
+
   const isFormDirty = Object.values(formData).some(
     (val, idx) => idx > 1 && val && val !== "",
   );
@@ -646,47 +655,32 @@ function ProcurementContent() {
 
       {/* HEADER */}
       <div className={styles.header}>
-        {loading ? (
-          <span className={styles.loading_text}> Loading supplier info...</span>
-        ) : (
-          <div className={styles.headerTitle}>
-            {/* <button className={styles.backButton}>Back</button> */}
+        <div className={styles.headerTitle}>
+          <h1> {data.supplier?.supplierName}</h1>
+          <div className={styles.supplierInfo}>
+            <span className={getSupplierTypeClass(data.supplier?.supplierType)}>
+              {data.supplier?.supplierType}
+            </span>
 
-            <h1> {data.supplier?.supplierName}</h1>
-            <div className={styles.supplierInfo}>
-              <span
-                className={getSupplierTypeClass(data.supplier?.supplierType)}
-              >
-                {data.supplier?.supplierType}
+            {data.supplier?.supplierCustomRate ? (
+              <span className={styles.tsRateTag}>
+                Custom Rate: ₹
+                {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(0)}
               </span>
-
-              {data.supplier?.supplierCustomRate ? (
-                <span className={styles.tsRateTag}>
-                  Custom Rate Rs:{" "}
-                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
-                    0,
-                  )}
-                </span>
-              ) : (
-                <span className={styles.tsRateTag}>
-                  Total Solids Rate:{" "}
-                  {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
-                </span>
-              )}
-            </div>
+            ) : (
+              <span className={styles.tsRateTag}>
+                Total Solids Rate:{" "}
+                {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+              </span>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* FORM SECTION */}
       <div className={styles.formSection}>
         <div className={styles.formHeader}>
-          <h2>
-            {editingId
-              ? "Edit Record"
-              : `Procurement Entry 
- `}
-          </h2>
+          <h2>{editingId ? "Edit Record" : `Procurement Entry`}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.procurementForm}>
@@ -725,6 +719,8 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.milkQuantity}
               required
+              step="0.01"
+              min="0"
             />
 
             <InputGroup
@@ -737,6 +733,8 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.fatPercentage}
               required
+              step="0.1"
+              min="0"
             />
 
             <InputGroup
@@ -749,6 +747,8 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.snfPercentage}
               required
+              step="0.1"
+              min="0"
             />
 
             <InputGroup
@@ -778,18 +778,6 @@ function ProcurementContent() {
           </div>
 
           <div className={styles.formActions}>
-            {/* {(editingId || isFormDirty) && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.secondaryFilterBtnForForm}
-                disabled={submitting}
-                aria-label={editingId ? "Cancel edit" : "Clear form"}
-              >
-                {editingId ? "Cancel Edit" : "Clear Form"}
-              </button>
-            )} */}
-
             <button
               type="submit"
               disabled={submitting}
@@ -812,8 +800,7 @@ function ProcurementContent() {
       </div>
 
       {/* FILTER SECTION */}
-
-      {summary.count > 0 && (
+      {data.allProcurements.length > 0 && (
         <form className={styles.filterForm}>
           <div className={styles.filterHeader}>
             <h2>Filter by Date Range</h2>
@@ -916,18 +903,7 @@ function ProcurementContent() {
           <LoadingSpinner />
         ) : summary.count === 0 ? (
           <div className={styles.emptyState}>
-            {!data.supplier ? (
-              <>
-                <span className={styles.emptyIcon}>⚠️</span>
-                <h3>Supplier not found</h3>
-                <button
-                  onClick={() => router.push("/supplier")}
-                  className={styles.secondaryBtn}
-                >
-                  Back to Suppliers
-                </button>
-              </>
-            ) : data.allProcurements.length === 0 ? (
+            {data.allProcurements.length === 0 ? (
               <>
                 <span className={styles.emptyIcon}>📊</span>
                 <p>No procurement records, start by adding the first record</p>
@@ -936,23 +912,19 @@ function ProcurementContent() {
               <>
                 <span className={styles.emptyIcon}>📊</span>
                 <p>No procurement records found for the selected date range</p>
-                {(filters.startDate !== getPreviousMonthDate() ||
-                  filters.endDate !== getTodayDate()) && (
+                {
                   <button
-                    onClick={resetFilterForm}
+                    onClick={clearFilters}
                     className={styles.clearFilterLink}
                   >
-                    Reset filters to see all {data.allProcurements.length}{" "}
+                    clear filters to see all {data.allProcurements.length}{" "}
                     records
                   </button>
-                )}
+                }
               </>
             )}
           </div>
         ) : (
-          //        <h3 className={styles.tableH3}>
-          //     Recent Production Entries ({filteredProcurements.length})
-          //   </h3>
           <div className={styles.tableContainer}>
             <table className={styles.table} aria-label="Procurement history">
               <thead>
@@ -1021,16 +993,28 @@ function ProcurementContent() {
                         <button
                           onClick={() => handleEdit(row)}
                           className={styles.editBtn}
-                          disabled={submitting}
+                          disabled={
+                            submitting ||
+                            new Date() - new Date(row.createdAt) <
+                              2 * 24 * 60 * 60 * 1000
+                              ? false
+                              : true
+                          }
                           aria-label="Edit record"
                           title="Edit record"
                         >
-                          Edit
+                          {editingId == row._id ? "Cancel" : "Edit"}
                         </button>
                         <button
                           onClick={() => handleDelete(row._id)}
                           className={styles.deleteBtn}
-                          disabled={submitting}
+                          disabled={
+                            submitting ||
+                            new Date() - new Date(row.createdAt) <
+                              2 * 24 * 60 * 60 * 1000
+                              ? false
+                              : true
+                          }
                           aria-label="Delete record"
                           title="Delete record"
                         >

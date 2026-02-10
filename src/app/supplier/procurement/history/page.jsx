@@ -8,7 +8,6 @@ import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import Link from "next/link";
-import { filter } from "lodash";
 
 const INITIAL_FILTERS = {
   startDate: getPreviousMonthDate(),

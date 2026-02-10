@@ -75,10 +75,16 @@ const ProductionTableRow = ({ entry, onDelete }) => {
       <td>{formatValue(entry.premium_paneer_quantity)}</td>
       <td>{formatValue(entry.butter_quantity)}</td>
       <td>{formatValue(entry.ghee_quantity)}</td>
+
       <td>
         <button
           onClick={() => onDelete(entry._id)}
           className={styles.deleteBtn}
+          disabled={
+            new Date() - new Date(entry.createdAt) < 2 * 24 * 60 * 60 * 1000
+              ? false
+              : true
+          }
           title="Delete entry"
         >
           Delete

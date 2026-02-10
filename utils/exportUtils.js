@@ -111,20 +111,24 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   if (supplier?.supplierName || supplier) {
+    doc.text(`Name: ${supplier.supplierName || supplier}`, 18, infoStartY + 14);
+  }
+  // if (supplier?.bankDetails) {
+  //   doc.text(`Bank:  ${supplier.bankDetails}`, 18, infoStartY + 20);
+  // }
+
+  if (supplier?.supplierCustomRate) {
     doc.text(
-      `Name:   ${supplier.supplierName || supplier}`,
-      18,
+      `Custom Rate in Rs: ${supplier.supplierCustomRate}`,
+      pageWidth / 2 + 10,
       infoStartY + 14,
     );
   }
-  if (supplier?.bankDetails) {
-    doc.text(`Bank:    ${supplier.bankDetails}`, 18, infoStartY + 20);
-  }
 
   // Right side of box
-  if (supplier?.supplierTSRate) {
+  if (supplier?.supplierTSRate && !supplier?.supplierCustomRate) {
     doc.text(
-      `Recent TS Rate: ${formatNumberWithCommas(supplier.supplierTSRate, 2)}`,
+      `Total Solids Rate: ${formatNumberWithCommas(supplier.supplierTSRate, 2)}`,
       pageWidth / 2 + 10,
       infoStartY + 14,
     );
@@ -172,13 +176,14 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     if (dateCompare !== 0) return dateCompare;
     return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
   });
+  let uniquieDates = new Set();
 
   sortedProcurements.forEach((record) => {
     const kg = (record.milkQuantity * 1.03).toFixed(2);
 
     if (supplier?.supplierName) {
       tableData.push([
-        formatDateForCSV(record.date),
+        !uniquieDates.has(record.date) ? formatDateForCSV(record.date) : "",
         record.time || "AM",
         // formatNumberWithCommas(kg, 2),
         formatNumberWithCommas(record.milkQuantity, 2),
@@ -190,7 +195,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
       ]);
     } else {
       tableData.push([
-        formatDateForCSV(record.date),
+        !uniquieDates.has(record.date) ? formatDateForCSV(record.date) : "",
         record.time || "AM",
         record.supplierName || "Unknown",
         // formatNumberWithCommas(kg, 2),
@@ -207,6 +212,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     totalAmount += record.totalAmount;
     totalFat += record.fatPercentage;
     totalSnf += record.snfPercentage;
+    uniquieDates.add(record.date);
   });
   //  siva here too
   autoTable(doc, {

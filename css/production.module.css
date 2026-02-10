@@ -229,6 +229,10 @@
 .deleteBtn:hover {
   background-color: #fecaca;
 }
+.deleteBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
 
 .recentEntries {
   background-color: #ffffff;

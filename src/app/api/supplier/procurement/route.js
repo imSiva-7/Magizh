@@ -50,15 +50,6 @@ const validateProcurementData = (data) => {
     }
   }
 
-  // Date validation
-  const today = new Date().toISOString().split("T")[0];
-  if (data.date > today) {
-    return {
-      valid: false,
-      error: "Date cannot be in the future",
-    };
-  }
-
   // Time validation
   if (!["AM", "PM"].includes(data.time)) {
     return {
@@ -71,13 +62,23 @@ const validateProcurementData = (data) => {
 };
 
 // Check for duplicate entry
-const checkDuplicateEntry = async (db, supplierId, date, time, milkQuantity) => {
+const checkDuplicateEntry = async (
+  db,
+  supplierId,
+  date,
+  time,
+  milkQuantity,
+  fatPercentage,
+  snfPercentage,
+) => {
   try {
     const existing = await db.collection("procurements").findOne({
       supplierId: new ObjectId(supplierId),
       date: date,
       time: time,
       milkQuantity: milkQuantity,
+      fatPercentage: fatPercentage,
+      snfPercentage: snfPercentage,
     });
 
     return existing;
@@ -112,7 +113,7 @@ export async function GET(request) {
       if (!procurement) {
         return NextResponse.json(
           { error: "Record not found" },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -123,7 +124,7 @@ export async function GET(request) {
     if (!supplierId) {
       return NextResponse.json(
         { error: "Supplier ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -148,7 +149,7 @@ export async function GET(request) {
         if (isNaN(startDateObj.getTime())) {
           return NextResponse.json(
             { error: "Invalid start date format. Use YYYY-MM-DD" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         query.date.$gte = startDate;
@@ -160,7 +161,7 @@ export async function GET(request) {
         if (isNaN(endDateObj.getTime())) {
           return NextResponse.json(
             { error: "Invalid end date format. Use YYYY-MM-DD" },
-            { status: 400 }
+            { status: 400 },
           );
         }
         query.date.$lte = endDate;
@@ -170,7 +171,7 @@ export async function GET(request) {
       if (startDate && endDate && startDate > endDate) {
         return NextResponse.json(
           { error: "Start date cannot be after end date" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -191,7 +192,7 @@ export async function GET(request) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -213,12 +214,22 @@ export async function POST(request) {
       totalAmount,
     } = body;
 
+    if (new Date() - new Date(date) > 3 * 24 * 60 * 60 * 1000) {
+      return NextResponse.json(
+        {
+          error:
+            "Procurement date can't be more than 3 days back, Contact Admin",
+        },
+        { status: 400 },
+      );
+    }
+
     // Validate supplier ID
     const supplierValidation = validateObjectId(supplierId);
     if (!supplierValidation.valid) {
       return NextResponse.json(
         { error: supplierValidation.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -236,7 +247,7 @@ export async function POST(request) {
     if (!dataValidation.valid) {
       return NextResponse.json(
         { error: dataValidation.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -244,15 +255,23 @@ export async function POST(request) {
     const db = client.db("production");
 
     // Check for duplicate entry (same supplier, same date, same time)
-    const duplicate = await checkDuplicateEntry(db, supplierId, date, time, milkQuantity);
+    const duplicate = await checkDuplicateEntry(
+      db,
+      supplierId,
+      date,
+      time,
+      milkQuantity,
+      fatPercentage,
+      snfPercentage,
+    );
     if (duplicate) {
       return NextResponse.json(
         {
           error:
-            "procurement record already exists for this Quantity!",
+            "procurement record already exists for this Quantity, fat and snf",
           duplicateId: duplicate._id,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -260,7 +279,7 @@ export async function POST(request) {
     if (!supplierTSRate || supplierTSRate <= 0) {
       return NextResponse.json(
         { error: "Invalid supplier total solids rate" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -295,7 +314,7 @@ export async function POST(request) {
           _id: result.insertedId,
         },
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("API Error - POST procurement:", error);
@@ -305,7 +324,7 @@ export async function POST(request) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -336,7 +355,7 @@ export async function PUT(request) {
     if (!dataValidation.valid) {
       return NextResponse.json(
         { error: dataValidation.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -368,7 +387,7 @@ export async function PUT(request) {
             "procurement already exists on the same Milk Qunatity, date and time period",
           duplicateId: duplicate._id,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -409,7 +428,7 @@ export async function PUT(request) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -445,7 +464,7 @@ export async function DELETE(request) {
     if (result.deletedCount === 0) {
       return NextResponse.json(
         { error: "Record not found or already deleted" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -462,7 +481,7 @@ export async function DELETE(request) {
         details:
           process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
