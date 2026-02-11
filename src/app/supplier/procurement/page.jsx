@@ -24,7 +24,6 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
-
 const getCurrentTimePeriod = () => {
   const hour = new Date().getHours();
   return hour >= 12 ? "PM" : "AM";
@@ -259,22 +258,21 @@ function ProcurementContent() {
     fetchAllData();
   }, [supplierId, router, fetchAllData]);
 
-  // Fix: Optimized calculation with useMemo
   const calculatedValues = useMemo(() => {
-    const hasValues =
-      formData.milkQuantity || formData.fatPercentage || formData.snfPercentage;
-
-    if (!hasValues) {
-      return { rate: "", totalAmount: "" };
+    if (
+      formData.milkQuantity ||
+      formData.fatPercentage ||
+      formData.snfPercentage
+    ) {
+      return calculateTotals(
+        formData.milkQuantity,
+        formData.fatPercentage,
+        formData.snfPercentage,
+        data.supplier?.supplierTSRate,
+        data.supplier?.supplierCustomRate,
+      );
     }
-
-    return calculateTotals(
-      formData.milkQuantity,
-      formData.fatPercentage,
-      formData.snfPercentage,
-      data.supplier?.supplierTSRate,
-      data.supplier?.supplierCustomRate,
-    );
+    return { rate: "", totalAmount: "" };
   }, [
     formData.milkQuantity,
     formData.fatPercentage,
@@ -284,19 +282,15 @@ function ProcurementContent() {
     calculateTotals,
   ]);
 
-  // Fix: Only update when calculated values change
   useEffect(() => {
-    if (
-      calculatedValues.rate !== formData.rate ||
-      calculatedValues.totalAmount !== formData.totalAmount
-    ) {
+    if (calculatedValues.rate || calculatedValues.totalAmount) {
       setFormData((prev) => ({
         ...prev,
         rate: calculatedValues.rate,
         totalAmount: calculatedValues.totalAmount,
       }));
     }
-  }, [calculatedValues, formData.rate, formData.totalAmount]);
+  }, [calculatedValues]);
 
   // ========== FORM HANDLERS ==========
   const handleInputChange = (e) => {
@@ -304,8 +298,7 @@ function ProcurementContent() {
 
     // Validate negative values
     if (["milkQuantity", "fatPercentage", "snfPercentage"].includes(name)) {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue < 0) return;
+      if (parseFloat(value) < 0) return;
     }
 
     // Sanitize numeric inputs
@@ -342,7 +335,7 @@ function ProcurementContent() {
     // Date validation
     if (!formData.date) {
       newErrors.date = "Date is required";
-    } 
+    }
 
     // Time validation
     if (!formData.time) {
@@ -355,7 +348,7 @@ function ProcurementContent() {
     const milkQty = parseFloat(formData.milkQuantity);
     if (!formData.milkQuantity) {
       newErrors.milkQuantity = "Quantity is required";
-    } else if (isNaN(milkQty) || milkQty <= 0) {
+    } else if (milkQty <= 0) {
       newErrors.milkQuantity = "Quantity must be greater than 0";
     } else if (milkQty > 10000) {
       newErrors.milkQuantity = "Quantity seems too high";
@@ -365,7 +358,7 @@ function ProcurementContent() {
     const fatPct = parseFloat(formData.fatPercentage);
     if (!formData.fatPercentage) {
       newErrors.fatPercentage = "Fat % is required";
-    } else if (isNaN(fatPct) || fatPct <= 0) {
+    } else if (fatPct <= 0) {
       newErrors.fatPercentage = "Fat % must be greater than 0";
     } else if (fatPct > 9) {
       newErrors.fatPercentage = "Fat % seems too high";
@@ -375,15 +368,14 @@ function ProcurementContent() {
     const snfPct = parseFloat(formData.snfPercentage);
     if (!formData.snfPercentage) {
       newErrors.snfPercentage = "SNF % is required";
-    } else if (isNaN(snfPct) || snfPct <= 0) {
+    } else if (snfPct <= 0) {
       newErrors.snfPercentage = "SNF % must be greater than 0";
     } else if (snfPct > 12) {
       newErrors.snfPercentage = "SNF % seems too high";
     }
 
     // Rate validation
-    const rateValue = parseFloat(formData.rate);
-    if (!formData.rate || isNaN(rateValue) || rateValue <= 0) {
+    if (!formData.rate || parseFloat(formData.rate) <= 0) {
       newErrors.rate = "Invalid calculation. Check Fat/SNF values";
     }
 
@@ -399,28 +391,56 @@ function ProcurementContent() {
       return;
     }
 
+    // try {
+    //   const method = "GET";
+    //   const uri = `/api/supplier/procurement?milkQuantity=${formData.milkQuantity}`;
+
+    //   const res = await fetch(uri, {
+    //     method,
+    //   });
+    //   const resData = await res.json();
+
+    //   if (!res.ok) return new Error("Checking Milk Quantity failing");
+    //   if (resData) alert("Milk procurement already entered, kindly check");
+    // } catch (error) {}
+
     setSubmitting(true);
     try {
       const method = editingId ? "PUT" : "POST";
       const url = editingId
         ? `/api/supplier/procurement?id=${editingId}`
         : "/api/supplier/procurement";
+      let payload;
 
-      const payload = {
-        supplierId,
-        supplierName: data.supplier?.supplierName,
-        supplierType: data.supplier?.supplierType,
-        supplierTSRate: data.supplier?.supplierCustomRate
-          ? "N/A"
-          : data.supplier?.supplierTSRate,
-        date: formData.date,
-        time: formData.time,
-        milkQuantity: parseFloat(formData.milkQuantity),
-        fatPercentage: parseFloat(formData.fatPercentage),
-        snfPercentage: parseFloat(formData.snfPercentage),
-        rate: parseFloat(formData.rate),
-        totalAmount: parseFloat(formData.totalAmount),
-      };
+      if (data.supplier?.supplierCustomRate) {
+        payload = {
+          supplierId,
+          supplierName: data.supplier.supplierName,
+          supplierType: data.supplier.supplierType,
+          supplierTSRate: "N/A",
+          date: formData.date,
+          time: formData.time,
+          milkQuantity: parseFloat(formData.milkQuantity),
+          fatPercentage: parseFloat(formData.fatPercentage),
+          snfPercentage: parseFloat(formData.snfPercentage),
+          rate: parseFloat(formData.rate),
+          totalAmount: parseFloat(formData.totalAmount),
+        };
+      } else {
+        payload = {
+          supplierId,
+          supplierName: data.supplier.supplierName,
+          supplierType: data.supplier.supplierType,
+          supplierTSRate: data.supplier.supplierTSRate,
+          date: formData.date,
+          time: formData.time,
+          milkQuantity: parseFloat(formData.milkQuantity),
+          fatPercentage: parseFloat(formData.fatPercentage),
+          snfPercentage: parseFloat(formData.snfPercentage),
+          rate: parseFloat(formData.rate),
+          totalAmount: parseFloat(formData.totalAmount),
+        };
+      }
 
       const res = await fetch(url, {
         method,
@@ -502,18 +522,13 @@ function ProcurementContent() {
     setErrors({});
   };
 
-  // Fix: Proper date filtering with timezone handling
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
 
     return data.allProcurements.filter((record) => {
-      const recordDate = new Date(record.date.split("T")[0]); // Extract date only
-      const startDate = filters.startDate
-        ? new Date(filters.startDate + "T00:00:00")
-        : null;
-      const endDate = filters.endDate
-        ? new Date(filters.endDate + "T23:59:59")
-        : null;
+      const recordDate = new Date(record.date);
+      const startDate = filters.startDate ? new Date(filters.startDate) : null;
+      const endDate = filters.endDate ? new Date(filters.endDate) : null;
 
       if (startDate && recordDate < startDate) return false;
       if (endDate && recordDate > endDate) return false;
@@ -577,26 +592,18 @@ function ProcurementContent() {
       return;
     }
 
-    // Fix: Handle cases where .at() might not be available
-    let fileName;
-    const firstRecord = filteredProcurements[0];
-    const lastRecord = filteredProcurements[filteredProcurements.length - 1];
-
     const dateRange = {
-      start: firstRecord
-        ? new Date(firstRecord.date).toLocaleDateString()
-        : "----",
-      end: lastRecord ? new Date(lastRecord.date).toLocaleDateString() : "----",
+      start:
+        new Date(filteredProcurements.at(-1).date).toLocaleDateString() ||
+        "----",
+      end:
+        new Date(filteredProcurements[0].date).toLocaleDateString() || "----",
     };
-
     const supplierName = data.supplier?.supplierName || "Unknown";
-    dateRange.start == dateRange.end
-      ? (fileName = `${supplierName}_${dateRange.end}`.replace(/\//g, "-"))
-      : (fileName =
-          `${supplierName}_${dateRange.start}_to_${dateRange.end}`.replace(
-            /\//g,
-            "-",
-          ));
+    const fileName =
+      dateRange.start == dateRange.end
+        ? `${supplierName}_${dateRange.start}`
+        : `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
 
     if (format === "csv") {
       exportToCSV(filteredProcurements, data.supplier, dateRange, fileName);
@@ -608,11 +615,7 @@ function ProcurementContent() {
   };
 
   // ========== RENDER CONDITIONS ==========
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
-  if (!data.supplier) {
+  if (!data.supplier && !loading) {
     return (
       <div className={styles.errorState}>
         <h2>Supplier Not Found</h2>
@@ -633,7 +636,6 @@ function ProcurementContent() {
       </div>
     );
   }
-
   const isFormDirty = Object.values(formData).some(
     (val, idx) => idx > 1 && val && val !== "",
   );
@@ -655,26 +657,36 @@ function ProcurementContent() {
 
       {/* HEADER */}
       <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1> {data.supplier?.supplierName}</h1>
-          <div className={styles.supplierInfo}>
-            <span className={getSupplierTypeClass(data.supplier?.supplierType)}>
-              {data.supplier?.supplierType}
-            </span>
+        {loading ? (
+          <span className={styles.loading_text}> Loading supplier info...</span>
+        ) : (
+          <div className={styles.headerTitle}>
+            {/* <button className={styles.backButton}>Back</button> */}
 
-            {data.supplier?.supplierCustomRate ? (
-              <span className={styles.tsRateTag}>
-                Custom Rate: ₹
-                {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(0)}
+            <h1> {data.supplier?.supplierName}</h1>
+            <div className={styles.supplierInfo}>
+              <span
+                className={getSupplierTypeClass(data.supplier?.supplierType)}
+              >
+                {data.supplier?.supplierType}
               </span>
-            ) : (
-              <span className={styles.tsRateTag}>
-                Total Solids Rate:{" "}
-                {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
-              </span>
-            )}
+
+              {data.supplier?.supplierCustomRate ? (
+                <span className={styles.tsRateTag}>
+                  Custom Rate: ₹
+                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
+                    0,
+                  )}
+                </span>
+              ) : (
+                <span className={styles.tsRateTag}>
+                  Total Solids Rate:{" "}
+                  {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* FORM SECTION */}
@@ -719,8 +731,6 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.milkQuantity}
               required
-              step="0.01"
-              min="0"
             />
 
             <InputGroup
@@ -733,8 +743,6 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.fatPercentage}
               required
-              step="0.1"
-              min="0"
             />
 
             <InputGroup
@@ -747,8 +755,6 @@ function ProcurementContent() {
               onChange={handleInputChange}
               error={errors.snfPercentage}
               required
-              step="0.1"
-              min="0"
             />
 
             <InputGroup
@@ -778,6 +784,18 @@ function ProcurementContent() {
           </div>
 
           <div className={styles.formActions}>
+            {/* {(editingId || isFormDirty) && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.secondaryFilterBtnForForm}
+                disabled={submitting}
+                aria-label={editingId ? "Cancel edit" : "Clear form"}
+              >
+                {editingId ? "Cancel Edit" : "Clear Form"}
+              </button>
+            )} */}
+
             <button
               type="submit"
               disabled={submitting}
@@ -800,6 +818,7 @@ function ProcurementContent() {
       </div>
 
       {/* FILTER SECTION */}
+
       {data.allProcurements.length > 0 && (
         <form className={styles.filterForm}>
           <div className={styles.filterHeader}>
@@ -903,7 +922,18 @@ function ProcurementContent() {
           <LoadingSpinner />
         ) : summary.count === 0 ? (
           <div className={styles.emptyState}>
-            {data.allProcurements.length === 0 ? (
+            {!data.supplier ? (
+              <>
+                <span className={styles.emptyIcon}>⚠️</span>
+                <h3>Supplier not found</h3>
+                <button
+                  onClick={() => router.push("/supplier")}
+                  className={styles.secondaryBtn}
+                >
+                  Back to Suppliers
+                </button>
+              </>
+            ) : data.allProcurements.length === 0 ? (
               <>
                 <span className={styles.emptyIcon}>📊</span>
                 <p>No procurement records, start by adding the first record</p>
@@ -925,6 +955,9 @@ function ProcurementContent() {
             )}
           </div>
         ) : (
+          //        <h3 className={styles.tableH3}>
+          //     Recent Production Entries ({filteredProcurements.length})
+          //   </h3>
           <div className={styles.tableContainer}>
             <table className={styles.table} aria-label="Procurement history">
               <thead>

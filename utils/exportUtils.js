@@ -120,17 +120,17 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   if (supplier?.supplierCustomRate) {
     doc.text(
       `Custom Rate in Rs: ${supplier.supplierCustomRate}`,
-      pageWidth / 2 + 10,
-      infoStartY + 14,
+      18,
+      infoStartY + 20,
     );
   }
 
   // Right side of box
   if (supplier?.supplierTSRate && !supplier?.supplierCustomRate) {
     doc.text(
-      `Total Solids Rate: ${formatNumberWithCommas(supplier.supplierTSRate, 2)}`,
-      pageWidth / 2 + 10,
-      infoStartY + 14,
+      `Total Solids Rate: ${supplier.supplierTSRate}`,
+      18,
+      infoStartY + 20,
     );
   }
 
@@ -203,7 +203,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         parseFloat(record.fatPercentage).toFixed(1),
         parseFloat(record.snfPercentage).toFixed(1),
         record.supplierTSRate || "N/A",
-        formatNumberWithCommas(record.rate, 2),
+        record.rate,
         formatNumberWithCommas(record.totalAmount, 2),
       ]);
     }
