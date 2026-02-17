@@ -24,6 +24,7 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
+
 const getCurrentTimePeriod = () => {
   const hour = new Date().getHours();
   return hour >= 12 ? "PM" : "AM";
@@ -181,7 +182,7 @@ function ProcurementContent() {
     supplier: null,
     allProcurements: [],
   });
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState({});
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
 
@@ -192,15 +193,19 @@ function ProcurementContent() {
       const f = parseFloat(fat) || 0;
       const s = parseFloat(snf) || 0;
       const tsRate = parseFloat(supplierRate) || 0;
+      const customRate = parseFloat(supplierCustomRate) || 0;
       let calculatedRate = 0;
       let calculatedTotal = 0;
 
-      if (f > 0 && s > 0 && tsRate > 0 && q > 0) {
+      if (f > 0 && s > 0 && q > 0) {
         const totalSolids = f + s;
 
-        if (supplierCustomRate) {
-          calculatedRate = supplierCustomRate;
-          calculatedTotal = supplierCustomRate * q;
+        if (editingId && editingId.customRate) {
+          calculatedRate = editingId.rate;
+          calculatedTotal = calculatedRate * q;
+        } else if (customRate) {
+          calculatedRate = customRate;
+          calculatedTotal = customRate * q;
         } else {
           calculatedRate = (totalSolids * tsRate) / 100;
           calculatedTotal = calculatedRate * q;
@@ -214,7 +219,7 @@ function ProcurementContent() {
 
       return { rate: "", totalAmount: "" };
     },
-    [],
+    [editingId],
   );
 
   // ========== DATA FETCHING ==========
@@ -248,7 +253,6 @@ function ProcurementContent() {
     }
   }, [supplierId]);
 
-  // ========== EFFECTS ==========
   useEffect(() => {
     if (!supplierId) {
       toast.error("No supplier ID provided");
@@ -362,7 +366,7 @@ function ProcurementContent() {
       newErrors.fatPercentage = "Fat % must be greater than 0";
     } else if (fatPct > 9) {
       newErrors.fatPercentage = "Fat % seems too high";
-    }
+    }                              
 
     // SNF percentage validation
     const snfPct = parseFloat(formData.snfPercentage);
@@ -391,24 +395,11 @@ function ProcurementContent() {
       return;
     }
 
-    // try {
-    //   const method = "GET";
-    //   const uri = `/api/supplier/procurement?milkQuantity=${formData.milkQuantity}`;
-
-    //   const res = await fetch(uri, {
-    //     method,
-    //   });
-    //   const resData = await res.json();
-
-    //   if (!res.ok) return new Error("Checking Milk Quantity failing");
-    //   if (resData) alert("Milk procurement already entered, kindly check");
-    // } catch (error) {}
-
     setSubmitting(true);
     try {
-      const method = editingId ? "PUT" : "POST";
-      const url = editingId
-        ? `/api/supplier/procurement?id=${editingId}`
+      const method = editingId._id ? "PUT" : "POST";
+      const url = editingId._id
+        ? `/api/supplier/procurement?id=${editingId._id}`
         : "/api/supplier/procurement";
       let payload;
 
@@ -423,6 +414,7 @@ function ProcurementContent() {
           milkQuantity: parseFloat(formData.milkQuantity),
           fatPercentage: parseFloat(formData.fatPercentage),
           snfPercentage: parseFloat(formData.snfPercentage),
+          customRate: true,
           rate: parseFloat(formData.rate),
           totalAmount: parseFloat(formData.totalAmount),
         };
@@ -437,6 +429,7 @@ function ProcurementContent() {
           milkQuantity: parseFloat(formData.milkQuantity),
           fatPercentage: parseFloat(formData.fatPercentage),
           snfPercentage: parseFloat(formData.snfPercentage),
+          customRate: false,
           rate: parseFloat(formData.rate),
           totalAmount: parseFloat(formData.totalAmount),
         };
@@ -451,7 +444,9 @@ function ProcurementContent() {
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || "Submission failed");
 
-      toast.success(editingId ? "Updated successfully" : "Added successfully");
+      toast.success(
+        editingId._id ? "Updated successfully" : "Added successfully",
+      );
       await fetchAllData();
       resetForm();
     } catch (error) {
@@ -485,7 +480,7 @@ function ProcurementContent() {
       await fetchAllData();
       toast.success("Deleted successfully");
 
-      if (editingId === id) {
+      if (editingId._id === id) {
         resetForm();
       }
     } catch (error) {
@@ -495,12 +490,11 @@ function ProcurementContent() {
   };
 
   const handleEdit = (item) => {
-    if (editingId) {
-      setEditingId(null);
+    if (editingId._id && editingId._id == item._id) {
       resetForm();
       return;
     }
-    setEditingId(item._id);
+    setEditingId(item);
     setFormData({
       date: item.date.split("T")[0],
       time: item.time || "AM",
@@ -518,7 +512,7 @@ function ProcurementContent() {
       ...initialForm,
       time: getCurrentTimePeriod(),
     });
-    setEditingId(null);
+    setEditingId({});
     setErrors({});
   };
 
@@ -692,7 +686,7 @@ function ProcurementContent() {
       {/* FORM SECTION */}
       <div className={styles.formSection}>
         <div className={styles.formHeader}>
-          <h2>{editingId ? "Edit Record" : `Procurement Entry`}</h2>
+          <h2>{editingId._id ? "Edit Record" : `Procurement Entry`}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.procurementForm}>
@@ -710,6 +704,7 @@ function ProcurementContent() {
               type="date"
               value={formData.date}
               onChange={handleInputChange}
+              // min={}
               max={getTodayDate()}
               error={errors.date}
               required
@@ -764,7 +759,7 @@ function ProcurementContent() {
               readOnly
               placeholder={
                 data.supplier?.supplierCustomRate
-                  ? ` Rs: ${data.supplier?.supplierCustomRate}`
+                  ? `Custom Rate Rs: ${data.supplier?.supplierCustomRate}`
                   : "Auto-calculated based on 'Total Solids' rate"
               }
               error={errors.rate}
@@ -978,7 +973,9 @@ function ProcurementContent() {
                 {filteredProcurements.map((row) => (
                   <tr
                     key={row._id}
-                    className={editingId === row._id ? styles.activeRow : ""}
+                    className={
+                      editingId._id === row._id ? styles.activeRow : ""
+                    }
                   >
                     <td className={styles.dateCell}>
                       {new Date(row.date).toLocaleDateString("en-IN", {
@@ -1029,14 +1026,15 @@ function ProcurementContent() {
                           disabled={
                             submitting ||
                             new Date() - new Date(row.createdAt) <
-                              2 * 24 * 60 * 60 * 1000
+                              10 * 24 * 60 * 60 * 1000
                               ? false
                               : true
+                            //: false
                           }
                           aria-label="Edit record"
                           title="Edit record"
                         >
-                          {editingId == row._id ? "Cancel" : "Edit"}
+                          {editingId._id == row._id ? "Cancel" : "Edit"}
                         </button>
                         <button
                           onClick={() => handleDelete(row._id)}
@@ -1044,7 +1042,7 @@ function ProcurementContent() {
                           disabled={
                             submitting ||
                             new Date() - new Date(row.createdAt) <
-                              2 * 24 * 60 * 60 * 1000
+                              10 * 24 * 60 * 60 * 1000
                               ? false
                               : true
                           }

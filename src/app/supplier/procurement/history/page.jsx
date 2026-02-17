@@ -16,12 +16,10 @@ const INITIAL_FILTERS = {
 
 const LoadingSpinner = () => (
   // <div className={styles.page_container}>
-    <div className={styles.loading_container}>
-      <div className={styles.spinner}></div>
-      <span className={styles.loading_text}>
-        Loading procurement records...
-      </span>
-    </div>
+  <div className={styles.loading_container}>
+    <div className={styles.spinner}></div>
+    <span className={styles.loading_text}>Loading procurement records...</span>
+  </div>
   //  </div>
 );
 
@@ -315,10 +313,8 @@ function ProcurementHistoryContent() {
       {/* SUMMARY SECTION */}
       {loading ? (
         <div className={styles.loadingSection}>
-        
           <LoadingSpinner />
-          </div>
-  
+        </div>
       ) : (
         summary.count > 0 && (
           <div className={styles.stats_card}>
@@ -337,19 +333,21 @@ function ProcurementHistoryContent() {
               <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
               <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
 
-              {filters.startDate === filters.endDate ? (
-                <StatItem
-                  label="Ester Egg!"
-                  value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
-                  unit="LoL"
-                />
-              ) : (
-                <StatItem
-                  label="Milk per Day"
-                  value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
-                  unit="L"
-                />
-              )}
+              <StatItem
+                label={
+                  filters.startDate === filters.endDate &&
+                  filters.startDate !== ""
+                    ? "Ester Egg!"
+                    : "Milk per Day"
+                }
+                value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
+                unit={
+                  filters.startDate === filters.endDate &&
+                  filters.startDate !== ""
+                    ? "LoL"
+                    : "L"
+                }
+              />
               <StatItem
                 label="Average Rate"
                 value={summary.avgRate}

@@ -49,9 +49,10 @@ export default function Footer() {
         <div className={styles.footerBottom}>
           <div className={styles.copyright}>
             <span className={styles.copyrightText}>
+              {/* © {currentYear} Diary milk oreo. All rights reserved. */}
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.3.8</span>
+            <span className={styles.version}>v1.4.0</span>
           </div>
 
           {/* <div className={styles.technicalInfo}>

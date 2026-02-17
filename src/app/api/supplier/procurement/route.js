@@ -210,15 +210,16 @@ export async function POST(request) {
       milkQuantity,
       fatPercentage,
       snfPercentage,
+      customRate,
       rate,
       totalAmount,
     } = body;
 
-    if (new Date() - new Date(date) > 3 * 24 * 60 * 60 * 1000) {
+    if (new Date() - new Date(date) > 10 * 24 * 60 * 60 * 1000) {
       return NextResponse.json(
         {
           error:
-            "Procurement date can't be more than 3 days back, Contact Admin",
+            "Procurement date can't be more than 10 days back, Contact Admin",
         },
         { status: 400 },
       );
@@ -294,6 +295,7 @@ export async function POST(request) {
       milkQuantity: parseFloat(milkQuantity),
       fatPercentage: parseFloat(fatPercentage),
       snfPercentage: parseFloat(snfPercentage),
+      customRate: customRate,
       rate: parseFloat(rate),
       totalAmount: parseFloat(totalAmount),
       createdAt: new Date(),
@@ -377,6 +379,8 @@ export async function PUT(request) {
       date: body.date,
       time: body.time,
       milkQuantity: body.milkQuantity,
+      fatPercentage: body.fatPercentage,
+      snfPercentage: body.snfPercentage,
       _id: { $ne: new ObjectId(id) },
     });
 
