@@ -12,7 +12,6 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
-
     const client = await clientPromise;
     const db = client.db("production");
     const collection = db.collection("procurements");

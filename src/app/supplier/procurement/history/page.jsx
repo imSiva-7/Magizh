@@ -134,6 +134,18 @@ function ProcurementHistoryContent() {
     setFilters({ startDate: "", endDate: "" });
   };
 
+  const uniqueDate = new Set();
+  const checkDate = (date) => {
+    if (!uniqueDate.has(date)) {
+      uniqueDate.add(date);
+      return new Date(date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
+    return "";
+  };
   const calculateSummary = () => {
     if (procurementData.length === 0) {
       return {
@@ -337,7 +349,7 @@ function ProcurementHistoryContent() {
                 label={
                   filters.startDate === filters.endDate &&
                   filters.startDate !== ""
-                    ? "Ester Egg!"
+                    ? "Easter Egg!"
                     : "Milk per Day"
                 }
                 value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
@@ -469,13 +481,15 @@ function ProcurementHistoryContent() {
                       <th scope="col" className={styles.total_header}>
                         Total (₹)
                       </th>
+                      <th>
+                        Status
+                      </th>
                     </tr>
                   </thead>
 
                   <tbody>
                     {procurementData.map((row, index) => {
                       const timeBadge = formatTimeBadge(row.time);
-
                       return (
                         <tr
                           key={
@@ -484,11 +498,7 @@ function ProcurementHistoryContent() {
                           }
                         >
                           <td className={styles.date_cell}>
-                            {new Date(row.date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
+                            {checkDate(row.date)}
                           </td>
 
                           <td className={styles.supplier_cell}>
@@ -544,6 +554,9 @@ function ProcurementHistoryContent() {
                             {formatNumberWithCommasNoDecimal(
                               row.totalAmount || 0,
                             )}
+                          </td>
+                          <td>
+                            N/A
                           </td>
                         </tr>
                       );

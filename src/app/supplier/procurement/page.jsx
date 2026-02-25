@@ -366,7 +366,7 @@ function ProcurementContent() {
       newErrors.fatPercentage = "Fat % must be greater than 0";
     } else if (fatPct > 9) {
       newErrors.fatPercentage = "Fat % seems too high";
-    }                              
+    }
 
     // SNF percentage validation
     const snfPct = parseFloat(formData.snfPercentage);

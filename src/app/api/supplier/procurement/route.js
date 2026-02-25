@@ -4,7 +4,6 @@ import { MongoClient, ObjectId } from "mongodb";
 
 const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
 
-// Validation helper functions
 const validateObjectId = (id) => {
   if (!id || !ObjectId.isValid(id)) {
     return { valid: false, error: "Invalid ID format" };
@@ -40,6 +39,7 @@ const validateProcurementData = (data) => {
     "rate",
     "totalAmount",
   ];
+
   for (const field of numericFields) {
     const value = parseFloat(data[field]);
     if (isNaN(value) || value <= 0) {
@@ -116,7 +116,6 @@ export async function GET(request) {
           { status: 404 },
         );
       }
-
       return NextResponse.json(procurement);
     }
 
@@ -180,7 +179,7 @@ export async function GET(request) {
     const procurements = await db
       .collection("procurements")
       .find(query)
-      .sort({ date: -1, time: -1 }) // Sort by date descending, then time
+      .sort({ date: -1, createdAt: -1 })
       .toArray();
 
     return NextResponse.json(procurements);
