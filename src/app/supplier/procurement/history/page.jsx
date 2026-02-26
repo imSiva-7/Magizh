@@ -126,6 +126,12 @@ function ProcurementHistoryContent() {
     }
   };
 
+  const todayFilter = () => {
+    setFilters({
+      startDate: getTodayDate(),
+      endDate: getTodayDate(),
+    });
+  };
   const resetFilters = () => {
     setFilters(INITIAL_FILTERS);
   };
@@ -134,17 +140,20 @@ function ProcurementHistoryContent() {
     setFilters({ startDate: "", endDate: "" });
   };
 
+  let countDates = 1;
   const uniqueDate = new Set();
   const checkDate = (date) => {
     if (!uniqueDate.has(date)) {
       uniqueDate.add(date);
-      return new Date(date).toLocaleDateString("en-IN", {
+      countDates = 1;
+      return `${new Date(date).toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "short",
         year: "numeric",
-      });
+      })} (${countDates})`;
     }
-    return "";
+    countDates++;
+    return `----------->  (${countDates})`;
   };
   const calculateSummary = () => {
     if (procurementData.length === 0) {
@@ -317,6 +326,16 @@ function ProcurementHistoryContent() {
               >
                 Clear Filters
               </button>
+
+              <button
+                type="button"
+                onClick={todayFilter}
+                className={`${styles.btn} ${styles.btn_primary2}`}
+                disabled={loading}
+                aria-label="Load Today's Record"
+              >
+                {"Load Today's Record"}
+              </button>
             </div>
           </div>
         </div>
@@ -377,7 +396,7 @@ function ProcurementHistoryContent() {
         )
       )}
 
-      {summary.count > 0 && (
+      {!loading && summary.count > 0 && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
@@ -481,9 +500,7 @@ function ProcurementHistoryContent() {
                       <th scope="col" className={styles.total_header}>
                         Total (₹)
                       </th>
-                      <th>
-                        Status
-                      </th>
+                      <th>Status</th>
                     </tr>
                   </thead>
 
@@ -555,9 +572,7 @@ function ProcurementHistoryContent() {
                               row.totalAmount || 0,
                             )}
                           </td>
-                          <td>
-                            N/A
-                          </td>
+                          <td>N/A</td>
                         </tr>
                       );
                     })}

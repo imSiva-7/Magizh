@@ -324,6 +324,12 @@ function ProcurementContent() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const todayFilter = () => {
+    setFilters({
+      startDate: getTodayDate(),
+      endDate: getTodayDate(),
+    });
+  };
   const clearFilters = () => {
     setFilters({ startDate: "", endDate: "" });
   };
@@ -608,6 +614,22 @@ function ProcurementContent() {
     }
   };
 
+  let countDates = 1;
+  const uniqueDate = new Set();
+  const checkDate = (date) => {
+    if (!uniqueDate.has(date)) {
+      uniqueDate.add(date);
+      countDates = 1;
+      return `${new Date(date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })} (${countDates})`;
+    }
+    countDates++;
+    return `----------> (${countDates})`;
+  };
+
   // ========== RENDER CONDITIONS ==========
   if (!data.supplier && !loading) {
     return (
@@ -873,6 +895,14 @@ function ProcurementContent() {
                 >
                   Clear Filters
                 </button>
+                <button
+                  type="button"
+                  onClick={todayFilter}
+                  className={styles.secondaryBtn2}            
+                  aria-label="Load Today's Record"
+                >
+                  {"Load Today's Record"}
+                </button>
               </div>
             </div>
           </div>
@@ -977,13 +1007,7 @@ function ProcurementContent() {
                       editingId._id === row._id ? styles.activeRow : ""
                     }
                   >
-                    <td className={styles.dateCell}>
-                      {new Date(row.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
+                    <td className={styles.dateCell}>{checkDate(row.date)}</td>
 
                     <td className={styles.timeCell}>
                       <span

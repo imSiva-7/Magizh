@@ -161,6 +161,15 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
+.btn_primary2 {
+  background-color: #3064cd;
+  color: white;
+}
+
+.btn_primary2:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(103, 118, 150, 0.3);
+}
 
 .btn_secondary {
   background: rgb(39, 121, 93);

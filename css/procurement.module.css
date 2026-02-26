@@ -466,7 +466,8 @@
   }
 
   .primaryBtn,
-  .secondaryBtn {
+  .secondaryBtn,
+  .secondaryBtn2 {
     width: 100%; /* Full width buttons */
     min-width: unset; /* Remove min-width constraint */
     justify-content: center;
@@ -499,7 +500,8 @@
   }
 
   .primaryBtn,
-  .secondaryBtn {
+  .secondaryBtn,
+  .secondaryBtn2 {
     padding: 0.75rem;
     font-size: 0.875rem;
   }
@@ -516,7 +518,8 @@
   }
 
   .primaryBtn,
-  .secondaryBtn {
+  .secondaryBtn,
+  .secondaryBtn2 {
     flex: 1; /* Equal width buttons */
     min-width: 150px; /* Reasonable minimum */
     max-width: 200px; /* Maximum width */
@@ -552,7 +555,8 @@
 }
 
 .primaryBtn,
-.secondaryBtn {
+.secondaryBtn,
+.secondaryBtn2 {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -593,6 +597,20 @@
 }
 
 .secondaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.secondaryBtn2 {
+  background:  #3064cd;
+  color: white;
+}
+
+.secondaryBtn2:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
+}
+
+.secondaryBtn2:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
