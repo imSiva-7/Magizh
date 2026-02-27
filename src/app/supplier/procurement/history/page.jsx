@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useCallback } from "react";
+import { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/procurement-history.module.css";
@@ -15,12 +15,10 @@ const INITIAL_FILTERS = {
 };
 
 const LoadingSpinner = () => (
-  // <div className={styles.page_container}>
   <div className={styles.loading_container}>
     <div className={styles.spinner}></div>
     <span className={styles.loading_text}>Loading procurement records...</span>
   </div>
-  //  </div>
 );
 
 const validateDateRange = (startDate, endDate) => {
@@ -68,7 +66,14 @@ function ProcurementHistoryContent() {
   const [procurementData, setProcurementData] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
+  // FIX 1: Validation moved inside the fetch logic so bad API calls are blocked
   const fetchAllData = useCallback(async () => {
+    const error = validateDateRange(filters.startDate, filters.endDate);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -77,9 +82,7 @@ function ProcurementHistoryContent() {
 
       const response = await fetch(
         `/api/supplier/procurement/history?${queryParams}`,
-        {
-          cache: "no-store",
-        },
+        { cache: "no-store" },
       );
 
       if (!response.ok) {
@@ -118,44 +121,38 @@ function ProcurementHistoryContent() {
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
-
-    const error = validateDateRange(filters.startDate, filters.endDate);
-    if (error) {
-      toast.error(error);
-      return;
-    }
+    // Fetch happens via useEffect when filters change, but we keep this for form semantics
+    fetchAllData();
   };
 
-  const todayFilter = () => {
-    setFilters({
-      startDate: getTodayDate(),
-      endDate: getTodayDate(),
+  const todayFilter = () =>
+    setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
+  const resetFilters = () => setFilters(INITIAL_FILTERS);
+  const clearFilters = () => setFilters({ startDate: "", endDate: "" });
+
+  // FIX 2: Pre-process the dates to avoid mutating variables during React render
+  const decoratedTableData = useMemo(() => {
+    const dateCounts = {};
+    return procurementData.map((row) => {
+      const dateKey = row.date?.split("T")[0] || "unknown";
+      if (!dateCounts[dateKey]) dateCounts[dateKey] = 0;
+      dateCounts[dateKey]++;
+
+      const isFirstOfDate = dateCounts[dateKey] === 1;
+      const displayDate = isFirstOfDate
+        ? `${new Date(row.date).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })} (${dateCounts[dateKey]})`
+        : `ㅤㅤㅤㅤ ㅤ (${dateCounts[dateKey]})`;
+
+      return { ...row, displayDate };
     });
-  };
-  const resetFilters = () => {
-    setFilters(INITIAL_FILTERS);
-  };
+  }, [procurementData]);
 
-  const clearFilters = () => {
-    setFilters({ startDate: "", endDate: "" });
-  };
-
-  let countDates = 1;
-  const uniqueDate = new Set();
-  const checkDate = (date) => {
-    if (!uniqueDate.has(date)) {
-      uniqueDate.add(date);
-      countDates = 1;
-      return `${new Date(date).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })} (${countDates})`;
-    }
-    countDates++;
-    return `----------->  (${countDates})`;
-  };
-  const calculateSummary = () => {
+  // FIX 3: Memoize the summary calculation so it only runs when data changes
+  const summary = useMemo(() => {
     if (procurementData.length === 0) {
       return {
         milk: 0,
@@ -169,10 +166,10 @@ function ProcurementHistoryContent() {
     }
 
     const uniqueDates = new Set();
-    let totalMilk = 0;
-    let totalAmount = 0;
-    let totalFat = 0;
-    let totalSnf = 0;
+    let totalMilk = 0,
+      totalAmount = 0,
+      totalFat = 0,
+      totalSnf = 0;
 
     procurementData.forEach((record) => {
       const milkQty = parseFloat(record.milkQuantity) || 0;
@@ -190,23 +187,16 @@ function ProcurementHistoryContent() {
     });
 
     const count = procurementData.length;
-    const avgRate =
-      totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00";
-    const avgFat = count > 0 ? (totalFat / count).toFixed(1) : "0.0";
-    const avgSnf = count > 0 ? (totalSnf / count).toFixed(1) : "0.0";
-
     return {
       milk: totalMilk,
       amount: totalAmount,
       count,
-      avgRate,
-      avgFat,
-      avgSnf,
+      avgRate: totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00",
+      avgFat: count > 0 ? (totalFat / count).toFixed(1) : "0.0",
+      avgSnf: count > 0 ? (totalSnf / count).toFixed(1) : "0.0",
       daysWithData: uniqueDates.size,
     };
-  };
-
-  const summary = calculateSummary();
+  }, [procurementData]);
 
   const handleExport = (format) => {
     if (!procurementData.length) {
@@ -231,12 +221,6 @@ function ProcurementHistoryContent() {
     }
   };
 
-  // ========== RENDER LOADING STATE ==========
-  // if (loading) {
-  //   return <LoadingSpinner />;
-  // }
-
-  // ========== RENDER ==========
   return (
     <div className={styles.page_container}>
       <ToastContainer
@@ -312,29 +296,24 @@ function ProcurementHistoryContent() {
                 onClick={resetFilters}
                 className={`${styles.btn} ${styles.btn_primary}`}
                 disabled={loading}
-                aria-label="Reset filters to default"
               >
                 Reset Filters
               </button>
-
               <button
                 type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_secondary}`}
                 disabled={loading || (!filters.startDate && !filters.endDate)}
-                aria-label="Clear all filters"
               >
                 Clear Filters
               </button>
-
               <button
                 type="button"
                 onClick={todayFilter}
                 className={`${styles.btn} ${styles.btn_primary2}`}
                 disabled={loading}
-                aria-label="Load Today's Record"
               >
-                {"Load Today's Record"}
+                Load Today&apos;s Record
               </button>
             </div>
           </div>
@@ -363,7 +342,6 @@ function ProcurementHistoryContent() {
               />
               <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
               <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
-
               <StatItem
                 label={
                   filters.startDate === filters.endDate &&
@@ -371,7 +349,7 @@ function ProcurementHistoryContent() {
                     ? "Easter Egg!"
                     : "Milk per Day"
                 }
-                value={(summary.milk / summary.daysWithData || 0).toFixed(2)}
+                value={(summary.milk / (summary.daysWithData || 1)).toFixed(2)}
                 unit={
                   filters.startDate === filters.endDate &&
                   filters.startDate !== ""
@@ -396,6 +374,7 @@ function ProcurementHistoryContent() {
         )
       )}
 
+      {/* EXPORT SECTION */}
       {!loading && summary.count > 0 && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
@@ -406,7 +385,6 @@ function ProcurementHistoryContent() {
               onClick={() => handleExport("csv")}
               className={styles.exportBtn}
               disabled={!procurementData.length}
-              aria-label="Export data as CSV"
             >
               Export as CSV
             </button>
@@ -414,24 +392,12 @@ function ProcurementHistoryContent() {
               onClick={() => handleExport("pdf")}
               className={styles.exportBtn}
               disabled={!procurementData.length}
-              aria-label="Export data as PDF"
             >
               Export as PDF
             </button>
           </div>
         </div>
       )}
-
-      {/* RECORD COUNT */}
-      {/* {summary.count > 0 && (
-        <div className={styles.record_count}>
-          Showing {procurementData.length.toLocaleString()} record
-          {procurementData.length !== 1 ? "s" : ""}
-          {filters.startDate || filters.endDate
-            ? ` for selected date range`
-            : ""}
-        </div>
-      )} */}
 
       {/* TABLE SECTION */}
       <div className={styles.table_wrapper}>
@@ -466,119 +432,107 @@ function ProcurementHistoryContent() {
         ) : (
           !loading && (
             <div className={styles.table_container}>
-              <div className={styles.table_scroll}>
-                <table
-                  className={styles.table}
-                  aria-label="All procurement history"
-                >
-                  <thead>
-                    <tr>
-                      <th scope="col" className={styles.date_header}>
-                        Date
-                      </th>
-                      <th scope="col" className={styles.supplier_header}>
-                        Supplier
-                      </th>
-                      <th scope="col" className={styles.time_header}>
-                        Time
-                      </th>
-                      <th scope="col" className={styles.quantity_header}>
-                        Milk (L)
-                      </th>
-                      <th scope="col" className={styles.fat_header}>
-                        Fat %
-                      </th>
-                      <th scope="col" className={styles.snf_header}>
-                        SNF %
-                      </th>
-                      <th scope="col" className={styles.tsRate_header}>
-                        TS Rate
-                      </th>
-                      <th scope="col" className={styles.rate_header}>
-                        Rate/L
-                      </th>
-                      <th scope="col" className={styles.total_header}>
-                        Total (₹)
-                      </th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
+              <table
+                className={styles.table}
+                aria-label="All procurement history"
+              >
+                <thead>
+                  <tr>
+                    <th scope="col" className={styles.date_header}>
+                      Date
+                    </th>
+                    <th scope="col" className={styles.supplier_header}>
+                      Supplier
+                    </th>
+                    <th scope="col" className={styles.time_header}>
+                      Time
+                    </th>
+                    <th scope="col" className={styles.quantity_header}>
+                      Milk (L)
+                    </th>
+                    <th scope="col" className={styles.fat_header}>
+                      Fat %
+                    </th>
+                    <th scope="col" className={styles.snf_header}>
+                      SNF %
+                    </th>
+                    <th scope="col" className={styles.tsRate_header}>
+                      TS Rate
+                    </th>
+                    <th scope="col" className={styles.rate_header}>
+                      Rate/L
+                    </th>
+                    <th scope="col" className={styles.total_header}>
+                      Total (₹)
+                    </th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
 
-                  <tbody>
-                    {procurementData.map((row, index) => {
-                      const timeBadge = formatTimeBadge(row.time);
-                      return (
-                        <tr
-                          key={
-                            row._id ||
-                            `${row.date}-${row.supplierName || "unknown"}-${index}`
-                          }
-                        >
-                          <td className={styles.date_cell}>
-                            {checkDate(row.date)}
-                          </td>
-
-                          <td className={styles.supplier_cell}>
-                            {row.supplierName ? (
-                              <Link
-                                href={`/supplier/procurement?supplierId=${row.supplierId}`}
-                                className={styles.supplier_name}
-                              >
-                                {row.supplierName}
-                              </Link>
-                            ) : (
-                              "Unknown"
-                            )}
-                          </td>
-
-                          <td className={styles.time_cell}>
-                            <span
-                              className={
-                                timeBadge === "PM"
-                                  ? styles.pm_badge
-                                  : styles.am_badge
-                              }
-                              title={timeBadge === "PM" ? "Evening" : "Morning"}
+                <tbody>
+                  {decoratedTableData.map((row, index) => {
+                    const timeBadge = formatTimeBadge(row.time);
+                    return (
+                      <tr
+                        key={
+                          row._id ||
+                          `${row.date}-${row.supplierName || "unknown"}-${index}`
+                        }
+                      >
+                        <td className={styles.date_cell}>{row.displayDate}</td>
+                        <td className={styles.supplier_cell}>
+                          {row.supplierName ? (
+                            <Link
+                              href={`/supplier/procurement?supplierId=${row.supplierId}`}
+                              className={styles.supplier_name}
                             >
-                              {timeBadge}
-                            </span>
-                          </td>
-
-                          <td className={styles.quantity_cell}>
-                            {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
-                          </td>
-
-                          <td className={styles.fat_cell}>
-                            {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
-                          </td>
-
-                          <td className={styles.snf_cell}>
-                            {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
-                          </td>
-
-                          <td className={styles.tsRate_cell}>
-                            {row.supplierTSRate
-                              ? `${parseInt(row.supplierTSRate)}`
-                              : "N/A"}
-                          </td>
-
-                          <td className={styles.rate_cell}>
-                            ₹{(parseFloat(row.rate) || 0).toFixed(1)}
-                          </td>
-
-                          <td className={styles.total_cell}>
-                            ₹
-                            {formatNumberWithCommasNoDecimal(
-                              row.totalAmount || 0,
-                            )}
-                          </td>
-                          <td>N/A</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              {row.supplierName}
+                            </Link>
+                          ) : (
+                            "Unknown"
+                          )}
+                        </td>
+                        <td className={styles.time_cell}>
+                          <span
+                            className={
+                              timeBadge === "PM"
+                                ? styles.pm_badge
+                                : styles.am_badge
+                            }
+                            title={timeBadge === "PM" ? "Evening" : "Morning"}
+                          >
+                            {timeBadge}
+                          </span>
+                        </td>
+                        <td className={styles.quantity_cell}>
+                          {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
+                        </td>
+                        <td className={styles.fat_cell}>
+                          {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
+                        </td>
+                        <td className={styles.snf_cell}>
+                          {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
+                        </td>
+                        <td className={styles.tsRate_cell}>
+                          {row.supplierTSRate
+                            ? `${parseInt(row.supplierTSRate)}`
+                            : "N/A"}
+                        </td>
+                        <td className={styles.rate_cell}>
+                          ₹{(parseFloat(row.rate) || 0).toFixed(1)}
+                        </td>
+                        <td className={styles.total_cell}>
+                          ₹
+                          {formatNumberWithCommasNoDecimal(
+                            row.totalAmount || 0,
+                          )}
+                        </td>
+                        <td>N/A</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )
         )}
@@ -587,7 +541,6 @@ function ProcurementHistoryContent() {
   );
 }
 
-// ========== EXPORT WITH SUSPENSE ==========
 export default function ProcurementHistoryPage() {
   return (
     <Suspense fallback={<LoadingSpinner />}>

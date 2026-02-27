@@ -499,7 +499,7 @@
 .date_header,
 .date_cell {
   text-align: left !important;
-  min-width: 80px;
+  min-width: 90px;
 }
 .supplier_header,
 .supplier_cell {
@@ -732,7 +732,11 @@
     font-size: 0.6875rem;
     padding: 0.125rem 0.5rem;
   }
-
+  .date_header,
+  .date_cell {
+    text-align: left !important;
+    min-width: 100px;
+  }
   .supplier_header,
   .supplier_cell {
     /* text-align: left !important; */
