@@ -30,13 +30,13 @@ const getCurrentTimePeriod = () => {
   return hour >= 12 ? "PM" : "AM";
 };
 
-// FIX 1: Removed rate and totalAmount from state. They are purely derived now!
 const initialForm = {
   date: getTodayDate(),
   time: getCurrentTimePeriod(),
   milkQuantity: "",
   fatPercentage: "",
   snfPercentage: "",
+  paymentStatus: "Not Paid",
 };
 
 const initialFilters = {
@@ -174,6 +174,7 @@ function ProcurementContent() {
   const supplierId = searchParams.get("supplierId");
 
   const [loading, setLoading] = useState(true);
+  const [checkedIds, setCheckedIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ supplier: null, allProcurements: [] });
@@ -256,7 +257,6 @@ function ProcurementContent() {
     fetchAllData();
   }, [supplierId, router, fetchAllData]);
 
-  // FIX 2: Compute current pricing purely as derived state. No useEffect needed!
   const currentPricing = useMemo(() => {
     if (
       formData.milkQuantity ||
@@ -295,6 +295,61 @@ function ProcurementContent() {
     setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const handleCheck = (id) => {
+    setCheckedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const eligibleIds = decoratedTableData
+        .filter((row) => row.paymentStatus === "Not Paid")
+        .map((row) => row._id);
+      setCheckedIds(eligibleIds);
+    } else {
+      setCheckedIds([]);
+    }
+  };
+
+  const handleBulkMarkAsPaid = async () => {
+    if (checkedIds.length === 0) return;
+
+    if (!window.confirm(`Mark ${checkedIds.length} records as paid?`)) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/supplier/procurement", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ procurementIds: checkedIds, status: "Paid" }),
+      });
+
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textError = await res.text();
+        console.error("HTML Error:", textError);
+        throw new Error(
+          `Server routing error (Status: ${res.status}). Restart server.`,
+        );
+      }
+
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Bulk update failed");
+
+      toast.success(`Successfully marked ${checkedIds.length} records as paid`);
+      setCheckedIds([]);
+      await fetchAllData();
+    } catch (error) {
+      console.error("Bulk action error:", error);
+      toast.error(error.message || "Failed to process bulk payment");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -371,6 +426,7 @@ function ProcurementContent() {
         customRate: isCustomRate,
         rate: parseFloat(currentPricing.rate),
         totalAmount: parseFloat(currentPricing.totalAmount),
+        paymentStatus: formData.paymentStatus,
       };
 
       const res = await fetch(url, {
@@ -425,6 +481,7 @@ function ProcurementContent() {
       resetForm();
       return;
     }
+    setCheckedIds([]);
     setEditingId(item);
     setFormData({
       date: item.date.split("T")[0],
@@ -432,6 +489,7 @@ function ProcurementContent() {
       milkQuantity: item.milkQuantity.toString(),
       fatPercentage: item.fatPercentage.toString(),
       snfPercentage: item.snfPercentage.toString(),
+      paymentStatus: item.paymentStatus || "Not Paid",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -455,7 +513,6 @@ function ProcurementContent() {
     });
   }, [filters, data.allProcurements]);
 
-  // FIX 3: Pre-compute the counts for the dates safely during render cycle
   const decoratedTableData = useMemo(() => {
     const dateCounts = {};
     return filteredProcurements.map((row) => {
@@ -704,19 +761,46 @@ function ProcurementContent() {
             />
           </div>
 
+          {editingId && editingId._id && editingId.paymentRecord ? (
+            <div className={styles.editPaymentWrapper}>
+              <label className={styles.editPaymentLabel}>Payment Status:</label>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
+                <input
+                  type="checkbox"
+                  className={styles.paymentCheckbox}
+                  checked={formData.paymentStatus === "Paid"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      paymentStatus: e.target.checked ? "Paid" : "Not Paid",
+                    }))
+                  }
+                  title="Toggle payment status"
+                />
+                {formData.paymentStatus === "Paid" ? (
+                  <span className={styles.statusPaid}>Paid</span>
+                ) : (
+                  <span className={styles.statusDue}>Due</span>
+                )}
+              </div>
+            </div>
+          ) : null}
+
           <div className={styles.formActions}>
             <button
               type="submit"
               disabled={submitting}
               className={styles.primaryBtn_}
-              aria-label={editingId ? "Update record" : "Add new record"}
+              aria-label={editingId._id ? "Update record" : "Add new record"}
             >
               {submitting ? (
                 <>
                   <span className={styles.buttonSpinner}></span>
-                  {editingId ? "Updating..." : "Saving..."}
+                  {editingId._id ? "Updating..." : "Saving..."}
                 </>
-              ) : editingId ? (
+              ) : editingId._id ? (
                 "Update Record"
               ) : (
                 "Add Record"
@@ -866,6 +950,28 @@ function ProcurementContent() {
           </div>
         ) : (
           <div className={styles.tableContainer}>
+            {checkedIds.length > 0 && (
+              <div className={styles.bulkActionsBanner}>
+                <span className={styles.bulkActionsText}>
+                  {checkedIds.length} record(s) selected
+                </span>
+                <button
+                  onClick={handleBulkMarkAsPaid}
+                  disabled={submitting}
+                  className={styles.primaryBtn} // Changed to ensure it gets correct CSS styling
+                >
+                  {submitting ? "Processing..." : "Mark Selected as Paid"}
+                </button>
+                <button
+                  onClick={() => setCheckedIds([])}
+                  disabled={submitting}
+                  className={styles.clearFilterLink}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+
             <table className={styles.table} aria-label="Procurement history">
               <thead>
                 <tr>
@@ -877,6 +983,33 @@ function ProcurementContent() {
                   <th scope="col">TS Rate</th>
                   <th scope="col">Rate/L (₹)</th>
                   <th scope="col">Total (₹)</th>
+
+                  {/* FIXED HEADER CHECKBOX SYNTAX HERE */}
+                  <th scope="col">
+                    <div className={styles.selectAllWrapper}>
+                      {decoratedTableData.filter(
+                        (r) => r.paymentStatus === "Not Paid",
+                      ).length > 1 && (
+                        <input
+                          type="checkbox"
+                          className={styles.paymentCheckbox}
+                          onChange={handleSelectAll}
+                          disabled={!!editingId._id}
+                          checked={
+                            decoratedTableData.filter(
+                              (r) => r.paymentStatus === "Not Paid",
+                            ).length > 0 &&
+                            checkedIds.length ===
+                              decoratedTableData.filter(
+                                (r) => r.paymentStatus === "Not Paid",
+                              ).length
+                          }
+                          title="Select All Eligible"
+                        />
+                      )}
+                      Status
+                    </div>
+                  </th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
@@ -888,10 +1021,10 @@ function ProcurementContent() {
                       editingId._id === row._id ? styles.activeRow : ""
                     }
                   >
-                    {/* IMPLEMENTED NEW DATE STYLING */}
                     <td className={styles.dateCell}>
                       {row.isFirstOfDate ? (
                         <div className={styles.continuation_wrapper}>
+                          {`(${row.occurrenceCount}) `}
                           <span className={styles.date_text}>
                             {new Date(row.date).toLocaleDateString("en-IN", {
                               day: "2-digit",
@@ -899,10 +1032,9 @@ function ProcurementContent() {
                               year: "numeric",
                             })}
                           </span>
-                          {` (${row.occurrenceCount})`}
                         </div>
                       ) : (
-                        `ㅤㅤㅤㅤㅤㅤ(${row.occurrenceCount})`
+                        `(${row.occurrenceCount})`
                       )}
                     </td>
 
@@ -933,6 +1065,29 @@ function ProcurementContent() {
                     <td className={styles.totalCell}>
                       ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}
                     </td>
+
+                    {/* FIXED ROW PAYMENT RENDERING */}
+                    <td className={styles.paymentCell}>
+                      {row.paymentStatus === "Not Paid" ? (
+                       <div className={styles.unpaidWrapper}>
+                          <input
+                            type="checkbox"
+                            className={styles.paymentCheckbox}
+                            value={row._id}
+                            disabled={!!editingId._id}
+                            checked={checkedIds.includes(row._id)}
+                            onChange={() => handleCheck(row._id)}
+                            title="Select to pay"
+                          />
+                          <span className={styles.statusDue}>Due</span>
+                        </div>
+                      ) : row.paymentStatus === "Paid" || row.paymentRecord ? (
+                        <span className={styles.statusPaid}>Paid</span>
+                      ) : (
+                        <span className={styles.statusNA}>N/A</span>
+                      )}
+                    </td>
+
                     <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
                         <button

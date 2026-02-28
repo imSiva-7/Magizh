@@ -66,7 +66,6 @@ function ProcurementHistoryContent() {
   const [procurementData, setProcurementData] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // FIX 1: Validation moved inside the fetch logic so bad API calls are blocked
   const fetchAllData = useCallback(async () => {
     const error = validateDateRange(filters.startDate, filters.endDate);
     if (error) {
@@ -121,7 +120,6 @@ function ProcurementHistoryContent() {
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
-    // Fetch happens via useEffect when filters change, but we keep this for form semantics
     fetchAllData();
   };
 
@@ -130,7 +128,6 @@ function ProcurementHistoryContent() {
   const resetFilters = () => setFilters(INITIAL_FILTERS);
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
 
-  // FIX 2: Pre-process the dates to avoid mutating variables during React render
   const decoratedTableData = useMemo(() => {
     const dateCounts = {};
     return procurementData.map((row) => {
@@ -140,18 +137,20 @@ function ProcurementHistoryContent() {
 
       const isFirstOfDate = dateCounts[dateKey] === 1;
       const displayDate = isFirstOfDate
-        ? `${new Date(row.date).toLocaleDateString("en-IN", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })} (${dateCounts[dateKey]})`
-        : `ㅤㅤㅤㅤ ㅤ (${dateCounts[dateKey]})`;
+        ? `(${dateCounts[dateKey]}) ${new Date(row.date).toLocaleDateString(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            },
+          )} `
+        : `(${dateCounts[dateKey]})`;
 
       return { ...row, displayDate };
     });
   }, [procurementData]);
 
-  // FIX 3: Memoize the summary calculation so it only runs when data changes
   const summary = useMemo(() => {
     if (procurementData.length === 0) {
       return {
@@ -527,7 +526,20 @@ function ProcurementHistoryContent() {
                             row.totalAmount || 0,
                           )}
                         </td>
-                        <td>N/A</td>
+
+                        {/* ========== NEW STATUS CELL ========== */}
+                        <td className={styles.status_cell}>
+                          {row.paymentRecord ? (
+                            (row.paymentStatus || "Not Paid") === "Not Paid" ? (
+                              <span className={styles.status_due}>Due</span>
+                            ) : (
+                              <span className={styles.status_paid}>Paid</span>
+                            )
+                          ) : (
+                            <span className={styles.status_na}>N/A</span>
+                          )}
+                        </td>
+                        {/* ===================================== */}
                       </tr>
                     );
                   })}

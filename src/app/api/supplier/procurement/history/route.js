@@ -27,21 +27,21 @@ export async function GET(request) {
     const procurements = await collection
       .find(query)
       // .limit(5000)
-      .project({
-        _id: 1,
-        date: 1,
-        time: 1,
-        milkQuantity: 1,
-        fatPercentage: 1,
-        snfPercentage: 1,
-        rate: 1,
-        totalAmount: 1,
-        supplierId: 1,
-        supplierName: 1,
-        supplierType: 1,
-        supplierTSRate: 1,
-        createdAt: 1,
-      })
+      // .project({
+      //   _id: 1,
+      //   date: 1,
+      //   time: 1,
+      //   milkQuantity: 1,
+      //   fatPercentage: 1,
+      //   snfPercentage: 1,
+      //   rate: 1,
+      //   totalAmount: 1,
+      //   supplierId: 1,
+      //   supplierName: 1,
+      //   supplierType: 1,
+      //   supplierTSRate: 1,
+      //   createdAt: 1,
+      // })
       .sort({ date: -1, createdAt: -1 })
       .toArray();
 

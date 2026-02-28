@@ -195,6 +195,65 @@ export async function GET(request) {
     );
   }
 }
+export async function PATCH(request) {
+  try {
+    const { procurementIds, status } = await request.json();
+
+    // 1. Validate the input
+    if (!Array.isArray(procurementIds) || procurementIds.length === 0) {
+      return NextResponse.json(
+        { error: "No valid IDs provided for update" },
+        { status: 400 },
+      );
+    }
+
+    if (!status) {
+      return NextResponse.json(
+        { error: "Status is required" },
+        { status: 400 },
+      );
+    }
+
+    // 2. Initialize database connection
+    const client = await clientPromise;
+    const db = client.db("production");
+
+    // 3. Convert string IDs to MongoDB ObjectIds
+    const objectIds = procurementIds.map((id) => {
+      const validation = validateObjectId(id);
+      if (!validation.valid) throw new Error(`Invalid ID format: ${id}`);
+      return new ObjectId(id);
+    });
+
+    // 4. Perform the bulk update
+    const result = await db.collection("procurements").updateMany(
+      { _id: { $in: objectIds } },
+      {
+        $set: {
+          paymentStatus: status,
+          paymentUpdatedOn: new Date(),
+        },
+      },
+    );
+
+    // 5. Return success
+    return NextResponse.json({
+      success: true,
+      message: `Successfully updated ${result.modifiedCount} records`,
+      modifiedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    console.error("API Error - PATCH bulk update:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to update records",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(request) {
   try {
@@ -297,6 +356,9 @@ export async function POST(request) {
       customRate: customRate,
       rate: parseFloat(rate),
       totalAmount: parseFloat(totalAmount),
+      paymentRecord: true,
+      paymentStatus: "Not Paid",
+      paymentUpadatedOn: "",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -403,6 +465,8 @@ export async function PUT(request) {
       snfPercentage: parseFloat(body.snfPercentage),
       rate: parseFloat(body.rate),
       totalAmount: parseFloat(body.totalAmount),
+      paymentStatus: body.paymentStatus,
+      paymentUpadatedOn: new Date(),
       updatedAt: new Date(),
     };
 
