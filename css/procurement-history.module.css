@@ -472,12 +472,12 @@ input[type="date"]::-webkit-date-and-time-value {
 .date_header,
 .date_cell {
   text-align: left !important;
-  min-width: 90px;
+  /* min-width: 90px; */
 }
 .supplier_header,
 .supplier_cell {
   text-align: left !important;
-  min-width: 100px;
+  /* min-width: 100px; */
   max-width: 100px;
 }
 
@@ -624,7 +624,7 @@ input[type="date"]::-webkit-date-and-time-value {
     align-items: stretch;
   }
   .exportButtons {
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .table {
@@ -632,12 +632,12 @@ input[type="date"]::-webkit-date-and-time-value {
   }
   .table th,
   .table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.5rem;
   }
-  .supplier_header,
+  /* .supplier_header,
   .supplier_cell {
     min-width: 170px !important;
-  }
+  } */
 }
 
 /* Small Phones (iPhone SE, etc) */
@@ -654,8 +654,8 @@ input[type="date"]::-webkit-date-and-time-value {
     font-size: 0.6875rem;
     padding: 0.125rem 0.5rem;
   }
-  .date_header,
+  /* .date_header,
   .date_cell {
     min-width: 100px;
-  }
+  } */
 }

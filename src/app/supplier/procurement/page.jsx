@@ -1069,7 +1069,7 @@ function ProcurementContent() {
                     {/* FIXED ROW PAYMENT RENDERING */}
                     <td className={styles.paymentCell}>
                       {row.paymentStatus === "Not Paid" ? (
-                       <div className={styles.unpaidWrapper}>
+                        <div className={styles.unpaidWrapper}>
                           <input
                             type="checkbox"
                             className={styles.paymentCheckbox}
@@ -1087,7 +1087,6 @@ function ProcurementContent() {
                         <span className={styles.statusNA}>N/A</span>
                       )}
                     </td>
-
                     <td className={styles.actionsCell}>
                       <div className={styles.actionButtons}>
                         <button

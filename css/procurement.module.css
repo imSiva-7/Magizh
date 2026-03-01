@@ -897,7 +897,7 @@ input[type="date"]::-webkit-date-and-time-value {
     align-items: stretch;
   }
   .exportButtons {
-    flex-direction: column;
+    flex-direction: row;
   } /* Changed to stack nicely on phones */
 
   .table {
@@ -905,7 +905,7 @@ input[type="date"]::-webkit-date-and-time-value {
   }
   .table th,
   .table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.5rem;
     font-size: 0.875rem;
   }
 }
