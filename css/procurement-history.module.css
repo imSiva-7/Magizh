@@ -135,10 +135,12 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 /* ============================ */
 
+
 /* ========== 3. BUTTONS ========== */
 .filter_actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: wrap;
+  justify-content: flex-end;
   gap: 1rem;
   padding-top: 1rem;
   border-top: 2px solid #e2e8f0;
@@ -173,12 +175,12 @@ input[type="date"]::-webkit-date-and-time-value {
   color: white;
 }
 .btn_primary2 {
-  background-color: #3064cd;
+  background-color: rgb(39, 121, 93);
   color: white;
 }
 .btn_secondary {
-  background: rgb(39, 121, 93);
-  color: white;
+ background-color: #e2e8f0;
+  color: rgb(22, 22, 22);
 }
 .exportBtn {
   background: linear-gradient(
@@ -445,7 +447,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .table th {
-  padding: 0.5rem;
+  padding: 0.4rem;
   text-align: center;
   font-weight: 600;
   color: #475569;
@@ -605,15 +607,21 @@ input[type="date"]::-webkit-date-and-time-value {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  .filter_buttons {
+  /* .filter_buttons {
     flex-direction: column;
     width: 100%;
+  } */
+    .filter_actions {
+    justify-content: stretch;
   }
-  .btn,
+  .btn {
+    flex: 1;
+  }
+  /* .btn,
   .exportBtn {
     width: 100%;
     justify-content: center;
-  }
+  } */
 
   .stats_grid {
     grid-template-columns: repeat(2, 1fr);
@@ -632,12 +640,15 @@ input[type="date"]::-webkit-date-and-time-value {
   }
   .table th,
   .table td {
-    padding: 0.5rem 0.5rem;
+    padding: 0.3rem 0.3rem;
   }
-  /* .supplier_header,
+  .date_cell{
+    max-width: 50px;
+  }
+  .supplier_header,
   .supplier_cell {
-    min-width: 170px !important;
-  } */
+    max-width: 70px !important;
+  }
 }
 
 /* Small Phones (iPhone SE, etc) */

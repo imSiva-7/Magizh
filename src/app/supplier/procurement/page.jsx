@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import styles from "@/css/procurement.module.css";
+import styles from "@/css/procurement.module.css"; // will use underscore class names
 import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
@@ -17,7 +17,7 @@ import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 const LoadingSpinner = () => (
   <div className={styles.page_container}>
     <div className={styles.loading_container}>
-      <div className={`${styles.spinner}`}></div>
+      <div className={styles.spinner}></div>
       <span className={styles.loading_text}>
         Loading procurement records...
       </span>
@@ -46,63 +46,63 @@ const initialFilters = {
 
 // ========== REUSABLE COMPONENTS ==========
 const InputGroup = ({ label, error, required, readOnly, ...props }) => (
-  <div className={styles.inputGroup}>
-    <label className={required ? styles.requiredLabel : ""}>
+  <div className={styles.input_group}>
+    <label className={required ? styles.required_label : ""}>
       {label}
-      {required && <span className={styles.requiredAsterisk}>*</span>}
+      {required && <span className={styles.required_asterisk}>*</span>}
     </label>
     <input
-      className={`${styles.input} ${error ? styles.inputError : ""} ${
-        readOnly ? styles.readOnlyInput : ""
+      className={`${styles.input} ${error ? styles.input_error : ""} ${
+        readOnly ? styles.read_only_input : ""
       }`}
       autoComplete="off"
       readOnly={readOnly}
       {...props}
     />
-    {error && <span className={styles.errorText}>{error}</span>}
+    {error && <span className={styles.error_text}>{error}</span>}
   </div>
 );
 
 const TimePeriodSelect = ({ value, onChange, error }) => (
-  <div className={styles.inputGroup}>
-    <label className={styles.requiredLabel}>
+  <div className={styles.input_group}>
+    <label className={styles.required_label}>
       Time Period
-      <span className={styles.requiredAsterisk}>*</span>
+      <span className={styles.required_asterisk}>*</span>
     </label>
     <select
       name="time"
       value={value}
       onChange={onChange}
-      className={styles.select}
+      className={styles.select_input}
       aria-label="Select time period"
     >
       <option value="AM">AM (Morning)</option>
       <option value="PM">PM (Evening)</option>
     </select>
-    {error && <span className={styles.errorText}>{error}</span>}
+    {error && <span className={styles.error_text}>{error}</span>}
   </div>
 );
 
 const StatItem = ({ label, value, unit, prefix = "" }) => (
-  <div className={styles.statItem}>
-    <span className={styles.statLabel}>{label}</span>
-    <span className={styles.statValue}>
+  <div className={styles.stat_item}>
+    <span className={styles.stat_label}>{label}</span>
+    <span className={styles.stat_value}>
       {prefix}
       {value}
-      <span className={styles.statUnit}>{unit}</span>
+      <span className={styles.stat_unit}>{unit}</span>
     </span>
   </div>
 );
 
 const SummaryStats = ({ summary, filters }) => (
-  <div className={styles.summaryBox}>
+  <div className={styles.summary_box}>
     <h3>
       Summary{" "}
-      <span className={styles.dateRange}>
+      <span className={styles.date_range_badge}>
         {getDateRangeLabel(filters.startDate, filters.endDate)}
       </span>
     </h3>
-    <div className={styles.statsGrid}>
+    <div className={styles.stats_grid}>
       <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
       <StatItem
         label="Daily Avg"
@@ -164,7 +164,7 @@ const getSupplierTypeClass = (supplierType) => {
     Farmer: styles.type_farmer_badge,
     Other: styles.type_other_badge,
   };
-  return typeClassMap[supplierType] || styles.defaultSupplier;
+  return typeClassMap[supplierType] || styles.default_supplier;
 };
 
 // ========== MAIN COMPONENT ==========
@@ -251,7 +251,7 @@ function ProcurementContent() {
   useEffect(() => {
     if (!supplierId) {
       toast.error("No supplier ID provided");
-      router.push("/supplier");
+      // router.push("/supplier");
       return;
     }
     fetchAllData();
@@ -500,18 +500,20 @@ function ProcurementContent() {
     setErrors({});
   };
 
+  // Improved date filtering – compare date strings only
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
-    return data.allProcurements.filter((record) => {
-      const recordDate = new Date(record.date);
-      const startDate = filters.startDate ? new Date(filters.startDate) : null;
-      const endDate = filters.endDate ? new Date(filters.endDate) : null;
 
-      if (startDate && recordDate < startDate) return false;
-      if (endDate && recordDate > endDate) return false;
+    const start = filters.startDate; // YYYY-MM-DD string
+    const end = filters.endDate; // YYYY-MM-DD string
+
+    return data.allProcurements.filter((record) => {
+      const recordDate = record.date.split("T")[0];
+      if (start && recordDate < start) return false;
+      if (end && recordDate > end) return false;
       return true;
     });
-  }, [filters, data.allProcurements]);
+  }, [filters.startDate, filters.endDate, data.allProcurements]);
 
   const decoratedTableData = useMemo(() => {
     const dateCounts = {};
@@ -604,17 +606,17 @@ function ProcurementContent() {
 
   if (!data.supplier && !loading) {
     return (
-      <div className={styles.errorState}>
+      <div className={styles.error_state}>
         <h2>Supplier Not Found</h2>
         <p>
           {
             " The supplier you're looking for doesn't exist or has been removed."
           }
         </p>
-        <div className={styles.errorActions}>
+        <div className={styles.error_actions}>
           <button
             onClick={() => router.push("/supplier")}
-            className={styles.primaryBtn}
+            className={styles.primary_btn}
             aria-label="Go back to suppliers"
           >
             Back to Suppliers
@@ -625,7 +627,7 @@ function ProcurementContent() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.page_container}>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -643,23 +645,23 @@ function ProcurementContent() {
         {loading ? (
           <span className={styles.loading_text}> Loading supplier info...</span>
         ) : (
-          <div className={styles.headerTitle}>
+          <div className={styles.header_title}>
             <h1> {data.supplier?.supplierName}</h1>
-            <div className={styles.supplierInfo}>
+            <div className={styles.supplier_info}>
               <span
                 className={getSupplierTypeClass(data.supplier?.supplierType)}
               >
                 {data.supplier?.supplierType}
               </span>
               {data.supplier?.supplierCustomRate ? (
-                <span className={styles.tsRateTag}>
+                <span className={styles.ts_rate_tag}>
                   Custom Rate: ₹
                   {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
                     0,
                   )}
                 </span>
               ) : (
-                <span className={styles.tsRateTag}>
+                <span className={styles.ts_rate_tag}>
                   Total Solids Rate:{" "}
                   {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
                 </span>
@@ -670,20 +672,20 @@ function ProcurementContent() {
       </div>
 
       {/* FORM SECTION */}
-      <div className={styles.formSection}>
-        <div className={styles.formHeader}>
+      <div className={styles.form_section}>
+        <div className={styles.form_header}>
           <h2>{editingId._id ? "Edit Record" : `Procurement Entry`}</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.procurementForm}>
+        <form onSubmit={handleSubmit} className={styles.procurement_form}>
           {Object.keys(errors).length > 0 && (
-            <div className={styles.errorAlert}>
-              <span className={styles.errorIcon}>⚠️</span>
+            <div className={styles.error_alert}>
+              <span className={styles.error_icon}>⚠️</span>
               Please fix the errors in the form
             </div>
           )}
 
-          <div className={styles.formGrid}>
+          <div className={styles.form_grid}>
             <InputGroup
               label="Date"
               name="date"
@@ -762,14 +764,16 @@ function ProcurementContent() {
           </div>
 
           {editingId && editingId._id && editingId.paymentRecord ? (
-            <div className={styles.editPaymentWrapper}>
-              <label className={styles.editPaymentLabel}>Payment Status:</label>
+            <div className={styles.edit_payment_wrapper}>
+              <label className={styles.edit_payment_label}>
+                Payment Status:
+              </label>
               <div
                 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
                 <input
                   type="checkbox"
-                  className={styles.paymentCheckbox}
+                  className={styles.payment_checkbox}
                   checked={formData.paymentStatus === "Paid"}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -780,24 +784,24 @@ function ProcurementContent() {
                   title="Toggle payment status"
                 />
                 {formData.paymentStatus === "Paid" ? (
-                  <span className={styles.statusPaid}>Paid</span>
+                  <span className={styles.status_paid}>Paid</span>
                 ) : (
-                  <span className={styles.statusDue}>Due</span>
+                  <span className={styles.status_due}>Due</span>
                 )}
               </div>
             </div>
           ) : null}
 
-          <div className={styles.formActions}>
+          <div className={styles.form_actions}>
             <button
               type="submit"
               disabled={submitting}
-              className={styles.primaryBtn_}
+              className={styles.primary_btn}
               aria-label={editingId._id ? "Update record" : "Add new record"}
             >
               {submitting ? (
                 <>
-                  <span className={styles.buttonSpinner}></span>
+                  <span className={styles.button_spinner}></span>
                   {editingId._id ? "Updating..." : "Saving..."}
                 </>
               ) : editingId._id ? (
@@ -812,14 +816,14 @@ function ProcurementContent() {
 
       {/* FILTER SECTION */}
       {data.allProcurements.length > 0 && (
-        <form className={styles.filterForm}>
-          <div className={styles.filterHeader}>
+        <form className={styles.filter_form}>
+          <div className={styles.filter_header}>
             <h2>Filter by Date Range</h2>
           </div>
-          <div className={styles.filterRow}>
-            <div className={styles.dateFilterSection}>
-              <div className={styles.dateInputGroup}>
-                <div className={styles.dateField}>
+          <div className={styles.filter_row}>
+            <div className={styles.date_filter_section}>
+              <div className={styles.date_input_group}>
+                <div className={styles.date_field}>
                   <label htmlFor="startDate">From Date</label>
                   <input
                     id="startDate"
@@ -827,12 +831,12 @@ function ProcurementContent() {
                     name="startDate"
                     value={filters.startDate}
                     onChange={handleFilterChange}
-                    className={styles.filterInput}
+                    className={styles.filter_input}
                     max={filters.endDate || getTodayDate()}
                     aria-label="Select start date"
                   />
                 </div>
-                <div className={styles.dateField}>
+                <div className={styles.date_field}>
                   <label htmlFor="endDate">To Date</label>
                   <input
                     id="endDate"
@@ -840,7 +844,7 @@ function ProcurementContent() {
                     name="endDate"
                     value={filters.endDate}
                     onChange={handleFilterChange}
-                    className={styles.filterInput}
+                    className={styles.filter_input}
                     max={getTodayDate()}
                     min={filters.startDate}
                     aria-label="Select end date"
@@ -848,34 +852,20 @@ function ProcurementContent() {
                 </div>
               </div>
             </div>
-            <div className={styles.filterActions}>
-              <div className={styles.buttonGroup}>
-                <button
-                  type="button"
-                  onClick={resetFilterForm}
-                  className={styles.primaryBtn}
-                  aria-label="Reset filters to default"
-                >
-                  Reset Filters
-                </button>
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className={styles.secondaryBtn}
-                  disabled={!filters.startDate && !filters.endDate}
-                  aria-label="Clear date filters"
-                >
-                  Clear Filters
-                </button>
-                <button
-                  type="button"
-                  onClick={todayFilter}
-                  className={styles.secondaryBtn2}
-                  aria-label="Load Today's Record"
-                >
-                  {"Load Today's Record"}
-                </button>
-              </div>
+            <div className={styles.filter_actions}>
+              <button
+                onClick={resetFilterForm}
+                className={`${styles.btn} ${styles.btn_reset}`}
+              >
+                Reset
+              </button>
+              <button
+                onClick={clearFilters}
+                className={`${styles.btn} ${styles.btn_clear}`}
+                disabled={!filters.endDate}
+              >
+                Clear
+              </button>
             </div>
           </div>
         </form>
@@ -888,14 +878,14 @@ function ProcurementContent() {
 
       {/* EXPORT SECTION */}
       {summary.count > 0 && (
-        <div className={styles.exportSection}>
-          <span className={styles.entryCount}>
+        <div className={styles.export_section}>
+          <span className={styles.entry_count}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
           </span>
-          <div className={styles.exportButtons}>
+          <div className={styles.export_buttons}>
             <button
               onClick={() => handleExport("csv")}
-              className={styles.exportBtn}
+              className={styles.export_btn}
               disabled={!filteredProcurements.length}
               aria-label="Export data as CSV"
             >
@@ -903,7 +893,7 @@ function ProcurementContent() {
             </button>
             <button
               onClick={() => handleExport("pdf")}
-              className={styles.exportBtn}
+              className={styles.export_btn}
               disabled={!filteredProcurements.length}
               aria-label="Export data as PDF"
             >
@@ -913,35 +903,58 @@ function ProcurementContent() {
         </div>
       )}
 
+      {/* BULK ACTIONS BANNER */}
+      {checkedIds.length > 0 && (
+        <div className={styles.bulk_actions_banner}>
+          <span className={styles.bulk_actions_text}>
+            {checkedIds.length} record(s) selected
+          </span>
+          <button
+            onClick={handleBulkMarkAsPaid}
+            disabled={submitting}
+            className={styles.primary_btn}
+          >
+            {submitting ? "Processing..." : "Mark Selected as Paid"}
+          </button>
+          <button
+            onClick={() => setCheckedIds([])}
+            disabled={submitting}
+            className={styles.clear_filter_link}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
       {/* TABLE SECTION */}
-      <div className={styles.tableWrapper}>
+      <div className={styles.table_wrapper}>
         {loading ? (
           <LoadingSpinner />
         ) : summary.count === 0 ? (
-          <div className={styles.emptyState}>
+          <div className={styles.empty_state}>
             {!data.supplier ? (
               <>
-                <span className={styles.emptyIcon}>⚠️</span>
+                <span className={styles.empty_icon}>⚠️</span>
                 <h3>Supplier not found</h3>
                 <button
                   onClick={() => router.push("/supplier")}
-                  className={styles.secondaryBtn}
+                  className={styles.secondary_btn}
                 >
                   Back to Suppliers
                 </button>
               </>
             ) : data.allProcurements.length === 0 ? (
               <>
-                <span className={styles.emptyIcon}>📊</span>
+                <span className={styles.empty_icon}>📊</span>
                 <p>No procurement records, start by adding the first record</p>
               </>
             ) : (
               <>
-                <span className={styles.emptyIcon}>📊</span>
+                <span className={styles.empty_icon}>📊</span>
                 <p>No procurement records found for the selected date range</p>
                 <button
                   onClick={clearFilters}
-                  className={styles.clearFilterLink}
+                  className={styles.clear_filter_link}
                 >
                   clear filters to see all {data.allProcurements.length} records
                 </button>
@@ -949,29 +962,7 @@ function ProcurementContent() {
             )}
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            {checkedIds.length > 0 && (
-              <div className={styles.bulkActionsBanner}>
-                <span className={styles.bulkActionsText}>
-                  {checkedIds.length} record(s) selected
-                </span>
-                <button
-                  onClick={handleBulkMarkAsPaid}
-                  disabled={submitting}
-                  className={styles.primaryBtn} // Changed to ensure it gets correct CSS styling
-                >
-                  {submitting ? "Processing..." : "Mark Selected as Paid"}
-                </button>
-                <button
-                  onClick={() => setCheckedIds([])}
-                  disabled={submitting}
-                  className={styles.clearFilterLink}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-
+          <div className={styles.table_container}>
             <table className={styles.table} aria-label="Procurement history">
               <thead>
                 <tr>
@@ -983,16 +974,14 @@ function ProcurementContent() {
                   <th scope="col">TS Rate</th>
                   <th scope="col">Rate/L (₹)</th>
                   <th scope="col">Total (₹)</th>
-
-                  {/* FIXED HEADER CHECKBOX SYNTAX HERE */}
                   <th scope="col">
-                    <div className={styles.selectAllWrapper}>
+                    <div className={styles.select_all_wrapper}>
                       {decoratedTableData.filter(
                         (r) => r.paymentStatus === "Not Paid",
                       ).length > 1 && (
                         <input
                           type="checkbox"
-                          className={styles.paymentCheckbox}
+                          className={styles.payment_checkbox}
                           onChange={handleSelectAll}
                           disabled={!!editingId._id}
                           checked={
@@ -1018,10 +1007,10 @@ function ProcurementContent() {
                   <tr
                     key={row._id}
                     className={
-                      editingId._id === row._id ? styles.activeRow : ""
+                      editingId._id === row._id ? styles.active_row : ""
                     }
                   >
-                    <td className={styles.dateCell}>
+                    <td className={styles.date_cell}>
                       {row.isFirstOfDate ? (
                         <div className={styles.continuation_wrapper}>
                           {`(${row.occurrenceCount}) `}
@@ -1038,60 +1027,59 @@ function ProcurementContent() {
                       )}
                     </td>
 
-                    <td className={styles.timeCell}>
+                    <td className={styles.time_cell}>
                       <span
                         className={
-                          row.time === "AM" ? styles.amBadge : styles.pmBadge
+                          row.time === "AM" ? styles.am_badge : styles.pm_badge
                         }
                       >
                         {row.time || "AM"}
                       </span>
                     </td>
-                    <td className={styles.quantityCell}>
+                    <td className={styles.quantity_cell}>
                       {parseFloat(row.milkQuantity).toFixed(2)}
                     </td>
-                    <td className={styles.fatCell}>
+                    <td className={styles.fat_cell}>
                       {parseFloat(row.fatPercentage).toFixed(1)}
                     </td>
-                    <td className={styles.snfCell}>
+                    <td className={styles.snf_cell}>
                       {parseFloat(row.snfPercentage).toFixed(1)}
                     </td>
-                    <td className={styles.rateCell}>
+                    <td className={styles.rate_cell}>
                       {row.supplierTSRate || "N/A"}
                     </td>
-                    <td className={styles.rateCell}>
+                    <td className={styles.rate_cell}>
                       ₹{parseFloat(row.rate).toFixed(1)}
                     </td>
-                    <td className={styles.totalCell}>
+                    <td className={styles.total_cell}>
                       ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}
                     </td>
 
-                    {/* FIXED ROW PAYMENT RENDERING */}
-                    <td className={styles.paymentCell}>
+                    <td className={styles.payment_cell}>
                       {row.paymentStatus === "Not Paid" ? (
-                        <div className={styles.unpaidWrapper}>
+                        <div className={styles.unpaid_wrapper}>
                           <input
                             type="checkbox"
-                            className={styles.paymentCheckbox}
+                            className={styles.payment_checkbox}
                             value={row._id}
                             disabled={!!editingId._id}
                             checked={checkedIds.includes(row._id)}
                             onChange={() => handleCheck(row._id)}
                             title="Select to pay"
                           />
-                          <span className={styles.statusDue}>Due</span>
+                          <span className={styles.status_due}>Due</span>
                         </div>
                       ) : row.paymentStatus === "Paid" || row.paymentRecord ? (
-                        <span className={styles.statusPaid}>Paid</span>
+                        <span className={styles.status_paid}>Paid</span>
                       ) : (
-                        <span className={styles.statusNA}>N/A</span>
+                        <span className={styles.status_na}>N/A</span>
                       )}
                     </td>
-                    <td className={styles.actionsCell}>
-                      <div className={styles.actionButtons}>
+                    <td className={styles.actions_cell}>
+                      <div className={styles.action_buttons}>
                         <button
                           onClick={() => handleEdit(row)}
-                          className={styles.editBtn}
+                          className={styles.edit_btn}
                           disabled={
                             submitting ||
                             new Date() - new Date(row.createdAt) >=
@@ -1103,7 +1091,7 @@ function ProcurementContent() {
                         </button>
                         <button
                           onClick={() => handleDelete(row._id)}
-                          className={styles.deleteBtn}
+                          className={styles.delete_btn}
                           disabled={
                             submitting ||
                             new Date() - new Date(row.createdAt) >=
@@ -1131,10 +1119,10 @@ export default function ProcurementPage() {
   return (
     <Suspense
       fallback={
-        <div className={styles.container}>
-          <div className={styles.loading}>
+        <div className={styles.page_container}>
+          <div className={styles.loading_container}>
             <div className={styles.spinner}></div>
-            <span className={styles.loadingText}>
+            <span className={styles.loading_text}>
               Loading procurement page...
             </span>
           </div>

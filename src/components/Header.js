@@ -14,7 +14,8 @@ export default function Header() {
     { name: "Production", path: "/productions", icon: "" },
     { name: "Production History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
-    {name: "Procurement History", path: "/supplier/procurement/history"}
+    {name: "Procurement History", path: "/supplier/procurement/history"},
+    {name: "Procurement Payments", path: "/supplier/payments"}
   ];
 
   const isActive = (path) => {

@@ -142,7 +142,7 @@ function ProcurementHistoryContent() {
             {
               day: "2-digit",
               month: "short",
-              year: "numeric",
+              year: "2-digit",
             },
           )} `
         : `(${dateCounts[dateKey]})`;
@@ -296,7 +296,7 @@ function ProcurementHistoryContent() {
                 className={`${styles.btn} ${styles.btn_primary}`}
                 disabled={loading}
               >
-                Reset Filters
+                Reset
               </button>
               <button
                 type="button"
@@ -304,7 +304,7 @@ function ProcurementHistoryContent() {
                 className={`${styles.btn} ${styles.btn_secondary}`}
                 disabled={loading || (!filters.startDate && !filters.endDate)}
               >
-                Clear Filters
+                Clear
               </button>
               <button
                 type="button"
@@ -312,7 +312,7 @@ function ProcurementHistoryContent() {
                 className={`${styles.btn} ${styles.btn_primary2}`}
                 disabled={loading}
               >
-                Load Today&apos;s Record
+                Load Today
               </button>
             </div>
           </div>
