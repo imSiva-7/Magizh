@@ -978,7 +978,7 @@ function ProcurementContent() {
                     <div className={styles.select_all_wrapper}>
                       {decoratedTableData.filter(
                         (r) => r.paymentStatus === "Not Paid",
-                      ).length > 1 && (
+                      ).length > 1 && filters !== initialFilters &&  (
                         <input
                           type="checkbox"
                           className={styles.payment_checkbox}

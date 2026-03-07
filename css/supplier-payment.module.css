@@ -39,6 +39,19 @@
   gap: 1.5rem;
 }
 
+.filter_title {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.filter_title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
 /* Search */
 .search_wrapper {
   display: flex;
@@ -47,9 +60,11 @@
 }
 
 .search_label {
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
-  color: #475569;
+  color: #1e293b;
+  padding-bottom: 1rem;
+  margin: 0;
 }
 
 .search_input_group {
@@ -184,7 +199,7 @@
 }
 
 .btn {
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 1rem;
   border: none;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -238,6 +253,7 @@
   color: #64748b;
   padding-top: 0.5rem;
   border-top: 1px dashed #e2e8f0;
+  justify-content: center;
 }
 
 .result_count {
@@ -273,7 +289,7 @@
 .global_title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: rgb(39, 121, 93);
   margin: 0;
 }
 
@@ -338,15 +354,21 @@
 .bulk_actions_banner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  color: white;
+  justify-content: flex-end;
+  /* background: linear-gradient(135deg, #1e293b, #0f172a); */
+  color: rgb(0, 0, 0);
   padding: 1rem 2rem;
   border-radius: 0.5rem;
   margin-bottom: 2rem;
   flex-wrap: wrap;
   gap: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+.bulk_actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  justify-content: flex-end;
 }
 
 .bulk_actions_text {
@@ -355,7 +377,7 @@
 }
 
 .payment_btn {
-  background-color: #22c55e;
+  background-color: rgb(39, 121, 93);
   color: white;
   border: none;
   padding: 0.5rem 1.5rem;
@@ -366,7 +388,7 @@
 }
 
 .payment_btn:hover:not(:disabled) {
-  background-color: #16a34a;
+  /* background-color: #16a34a; */
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
@@ -378,14 +400,14 @@
 .clear_filter_link {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #1a509c;
   text-decoration: underline;
   cursor: pointer;
   font-size: 0.875rem;
   transition: color 0.2s;
 }
 .clear_filter_link:hover {
-  color: white;
+  color: rgb(94, 94, 94);
 }
 
 /* ========== 5. SUPPLIER GRID (CARDS) ========== */
@@ -427,18 +449,19 @@
 }
 
 .supplierName {
-  color: rgb(255, 255, 255);
+  color: rgb(39, 121, 93);
+  font-size: 2rem;
   text-decoration: none;
   font-weight: 600;
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  background-color: rgb(39, 121, 93);
+  /* border-radius: 0.5rem;
+  background-color: ; */
   display: inline-block;
   transition: all 0.2s ease;
 }
 
 .supplierName:hover {
-  background-color: rgba(225, 225, 225, 0.2);
+  background-color: rgba(61, 165, 132, 0.2);
   color: rgb(39, 121, 93);
 }
 /* Supplier type badges (reuse from supplier.module.css) */
@@ -446,9 +469,9 @@
 .type_milkman,
 .type_farmer,
 .type_other {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.575rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;

@@ -58,6 +58,7 @@ export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
   const [checkedIds, setCheckedIds] = useState([]);
+  const [checkedISupplierId, setCheckedSupplierId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [statusFilter, setStatusFilter] = useState(""); // "Paid", "Not Paid", or ""
@@ -86,6 +87,7 @@ export default function Payments() {
   const fetchSupplierProcurements = useCallback(
     async (signal) => {
       setIsLoading(true);
+      setCheckedIds([]);
       try {
         const queryParams = new URLSearchParams();
         if (filters.startDate)
@@ -149,13 +151,23 @@ export default function Payments() {
   };
 
   // 4. Checkbox Handlers
-  const handleCheck = (id) => {
+  const handleCheck = (id, supplierId) => {
+    if (!checkedISupplierId) {
+      setCheckedSupplierId(supplierId);
+    }
+
     setCheckedIds((prev) =>
       prev.includes(id)
         ? prev.filter((itemId) => itemId !== id)
         : [...prev, id],
     );
   };
+
+  useEffect(() => {
+    if (checkedISupplierId && checkedIds.length == 0) {
+      setCheckedSupplierId("");
+    }
+  }, [checkedIds]);
 
   const handleSelectAll = (e, supplierId) => {
     const eligibleIds = supplierTotalsMap[supplierId].procurements
@@ -267,6 +279,12 @@ export default function Payments() {
 
   // 7. Filter Handlers
   const handleFilterChange = (e) => {
+    if (checkedIds.length > 0) {
+      if (
+        !window.confirm(`checked records will lost, do you want to continue ?`)
+      )
+        return;
+    }
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
@@ -291,7 +309,7 @@ export default function Payments() {
       />
 
       <div className={styles.header_content}>
-        <h1 className={styles.page_title}>Supplier Payment Management</h1>
+        <h1 className={styles.page_title}>Supplier Payments</h1>
       </div>
 
       {/* Search & Filters */}
@@ -323,10 +341,27 @@ export default function Payments() {
               </button>
             )}
           </div>
+          <div className={styles.search_stats}>
+            {isLoading ? (
+              <span className={styles.loading_text}>Searching...</span>
+            ) : (
+              <span className={styles.result_count}>
+                Showing{" "}
+                {
+                  filteredSupplierList.filter((s) =>
+                    Object.keys(supplierTotalsMap).includes(s._id),
+                  ).length
+                }{" "}
+                of {supplierList.length} suppliers
+              </span>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Status Radio */}
-        <div className={styles.radio_group}>
+      {/* Search & Filters */}
+      <div className={styles.filter_section}>
+        {/* <div className={styles.radio_group}>
           <label className={styles.radio_label}>
             <input
               type="radio"
@@ -357,9 +392,13 @@ export default function Payments() {
             />
             <span className={styles.text_red}>Due</span>
           </label>
-        </div>
+        </div> */}
 
         {/* Date Filters */}
+
+        <div className={styles.filter_title}>
+          <h2>Filter by Date Range</h2>
+        </div>
         <div className={styles.date_input_group}>
           <span>From Date</span>
           <input
@@ -404,24 +443,6 @@ export default function Payments() {
           >
             Load Today
           </button>
-        </div>
-
-        {/* Result stats */}
-        <div className={styles.search_stats}>
-          {isLoading ? (
-            <span className={styles.loading_text}>Searching...</span>
-          ) : (
-            <span className={styles.result_count}>
-              Showing{" "}
-              {
-                filteredSupplierList.filter((s) =>
-                  Object.keys(supplierTotalsMap).includes(s._id),
-                ).length
-              }{" "}
-              of {supplierList.length} supplier
-              {filteredSupplierList.length !== 1 ? "s" : ""}
-            </span>
-          )}
         </div>
       </div>
 
@@ -468,30 +489,13 @@ export default function Payments() {
       )}
 
       {/* Bulk Actions Banner */}
-      {checkedIds.length > 0 && (
-        <div className={styles.bulk_actions_banner}>
-          <span className={styles.bulk_actions_text}>
-            {checkedIds.length} record(s) selected
-          </span>
-          <button
-            onClick={handleBulkMarkAsPaid}
-            disabled={submitting}
-            className={styles.payment_btn}
-          >
-            {submitting ? "Processing..." : "Mark as Paid"}
-          </button>
-          <button
-            onClick={() => setCheckedIds([])}
-            disabled={submitting}
-            className={styles.clear_filter_link}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
 
       {/* Supplier Grid (Cards) */}
-      {!isLoading && (
+      {isLoading ? (
+        <div className={styles.supplier_card}>
+          <LoadingSpinner />
+        </div>
+      ) : (
         <div className={styles.supplier_grid}>
           {filteredSupplierList.map((supplier) => {
             const stats = supplierTotalsMap[supplier._id];
@@ -565,6 +569,30 @@ export default function Payments() {
                     </div>
                   </div>
                 </div>
+                {checkedIds.length > 0 &&
+                  supplier._id == checkedISupplierId && (
+                    <div className={styles.bulk_actions_banner}>
+                      <span className={styles.bulk_actions_text}>
+                        {checkedIds.length} record(s) selected
+                      </span>
+                      <div className={styles.bulk_actions}>
+                        <button
+                          onClick={handleBulkMarkAsPaid}
+                          disabled={submitting}
+                          className={styles.payment_btn}
+                        >
+                          {submitting ? "Processing..." : "Mark as Paid"}
+                        </button>
+                        <button
+                          onClick={() => setCheckedIds([])}
+                          disabled={submitting}
+                          className={styles.clear_filter_link}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Procurement Table (with extra columns) */}
                 <div className={styles.table_wrapper}>
@@ -581,18 +609,24 @@ export default function Payments() {
                         <th className={styles.table_header_cell}>Total (₹)</th>
                         <th className={styles.table_header_cell}>
                           <div className={styles.select_all_wrapper}>
-                            {eligibleProcurements.length > 0 && (
-                              <input
-                                type="checkbox"
-                                className={styles.payment_checkbox}
-                                onChange={(e) =>
-                                  handleSelectAll(e, supplier._id)
-                                }
-                                disabled={isLoading}
-                                checked={isAllChecked}
-                                title="Select All Unpaid"
-                              />
-                            )}
+                            {(eligibleProcurements.length > 0 &&
+                              filters.startDate !==
+                                INITIAL_FILTERS.startDate) ||
+                              (filters.endDate !== INITIAL_FILTERS.endDate &&
+                                filters.startDate &&
+                                filters.endDate &&
+                                supplier._id == checkedISupplierId && (
+                                  <input
+                                    type="checkbox"
+                                    className={styles.payment_checkbox}
+                                    onChange={(e) =>
+                                      handleSelectAll(e, supplier._id)
+                                    }
+                                    disabled={isLoading}
+                                    checked={isAllChecked}
+                                    title="Select All Unpaid"
+                                  />
+                                ))}
                             Status
                           </div>
                         </th>
@@ -658,12 +692,27 @@ export default function Payments() {
                                 <span className={styles.status_paid}>Paid</span>
                               ) : (
                                 <div className={styles.unpaid_wrapper}>
-                                  <input
-                                    type="checkbox"
-                                    className={styles.payment_checkbox}
-                                    checked={checkedIds.includes(row._id)}
-                                    onChange={() => handleCheck(row._id)}
-                                  />
+                                  {checkedISupplierId ? (
+                                    supplier._id == checkedISupplierId ? (
+                                      <input
+                                        type="checkbox"
+                                        className={styles.payment_checkbox}
+                                        checked={checkedIds.includes(row._id)}
+                                        onChange={() =>
+                                          handleCheck(row._id, supplier._id)
+                                        }
+                                      />
+                                    ) : null
+                                  ) : (
+                                    <input
+                                      type="checkbox"
+                                      className={styles.payment_checkbox}
+                                      checked={checkedIds.includes(row._id)}
+                                      onChange={() =>
+                                        handleCheck(row._id, supplier._id)
+                                      }
+                                    />
+                                  )}
                                   <span className={styles.status_due}>Due</span>
                                 </div>
                               )}
