@@ -58,7 +58,7 @@ export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
   const [checkedIds, setCheckedIds] = useState([]);
-  const [checkedISupplierId, setCheckedSupplierId] = useState("");
+  const [checkedSupplierId, setCheckedSupplierId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [statusFilter, setStatusFilter] = useState(""); // "Paid", "Not Paid", or ""
@@ -152,7 +152,7 @@ export default function Payments() {
 
   // 4. Checkbox Handlers
   const handleCheck = (id, supplierId) => {
-    if (!checkedISupplierId) {
+    if (!checkedSupplierId) {
       setCheckedSupplierId(supplierId);
     }
 
@@ -164,10 +164,10 @@ export default function Payments() {
   };
 
   useEffect(() => {
-    if (checkedISupplierId && checkedIds.length == 0) {
+    if (checkedSupplierId && checkedIds.length == 0) {
       setCheckedSupplierId("");
     }
-  }, [checkedIds]);
+  }, [checkedIds, checkedSupplierId]);
 
   const handleSelectAll = (e, supplierId) => {
     const eligibleIds = supplierTotalsMap[supplierId].procurements
@@ -451,7 +451,7 @@ export default function Payments() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Suppliers Summary</h2>
-            <span className={styles.date_range_badge}>
+            <span className={styles.date_range_badge1}>
               {getFormattedDateRange(filters.startDate, filters.endDate)}
             </span>
           </div>
@@ -467,7 +467,7 @@ export default function Payments() {
             <div className={styles.global_stat_item}>
               <div className={styles.global_stat_label}>Total Amount</div>
               <div className={styles.global_stat_value}>
-                ₹{formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}
+                ₹{formatNumberWithCommasNoDecimal(globalStats.totalAmount)}
               </div>
             </div>
             <div className={styles.global_stat_item}>
@@ -475,22 +475,19 @@ export default function Payments() {
               <div
                 className={`${styles.global_stat_value} ${styles.text_green}`}
               >
-                ₹{formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}
+                ₹{formatNumberWithCommasNoDecimal(globalStats.paidAmount)}
               </div>
             </div>
             <div className={styles.global_stat_item}>
               <div className={styles.global_stat_label}>Total Due</div>
               <div className={`${styles.global_stat_value} ${styles.text_red}`}>
-                ₹{formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}
+                ₹{formatNumberWithCommasNoDecimal(globalStats.dueAmount)}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bulk Actions Banner */}
-
-      {/* Supplier Grid (Cards) */}
       {isLoading ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
@@ -532,9 +529,9 @@ export default function Payments() {
                       {supplier.supplierType}
                     </span>
                   </div>
-                  {/* <span className={styles.date_range_badge}>
+                  <span className={styles.date_range_badge}>
                     {getFormattedDateRange(filters.startDate, filters.endDate)}
-                  </span> */}
+                  </span>
                 </div>
 
                 {/* Quick Stats Row */}
@@ -542,7 +539,7 @@ export default function Payments() {
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Total Milk</div>
                     <div className={styles.stat_card_value}>
-                      {stats.totalMilk.toFixed(2)}{" "}
+                      {formatNumberWithCommas(stats.totalMilk.toFixed(2))}{" "}
                       <span className={styles.unit_label}>L</span>
                     </div>
                   </div>
@@ -569,30 +566,29 @@ export default function Payments() {
                     </div>
                   </div>
                 </div>
-                {checkedIds.length > 0 &&
-                  supplier._id == checkedISupplierId && (
-                    <div className={styles.bulk_actions_banner}>
-                      <span className={styles.bulk_actions_text}>
-                        {checkedIds.length} record(s) selected
-                      </span>
-                      <div className={styles.bulk_actions}>
-                        <button
-                          onClick={handleBulkMarkAsPaid}
-                          disabled={submitting}
-                          className={styles.payment_btn}
-                        >
-                          {submitting ? "Processing..." : "Mark as Paid"}
-                        </button>
-                        <button
-                          onClick={() => setCheckedIds([])}
-                          disabled={submitting}
-                          className={styles.clear_filter_link}
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                {checkedIds.length > 0 && supplier._id == checkedSupplierId && (
+                  <div className={styles.bulk_actions_banner}>
+                    <span className={styles.bulk_actions_text}>
+                      {checkedIds.length} record(s) selected
+                    </span>
+                    <div className={styles.bulk_actions}>
+                      <button
+                        onClick={handleBulkMarkAsPaid}
+                        disabled={submitting}
+                        className={styles.payment_btn}
+                      >
+                        {submitting ? "Processing..." : "Mark as Paid"}
+                      </button>
+                      <button
+                        onClick={() => setCheckedIds([])}
+                        disabled={submitting}
+                        className={styles.clear_filter_link}
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* Procurement Table (with extra columns) */}
                 <div className={styles.table_wrapper}>
@@ -609,24 +605,25 @@ export default function Payments() {
                         <th className={styles.table_header_cell}>Total (₹)</th>
                         <th className={styles.table_header_cell}>
                           <div className={styles.select_all_wrapper}>
-                            {(eligibleProcurements.length > 0 &&
-                              filters.startDate !==
-                                INITIAL_FILTERS.startDate) ||
-                              (filters.endDate !== INITIAL_FILTERS.endDate &&
-                                filters.startDate &&
-                                filters.endDate &&
-                                supplier._id == checkedISupplierId && (
-                                  <input
-                                    type="checkbox"
-                                    className={styles.payment_checkbox}
-                                    onChange={(e) =>
-                                      handleSelectAll(e, supplier._id)
-                                    }
-                                    disabled={isLoading}
-                                    checked={isAllChecked}
-                                    title="Select All Unpaid"
-                                  />
-                                ))}
+                            {eligibleProcurements.length > 0 &&
+                              (filters.startDate !==
+                                INITIAL_FILTERS.startDate ||
+                                filters.endDate !== INITIAL_FILTERS.endDate) &&
+                              filters.startDate &&
+                              filters.endDate &&
+                              (!checkedSupplierId ||
+                                checkedSupplierId == supplier._id) && (
+                                <input
+                                  type="checkbox"
+                                  className={styles.payment_checkbox}
+                                  onChange={(e) =>
+                                    handleSelectAll(e, supplier._id)
+                                  }
+                                  disabled={isLoading}
+                                  checked={isAllChecked}
+                                  title="Select All Unpaid"
+                                />
+                              )}
                             Status
                           </div>
                         </th>
@@ -692,8 +689,8 @@ export default function Payments() {
                                 <span className={styles.status_paid}>Paid</span>
                               ) : (
                                 <div className={styles.unpaid_wrapper}>
-                                  {checkedISupplierId ? (
-                                    supplier._id == checkedISupplierId ? (
+                                  {checkedSupplierId ? (
+                                    supplier._id == checkedSupplierId ? (
                                       <input
                                         type="checkbox"
                                         className={styles.payment_checkbox}

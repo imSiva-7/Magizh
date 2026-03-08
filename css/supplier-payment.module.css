@@ -293,7 +293,7 @@
   margin: 0;
 }
 
-.date_range_badge {
+.date_range_badge1 {
   font-size: 0.875rem;
   color: #64748b;
   background: #f1f5f9;
@@ -450,12 +450,12 @@
 
 .supplierName {
   color: rgb(39, 121, 93);
-  font-size: 2rem;
+  font-size: 1.5rem;
   text-decoration: none;
   font-weight: 600;
-  padding: 0.5rem 1rem;
-  /* border-radius: 0.5rem;
-  background-color: ; */
+  /* padding: 0.5rem 1rem;
+   border-radius: 0.5rem;
+  background-color: ;  */
   display: inline-block;
   transition: all 0.2s ease;
 }
@@ -498,6 +498,17 @@
   border: 1px solid #d8b4fe;
 }
 
+.date_range_badge {
+  font-size: 0.675rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
 /* Quick stats row */
 .quick_stats {
   display: grid;
@@ -512,6 +523,7 @@
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
   text-align: left;
+  transition: all 0.2s ease;
 }
 
 .stat_card_label {
@@ -520,6 +532,12 @@
   color: #64748b;
   text-transform: uppercase;
   margin-bottom: 0.25rem;
+}
+
+.stat_card:hover {
+  border-color: rgb(39, 121, 93);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .stat_card_value {
