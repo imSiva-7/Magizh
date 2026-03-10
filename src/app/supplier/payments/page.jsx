@@ -28,15 +28,25 @@ const getFormattedDateRange = (startDate, endDate) => {
   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
   return "All Records";
 };
-
 const getSupplierTypeClass = (supplierType) => {
-  const typeClassMap = {
-    Society: styles.type_society,
-    Milkman: styles.type_milkman,
-    Farmer: styles.type_farmer,
-    Other: styles.type_other,
-  };
-  return typeClassMap[supplierType] || styles.type_other;
+  // 1. Grab the base shape/padding class
+  const baseBadge = styles.typeBadge || styles.type_badge;
+
+  // 2. Determine the specific color class
+  let colorBadge = styles["type-other"] || styles.type_other;
+
+  if (supplierType) {
+    const type = supplierType.toLowerCase().trim();
+    if (type === "society")
+      colorBadge = styles["type-society"] || styles.type_society;
+    if (type === "milkman")
+      colorBadge = styles["type-milkman"] || styles.type_milkman;
+    if (type === "farmer")
+      colorBadge = styles["type-farmer"] || styles.type_farmer;
+  }
+
+  // 3. Combine both classes together!
+  return `${baseBadge} ${colorBadge}`;
 };
 
 const formatTimeBadge = (time) => {
@@ -57,8 +67,12 @@ const LoadingSpinner = () => (
 export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
+
+  // Selection State
   const [checkedIds, setCheckedIds] = useState([]);
   const [checkedSupplierId, setCheckedSupplierId] = useState("");
+
+  // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [statusFilter, setStatusFilter] = useState(""); // "Paid", "Not Paid", or ""
@@ -83,11 +97,12 @@ export default function Payments() {
     fetchSuppliers();
   }, []);
 
-  // 2. Fetch Procurements (accepts signal for abort)
+  // 2. Fetch Procurements
   const fetchSupplierProcurements = useCallback(
     async (signal) => {
       setIsLoading(true);
       setCheckedIds([]);
+      setCheckedSupplierId("");
       try {
         const queryParams = new URLSearchParams();
         if (filters.startDate)
@@ -141,10 +156,11 @@ export default function Payments() {
 
       toast.success(`Successfully marked ${checkedIds.length} records as paid`);
       setCheckedIds([]);
+      setCheckedSupplierId("");
       await fetchSupplierProcurements(); // refresh data
     } catch (error) {
       console.error(error);
-      alert(error.message || "Failed to process bulk payment");
+      toast.error(error.message || "Failed to process bulk payment");
     } finally {
       setSubmitting(false);
     }
@@ -156,29 +172,31 @@ export default function Payments() {
       setCheckedSupplierId(supplierId);
     }
 
-    setCheckedIds((prev) =>
-      prev.includes(id)
+    setCheckedIds((prev) => {
+      const newSelected = prev.includes(id)
         ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id],
-    );
-  };
+        : [...prev, id];
 
-  useEffect(() => {
-    if (checkedSupplierId && checkedIds.length == 0) {
-      setCheckedSupplierId("");
-    }
-  }, [checkedIds, checkedSupplierId]);
+      if (newSelected.length === 0) setCheckedSupplierId("");
+      return newSelected;
+    });
+  };
 
   const handleSelectAll = (e, supplierId) => {
     const eligibleIds = supplierTotalsMap[supplierId].procurements
       .filter((row) => row.paymentStatus !== "Paid")
       .map((row) => row._id);
 
-    setCheckedIds((prev) =>
-      e.target.checked
-        ? [...new Set([...prev, ...eligibleIds])]
-        : prev.filter((id) => !eligibleIds.includes(id)),
-    );
+    if (e.target.checked) {
+      setCheckedSupplierId(supplierId);
+      setCheckedIds((prev) => [...new Set([...prev, ...eligibleIds])]);
+    } else {
+      setCheckedIds((prev) => {
+        const newSelected = prev.filter((id) => !eligibleIds.includes(id));
+        if (newSelected.length === 0) setCheckedSupplierId("");
+        return newSelected;
+      });
+    }
   };
 
   // 5. Supplier Totals + Procurements (memoized)
@@ -207,8 +225,8 @@ export default function Payments() {
       if (!totals[id]) {
         totals[id] = {
           totalMilk: 0,
-          totalFat: 0,
-          totalSnf: 0,
+          totalFatSum: 0,
+          totalSnfSum: 0,
           uniqueDates: new Set(),
           totalAmount: 0,
           paidAmount: 0,
@@ -226,8 +244,8 @@ export default function Payments() {
 
       // supplier totals
       totals[id].totalMilk += milk;
-      totals[id].totalFat += fat;
-      totals[id].totalSnf += snf;
+      totals[id].totalFatSum += fat;
+      totals[id].totalSnfSum += snf;
       totals[id].uniqueDates.add(date);
       totals[id].totalAmount += amount;
 
@@ -277,23 +295,58 @@ export default function Payments() {
     );
   }, [supplierList, searchQuery]);
 
-  // 7. Filter Handlers
-  const handleFilterChange = (e) => {
+  // 7. Filter Handlers & Warnings
+  const confirmClearChecked = () => {
     if (checkedIds.length > 0) {
-      if (
-        !window.confirm(`checked records will lost, do you want to continue ?`)
-      )
-        return;
+      return window.confirm(
+        `Checked records will be lost, do you want to continue?`,
+      );
     }
+    return true;
+  };
+
+  const handleFilterChange = (e) => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setCheckedSupplierId("");
+
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const resetFilters = () => setFilters(INITIAL_FILTERS);
-  const clearFilters = () =>
+  const handleStatusChange = (newStatus) => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setCheckedSupplierId("");
+    setStatusFilter(newStatus);
+  };
+
+  const resetFilters = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setCheckedSupplierId("");
+    setFilters(INITIAL_FILTERS);
+    setStatusFilter("");
+    toast.info("Filters reset to default.");
+  };
+
+  const clearFilters = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setCheckedSupplierId("");
     setFilters({ startDate: "2026-03-01", endDate: "" });
-  const loadTodayData = () =>
+    setStatusFilter("");
+    toast.info("Date filters cleared.");
+  };
+
+  const loadTodayData = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setCheckedSupplierId("");
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
+    setStatusFilter("");
+    toast.info("Loaded today's records.");
+  };
 
   const globalStats = supplierTotalsMap.all;
 
@@ -312,9 +365,8 @@ export default function Payments() {
         <h1 className={styles.page_title}>Supplier Payments</h1>
       </div>
 
-      {/* Search & Filters */}
+      {/* Search Section */}
       <div className={styles.filter_section}>
-        {/* Search */}
         <div className={styles.search_wrapper}>
           <label htmlFor="searchInput" className={styles.search_label}>
             Search Suppliers:
@@ -336,6 +388,7 @@ export default function Payments() {
                 onClick={() => setSearchQuery("")}
                 className={styles.clear_search_button}
                 aria-label="Clear search"
+                disabled={isLoading}
               >
                 ✕
               </button>
@@ -359,87 +412,142 @@ export default function Payments() {
         </div>
       </div>
 
-      {/* Search & Filters */}
+      {/* Date & Status Filters */}
       <div className={styles.filter_section}>
-        {/* <div className={styles.radio_group}>
-          <label className={styles.radio_label}>
+        <div className={styles.filter_title}>
+          <h2>Filter by Date Range & Status</h2>
+        </div>
+
+        {/* Status Radios */}
+        <div
+          style={{
+            display: "flex",
+            gap: "1.5rem",
+            marginBottom: "1.5rem",
+            flexWrap: "wrap",
+          }}
+        >
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontWeight: 600,
+              color: "#475569",
+              opacity: isLoading ? 0.6 : 1,
+            }}
+          >
             <input
               type="radio"
               name="statusFilter"
               value=""
               checked={statusFilter === ""}
-              onChange={() => setStatusFilter("")}
+              onChange={() => handleStatusChange("")}
+              disabled={isLoading}
             />
             <span>All Records</span>
           </label>
-          <label className={styles.radio_label}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontWeight: 600,
+              color: "#475569",
+              opacity: isLoading ? 0.6 : 1,
+            }}
+          >
             <input
               type="radio"
               name="statusFilter"
               value="Paid"
               checked={statusFilter === "Paid"}
-              onChange={() => setStatusFilter("Paid")}
+              onChange={() => handleStatusChange("Paid")}
+              disabled={isLoading}
             />
             <span className={styles.text_green}>Paid</span>
           </label>
-          <label className={styles.radio_label}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              fontWeight: 600,
+              color: "#475569",
+              opacity: isLoading ? 0.6 : 1,
+            }}
+          >
             <input
               type="radio"
               name="statusFilter"
               value="Not Paid"
               checked={statusFilter === "Not Paid"}
-              onChange={() => setStatusFilter("Not Paid")}
+              onChange={() => handleStatusChange("Not Paid")}
+              disabled={isLoading}
             />
             <span className={styles.text_red}>Due</span>
           </label>
-        </div> */}
-
-        {/* Date Filters */}
-
-        <div className={styles.filter_title}>
-          <h2>Filter by Date Range</h2>
         </div>
+
+        {/* Date Inputs */}
+        {/* Date Inputs */}
         <div className={styles.date_input_group}>
-          <span>From Date</span>
-          <input
-            type="date"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleFilterChange}
-            min="2026-03-01"
-            max={filters.endDate || getTodayDate()}
-            className={styles.date_input}
-          />
-          <span>To Date</span>
-          <input
-            type="date"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleFilterChange}
-            min={filters.startDate}
-            max={getTodayDate()}
-            className={styles.date_input}
-          />
+          <div className={styles.date_field}>
+            <label htmlFor="startDate">From Date</label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={filters.startDate}
+              onChange={handleFilterChange}
+              min="2026-03-01"
+              max={filters.endDate || getTodayDate()}
+              className={styles.date_input}
+              disabled={isLoading}
+            />
+          </div>
+          <div className={styles.date_field}>
+            <label htmlFor="endDate">To Date</label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={filters.endDate}
+              onChange={handleFilterChange}
+              min={filters.startDate}
+              max={getTodayDate()}
+              className={styles.date_input}
+              disabled={isLoading}
+            />
+          </div>
         </div>
 
         {/* Filter Actions */}
         <div className={styles.filter_actions}>
           <button
+            type="button"
             onClick={resetFilters}
             className={`${styles.btn} ${styles.btn_reset}`}
+            disabled={isLoading}
           >
             Reset
           </button>
           <button
+            type="button"
             onClick={clearFilters}
             className={`${styles.btn} ${styles.btn_clear}`}
-            disabled={!filters.endDate}
+            disabled={(!filters.endDate && !filters.startDate) || isLoading}
           >
             Clear
           </button>
           <button
+            type="button"
             onClick={loadTodayData}
             className={`${styles.btn} ${styles.btn_today}`}
+            disabled={isLoading}
           >
             Load Today
           </button>
@@ -451,7 +559,7 @@ export default function Payments() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Suppliers Summary</h2>
-            <span className={styles.date_range_badge1}>
+            <span className={styles.date_range_badge}>
               {getFormattedDateRange(filters.startDate, filters.endDate)}
             </span>
           </div>
@@ -460,14 +568,14 @@ export default function Payments() {
             <div className={styles.global_stat_item}>
               <div className={styles.global_stat_label}>Total Milk</div>
               <div className={styles.global_stat_value}>
-                {formatNumberWithCommas(globalStats.totalMilk.toFixed(2))}{" "}
+                {formatNumberWithCommas(globalStats.totalMilk.toFixed(1))}{" "}
                 <span className={styles.unit_label}>L</span>
               </div>
             </div>
             <div className={styles.global_stat_item}>
               <div className={styles.global_stat_label}>Total Amount</div>
               <div className={styles.global_stat_value}>
-                ₹{formatNumberWithCommasNoDecimal(globalStats.totalAmount)}
+                ₹{formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}
               </div>
             </div>
             <div className={styles.global_stat_item}>
@@ -475,19 +583,20 @@ export default function Payments() {
               <div
                 className={`${styles.global_stat_value} ${styles.text_green}`}
               >
-                ₹{formatNumberWithCommasNoDecimal(globalStats.paidAmount)}
+                ₹{formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}
               </div>
             </div>
             <div className={styles.global_stat_item}>
               <div className={styles.global_stat_label}>Total Due</div>
               <div className={`${styles.global_stat_value} ${styles.text_red}`}>
-                ₹{formatNumberWithCommasNoDecimal(globalStats.dueAmount)}
+                ₹{formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* Supplier Grid (Cards) */}
       {isLoading ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
@@ -496,6 +605,7 @@ export default function Payments() {
         <div className={styles.supplier_grid}>
           {filteredSupplierList.map((supplier) => {
             const stats = supplierTotalsMap[supplier._id];
+
             if (
               !stats ||
               stats.totalAmount === 0 ||
@@ -509,6 +619,10 @@ export default function Payments() {
             const isAllChecked =
               eligibleProcurements.length > 0 &&
               eligibleProcurements.every((r) => checkedIds.includes(r._id));
+
+            // Disable checkboxes if user is already checking a different supplier
+            const isSupplierDisabled =
+              checkedSupplierId !== "" && checkedSupplierId !== supplier._id;
 
             return (
               <div key={supplier._id} className={styles.supplier_card}>
@@ -526,12 +640,9 @@ export default function Payments() {
                     <span
                       className={getSupplierTypeClass(supplier.supplierType)}
                     >
-                      {supplier.supplierType}
+                      {supplier.supplierType || "Other"}
                     </span>
                   </div>
-                  <span className={styles.date_range_badge}>
-                    {getFormattedDateRange(filters.startDate, filters.endDate)}
-                  </span>
                 </div>
 
                 {/* Quick Stats Row */}
@@ -539,7 +650,7 @@ export default function Payments() {
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Total Milk</div>
                     <div className={styles.stat_card_value}>
-                      {formatNumberWithCommas(stats.totalMilk.toFixed(2))}{" "}
+                      {formatNumberWithCommas(stats.totalMilk.toFixed(1))}{" "}
                       <span className={styles.unit_label}>L</span>
                     </div>
                   </div>
@@ -566,31 +677,37 @@ export default function Payments() {
                     </div>
                   </div>
                 </div>
-                {checkedIds.length > 0 && supplier._id == checkedSupplierId && (
-                  <div className={styles.bulk_actions_banner}>
-                    <span className={styles.bulk_actions_text}>
-                      {checkedIds.length} record(s) selected
-                    </span>
-                    <div className={styles.bulk_actions}>
-                      <button
-                        onClick={handleBulkMarkAsPaid}
-                        disabled={submitting}
-                        className={styles.payment_btn}
-                      >
-                        {submitting ? "Processing..." : "Mark as Paid"}
-                      </button>
-                      <button
-                        onClick={() => setCheckedIds([])}
-                        disabled={submitting}
-                        className={styles.clear_filter_link}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
 
-                {/* Procurement Table (with extra columns) */}
+                {/* Bulk Action Banner for Active Supplier */}
+                {checkedIds.length > 0 &&
+                  supplier._id === checkedSupplierId && (
+                    <div className={styles.bulk_actions_banner}>
+                      <span className={styles.bulk_actions_text}>
+                        {checkedIds.length} record(s) selected
+                      </span>
+                      <div className={styles.bulk_actions}>
+                        <button
+                          onClick={handleBulkMarkAsPaid}
+                          disabled={submitting}
+                          className={styles.payment_btn}
+                        >
+                          {submitting ? "Processing..." : "Mark as Paid"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCheckedIds([]);
+                            setCheckedSupplierId("");
+                          }}
+                          disabled={submitting}
+                          className={styles.clear_filter_link}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Procurement Table */}
                 <div className={styles.table_wrapper}>
                   <table className={styles.procurement_table}>
                     <thead>
@@ -598,32 +715,27 @@ export default function Payments() {
                         <th className={styles.table_header_cell}>Date</th>
                         <th className={styles.table_header_cell}>Time</th>
                         <th className={styles.table_header_cell}>Qty (L)</th>
-                        <th className={styles.table_header_cell}>Fat %</th>
-                        <th className={styles.table_header_cell}>SNF %</th>
-                        {/* <th className={styles.table_header_cell}>TS Rate</th> */}
+                        <th className={styles.table_header_cell}>Fat/SNF</th>
                         <th className={styles.table_header_cell}>Rate/L</th>
                         <th className={styles.table_header_cell}>Total (₹)</th>
                         <th className={styles.table_header_cell}>
                           <div className={styles.select_all_wrapper}>
-                            {eligibleProcurements.length > 0 &&
-                              (filters.startDate !==
-                                INITIAL_FILTERS.startDate ||
-                                filters.endDate !== INITIAL_FILTERS.endDate) &&
-                              filters.startDate &&
-                              filters.endDate &&
-                              (!checkedSupplierId ||
-                                checkedSupplierId == supplier._id) && (
-                                <input
-                                  type="checkbox"
-                                  className={styles.payment_checkbox}
-                                  onChange={(e) =>
-                                    handleSelectAll(e, supplier._id)
-                                  }
-                                  disabled={isLoading}
-                                  checked={isAllChecked}
-                                  title="Select All Unpaid"
-                                />
-                              )}
+                            {eligibleProcurements.length > 0 && (
+                              <input
+                                type="checkbox"
+                                className={styles.payment_checkbox}
+                                onChange={(e) =>
+                                  handleSelectAll(e, supplier._id)
+                                }
+                                disabled={isSupplierDisabled}
+                                checked={isAllChecked}
+                                title={
+                                  isSupplierDisabled
+                                    ? "Complete active supplier's payment first"
+                                    : "Select All Unpaid"
+                                }
+                              />
+                            )}
                             Status
                           </div>
                         </th>
@@ -662,21 +774,20 @@ export default function Payments() {
                               </span>
                             </td>
                             <td className={styles.table_cell}>
-                              {(parseFloat(row.milkQuantity) || 0).toFixed(1)}
+                              {formatNumberWithCommas(
+                                (parseFloat(row.milkQuantity) || 0).toFixed(1),
+                              )}
                             </td>
                             <td className={styles.table_cell}>
-                              {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
-                            </td>
-                            <td className={styles.table_cell}>
+                              {(parseFloat(row.fatPercentage) || 0).toFixed(1)}{" "}
+                              /{" "}
                               {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
                             </td>
-                            {/* <td className={styles.table_cell}>
-                              {row.supplierTSRate
-                                ? parseInt(row.supplierTSRate)
-                                : "N/A"}
-                            </td> */}
                             <td className={styles.table_cell}>
-                              ₹{(parseFloat(row.rate) || 0).toFixed(1)}
+                              ₹
+                              {formatNumberWithCommas(
+                                (parseFloat(row.rate) || 0).toFixed(2),
+                              )}
                             </td>
                             <td
                               className={`${styles.table_cell} ${styles.cell_total}`}
@@ -689,27 +800,21 @@ export default function Payments() {
                                 <span className={styles.status_paid}>Paid</span>
                               ) : (
                                 <div className={styles.unpaid_wrapper}>
-                                  {checkedSupplierId ? (
-                                    supplier._id == checkedSupplierId ? (
-                                      <input
-                                        type="checkbox"
-                                        className={styles.payment_checkbox}
-                                        checked={checkedIds.includes(row._id)}
-                                        onChange={() =>
-                                          handleCheck(row._id, supplier._id)
-                                        }
-                                      />
-                                    ) : null
-                                  ) : (
-                                    <input
-                                      type="checkbox"
-                                      className={styles.payment_checkbox}
-                                      checked={checkedIds.includes(row._id)}
-                                      onChange={() =>
-                                        handleCheck(row._id, supplier._id)
-                                      }
-                                    />
-                                  )}
+                                  <input
+                                    type="checkbox"
+                                    className={styles.payment_checkbox}
+                                    value={row._id}
+                                    disabled={isSupplierDisabled}
+                                    checked={checkedIds.includes(row._id)}
+                                    onChange={() =>
+                                      handleCheck(row._id, supplier._id)
+                                    }
+                                    title={
+                                      isSupplierDisabled
+                                        ? "Complete active supplier's payment first"
+                                        : "Select to pay"
+                                    }
+                                  />
                                   <span className={styles.status_due}>Due</span>
                                 </div>
                               )}

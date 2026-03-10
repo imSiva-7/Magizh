@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import styles from "@/css/procurement.module.css"; // will use underscore class names
+import styles from "@/css/procurement.module.css"; 
 import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
@@ -251,7 +251,6 @@ function ProcurementContent() {
   useEffect(() => {
     if (!supplierId) {
       toast.error("No supplier ID provided");
-      // router.push("/supplier");
       return;
     }
     fetchAllData();
@@ -353,15 +352,43 @@ function ProcurementContent() {
     }
   };
 
+  // ----- FILTER HANDLERS WITH TOASTS -----
+  const confirmClearChecked = () => {
+    if (checkedIds.length > 0) {
+      return window.confirm(`Checked records will be lost, do you want to continue?`);
+    }
+    return true;
+  };
+
   const handleFilterChange = (e) => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const todayFilter = () =>
+  const resetFilterForm = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setFilters(initialFilters);
+    toast.info("Date filters reset to default.");
+  };
+
+  const clearFilters = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
+    setFilters({ startDate: "", endDate: "" });
+    toast.info("Date filters cleared.");
+  };
+
+  const loadTodayData = () => {
+    if (!confirmClearChecked()) return;
+    setCheckedIds([]);
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
-  const clearFilters = () => setFilters({ startDate: "", endDate: "" });
-  const resetFilterForm = () => setFilters(initialFilters);
+    toast.info("Loaded today's records.");
+  };
+  // ---------------------------------------
 
   const validateForm = () => {
     const newErrors = {};
@@ -500,12 +527,11 @@ function ProcurementContent() {
     setErrors({});
   };
 
-  // Improved date filtering – compare date strings only
   const filteredProcurements = useMemo(() => {
     if (!data.allProcurements.length) return [];
 
-    const start = filters.startDate; // YYYY-MM-DD string
-    const end = filters.endDate; // YYYY-MM-DD string
+    const start = filters.startDate;
+    const end = filters.endDate; 
 
     return data.allProcurements.filter((record) => {
       const recordDate = record.date.split("T")[0];
@@ -609,9 +635,7 @@ function ProcurementContent() {
       <div className={styles.error_state}>
         <h2>Supplier Not Found</h2>
         <p>
-          {
-            " The supplier you're looking for doesn't exist or has been removed."
-          }
+          {" The supplier you're looking for doesn't exist or has been removed."}
         </p>
         <div className={styles.error_actions}>
           <button
@@ -625,6 +649,10 @@ function ProcurementContent() {
       </div>
     );
   }
+
+  // Pre-calculate eligible rows for the select all checkbox
+  const eligibleTableRows = decoratedTableData.filter(r => r.paymentStatus === "Not Paid");
+  const isSelectAllChecked = eligibleTableRows.length > 0 && checkedIds.length === eligibleTableRows.length;
 
   return (
     <div className={styles.page_container}>
@@ -814,7 +842,6 @@ function ProcurementContent() {
         </form>
       </div>
 
-      {/* FILTER SECTION */}
       {data.allProcurements.length > 0 && (
         <form className={styles.filter_form}>
           <div className={styles.filter_header}>
@@ -853,18 +880,28 @@ function ProcurementContent() {
               </div>
             </div>
             <div className={styles.filter_actions}>
+              {/* FIX: type="button" prevents form submission which destroys the URL query params */}
               <button
+                type="button"
                 onClick={resetFilterForm}
                 className={`${styles.btn} ${styles.btn_reset}`}
               >
                 Reset
               </button>
               <button
+                type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_clear}`}
                 disabled={!filters.endDate}
               >
                 Clear
+              </button>
+              <button
+                type="button"
+                onClick={loadTodayData}
+                className={`${styles.btn} ${styles.btn_today}`}
+              >
+                Load Today
               </button>
             </div>
           </div>
@@ -976,23 +1013,13 @@ function ProcurementContent() {
                   <th scope="col">Total (₹)</th>
                   <th scope="col">
                     <div className={styles.select_all_wrapper}>
-                      {decoratedTableData.filter(
-                        (r) => r.paymentStatus === "Not Paid",
-                      ).length > 1 && filters !== initialFilters &&  (
+                      {eligibleTableRows.length > 0 && (
                         <input
                           type="checkbox"
                           className={styles.payment_checkbox}
                           onChange={handleSelectAll}
                           disabled={!!editingId._id}
-                          checked={
-                            decoratedTableData.filter(
-                              (r) => r.paymentStatus === "Not Paid",
-                            ).length > 0 &&
-                            checkedIds.length ===
-                              decoratedTableData.filter(
-                                (r) => r.paymentStatus === "Not Paid",
-                              ).length
-                          }
+                          checked={isSelectAllChecked}
                           title="Select All Eligible"
                         />
                       )}

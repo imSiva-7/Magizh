@@ -164,7 +164,45 @@
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
 }
+/* new one */
 
+/* Date filter section – responsive layout */
+.date_input_group {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.date_field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date_field label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.date_input {
+  width: 90%;
+
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* On phones: stack vertically */
+@media (max-width: 768px) {
+  .date_input_group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
 .date_input {
   padding: 0.5rem 0.75rem;
   border: 2px solid #e2e8f0;
@@ -557,6 +595,23 @@
   border: 1px solid #e2e8f0;
   background: white;
   /* -webkit-overflow-scrolling: touch; */
+}
+
+.bulk_actions_banner {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  background-color: #e0f2fe;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #bae6fd;
+  transition: all 0.3s ease;
+}
+.bulk_actions_text {
+  font-weight: 600;
+  color: #0369a1;
+  flex-grow: 1;
 }
 
 .procurement_table {

@@ -14,8 +14,9 @@ export default function Header() {
     { name: "Production", path: "/productions", icon: "" },
     { name: "Production History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
-    {name: "Procurement History", path: "/supplier/procurement/history"},
-    {name: "Procurement Payments", path: "/supplier/payments"}
+    { name: "Customer", path: "/customer", icon: "" },
+    { name: "Procurement History", path: "/supplier/procurement/history" },
+    { name: "Procurement Payments", path: "/supplier/payments" },
   ];
 
   const isActive = (path) => {
@@ -29,8 +30,6 @@ export default function Header() {
     router.push(path);
     setMobileMenuOpen(false);
   };
-
-  
 
   return (
     <header className={styles.header}>
