@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import styles from "@/css/order.module.css"; // renamed CSS module
+import styles from "@/css/order.module.css";
 import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
@@ -12,15 +12,15 @@ import {
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 
-// ========== CONSTANTS & UTILITIES ==========
-
-const PRODUCT_TYPES = [
-  { value: "", label: "Select Product" },
-  { value: "Soft Paneer", label: "Soft Paneer" },
-  { value: "Premium Paneer", label: "Premium Paneer" },
-  { value: "Cream", label: "Cream" },
-  { value: "Ghee", label: "Ghee" },
-  { value: "Curd", label: "Curd" },
+// List of products with their price field in customer data
+const productFields = [
+  { name: "Milk", priceKey: "milkPrice" },
+  { name: "Butter", priceKey: "butterPrice" },
+  { name: "Fresh Cream", priceKey: "freshCreamPrice" },
+  { name: "Curd", priceKey: "curdPrice" },
+  { name: "Ghee", priceKey: "gheePrice" },
+  { name: "Soft Paneer", priceKey: "softPaneerPrice" },
+  { name: "Premium Paneer", priceKey: "premiumPaneerPrice" },
 ];
 
 const LoadingSpinner = () => (
@@ -37,18 +37,9 @@ const getCurrentTimePeriod = () => {
   return hour >= 12 ? "PM" : "AM";
 };
 
-// One order can have multiple items
-const initialOrderItem = {
-  product: "",
-  quantity: "",
-  ratePerUnit: "",
-  totalAmount: 0,
-};
-
 const initialOrder = {
   date: getTodayDate(),
   time: getCurrentTimePeriod(),
-  items: [{ ...initialOrderItem }],
   paymentStatus: "Not Paid",
 };
 
@@ -117,12 +108,6 @@ const SummaryStats = ({ summary, filters }) => (
     </h3>
     <div className={styles.stats_grid}>
       <StatItem label="Total Orders" value={summary.orderCount} unit="" />
-      <StatItem label="Total Items" value={summary.itemCount} unit="" />
-      <StatItem
-        label="Daily Avg (Items)"
-        value={summary.avgItemsPerDay.toFixed(1)}
-        unit="/day"
-      />
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
@@ -156,7 +141,7 @@ const sanitizeNumericInput = (value) => {
   let sanitized = value.replace(/[^\d.]/g, "");
   const parts = sanitized.split(".");
   if (parts.length > 2) {
-    sanitized = parts[0] + "." + parts.slice(1).join("");
+    sanitized = parts[0] + "." + parts.shift().join("");
   }
   if (parts[1]) {
     sanitized = parts[0] + "." + parts[1].substring(0, 2);
@@ -175,19 +160,30 @@ const getCustomerTypeClass = (customerType) => {
 };
 
 // ========== MAIN COMPONENT ==========
+
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const customerId = searchParams.get("customerId");
 
   const [loading, setLoading] = useState(true);
-  const [checkedIds, setCheckedIds] = useState([]); // for bulk actions on order items?
+  const [checkedIds, setCheckedIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ customer: null, orders: [] });
-  const [editingId, setEditingId] = useState({}); // could be order id or item id? We'll use order id for now.
+  const [editingId, setEditingId] = useState({});
   const [errors, setErrors] = useState({});
   const [orderForm, setOrderForm] = useState(initialOrder);
+  const [quantities, setQuantities] = useState({});
+
+  // Initialize quantities for all products
+  const initializeQuantities = useCallback(() => {
+    const initialQuantities = {};
+    productFields.forEach((product) => {
+      initialQuantities[product.name] = "";
+    });
+    setQuantities(initialQuantities);
+  }, []);
 
   // Fetch customer and orders
   const fetchAllData = useCallback(async () => {
@@ -211,150 +207,171 @@ function OrdersContent() {
         customer: customerData,
         orders: Array.isArray(ordersData) ? ordersData : [],
       });
+
+      initializeQuantities();
     } catch (error) {
       console.error("Load error:", error);
       toast.error(error.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [customerId]);
+  }, [customerId, initializeQuantities]);
 
   useEffect(() => {
     if (!customerId) {
       toast.error("No customer ID provided");
-      // router.push("/customer");
+      router.push("/customer");
       return;
     }
     fetchAllData();
   }, [customerId, router, fetchAllData]);
 
-  // Handle changes in order items
-  const handleItemChange = (index, field, value) => {
-    let processedValue = value;
-    if (field === "quantity" || field === "ratePerUnit") {
-      processedValue = sanitizeNumericInput(value);
-    }
-
-    setOrderForm((prev) => {
-      const updatedItems = prev.items.map((item, i) => {
-        if (i === index) {
-          const newItem = { ...item, [field]: processedValue };
-          // Recalculate total amount for this item
-          if (field === "quantity" || field === "ratePerUnit") {
-            const qty = parseFloat(newItem.quantity) || 0;
-            const rate = parseFloat(newItem.ratePerUnit) || 0;
-            newItem.totalAmount = qty * rate;
-          }
-          return newItem;
-        }
-        return item;
-      });
-      return { ...prev, items: updatedItems };
+  // When editing an order, populate quantities from order items
+  const populateQuantitiesFromOrder = (order) => {
+    const newQuantities = {};
+    productFields.forEach((product) => {
+      const item = order.items.find((i) => i.product === product.name);
+      newQuantities[product.name] = item ? item.quantity.toString() : "";
     });
+    setQuantities(newQuantities);
+  };
 
-    // Clear field-specific error if any
-    if (errors[`items.${index}.${field}`]) {
+  // Handle quantity change for a product
+  const handleQuantityChange = (productName, value) => {
+    const sanitized = sanitizeNumericInput(value);
+    setQuantities((prev) => ({ ...prev, [productName]: sanitized }));
+    if (errors[productName]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
-        delete newErrors[`items.${index}.${field}`];
+        delete newErrors[productName];
         return newErrors;
       });
     }
   };
 
-  const addProduct = () => {
-    setOrderForm((prev) => ({
-      ...prev,
-      items: [...prev.items, { ...initialOrderItem }],
-    }));
-  };
-
-  const removeProduct = (index) => {
-    if (orderForm.items.length === 1) {
-      toast.warning("At least one item is required");
-      return;
-    }
-    setOrderForm((prev) => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Overall total of the order
+  // Calculate total amount for the order
   const orderTotal = useMemo(() => {
-    return orderForm.items.reduce(
-      (sum, item) => sum + (item.totalAmount || 0),
-      0,
-    );
-  }, [orderForm.items]);
+    let total = 0;
+    productFields.forEach((product) => {
+      const price = data.customer?.[product.priceKey] || 0;
+      const quantity = parseFloat(quantities[product.name] || 0);
+      if (quantity > 0) {
+        total += price * quantity;
+      }
+    });
+    return total;
+  }, [data.customer, quantities]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "date") {
-      setOrderForm((prev) => ({ ...prev, date: value }));
-    } else if (name === "time") {
-      setOrderForm((prev) => ({ ...prev, time: value }));
+    if (name === "date" || name === "time") {
+      setOrderForm((prev) => ({ ...prev, [name]: value }));
     }
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
 
-  const handleCheck = (id) => {
-    // For bulk actions, we might want to select entire orders or individual items.
-    // We'll keep it simple: select order items by their ID (flattened items in table)
-    setCheckedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id],
-    );
-  };
+  // Filter Orders based on Date Range
+  const filteredOrders = useMemo(() => {
+    if (!data.orders.length) return [];
+    const start = filters.startDate;
+    const end = filters.endDate;
+    return data.orders.filter((order) => {
+      const recordDate = order.date.split("T")[0];
+      if (start && recordDate < start) return false;
+      if (end && recordDate > end) return false;
+      return true;
+    });
+  }, [data.orders, filters]);
 
+  // Flatten orders for export (each item as a row)
+  const flattenedTableData = useMemo(() => {
+    const rows = [];
+    filteredOrders.forEach((order) => {
+      order.items.forEach((item, idx) => {
+        rows.push({
+          _id: `${order._id}_${idx}`,
+          orderId: order._id,
+          date: new Date(order.date).toLocaleDateString("en-IN"),
+          time: order.time,
+          product: item.product,
+          quantity: item.quantity,
+          ratePerUnit: item.ratePerUnit,
+          totalAmount: item.totalAmount,
+          paymentStatus: order.paymentStatus,
+        });
+      });
+    });
+    return rows;
+  }, [filteredOrders]);
+
+  // Handle select all orders
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const eligibleIds = flattenedTableData
-        .filter((row) => row.paymentStatus === "Not Paid")
-        .map((row) => row._id);
-      setCheckedIds(eligibleIds);
+      const allIds = filteredOrders.map((order) => order._id);
+      setCheckedIds(allIds);
     } else {
       setCheckedIds([]);
     }
   };
 
+  // Handle individual order selection
+  const handleCheck = (orderId) => {
+    setCheckedIds((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  // Bulk mark selected orders as paid
   const handleBulkMarkAsPaid = async () => {
     if (checkedIds.length === 0) return;
-
-    if (!window.confirm(`Mark ${checkedIds.length} items as paid?`)) return;
+    if (!window.confirm(`Mark ${checkedIds.length} order(s) as paid?`)) return;
 
     setSubmitting(true);
     try {
-      // This endpoint should accept an array of item IDs (or order IDs) and update payment status.
       const res = await fetch("/api/customer/order/bulk-update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemIds: checkedIds, status: "Paid" }),
+        body: JSON.stringify({ orderIds: checkedIds, status: "Paid" }),
       });
 
-      const contentType = res.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const textError = await res.text();
-        console.error("HTML Error:", textError);
-        throw new Error(
-          `Server routing error (Status: ${res.status}). Restart server.`,
-        );
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Bulk update failed");
       }
-
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || "Bulk update failed");
-
-      toast.success(`Successfully marked ${checkedIds.length} items as paid`);
+      toast.success(`Successfully marked ${checkedIds.length} order(s) as paid`);
       setCheckedIds([]);
       await fetchAllData();
     } catch (error) {
       console.error("Bulk action error:", error);
-      toast.error(error.message || "Failed to process bulk payment");
+      toast.error(error.message || "Failed to update payment status");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Export data
+  const handleExport = (format) => {
+    if (!flattenedTableData.length) {
+      toast.error("No data to export");
+      return;
+    }
+    const dateRange = {
+      start: filters.startDate || "all",
+      end: filters.endDate || "all",
+    };
+    const customerName = data.customer?.customerName || "Unknown";
+    const fileName = `${customerName}_orders_${dateRange.start}_to_${dateRange.end}`;
+
+    if (format === "csv") {
+      exportToCSV(flattenedTableData, data.customer, dateRange, fileName);
+      toast.success("CSV exported successfully");
+    } else if (format === "pdf") {
+      exportToPDF(flattenedTableData, data.customer, dateRange, fileName);
+      toast.success("PDF exported successfully");
     }
   };
 
@@ -366,31 +383,25 @@ function OrdersContent() {
   const todayFilter = () =>
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
-  const resetFilterForm = () => {
-    setFilters(initialFilters);
-  };
+  const resetFilterForm = () => setFilters(initialFilters);
 
   const validateForm = () => {
     const newErrors = {};
     if (!orderForm.date) newErrors.date = "Date is required";
     if (!orderForm.time) newErrors.time = "Time period is required";
-    else if (!["AM", "PM"].includes(orderForm.time))
-      newErrors.time = "Invalid time period";
 
-    orderForm.items.forEach((item, index) => {
-      if (!item.product)
-        newErrors[`items.${index}.product`] = "Product is required";
-      const qty = parseFloat(item.quantity);
-      if (!item.quantity)
-        newErrors[`items.${index}.quantity`] = "Quantity is required";
-      else if (qty <= 0)
-        newErrors[`items.${index}.quantity`] = "Quantity must be > 0";
-      const rate = parseFloat(item.ratePerUnit);
-      if (!item.ratePerUnit)
-        newErrors[`items.${index}.ratePerUnit`] = "Rate is required";
-      else if (rate <= 0)
-        newErrors[`items.${index}.ratePerUnit`] = "Rate must be > 0";
+    let hasQuantity = false;
+    productFields.forEach((product) => {
+      const qty = parseFloat(quantities[product.name] || 0);
+      if (qty < 0) {
+        newErrors[product.name] = "Quantity must be ≥ 0";
+      } else if (qty > 0) {
+        hasQuantity = true;
+      }
     });
+    if (!hasQuantity) {
+      newErrors.general = "At least one product must have a positive quantity";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -402,6 +413,20 @@ function OrdersContent() {
       toast.error("Please fix form errors");
       return;
     }
+
+    const items = [];
+    productFields.forEach((product) => {
+      const price = data.customer[product.priceKey] || 0;
+      const quantity = parseFloat(quantities[product.name] || 0);
+      if (quantity > 0) {
+        items.push({
+          product: product.name,
+          quantity: quantity,
+          ratePerUnit: price,
+          totalAmount: price * quantity,
+        });
+      }
+    });
 
     setSubmitting(true);
     try {
@@ -416,12 +441,7 @@ function OrdersContent() {
         customerType: data.customer.customerType,
         date: orderForm.date,
         time: orderForm.time,
-        items: orderForm.items.map((item) => ({
-          product: item.product,
-          quantity: parseFloat(item.quantity),
-          ratePerUnit: parseFloat(item.ratePerUnit),
-          totalAmount: item.totalAmount,
-        })),
+        items,
         totalAmount: orderTotal,
         paymentStatus: orderForm.paymentStatus,
       };
@@ -432,8 +452,7 @@ function OrdersContent() {
         body: JSON.stringify(payload),
       });
 
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || "Submission failed");
+      if (!res.ok) throw new Error("Submission failed");
 
       toast.success(
         editingId._id
@@ -443,7 +462,6 @@ function OrdersContent() {
       await fetchAllData();
       resetForm();
     } catch (error) {
-      console.error("Submit error:", error);
       toast.error(error.message || "Failed to save order");
     } finally {
       setSubmitting(false);
@@ -451,32 +469,22 @@ function OrdersContent() {
   };
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this order? This action cannot be undone.",
-      )
-    )
-      return;
-
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
       const res = await fetch(`/api/customer/order?id=${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Delete failed");
-      }
+      if (!res.ok) throw new Error("Delete failed");
       await fetchAllData();
       toast.success("Order deleted successfully");
       if (editingId._id === id) resetForm();
     } catch (error) {
-      console.error("Delete error:", error);
-      toast.error(error.message || "Failed to delete order");
+      toast.error(error.message);
     }
   };
 
   const handleEdit = (order) => {
-    if (editingId._id && editingId._id === order._id) {
+    if (editingId._id === order._id) {
       resetForm();
       return;
     }
@@ -485,14 +493,9 @@ function OrdersContent() {
     setOrderForm({
       date: order.date.split("T")[0],
       time: order.time || "AM",
-      items: order.items.map((item) => ({
-        product: item.product,
-        quantity: item.quantity.toString(),
-        ratePerUnit: item.ratePerUnit.toString(),
-        totalAmount: item.totalAmount,
-      })),
       paymentStatus: order.paymentStatus || "Not Paid",
     });
+    populateQuantitiesFromOrder(order);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -500,130 +503,42 @@ function OrdersContent() {
     setOrderForm({ ...initialOrder, time: getCurrentTimePeriod() });
     setEditingId({});
     setErrors({});
+    initializeQuantities();
   };
 
-  // Flatten orders into rows for table (each order item becomes a row)
-  const flattenedTableData = useMemo(() => {
-    const rows = [];
-    data.orders.forEach((order) => {
-      order.items.forEach((item, idx) => {
-        rows.push({
-          _id: `${order._id}_${idx}`, // unique id for each item
-          orderId: order._id,
-          date: order.date,
-          time: order.time,
-          product: item.product,
-          quantity: item.quantity,
-          ratePerUnit: item.ratePerUnit,
-          totalAmount: item.totalAmount,
-          paymentStatus: order.paymentStatus, // payment status at order level, could be per item if needed
-        });
-      });
-    });
-    return rows;
-  }, [data.orders]);
-
-  // Apply date filters
-  const filteredRows = useMemo(() => {
-    if (!flattenedTableData.length) return [];
-    const start = filters.startDate;
-    const end = filters.endDate;
-    return flattenedTableData.filter((row) => {
-      const recordDate = row.date.split("T")[0];
-      if (start && recordDate < start) return false;
-      if (end && recordDate > end) return false;
-      return true;
-    });
-  }, [filters, flattenedTableData]);
-
-  // Summary stats
   const summary = useMemo(() => {
-    if (!filteredRows.length) {
-      return {
-        orderCount: 0,
-        itemCount: 0,
-        totalAmount: 0,
-        avgOrderValue: 0,
-        avgItemsPerDay: 0,
-      };
+    if (!filteredOrders.length) {
+      return { orderCount: 0, totalAmount: 0, avgOrderValue: 0 };
     }
-
-    const uniqueOrderIds = new Set(filteredRows.map((row) => row.orderId));
-    const orderCount = uniqueOrderIds.size;
-    const itemCount = filteredRows.length;
-    const totalAmount = filteredRows.reduce(
-      (sum, row) => sum + (row.totalAmount || 0),
+    const orderCount = filteredOrders.length;
+    const totalAmount = filteredOrders.reduce(
+      (sum, order) => sum + (order.totalAmount || 0),
       0,
     );
-
-    // Get unique dates
-    const uniqueDates = new Set(
-      filteredRows.map((row) => row.date.split("T")[0]),
-    );
-    const daysWithData = uniqueDates.size || 1;
-
     return {
       orderCount,
-      itemCount,
       totalAmount,
       avgOrderValue: orderCount ? totalAmount / orderCount : 0,
-      avgItemsPerDay: itemCount / daysWithData,
     };
-  }, [filteredRows]);
-
-  const handleExport = (format) => {
-    if (!filteredRows.length) {
-      toast.error("No data to export");
-      return;
-    }
-    const dateRange = {
-      start: filters.startDate || "all",
-      end: filters.endDate || "all",
-    };
-    const customerName = data.customer?.customerName || "Unknown";
-    const fileName = `${customerName}_orders_${dateRange.start}_to_${dateRange.end}`;
-
-    // For export, we might want to include order details. We'll use the filtered rows.
-    if (format === "csv") {
-      exportToCSV(filteredRows, data.customer, dateRange, fileName);
-      toast.success("CSV exported successfully");
-    } else if (format === "pdf") {
-      exportToPDF(filteredRows, data.customer, dateRange, fileName);
-      toast.success("PDF exported successfully");
-    }
-  };
+  }, [filteredOrders]);
 
   if (!data.customer && !loading) {
     return (
       <div className={styles.error_state}>
         <h2>Customer Not Found</h2>
-        {/* <p>The customer you're looking for doesn't exist or has been removed.</p> */}
-        <div className={styles.error_actions}>
-          <button
-            onClick={() => router.push("/customer")}
-            className={styles.primary_btn}
-            aria-label="Go back to customers"
-          >
-            Back to Customers
-          </button>
-        </div>
+        <button
+          onClick={() => router.push("/customer")}
+          className={styles.primary_btn}
+        >
+          Back to Customers
+        </button>
       </div>
     );
   }
 
   return (
     <div className={styles.page_container}>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* HEADER */}
       <div className={styles.header}>
@@ -632,7 +547,7 @@ function OrdersContent() {
         ) : (
           <div className={styles.header_title}>
             <h1>{data.customer?.customerName}</h1>
-            <div className={styles.customer_info}>
+            <div className={styles.customer_info_badges}>
               <span
                 className={getCustomerTypeClass(data.customer?.customerType)}
               >
@@ -655,13 +570,6 @@ function OrdersContent() {
         </div>
 
         <form onSubmit={handleSubmit} className={styles.order_form}>
-          {Object.keys(errors).length > 0 && (
-            <div className={styles.error_alert}>
-              <span className={styles.error_icon}>⚠️</span>
-              Please fix the errors in the form
-            </div>
-          )}
-
           <div className={styles.form_grid}>
             <InputGroup
               label="Date"
@@ -680,110 +588,50 @@ function OrdersContent() {
             />
           </div>
 
-          <h3 className={styles.items_header}>Order Items</h3>
-          {orderForm.items.map((item, index) => (
-            <div key={index} className={styles.item_row}>
-              <div className={styles.item_fields}>
-                <div className={styles.input_group} style={{ flex: 2 }}>
-                  <label>Product</label>
-                  <select
-                    value={item.product}
-                    onChange={(e) =>
-                      handleItemChange(index, "product", e.target.value)
-                    }
-                    className={`${styles.select_input} ${errors[`items.${index}.product`] ? styles.input_error : ""}`}
-                  >
-                    {PRODUCT_TYPES.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors[`items.${index}.product`] && (
-                    <span className={styles.error_text}>
-                      {errors[`items.${index}.product`]}
+          {/* Products Section */}
+          <div className={styles.products_grid}>
+            <div className={styles.product_header}>
+              <span>Product & Rate</span>
+              <span>Quantity</span>
+              <span>Total (₹)</span>
+            </div>
+            {productFields.map((product) => {
+              const price = data.customer?.[product.priceKey] || 0;
+              const quantity = quantities[product.name] || "";
+              const total = price * (parseFloat(quantity) || 0);
+              return (
+                <div key={product.name} className={styles.product_row}>
+                  <div className={styles.rate_display}>
+                    <span className={styles.product_label}>
+                      {product.name} - ₹{formatNumberWithCommas(price)}
                     </span>
-                  )}
-                </div>
-
-                <div className={styles.input_group} style={{ flex: 1 }}>
-                  <label>Quantity</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleItemChange(index, "quantity", e.target.value)
-                    }
-                    className={`${styles.input} ${errors[`items.${index}.quantity`] ? styles.input_error : ""}`}
-                  />
-                  {errors[`items.${index}.quantity`] && (
-                    <span className={styles.error_text}>
-                      {errors[`items.${index}.quantity`]}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.input_group} style={{ flex: 1 }}>
-                  <label>Rate/Unit</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={item.ratePerUnit}
-                    onChange={(e) =>
-                      handleItemChange(index, "ratePerUnit", e.target.value)
-                    }
-                    className={`${styles.input} ${errors[`items.${index}.ratePerUnit`] ? styles.input_error : ""}`}
-                  />
-                  {errors[`items.${index}.ratePerUnit`] && (
-                    <span className={styles.error_text}>
-                      {errors[`items.${index}.ratePerUnit`]}
-                    </span>
-                  )}
-                </div>
-
-                <div className={styles.input_group} style={{ flex: 1 }}>
-                  <label>Total</label>
+                  </div>
                   <input
                     type="text"
-                    value={
-                      item.totalAmount
-                        ? formatNumberWithCommas(item.totalAmount)
-                        : ""
+                    inputMode="numeric"
+                    value={quantity}
+                    onChange={(e) =>
+                      handleQuantityChange(product.name, e.target.value)
                     }
-                    readOnly
-                    className={`${styles.input} ${styles.read_only_input}`}
+                    placeholder="Enter quantity"
+                    className={styles.quantity_input}
+                    disabled={submitting}
                   />
+                  <div className={styles.total_display}>
+                    {total > 0
+                      ? `₹${formatNumberWithCommasNoDecimal(total)}`
+                      : "₹0"}
+                  </div>
                 </div>
-
-                {orderForm.items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeProduct(index)}
-                    className={styles.remove_item_btn}
-                    aria-label="Remove item"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
+              );
+            })}
+            {errors.general && (
+              <div className={styles.error_text}>{errors.general}</div>
+            )}
+            <div className={styles.order_total_row}>
+              <strong>Order Total:</strong>
+              <span>₹{formatNumberWithCommasNoDecimal(orderTotal)}</span>
             </div>
-          ))}
-
-          <div className={styles.add_item_btn_container}>
-            <button
-              type="button"
-              onClick={addProduct}
-              className={styles.secondary_btn}
-            >
-              + Add Another Product
-            </button>
-          </div>
-
-          <div className={styles.order_total}>
-            <strong>Order Total: ₹{formatNumberWithCommas(orderTotal)}</strong>
           </div>
 
           {editingId._id && (
@@ -791,9 +639,7 @@ function OrdersContent() {
               <label className={styles.edit_payment_label}>
                 Payment Status:
               </label>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-              >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input
                   type="checkbox"
                   className={styles.payment_checkbox}
@@ -804,13 +650,16 @@ function OrdersContent() {
                       paymentStatus: e.target.checked ? "Paid" : "Not Paid",
                     }))
                   }
-                  title="Toggle payment status"
                 />
-                {orderForm.paymentStatus === "Paid" ? (
-                  <span className={styles.status_paid}>Paid</span>
-                ) : (
-                  <span className={styles.status_due}>Due</span>
-                )}
+                <span
+                  className={
+                    orderForm.paymentStatus === "Paid"
+                      ? styles.status_paid
+                      : styles.status_due
+                  }
+                >
+                  {orderForm.paymentStatus === "Paid" ? "Paid" : "Due"}
+                </span>
               </div>
             </div>
           )}
@@ -821,102 +670,89 @@ function OrdersContent() {
               disabled={submitting}
               className={styles.primary_btn}
             >
-              {submitting ? (
-                <>
-                  <span className={styles.button_spinner}></span>
-                  {editingId._id ? "Updating..." : "Creating..."}
-                </>
-              ) : editingId._id ? (
-                "Update Order"
-              ) : (
-                "Create Order"
-              )}
+              {submitting
+                ? "Processing..."
+                : editingId._id
+                  ? "Update Order"
+                  : "Create Order"}
             </button>
+            {editingId._id && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.secondary_btn}
+              >
+                Cancel Edit
+              </button>
+            )}
           </div>
         </form>
       </div>
 
+      {/* FILTER SECTION */}
       {data.orders.length > 0 && (
-        <form className={styles.filter_form}>
-          <div className={styles.filter_header}>
-            <h2>Filter by Date Range</h2>
-          </div>
+        <div className={styles.filter_section}>
           <div className={styles.filter_row}>
-            <div className={styles.date_filter_section}>
-              <div className={styles.date_input_group}>
-                <div className={styles.date_field}>
-                  <label htmlFor="startDate">From Date</label>
-                  <input
-                    id="startDate"
-                    type="date"
-                    name="startDate"
-                    value={filters.startDate}
-                    onChange={handleFilterChange}
-                    className={styles.filter_input}
-                    max={filters.endDate || getTodayDate()}
-                    aria-label="Select start date"
-                  />
-                </div>
-                <div className={styles.date_field}>
-                  <label htmlFor="endDate">To Date</label>
-                  <input
-                    id="endDate"
-                    type="date"
-                    name="endDate"
-                    value={filters.endDate}
-                    onChange={handleFilterChange}
-                    className={styles.filter_input}
-                    max={getTodayDate()}
-                    min={filters.startDate}
-                    aria-label="Select end date"
-                  />
-                </div>
+            <div className={styles.date_input_group}>
+              <div className={styles.date_field}>
+                <label>From Date</label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={filters.startDate}
+                  onChange={handleFilterChange}
+                  className={styles.filter_input}
+                />
+              </div>
+              <div className={styles.date_field}>
+                <label>To Date</label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={filters.endDate}
+                  onChange={handleFilterChange}
+                  className={styles.filter_input}
+                />
               </div>
             </div>
             <div className={styles.filter_actions}>
               <button
+                type="button"
                 onClick={resetFilterForm}
-                className={`${styles.btn} ${styles.btn_reset}`}
+                className={styles.btn_secondary}
               >
                 Reset
               </button>
               <button
-                onClick={clearFilters}
-                className={`${styles.btn} ${styles.btn_clear}`}
-                disabled={!filters.endDate}
+                type="button"
+                onClick={todayFilter}
+                className={styles.btn_primary}
               >
-                Clear
+                Today
               </button>
             </div>
           </div>
-        </form>
+        </div>
       )}
 
-      {/* SUMMARY SECTION */}
-      {summary.itemCount > 0 && (
-        <SummaryStats summary={summary} filters={filters} />
-      )}
-
-      {/* EXPORT SECTION */}
-      {/* {summary.itemCount > 0 && (
+      {/* EXPORT BUTTONS */}
+      {/* {filteredOrders.length > 0 && (
         <div className={styles.export_section}>
-          <span className={styles.entry_count}>
-            {summary.itemCount} item{summary.itemCount !== 1 ? "s" : ""} found
-          </span>
+          <div className={styles.entry_count}>
+            {filteredOrders.length} order(s) found
+          </div>
           <div className={styles.export_buttons}>
             <button
               onClick={() => handleExport("csv")}
               className={styles.export_btn}
-              disabled={!filteredRows.length}
-              aria-label="Export data as CSV"
+              disabled={!filteredOrders.length}
             >
               Export as CSV
             </button>
             <button
               onClick={() => handleExport("pdf")}
               className={styles.export_btn}
-              disabled={!filteredRows.length}
-              aria-label="Export data as PDF"
+              disabled={!filteredOrders.length}
             >
               Export as PDF
             </button>
@@ -924,11 +760,16 @@ function OrdersContent() {
         </div>
       )} */}
 
+      {/* SUMMARY SECTION */}
+      {summary.orderCount > 0 && (
+        <SummaryStats summary={summary} filters={filters} />
+      )}
+
       {/* BULK ACTIONS BANNER */}
       {checkedIds.length > 0 && (
         <div className={styles.bulk_actions_banner}>
           <span className={styles.bulk_actions_text}>
-            {checkedIds.length} item(s) selected
+            {checkedIds.length} order(s) selected
           </span>
           <button
             onClick={handleBulkMarkAsPaid}
@@ -947,183 +788,123 @@ function OrdersContent() {
         </div>
       )}
 
-      {/* TABLE SECTION */}
+      {/* ORDERS LIST */}
       <div className={styles.table_wrapper}>
         {loading ? (
           <LoadingSpinner />
-        ) : summary.itemCount === 0 ? (
+        ) : filteredOrders.length === 0 ? (
           <div className={styles.empty_state}>
-            {!data.customer ? (
-              <>
-                <span className={styles.empty_icon}>⚠️</span>
-                <h3>Customer not found</h3>
-                <button
-                  onClick={() => router.push("/customer")}
-                  className={styles.secondary_btn}
-                >
-                  Back to Customers
-                </button>
-              </>
-            ) : data.orders.length === 0 ? (
-              <>
-                <span className={styles.empty_icon}>📦</span>
-                <p>No orders yet, start by creating the first order</p>
-              </>
-            ) : (
-              <>
-                <span className={styles.empty_icon}>📊</span>
-                <p>No orders found for the selected date range</p>
-                <button
-                  onClick={clearFilters}
-                  className={styles.clear_filter_link}
-                >
-                  clear filters to see all {data.orders.length} orders
-                </button>
-              </>
-            )}
+            <p>No orders found for the selected criteria.</p>
           </div>
         ) : (
-          <div className={styles.table_container}>
-            <table className={styles.table} aria-label="Order history">
-              <thead>
-                <tr>
-                  <th scope="col">Date</th>
-                  <th scope="col">Time</th>
-                  <th scope="col">Product</th>
-                  <th scope="col">Qty</th>
-                  <th scope="col">Rate/Unit</th>
-                  <th scope="col">Total (₹)</th>
-                  <th scope="col">
-                    <div className={styles.select_all_wrapper}>
-                      {/* {filteredRows.filter((r) => r.paymentStatus === "Not Paid").length > 1 && (
-                        <input
-                          type="checkbox"
-                          className={styles.payment_checkbox}
-                          onChange={handleSelectAll}
-                          disabled={!!editingId._id}
-                          checked={
-                            filteredRows.filter((r) => r.paymentStatus === "Not Paid").length > 0 &&
-                            checkedIds.length ===
-                              filteredRows.filter((r) => r.paymentStatus === "Not Paid").length
-                          }
-                          title="Select All Eligible"
-                        />
-                      )} */}
-                      Status
+          <>
+            {/* Select All Checkbox */}
+            <div className={styles.select_all_container}>
+              <label className={styles.select_all_label}>
+                <input
+                  type="checkbox"
+                  checked={
+                    filteredOrders.length > 0 &&
+                    checkedIds.length === filteredOrders.length
+                  }
+                  onChange={handleSelectAll}
+                  disabled={submitting}
+                />
+                <span>Select All</span>
+              </label>
+            </div>
+            <div className={styles.orders_grid}>
+              {filteredOrders.map((order) => (
+                <div
+                  key={order._id}
+                  className={`${styles.order_card} ${
+                    editingId._id === order._id ? styles.active_card : ""
+                  }`}
+                >
+                  <div className={styles.card_header}>
+                    <div className={styles.card_checkbox}>
+                      <input
+                        type="checkbox"
+                        checked={checkedIds.includes(order._id)}
+                        onChange={() => handleCheck(order._id)}
+                        disabled={submitting || editingId._id === order._id}
+                      />
                     </div>
-                  </th>
-                  <th scope="col">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.orders.map((row) => (
-                  <tr
-                    key={row._id}
-                    className={
-                      editingId._id === row.orderId ? styles.active_row : ""
-                    }
-                  >
-                    <td className={styles.date_cell}>
-                      {new Date(row.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className={styles.time_cell}>
+                    <div className={styles.card_title_group}>
+                      <h3 className={styles.card_date}>
+                        {new Date(order.date).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                        <span className={styles.time_badge}>{order.time}</span>
+                      </h3>
                       <span
                         className={
-                          row.time === "AM" ? styles.am_badge : styles.pm_badge
+                          order.paymentStatus === "Paid"
+                            ? styles.status_paid
+                            : styles.status_due
                         }
                       >
-                        {row.time || "AM"}
+                        {order.paymentStatus}
                       </span>
-                    </td>
-                    {row.items.map((prod) => (
-                      <div key={prod.product}>
-                        <td className={styles.product_cell}>{prod.product}</td>
-                        <td className={styles.quantity_cell}>
-                          {parseFloat(prod.quantity).toFixed(2)}
-                        </td>
-                        <td className={styles.rate_cell}>
-                          ₹{parseFloat(prod.ratePerUnit).toFixed(2)}
-                        </td>
-                        <td className={styles.total_cell}>
-                          ₹{formatNumberWithCommasNoDecimal(prod.totalAmount)}
-                        </td>
+                    </div>
+                  </div>
+
+                  <div className={styles.items_list}>
+                    <div className={styles.items_header}>
+                      <span>Product</span>
+                      <span className={styles.text_right}>Qty</span>
+                      <span className={styles.text_right}>Total</span>
+                    </div>
+                    {order.items.map((item, idx) => (
+                      <div key={idx} className={styles.item_row}>
+                        <span className={styles.product_name}>
+                          {item.product}
+                        </span>
+                        <span className={styles.item_qty}>{item.quantity}</span>
+                        <span className={styles.item_total}>
+                          ₹{formatNumberWithCommasNoDecimal(item.totalAmount)}
+                        </span>
                       </div>
                     ))}
+                    <div className={styles.card_total_row}>
+                      <span>Total</span>
+                      <span className={styles.card_total_amount}>
+                        ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
+                      </span>
+                    </div>
+                  </div>
 
-                    <td className={styles.payment_cell}>
-                      {row.paymentStatus === "Not Paid" ? (
-                        <div className={styles.unpaid_wrapper}>
-                          <input
-                            type="checkbox"
-                            className={styles.payment_checkbox}
-                            value={row._id}
-                            disabled={!!editingId._id}
-                            checked={checkedIds.includes(row._id)}
-                            onChange={() => handleCheck(row._id)}
-                            title="Select to pay"
-                          />
-                          <span className={styles.status_due}>Due</span>
-                        </div>
-                      ) : row.paymentStatus === "Paid" ? (
-                        <span className={styles.status_paid}>Paid</span>
-                      ) : (
-                        <span className={styles.status_na}>N/A</span>
-                      )}
-                    </td>
-                    <td className={styles.actions_cell}>
-                      <div className={styles.action_buttons}>
-                        <button
-                          onClick={() => {
-                            // Find full order to edit
-                            const fullOrder = data.orders.find(
-                              (o) => o._id === row.orderId,
-                            );
-                            if (fullOrder) handleEdit(fullOrder);
-                          }}
-                          className={styles.edit_btn}
-                          disabled={submitting}
-                          title="Edit order"
-                        >
-                          {editingId._id === row.orderId ? "Cancel" : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(row._id)}
-                          className={styles.delete_btn}
-                          disabled={submitting}
-                          title="Delete order"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  <div className={styles.card_actions}>
+                    <button
+                      onClick={() => handleEdit(order)}
+                      className={styles.edit_btn}
+                      disabled={submitting}
+                    >
+                      {editingId._id === order._id ? "Editing..." : "Edit"}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(order._id)}
+                      className={styles.delete_btn}
+                      disabled={submitting}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
 
-// ========== EXPORT WITH SUSPENSE ==========
 export default function OrdersPage() {
   return (
-    <Suspense
-      fallback={
-        <div className={styles.page_container}>
-          <div className={styles.loading_container}>
-            <div className={styles.spinner}></div>
-            <span className={styles.loading_text}>Loading orders page...</span>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingSpinner />}>
       <OrdersContent />
     </Suspense>
   );

@@ -14,7 +14,7 @@ export default function Header() {
     { name: "Production", path: "/productions", icon: "" },
     { name: "Production History", path: "/productions/history", icon: "" },
     { name: "Suppliers", path: "/supplier", icon: "" },
-    { name: "Customer", path: "/customer", icon: "" },
+    { name: "Customers", path: "/customer", icon: "" },
     { name: "Procurement History", path: "/supplier/procurement/history" },
     { name: "Procurement Payments", path: "/supplier/payments" },
   ];

@@ -9,14 +9,23 @@ import styles from "@/css/customer.module.css";
 // --- Constants ---
 const CUSTOMER_TYPES = [
   { value: "", label: "Select Type" },
-  { value: "Regular", label: "Regular" },
-  { value: "Wholesale", label: "Wholesale" },
   { value: "Retail", label: "Retail" },
-  { value: "Other", label: "Other" },
+  { value: "Wholesale", label: "Wholesale" },
+  { value: "Distributor", label: "Distributor" },
+  { value: "Restaurant", label: "Restaurant" },
 ];
 
-// GST regex: 2 digits, 5 letters, 4 digits, 1 letter, 1 digit, 1 letter, 1 digit
 const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+const PRICE_RANGES = {
+  milkPrice: { min: 35, max: 50, label: "Milk" },
+  butterPrice: { required: true, label: "Butter" },
+  freshCreamPrice: { min: 300, max: 400, label: "Fresh Cream" },
+  curdPrice: { min: 60, max: 100, label: "Curd" },
+  gheePrice: { min: 400, max: 1000, label: "Ghee" },
+  softPaneerPrice: { min: 300, max: 500, label: "Soft Paneer" },
+  premiumPaneerPrice: { min: 300, max: 500, label: "Premium Paneer" },
+};
 
 // --- Sub-Components ---
 const FormInput = memo(
@@ -68,12 +77,20 @@ export default function Customer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
   const [searchDebounced, setSearchDebounced] = useState("");
+  const [openActionMenuId, setOpenActionMenuId] = useState(null); // NEW
 
   const initialFormState = useMemo(
     () => ({
       customerId: null,
       customerName: "",
       customerType: "",
+      milkPrice: "",
+      butterPrice: "",
+      freshCreamPrice: "",
+      curdPrice: "",
+      gheePrice: "",
+      softPaneerPrice: "",
+      premiumPaneerPrice: "",
       customerNumber: "",
       customerGST: "",
       customerAddress: "",
@@ -85,6 +102,20 @@ export default function Customer() {
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+
+  // Close action menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openActionMenuId &&
+        !event.target.closest(`.${styles.actionMenuWrapper}`)
+      ) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openActionMenuId]);
 
   // Debounce search
   useEffect(() => {
@@ -123,14 +154,14 @@ export default function Customer() {
         }
         return "";
 
-      case "customerGST":
-        if (value && value.trim()) {
-          const gst = value.trim().toUpperCase();
-          if (!GST_REGEX.test(gst)) {
-            return "Invalid GST format (e.g., 22AAAAA0000A1Z5)";
-          }
-        }
-        return "";
+      // case "customerGST":
+      //   if (value && value.trim()) {
+      //     const gst = value.trim().toUpperCase();
+      //     if (!GST_REGEX.test(gst)) {
+      //       return "Invalid GST format (e.g., 22AAAAA0000A1Z5)";
+      //     }
+      //   }
+      //   return "";
 
       case "customerAddress":
         if (value?.trim()) {
@@ -140,12 +171,41 @@ export default function Customer() {
         }
         return "";
 
+      case "milkPrice":
+      case "butterPrice":
+      case "freshCreamPrice":
+      case "curdPrice":
+      case "gheePrice":
+      case "softPaneerPrice":
+      case "premiumPaneerPrice": {
+        const rules = PRICE_RANGES[field];
+        if (!rules) return "";
+
+        if (!value || value.toString().trim() === "") {
+          return `${rules.label} price is required`;
+        }
+
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          return `${rules.label} price must be a valid number`;
+        }
+        if (numValue < 0) {
+          return `${rules.label} price cannot be negative`;
+        }
+
+        if (rules.min !== undefined && rules.max !== undefined) {
+          if (numValue < rules.min || numValue > rules.max) {
+            return `${rules.label} price must be between ₹${rules.min} and ₹${rules.max}`;
+          }
+        }
+        return "";
+      }
+
       default:
         return "";
     }
   }, []);
 
-  // Form Validation
   const validateFullForm = useCallback(() => {
     const errors = {};
     const fieldsToValidate = [
@@ -154,6 +214,13 @@ export default function Customer() {
       "customerNumber",
       "customerGST",
       "customerAddress",
+      "milkPrice",
+      "butterPrice",
+      "freshCreamPrice",
+      "curdPrice",
+      "gheePrice",
+      "softPaneerPrice",
+      "premiumPaneerPrice",
     ];
     fieldsToValidate.forEach((field) => {
       const error = validateField(field, formData[field]);
@@ -162,7 +229,6 @@ export default function Customer() {
     return errors;
   }, [formData, validateField]);
 
-  // Search/Filter Logic (include GST in search)
   const filteredEntries = useMemo(() => {
     if (!searchDebounced.trim()) return entries;
     const searchTerm = searchDebounced.toLowerCase().trim();
@@ -182,7 +248,6 @@ export default function Customer() {
     });
   }, [entries, searchDebounced]);
 
-  // API Fetch
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -215,7 +280,6 @@ export default function Customer() {
         processedValue = value.replace(/\D/g, "").substring(0, 10);
       }
       if (field === "customerGST") {
-        // Convert to uppercase for consistency
         processedValue = value.toUpperCase();
       }
 
@@ -247,6 +311,13 @@ export default function Customer() {
     const payload = {
       customerName: formData.customerName.trim(),
       customerType: formData.customerType.trim(),
+      milkPrice: formData.milkPrice,
+      butterPrice: formData.butterPrice,
+      freshCreamPrice: formData.freshCreamPrice,
+      curdPrice: formData.curdPrice,
+      gheePrice: formData.gheePrice,
+      softPaneerPrice: formData.softPaneerPrice,
+      premiumPaneerPrice: formData.premiumPaneerPrice,
       customerNumber: formData.customerNumber.trim(),
       customerGST: formData.customerGST.trim() || "",
       customerAddress: formData.customerAddress.trim(),
@@ -308,10 +379,19 @@ export default function Customer() {
 
       setCreateCustomer(true);
       setIsEditing(true);
+      setOpenActionMenuId(null); // close any open menu
+
       setFormData({
         customerId: customer._id,
         customerName: customer.customerName || "",
         customerType: customer.customerType || "",
+        milkPrice: customer.milkPrice || "",
+        butterPrice: customer.butterPrice || "",
+        freshCreamPrice: customer.freshCreamPrice || "",
+        curdPrice: customer.curdPrice || "",
+        gheePrice: customer.gheePrice || "",
+        softPaneerPrice: customer.softPaneerPrice || "",
+        premiumPaneerPrice: customer.premiumPaneerPrice || "",
         customerNumber: customer.customerNumber || "",
         customerGST: customer.customerGST || "",
         customerAddress: customer.customerAddress || "",
@@ -339,6 +419,7 @@ export default function Customer() {
     }
 
     setDeleteLoading(id);
+    setOpenActionMenuId(null); // close any open menu
 
     try {
       const res = await fetch(`/api/customer?id=${id}`, { method: "DELETE" });
@@ -470,6 +551,106 @@ export default function Customer() {
             />
 
             <FormInput
+              id="milkPrice"
+              label="Milk Price"
+              type="number"
+              value={formData.milkPrice}
+              onChange={(value) => handleInputChange("milkPrice", value)}
+              placeholder="e.g. 45"
+              error={formErrors.milkPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="butterPrice"
+              label="Butter Price"
+              type="number"
+              value={formData.butterPrice}
+              onChange={(value) => handleInputChange("butterPrice", value)}
+              placeholder="e.g. 500"
+              error={formErrors.butterPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="freshCreamPrice"
+              label="Fresh Cream Price"
+              type="number"
+              value={formData.freshCreamPrice}
+              onChange={(value) => handleInputChange("freshCreamPrice", value)}
+              placeholder="e.g. 200"
+              error={formErrors.freshCreamPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="curdPrice"
+              label="Curd Price"
+              type="number"
+              value={formData.curdPrice}
+              onChange={(value) => handleInputChange("curdPrice", value)}
+              placeholder="e.g. 60"
+              error={formErrors.curdPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="gheePrice"
+              label="Ghee Price"
+              type="number"
+              value={formData.gheePrice}
+              onChange={(value) => handleInputChange("gheePrice", value)}
+              placeholder="e.g. 600"
+              error={formErrors.gheePrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="softPaneerPrice"
+              label="Soft Paneer Price"
+              type="number"
+              value={formData.softPaneerPrice}
+              onChange={(value) => handleInputChange("softPaneerPrice", value)}
+              placeholder="e.g. 300"
+              error={formErrors.softPaneerPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
+              id="premiumPaneerPrice"
+              label="Premium Paneer Price"
+              type="number"
+              value={formData.premiumPaneerPrice}
+              onChange={(value) =>
+                handleInputChange("premiumPaneerPrice", value)
+              }
+              placeholder="e.g. 400"
+              error={formErrors.premiumPaneerPrice}
+              disabled={isSubmitting}
+              inputMode="numeric"
+              min="0"
+              required
+            />
+
+            <FormInput
               id="f-gst"
               label="GST Number (Optional)"
               type="text"
@@ -572,6 +753,13 @@ export default function Customer() {
               <tr>
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
+                <th scope="col">Milk</th>
+                <th scope="col">Butter</th>
+                <th scope="col">Cream</th>
+                <th scope="col">Curd</th>
+                <th scope="col">Ghee</th>
+                <th scope="col">S. Paneer</th>
+                <th scope="col">P. Paneer</th>
                 <th scope="col">Phone</th>
                 <th scope="col">GST</th>
                 <th scope="col">Actions</th>
@@ -580,7 +768,7 @@ export default function Customer() {
             <tbody>
               {loading && entries.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className={styles.loadingCell}>
+                  <td colSpan="12" className={styles.loadingCell}>
                     <div className={styles.loadingContent}>
                       <div className={styles.tableSpinner}></div>
                       <span>Loading customers...</span>
@@ -589,7 +777,7 @@ export default function Customer() {
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className={styles.noDataCell}>
+                  <td colSpan="12" className={styles.noDataCell}>
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
@@ -616,14 +804,12 @@ export default function Customer() {
                 filteredEntries.map((item) => (
                   <tr key={item._id} className={styles.tableRow}>
                     <td className={styles.nameCell}>
-                      {/* <Link
+                      <Link
                         href={`/customer/order?customerId=${item._id}`}
                         className={styles.customerName}
                       >
-                        {item.customerName || "-"}
-                      </Link> */}
-
-                      {item.customerName}
+                        {item.customerName}
+                      </Link>
                     </td>
                     <td className={styles.typeCell}>
                       <span
@@ -636,46 +822,99 @@ export default function Customer() {
                         {item.customerType || "-"}
                       </span>
                     </td>
-                    <td className={styles.phoneCell}>
-                      {item.customerNumber || "-"}
+                    <td className={styles.priceCell}>
+                      {item.milkPrice ? `₹${item.milkPrice}` : "-"}
                     </td>
-                    <td className={styles.gstCell}>
-                      {item.customerGST || "-"}
+                    <td className={styles.priceCell}>
+                      {item.butterPrice ? `₹${item.butterPrice}` : "-"}
+                    </td>
+                    <td className={styles.priceCell}>
+                      {item.freshCreamPrice ? `₹${item.freshCreamPrice}` : "-"}
+                    </td>
+                    <td className={styles.priceCell}>
+                      {item.curdPrice ? `₹${item.curdPrice}` : "-"}
+                    </td>
+                    <td className={styles.priceCell}>
+                      {item.gheePrice ? `₹${item.gheePrice}` : "-"}
+                    </td>
+                    <td className={styles.priceCell}>
+                      {item.softPaneerPrice ? `₹${item.softPaneerPrice}` : "-"}
+                    </td>
+                    <td className={styles.priceCell}>
+                      {item.premiumPaneerPrice
+                        ? `₹${item.premiumPaneerPrice}`
+                        : "-"}
+                    </td>
+                    <td
+                      className={styles.phoneCell}
+                      title={item.customerNumber || "-"}
+                    >
+                      {item.customerNumber ? (
+                        <span
+                          className={styles.phone}
+                          data-number={item.customerNumber}
+                        >
+                          i
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td
+                      className={styles.gstCell}
+                      title={item.customerGST || "-"}
+                    >
+                      {item.customerGST ? (
+                        <span
+                          className={styles.gst}
+                          data-number={item.customerGST}
+                        >
+                          i
+                        </span>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className={styles.actionsCell}>
-                      <div className={styles.actionButtons}>
+                      <div className={styles.actionMenuWrapper}>
                         <button
-                          onClick={() => handleEdit(item)}
-                          className={`${styles.editButton} ${
-                            isEditing && formData.customerId === item._id
-                              ? styles.editingActive
-                              : ""
-                          }`}
-                          disabled={loading || deleteLoading === item._id}
-                          title={
-                            isEditing && formData.customerId === item._id
-                              ? "Cancel"
-                              : "Edit"
+                          className={styles.actionMenuButton}
+                          onClick={() =>
+                            setOpenActionMenuId(
+                              openActionMenuId === item._id ? null : item._id,
+                            )
                           }
-                        >
-                          {isEditing && formData.customerId === item._id
-                            ? "Cancel"
-                            : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item._id)}
-                          className={styles.deleteButton}
                           disabled={
-                            deleteLoading === item._id || loading || isEditing
+                            loading || deleteLoading === item._id || isEditing
                           }
-                          title={isEditing ? "Delete disabled" : " Delete"}
+                          title="Actions"
                         >
-                          {deleteLoading === item._id ? (
-                            <span className={styles.deleteSpinner}></span>
-                          ) : (
-                            "Delete"
-                          )}
+                          ⋮
                         </button>
+                        {openActionMenuId === item._id && (
+                          <div className={styles.actionMenuPopup}>
+                            <button
+                              onClick={() => {
+                                handleEdit(item);
+                                setOpenActionMenuId(null);
+                              }}
+                              className={styles.actionEditButton}
+                              disabled={loading || deleteLoading === item._id}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDelete(item._id);
+                                setOpenActionMenuId(null);
+                              }}
+                              className={styles.actionDeleteButton}
+                              disabled={loading || deleteLoading === item._id}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

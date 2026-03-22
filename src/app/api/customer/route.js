@@ -19,6 +19,13 @@ const getDatabase = async () => {
   }
 };
 
+// Helper: parse price field to number or null
+const parsePrice = (value) => {
+  if (value === undefined || value === null || value === "") return null;
+  const num = parseFloat(value);
+  return isNaN(num) ? null : num;
+};
+
 // GET all customers OR single customer by ID
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
@@ -29,14 +36,12 @@ export async function GET(request) {
     const search = searchParams.get("search");
 
     const db = await getDatabase();
-    console.log("Received customerId:");
 
     // CASE 1: Get single customer by ID
     if (customerId) {
       if (!ObjectId.isValid(customerId)) {
         return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
       }
-      // In app/api/customer/route.js
 
       const customer = await db
         .collection("customers")
@@ -95,13 +100,21 @@ export async function POST(request) {
       }
     }
 
-    // 2. Insert Data
+    // 2. Insert Data (including price fields)
     const customerData = {
       customerName: data.customerName.trim(),
       customerType: data.customerType?.trim() || "",
       customerNumber: data.customerNumber?.trim() || "",
       customerGST: data.customerGST?.trim() || "",
       customerAddress: data.customerAddress?.trim() || "",
+      // Price fields
+      milkPrice: parsePrice(data.milkPrice),
+      butterPrice: parsePrice(data.butterPrice),
+      freshCreamPrice: parsePrice(data.freshCreamPrice),
+      curdPrice: parsePrice(data.curdPrice),
+      gheePrice: parsePrice(data.gheePrice),
+      softPaneerPrice: parsePrice(data.softPaneerPrice),
+      premiumPaneerPrice: parsePrice(data.premiumPaneerPrice),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -155,7 +168,7 @@ export async function PUT(request) {
       }
     }
 
-    // 2. Prepare update data
+    // 2. Prepare update data (including price fields)
     const updateData = { updatedAt: new Date() };
     if (data.customerName !== undefined)
       updateData.customerName = data.customerName.trim();
@@ -167,6 +180,21 @@ export async function PUT(request) {
       updateData.customerGST = data.customerGST.trim();
     if (data.customerAddress !== undefined)
       updateData.customerAddress = data.customerAddress.trim();
+    // Price fields
+    if (data.milkPrice !== undefined)
+      updateData.milkPrice = parsePrice(data.milkPrice);
+    if (data.butterPrice !== undefined)
+      updateData.butterPrice = parsePrice(data.butterPrice);
+    if (data.freshCreamPrice !== undefined)
+      updateData.freshCreamPrice = parsePrice(data.freshCreamPrice);
+    if (data.curdPrice !== undefined)
+      updateData.curdPrice = parsePrice(data.curdPrice);
+    if (data.gheePrice !== undefined)
+      updateData.gheePrice = parsePrice(data.gheePrice);
+    if (data.softPaneerPrice !== undefined)
+      updateData.softPaneerPrice = parsePrice(data.softPaneerPrice);
+    if (data.premiumPaneerPrice !== undefined)
+      updateData.premiumPaneerPrice = parsePrice(data.premiumPaneerPrice);
 
     const result = await db
       .collection("customers")
@@ -199,7 +227,7 @@ export async function DELETE(request) {
 
     const db = await getDatabase();
 
-    // 1. ORDERS DEPENDENCY CHECK (changed from procurements)
+    // 1. ORDERS DEPENDENCY CHECK
     const orderCount = await db
       .collection("orders")
       .countDocuments({ customerId: new ObjectId(id) });

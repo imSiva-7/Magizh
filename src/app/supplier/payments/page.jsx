@@ -75,12 +75,12 @@ export default function Payments() {
   // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
-  const [statusFilter, setStatusFilter] = useState(""); // "Paid", "Not Paid", or ""
+  const [statusFilter, setStatusFilter] = useState(""); 
 
   const [isLoading, setIsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // 1. Fetch Suppliers
+
   useEffect(() => {
     async function fetchSuppliers() {
       try {
@@ -97,7 +97,6 @@ export default function Payments() {
     fetchSuppliers();
   }, []);
 
-  // 2. Fetch Procurements
   const fetchSupplierProcurements = useCallback(
     async (signal) => {
       setIsLoading(true);
@@ -131,13 +130,13 @@ export default function Payments() {
     [filters],
   );
 
+  
   useEffect(() => {
     const controller = new AbortController();
     fetchSupplierProcurements(controller.signal);
     return () => controller.abort();
   }, [fetchSupplierProcurements]);
 
-  // 3. Bulk Payment Handler
   const handleBulkMarkAsPaid = async () => {
     if (checkedIds.length === 0) return;
 
@@ -166,7 +165,6 @@ export default function Payments() {
     }
   };
 
-  // 4. Checkbox Handlers
   const handleCheck = (id, supplierId) => {
     if (!checkedSupplierId) {
       setCheckedSupplierId(supplierId);

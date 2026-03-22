@@ -334,6 +334,7 @@
 
 .customerTable {
   width: 100%;
+  text-align: center;
   border-collapse: collapse;
 }
 
@@ -355,6 +356,7 @@
 }
 
 .customerTable td {
+  text-align: center;
   padding: 1rem;
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
@@ -370,8 +372,9 @@
 }
 
 .nameCell {
+  text-align: left !important ;
   font-weight: 500;
-  min-width: 170px;
+  min-width: 100px;
 }
 
 .customerName {
@@ -391,16 +394,15 @@
 }
 
 .typeCell {
-  min-width: 100px;
   text-align: center;
 }
 
 .typeBadge {
-  min-width: 90px;
+  min-width: 70px;
   display: inline-block;
-  padding: 0.5rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.575rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -430,72 +432,187 @@
   border: 1px solid #d8b4fe;
 }
 
-.phoneCell {
-  text-align: center;
+.priceCell {
+  text-align: right;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.actionsCell {
-  min-width: 180px;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.editButton,
-.deleteButton {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
+.phone {
+  display: inline-block;
+  background-color: #d2eaf5;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
   font-weight: 500;
+  color: rgb(39, 121, 93);
   cursor: pointer;
-  transition: all 0.2s ease;
+  font-size: 14px;
+  font-style: normal;
 }
 
-.editButton {
-  background-color: #dbeafe;
-  color: #1e40af;
+.phoneCell {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
 }
 
-.editButton:hover:not(:disabled) {
-  background-color: #bfdbfe;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Tooltip appears on hover of the .phone span */
+.phone:hover::after {
+  content: attr(data-number);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.editingActive {
-  background-color: #fef3c7;
-  color: #92400e;
+/* Arrow */
+.phone:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+  margin-bottom: 0.25rem;
+  z-index: 10;
+}
+.gst {
+  display: inline-block;
+  background-color: #d2eaf5;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  font-weight: 500;
+  color: rgb(39, 121, 93);
+  cursor: pointer;
+  font-size: 14px;
+  font-style: normal;
 }
 
-.deleteButton {
-  background-color: #fee2e2;
-  color: #dc2626;
+.gstCell {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
 }
 
-.deleteButton:hover:not(:disabled) {
-  background-color: #fecaca;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Tooltip appears on hover of the .gst span */
+.gst:hover::after {
+  content: attr(data-number);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.editButton:disabled,
-.deleteButton:disabled {
+/* Arrow */
+.gst:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+  margin-bottom: 0.25rem;
+  z-index: 10;
+}
+
+.actionsCell {
+  position: absolute;
+  /* width: 60px; */
+  text-align: center;
+}
+
+.actionMenuWrapper {
+  position: absolute;
+  display: inline-block;
+}
+
+.actionMenuButton {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.actionMenuButton:hover:not(:disabled) {
+  color: #333;
+}
+
+.actionMenuButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.deleteSpinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(220, 38, 38, 0.3);
-  border-top-color: #dc2626;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.actionMenuPopup {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  z-index: 1000;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  /* overflow: hidden; */
+}
+
+.actionEditButton,
+.actionDeleteButton {
+  padding: 8px 12px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.actionEditButton:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.actionDeleteButton:hover:not(:disabled) {
+  background: #fee;
+  color: #d32f2f;
+}
+
+.actionEditButton:disabled,
+.actionDeleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .loadingCell {
@@ -602,14 +719,5 @@
 
   .customerTable {
     min-width: 700px;
-  }
-
-  .actionButtons {
-    flex-direction: rows;
-  }
-
-  .editButton,
-  .deleteButton {
-    width: 100%;
   }
 }

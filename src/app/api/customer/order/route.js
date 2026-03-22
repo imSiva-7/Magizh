@@ -20,18 +20,16 @@ const getDatabase = async () => {
   }
 };
 
-// GET orders – either by customerId (list) or by id (single order)
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
   try {
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get("id");
-     const customerId = searchParams.get("customerId");
+    const customerId = searchParams.get("customerId");
 
     const db = await getDatabase();
 
-    // Single order by ID
     if (orderId) {
       if (!ObjectId.isValid(orderId)) {
         return NextResponse.json(
@@ -47,14 +45,14 @@ export async function GET(request) {
       }
       return NextResponse.json(order);
     }
-
-    // Orders for a specific customer
+ 
     if (!customerId) {
       return NextResponse.json(
         { error: "customerId is required" },
         { status: 400 },
       );
     }
+
     if (!ObjectId.isValid(customerId)) {
       return NextResponse.json(
         { error: "Invalid customer ID" },
@@ -75,7 +73,6 @@ export async function GET(request) {
   }
 }
 
-// CREATE a new order
 export async function POST(request) {
   const METHOD = METHOD_NAMES.POST;
 
@@ -83,13 +80,13 @@ export async function POST(request) {
     const db = await getDatabase();
     const data = await request.json();
 
-    // Basic validation
     if (!data.customerId) {
       return NextResponse.json(
         { error: "customerId is required" },
         { status: 400 },
       );
     }
+
     if (!ObjectId.isValid(data.customerId)) {
       return NextResponse.json(
         { error: "Invalid customerId" },
@@ -114,7 +111,6 @@ export async function POST(request) {
       );
     }
 
-    // Validate each item
     for (const item of items) {
       if (!item.product || !item.quantity || !item.ratePerUnit) {
         return NextResponse.json(
@@ -152,7 +148,9 @@ export async function POST(request) {
       },
       { status: 201 },
     );
-  } catch (error) {
+  }
+  
+  catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json(
       { error: "Failed to create order", details: error.message },
@@ -161,7 +159,6 @@ export async function POST(request) {
   }
 }
 
-// UPDATE an existing order
 export async function PUT(request) {
   const METHOD = METHOD_NAMES.PUT;
 

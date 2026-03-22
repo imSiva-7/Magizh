@@ -52,7 +52,7 @@ export default function Footer() {
               {/* © {currentYear} Diary milk oreo. All rights reserved. */}
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.4.8</span>
+            <span className={styles.version}>v1.4.9</span>
           </div>
 
           {/* <div className={styles.technicalInfo}>
