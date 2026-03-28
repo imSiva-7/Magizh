@@ -197,7 +197,8 @@ export async function GET(request) {
 }
 export async function PATCH(request) {
   try {
-    const { procurementIds, status } = await request.json();
+    const { procurementIds, status, actionDoneBy } = await request.json();
+    console.log(actionDoneBy);
 
     // 1. Validate the input
     if (!Array.isArray(procurementIds) || procurementIds.length === 0) {
@@ -232,6 +233,7 @@ export async function PATCH(request) {
         $set: {
           paymentStatus: status,
           paymentUpdatedOn: new Date(),
+          paymentRecordDoneBy: actionDoneBy,
         },
       },
     );
@@ -271,6 +273,8 @@ export async function POST(request) {
       customRate,
       rate,
       totalAmount,
+      comment,
+      actionDoneBy,
     } = body;
 
     if (new Date() - new Date(date) > 10 * 24 * 60 * 60 * 1000) {
@@ -359,6 +363,8 @@ export async function POST(request) {
       paymentRecord: true,
       paymentStatus: "Not Paid",
       paymentUpadatedOn: "",
+      actionDoneBy: actionDoneBy,
+      comment: comment,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

@@ -45,7 +45,7 @@ export async function GET(request) {
       }
       return NextResponse.json(order);
     }
- 
+
     if (!customerId) {
       return NextResponse.json(
         { error: "customerId is required" },
@@ -98,10 +98,11 @@ export async function POST(request) {
       items,
       totalAmount,
       date,
-      time,
       paymentStatus,
       customerName,
       customerType,
+      comment,
+      actionDoneBy,
     } = data;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -125,7 +126,6 @@ export async function POST(request) {
       customerName: customerName?.trim() || "",
       customerType: customerType?.trim() || "",
       date: date || new Date().toISOString().split("T")[0],
-      time: time || "AM",
       items: items.map((item) => ({
         product: item.product.trim(),
         quantity: parseFloat(item.quantity) || 0,
@@ -134,6 +134,8 @@ export async function POST(request) {
       })),
       totalAmount: parseFloat(totalAmount) || 0,
       paymentStatus: paymentStatus || "Not Paid",
+      comment: comment?.trim() || "",
+      actionDoneBy: actionDoneBy?.trim() || "",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -148,9 +150,7 @@ export async function POST(request) {
       },
       { status: 201 },
     );
-  }
-  
-  catch (error) {
+  } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json(
       { error: "Failed to create order", details: error.message },
@@ -178,10 +178,16 @@ export async function PUT(request) {
 
     const updateData = { updatedAt: new Date() };
 
+    // Basic fields
     if (data.date !== undefined) updateData.date = data.date;
-    if (data.time !== undefined) updateData.time = data.time;
     if (data.paymentStatus !== undefined)
       updateData.paymentStatus = data.paymentStatus;
+    if (data.comment !== undefined)
+      updateData.comment = data.comment?.trim() || "";
+    if (data.actionDoneBy !== undefined)
+      updateData.actionDoneBy = data.actionDoneBy?.trim() || "";
+
+    // Items handling
     if (data.items !== undefined) {
       if (!Array.isArray(data.items) || data.items.length === 0) {
         return NextResponse.json(
@@ -259,7 +265,7 @@ export async function PATCH(request) {
 
   try {
     const db = await getDatabase();
-    const { orderIds, status } = await request.json();
+    const { orderIds, status, actionDoneBy } = await request.json();
 
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
       return NextResponse.json(
@@ -290,7 +296,13 @@ export async function PATCH(request) {
       .collection("orders")
       .updateMany(
         { _id: { $in: validObjectIds } },
-        { $set: { paymentStatus: status, updatedAt: new Date() } },
+        {
+          $set: {
+            paymentStatus: status,
+            paymentUpdatedAt: new Date(),
+            paymentRecordDoneBy: actionDoneBy,
+          },
+        },
       );
 
     return NextResponse.json({

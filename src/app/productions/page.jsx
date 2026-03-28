@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSession } from "next-auth/react";
 import styles from "@/css/production.module.css";
 import { getTodayDate } from "@/utils/dateUtils.js";
 
@@ -46,7 +47,7 @@ const ProductionFormInput = ({
   </div>
 );
 
-const ProductionTableRow = ({ entry, onDelete }) => {
+const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
   const formatValue = (value) => {
     if (value === null || value === undefined || value === "" || value === 0)
       return "-";
@@ -75,27 +76,26 @@ const ProductionTableRow = ({ entry, onDelete }) => {
       <td>{formatValue(entry.premium_paneer_quantity)}</td>
       <td>{formatValue(entry.butter_quantity)}</td>
       <td>{formatValue(entry.ghee_quantity)}</td>
-
-      <td>
-        <button
-          onClick={() => onDelete(entry._id)}
-          className={styles.deleteBtn}
-          disabled={
-            new Date() - new Date(entry.createdAt) < 2 * 24 * 60 * 60 * 1000
-              ? false
-              : true
-          }
-          title="Delete entry"
-        >
-          Delete
-        </button>
-      </td>
+      {isAdmin && (
+        <td>
+          <button
+            onClick={() => onDelete(entry._id)}
+            className={styles.deleteBtn}
+            title={"Delete entry"}
+          >
+            Delete
+          </button>
+        </td>
+      )}
     </tr>
   );
 };
 
 export default function ProductionPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
@@ -160,11 +160,6 @@ export default function ProductionPage() {
 
   const parseDecimal = (value, decimalPlaces = 2) => {
     if (!value) return null;
-
-    7;
-
-    7.89556;
-
     const num = parseFloat(value);
     return isNaN(num) ? null : parseFloat(num.toFixed(decimalPlaces));
   };
@@ -272,10 +267,7 @@ export default function ProductionPage() {
                   onChange={(e) => setDateStr(e.target.value)}
                   className={styles.input}
                   required
-                  max={new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  max={getTodayDate()}
                 />
               </div>
 
@@ -381,14 +373,6 @@ export default function ProductionPage() {
 
           {/* Form Actions */}
           <section className={styles.formActions}>
-            {/* <button
-              type="button"
-              onClick={resetForm}
-              className={styles.resetBtn}
-              disabled={isSubmitting}
-            >
-              Reset Form
-            </button> */}
             <button
               type="submit"
               disabled={!batchNo || isSubmitting}
@@ -400,7 +384,6 @@ export default function ProductionPage() {
         </form>
 
         {/* Recent Entries */}
-
         {loading ? (
           <section className={styles.recentEntries}>
             <LoadingSpinner />
@@ -449,7 +432,7 @@ export default function ProductionPage() {
                     <th>P. Paneer (Kg)</th>
                     <th>Butter (Kg)</th>
                     <th>Ghee (L)</th>
-                    <th>Actions</th>
+                    {isAdmin && <th>Actions</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -458,12 +441,12 @@ export default function ProductionPage() {
                       key={item._id}
                       entry={item}
                       onDelete={handleDelete}
+                      isAdmin={isAdmin}
                     />
                   ))}
                 </tbody>
               </table>
             </div>
-            ,
           </>
         )}
       </main>

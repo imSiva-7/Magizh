@@ -1,104 +1,221 @@
+/* ========== analytics.module.css ========== */
+/* Based on the same design language as procurement.module.css */
+
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
+  font-family: "Segoe UI", sans-serif;
   background-color: #f8fafc;
   min-height: 100vh;
 }
 
-.title {
-  color: rgb(39, 121, 93);
+/* ========== HEADER ========== */
+.header {
   margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: rgb(39, 121, 93);
+}
+
+/* ========== FILTER BAR ========== */
 .filterBar {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  margin-bottom: 2rem;
   background: white;
+  border-radius: 1rem;
   padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.5rem;
 }
 
 .dateInputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .dateInputGroup label {
-  font-size: 0.875rem;
   font-weight: 600;
   color: #475569;
+  font-size: 0.875rem;
 }
 
 .dateInputGroup input {
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #1e293b;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.dateInputGroup input:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.dateInputGroup input:hover {
+  border-color: #cbd5e1;
 }
 
 .filterBar button {
-  padding: 0.5rem 1rem;
   background: rgb(39, 121, 93);
   color: white;
   border: none;
-  border-radius: 0.375rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-end;
 }
 
+.filterBar button:hover {
+  background: rgb(30, 100, 80);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(39, 121, 93, 0.2);
+}
+
+/* ========== SUMMARY CARDS ========== */
 .summaryCards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .card {
   background: white;
+  border-radius: 1rem;
   padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
   text-align: center;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card h3 {
-  color: #64748b;
   font-size: 0.875rem;
-  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
 }
 
 .card p {
-  color: #1e293b;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
+/* ========== CHART CARDS ========== */
 .chartCard {
   background: white;
+  border-radius: 1rem;
   padding: 1.5rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.chartCard:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chartCard h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
   color: #1e293b;
-  margin-bottom: 1rem;
+  margin: 0 0 1.25rem 0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
+/* ========== LOADING SPINNER ========== */
 .loading {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 3rem;
   color: #64748b;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  margin: 2rem 0;
 }
 
-/* Responsive */
+.loading:after {
+  content: "";
+  width: 48px;
+  height: 48px;
+  border: 3px solid #e2e8f0;
+  border-top-color: rgb(39, 121, 93);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
+  .container {
+    padding: 0.75rem;
+  }
+
   .filterBar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .dateInputGroup input {
+    width: 100%;
+  }
+
+  .filterBar button {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  .summaryCards {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card p {
+    font-size: 1.5rem;
+  }
+
+  .chartCard {
+    padding: 1rem;
   }
 }

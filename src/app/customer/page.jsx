@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
+import { useSession } from "next-auth/react"; // <-- added
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/customer.module.css";
 
@@ -70,6 +71,9 @@ const FormInput = memo(
 FormInput.displayName = "FormInput";
 
 export default function Customer() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+
   const [createCustomer, setCreateCustomer] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
@@ -77,7 +81,7 @@ export default function Customer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
   const [searchDebounced, setSearchDebounced] = useState("");
-  const [openActionMenuId, setOpenActionMenuId] = useState(null); // NEW
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   const initialFormState = useMemo(
     () => ({
@@ -154,15 +158,6 @@ export default function Customer() {
         }
         return "";
 
-      // case "customerGST":
-      //   if (value && value.trim()) {
-      //     const gst = value.trim().toUpperCase();
-      //     if (!GST_REGEX.test(gst)) {
-      //       return "Invalid GST format (e.g., 22AAAAA0000A1Z5)";
-      //     }
-      //   }
-      //   return "";
-
       case "customerAddress":
         if (value?.trim()) {
           if (value.trim().length < 5)
@@ -193,11 +188,6 @@ export default function Customer() {
           return `${rules.label} price cannot be negative`;
         }
 
-        if (rules.min !== undefined && rules.max !== undefined) {
-          if (numValue < rules.min || numValue > rules.max) {
-            return `${rules.label} price must be between ₹${rules.min} and ₹${rules.max}`;
-          }
-        }
         return "";
       }
 
@@ -321,6 +311,7 @@ export default function Customer() {
       customerNumber: formData.customerNumber.trim(),
       customerGST: formData.customerGST.trim() || "",
       customerAddress: formData.customerAddress.trim(),
+      actionDoneBy: session?.user?.email, // <-- added
     };
 
     try {
@@ -753,22 +744,15 @@ export default function Customer() {
               <tr>
                 <th scope="col">Name</th>
                 <th scope="col">Type</th>
-                <th scope="col">Milk</th>
-                <th scope="col">Butter</th>
-                <th scope="col">Cream</th>
-                <th scope="col">Curd</th>
-                <th scope="col">Ghee</th>
-                <th scope="col">S. Paneer</th>
-                <th scope="col">P. Paneer</th>
                 <th scope="col">Phone</th>
                 <th scope="col">GST</th>
-                <th scope="col">Actions</th>
+                {isAdmin && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {loading && entries.length === 0 ? (
                 <tr>
-                  <td colSpan="12" className={styles.loadingCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.loadingCell}>
                     <div className={styles.loadingContent}>
                       <div className={styles.tableSpinner}></div>
                       <span>Loading customers...</span>
@@ -777,7 +761,7 @@ export default function Customer() {
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan="12" className={styles.noDataCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.noDataCell}>
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
@@ -822,29 +806,6 @@ export default function Customer() {
                         {item.customerType || "-"}
                       </span>
                     </td>
-                    <td className={styles.priceCell}>
-                      {item.milkPrice ? `₹${item.milkPrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.butterPrice ? `₹${item.butterPrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.freshCreamPrice ? `₹${item.freshCreamPrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.curdPrice ? `₹${item.curdPrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.gheePrice ? `₹${item.gheePrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.softPaneerPrice ? `₹${item.softPaneerPrice}` : "-"}
-                    </td>
-                    <td className={styles.priceCell}>
-                      {item.premiumPaneerPrice
-                        ? `₹${item.premiumPaneerPrice}`
-                        : "-"}
-                    </td>
                     <td
                       className={styles.phoneCell}
                       title={item.customerNumber || "-"}
@@ -875,48 +836,52 @@ export default function Customer() {
                         "-"
                       )}
                     </td>
-                    <td className={styles.actionsCell}>
-                      <div className={styles.actionMenuWrapper}>
-                        <button
-                          className={styles.actionMenuButton}
-                          onClick={() =>
-                            setOpenActionMenuId(
-                              openActionMenuId === item._id ? null : item._id,
-                            )
-                          }
-                          disabled={
-                            loading || deleteLoading === item._id || isEditing
-                          }
-                          title="Actions"
-                        >
-                          ⋮
-                        </button>
-                        {openActionMenuId === item._id && (
-                          <div className={styles.actionMenuPopup}>
-                            <button
-                              onClick={() => {
-                                handleEdit(item);
-                                setOpenActionMenuId(null);
-                              }}
-                              className={styles.actionEditButton}
-                              disabled={loading || deleteLoading === item._id}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => {
-                                handleDelete(item._id);
-                                setOpenActionMenuId(null);
-                              }}
-                              className={styles.actionDeleteButton}
-                              disabled={loading || deleteLoading === item._id}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
+                    {isAdmin && (
+                      <td className={styles.actionsCell}>
+                        <div className={styles.actionMenuWrapper}>
+                          <button
+                            className={styles.actionMenuButton}
+                            onClick={() =>
+                              setOpenActionMenuId(
+                                openActionMenuId === item._id ? null : item._id,
+                              )
+                            }
+                            disabled={
+                              loading || deleteLoading === item._id || isEditing
+                            }
+                            title="Actions"
+                          >
+                            ⋮
+                          </button>
+                          {openActionMenuId === item._id && (
+                            <div className={styles.actionMenuPopup}>
+                              <button
+                                onClick={() => {
+                                  handleEdit(item);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className={styles.actionEditButton}
+                                disabled={loading || deleteLoading === item._id}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleDelete(item._id);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className={styles.actionDeleteButton}
+                                disabled={loading || deleteLoading === item._id}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    )}
+
+
                   </tr>
                 ))
               )}
@@ -927,3 +892,5 @@ export default function Customer() {
     </div>
   );
 }
+
+  

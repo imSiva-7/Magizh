@@ -3,10 +3,14 @@
 import styles from "@/css/footer.module.css";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
+
+
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-
+ const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin" || session?.user?.role === "dev";
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContainer}>
@@ -24,6 +28,9 @@ export default function Footer() {
             <div className={styles.footerSection}>
               <h4 className={styles.sectionTitle}>Links</h4>
               <ul className={styles.footerLinks}>
+               {isAdmin && <li>
+                    <Link href="/admin" className={styles.footerLink}>Admin Panel</Link>
+                </li>}
                 <li>
                   <Link href="/productions" className={styles.footerLink}>
                     Production
@@ -42,6 +49,7 @@ export default function Footer() {
                     Suppliers
                   </Link>
                 </li>
+               
               </ul>
             </div>
           </div>

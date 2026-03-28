@@ -151,6 +151,86 @@
   font-weight: 600;
 }
 
+
+/* Radio group */
+.radio_group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.radio_label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+.radio_label input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: rgb(39, 121, 93);
+  cursor: pointer;
+}
+
+/* Bulk actions – second button (Unpaid) */
+.payment_btn_unpaid {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment_btn_unpaid:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.payment_btn_unpaid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Show More button */
+.show_more_container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.5rem;
+}
+
+.show_more_btn {
+  background-color: #e2e8f0;
+  color: #1e293b;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.show_more_btn:hover:not(:disabled) {
+  background-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.show_more_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Date inputs */
 .date_input_group {
   display: flex;
@@ -392,60 +472,113 @@
 .bulk_actions_banner {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  /* background: linear-gradient(135deg, #1e293b, #0f172a); */
-  color: rgb(0, 0, 0);
-  padding: 1rem 2rem;
-  border-radius: 0.5rem;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-.bulk_actions {
-  display: flex;
+  background: #f5f5f5; 
+  padding: 1.5rem 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #ffffff;
   flex-wrap: wrap;
-
-  justify-content: flex-end;
 }
 
 .bulk_actions_text {
   font-weight: 600;
-  font-size: 1rem;
+   color: #64748b;
+  background:#f1f5f9;
+  padding: .5rem 0.75rem;
+  border-radius: .5rem;
+  font-size: 0.875rem;
 }
 
-.payment_btn {
-  background-color: rgb(39, 121, 93);
+.bulk_buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Green button (Paid) */
+.primary_btn {
+  background: rgb(39, 121, 93);
   color: white;
   border: none;
-  padding: 0.5rem 1.5rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.payment_btn:hover:not(:disabled) {
-  /* background-color: #16a34a; */
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-}
-.payment_btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.primary_btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
 }
 
-.clear_filter_link {
-  background: transparent;
+/* Red button (Unpaid) */
+.secondary_btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
   border: none;
-  color: #1a509c;
-  text-decoration: underline;
-  cursor: pointer;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary_btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* Cancel link */
+.clear_filter_link {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  text-decoration: underline;
   transition: color 0.2s;
 }
-.clear_filter_link:hover {
-  color: rgb(94, 94, 94);
+
+.clear_filter_link:hover:not(:disabled) {
+  color: #1e293b;
+}
+
+/* Disabled states */
+.primary_btn:disabled,
+.secondary_btn:disabled,
+.clear_filter_link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .bulk_actions_banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .bulk_buttons {
+    justify-content: center;
+  }
+
+  .primary_btn,
+  .secondary_btn {
+    padding: 0.5rem 1rem;
+  }
 }
 
 /* ========== 5. SUPPLIER GRID (CARDS) ========== */
@@ -597,22 +730,7 @@
   /* -webkit-overflow-scrolling: touch; */
 }
 
-.bulk_actions_banner {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  background-color: #e0f2fe;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
-  border: 1px solid #bae6fd;
-  transition: all 0.3s ease;
-}
-.bulk_actions_text {
-  font-weight: 600;
-  color: #0369a1;
-  flex-grow: 1;
-}
+
 
 .procurement_table {
   width: 100%;
@@ -844,16 +962,5 @@
   }
 }
 
-@media (max-width: 480px) {
-  .bulk_actions_banner {
-    flex-direction: column;
-    align-items: stretch;
-    text-align: center;
-  }
-  .payment_btn {
-    width: 100%;
-  }
-  .clear_filter_link {
-    align-self: center;
-  }
-}
+
+

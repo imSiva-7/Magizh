@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useSession, signOut } from "next-auth/react"; // ← added
 import styles from "@/css/header.module.css";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session, status } = useSession(); // ← added
 
   const navItems = [
     { name: "Production", path: "/productions", icon: "" },
@@ -31,12 +33,22 @@ export default function Header() {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/" });
+  };
+
+  // Loading state while session is being fetched
+  if (status === "loading") {
+    // You could return a simple loading spinner or nothing
+    return null;
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
         <div
           className={styles.logoSection}
-          onClick={() => router.push("/productions")}
+          onClick={() => router.push("/")}
         >
           <div className={styles.logo}>
             <div className={styles.logoImage}>
@@ -71,6 +83,39 @@ export default function Header() {
         </nav>
 
         <div className={styles.headerRight}>
+          {/* Authentication Section */}
+          {session ? (
+            <div className={styles.userSection}>
+              <span className={styles.userName}>
+                Hi, {session.user.name || session.user.email}
+              </span>
+              <button
+                onClick={handleLogout}
+                className={styles.logoutButton}
+                aria-label="Logout"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className={styles.authButtons}>
+              <button
+                onClick={() => router.push("/login")}
+                className={styles.loginButton}
+                aria-label="Login"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => router.push("/register")}
+                className={styles.registerButton}
+                aria-label="Register"
+              >
+                Register
+              </button>
+            </div>
+          )}
+
           <button
             className={styles.mobileMenuButton}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -101,6 +146,37 @@ export default function Header() {
                     </button>
                   </li>
                 ))}
+                {/* Add mobile auth links */}
+                {!session && (
+                  <>
+                    <li className={styles.mobileNavItem}>
+                      <button
+                        onClick={() => handleNavigation("/login")}
+                        className={styles.mobileNavButton}
+                      >
+                        <span className={styles.mobileNavText}>Login</span>
+                      </button>
+                    </li>
+                    {/* <li className={styles.mobileNavItem}>
+                      <button
+                        onClick={() => handleNavigation("/register")}
+                        className={styles.mobileNavButton}
+                      >
+                        <span className={styles.mobileNavText}>Register</span>
+                      </button>
+                    </li> */}
+                  </>
+                )}
+                {session && (
+                  <li className={styles.mobileNavItem}>
+                    <button
+                      onClick={handleLogout}
+                      className={styles.mobileNavButton}
+                    >
+                      <span className={styles.mobileNavText}>Logout</span>
+                    </button>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>

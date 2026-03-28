@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 import { ObjectId } from "mongodb";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 
 const METHOD_NAMES = {
   GET: "GET /api/customer",
@@ -80,6 +83,7 @@ export async function GET(request) {
 
 // CREATE a new customer
 export async function POST(request) {
+
   const METHOD = METHOD_NAMES.POST;
 
   try {
@@ -140,6 +144,14 @@ export async function POST(request) {
 
 // UPDATE an existing customer
 export async function PUT(request) {
+
+   const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (session.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const METHOD = METHOD_NAMES.PUT;
 
   try {

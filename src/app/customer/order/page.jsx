@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
@@ -12,7 +13,7 @@ import {
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 
-// List of products with their price field in customer data
+// List of products with their price key in customer data
 const productFields = [
   { name: "Milk", priceKey: "milkPrice" },
   { name: "Butter", priceKey: "butterPrice" },
@@ -21,6 +22,12 @@ const productFields = [
   { name: "Ghee", priceKey: "gheePrice" },
   { name: "Soft Paneer", priceKey: "softPaneerPrice" },
   { name: "Premium Paneer", priceKey: "premiumPaneerPrice" },
+];
+
+const GST_RATE = 5; // 5% GST
+const GST_OPTIONS = [
+  { value: "inclusive", label: "Price includes GST" },
+  { value: "exclusive", label: "Add GST (5%) extra" },
 ];
 
 const LoadingSpinner = () => (
@@ -32,15 +39,11 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const getCurrentTimePeriod = () => {
-  const hour = new Date().getHours();
-  return hour >= 12 ? "PM" : "AM";
-};
-
 const initialOrder = {
   date: getTodayDate(),
-  time: getCurrentTimePeriod(),
   paymentStatus: "Not Paid",
+  comment: "",
+  gstType: "inclusive", // default to inclusive (price already includes GST)
 };
 
 const initialFilters = {
@@ -49,40 +52,23 @@ const initialFilters = {
 };
 
 // ========== REUSABLE COMPONENTS ==========
-const InputGroup = ({ label, error, required, readOnly, ...props }) => (
+const InputGroup = ({ label, error, required, readOnly, suffix, ...props }) => (
   <div className={styles.input_group}>
     <label className={required ? styles.required_label : ""}>
       {label}
       {required && <span className={styles.required_asterisk}>*</span>}
     </label>
-    <input
-      className={`${styles.input} ${error ? styles.input_error : ""} ${
-        readOnly ? styles.read_only_input : ""
-      }`}
-      autoComplete="off"
-      readOnly={readOnly}
-      {...props}
-    />
-    {error && <span className={styles.error_text}>{error}</span>}
-  </div>
-);
-
-const TimePeriodSelect = ({ value, onChange, error }) => (
-  <div className={styles.input_group}>
-    <label className={styles.required_label}>
-      Time Period
-      <span className={styles.required_asterisk}>*</span>
-    </label>
-    <select
-      name="time"
-      value={value}
-      onChange={onChange}
-      className={styles.select_input}
-      aria-label="Select time period"
-    >
-      <option value="AM">AM (Morning)</option>
-      <option value="PM">PM (Evening)</option>
-    </select>
+    <div className={styles.input_wrapper}>
+      <input
+        className={`${styles.input} ${error ? styles.input_error : ""} ${
+          readOnly ? styles.read_only_input : ""
+        }`}
+        autoComplete="off"
+        readOnly={readOnly}
+        {...props}
+      />
+      {suffix && <span className={styles.input_suffix}>{suffix}</span>}
+    </div>
     {error && <span className={styles.error_text}>{error}</span>}
   </div>
 );
@@ -91,6 +77,26 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
   <div className={styles.stat_item}>
     <span className={styles.stat_label}>{label}</span>
     <span className={styles.stat_value}>
+      {prefix}
+      {value}
+      <span className={styles.stat_unit}>{unit}</span>
+    </span>
+  </div>
+);
+const StatItemGColor = ({ label, value, unit, prefix = "" }) => (
+  <div className={styles.stat_item}>
+    <span className={styles.stat_label}>{label}</span>
+    <span className={`${styles.stat_value} ${styles.text_green}`}>
+      {prefix}
+      {value}
+      <span className={styles.stat_unit}>{unit}</span>
+    </span>
+  </div>
+);
+const StatItemRColor = ({ label, value, unit, prefix = "" }) => (
+  <div className={styles.stat_item}>
+    <span className={styles.stat_label}>{label}</span>
+    <span className={`${styles.stat_value} ${styles.text_red}`}>
       {prefix}
       {value}
       <span className={styles.stat_unit}>{unit}</span>
@@ -111,6 +117,18 @@ const SummaryStats = ({ summary, filters }) => (
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
+        prefix="₹"
+      />
+
+      <StatItemGColor
+        label="Paid Amount"
+        value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
+        prefix="₹"
+      />
+
+      <StatItemRColor
+        label="Due Amount"
+        value={formatNumberWithCommasNoDecimal(summary.dueAmount)}
         prefix="₹"
       />
       <StatItem
@@ -141,7 +159,7 @@ const sanitizeNumericInput = (value) => {
   let sanitized = value.replace(/[^\d.]/g, "");
   const parts = sanitized.split(".");
   if (parts.length > 2) {
-    sanitized = parts[0] + "." + parts.shift().join("");
+    sanitized = parts[0] + "." + parts.slice(1).join("");
   }
   if (parts[1]) {
     sanitized = parts[0] + "." + parts[1].substring(0, 2);
@@ -160,7 +178,6 @@ const getCustomerTypeClass = (customerType) => {
 };
 
 // ========== MAIN COMPONENT ==========
-
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -169,12 +186,17 @@ function OrdersContent() {
   const [loading, setLoading] = useState(true);
   const [checkedIds, setCheckedIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ customer: null, orders: [] });
   const [editingId, setEditingId] = useState({});
   const [errors, setErrors] = useState({});
   const [orderForm, setOrderForm] = useState(initialOrder);
   const [quantities, setQuantities] = useState({});
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
+
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
 
   // Initialize quantities for all products
   const initializeQuantities = useCallback(() => {
@@ -184,6 +206,19 @@ function OrdersContent() {
     });
     setQuantities(initialQuantities);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openActionMenuId &&
+        !event.target.closest(`.${styles.actionMenuWrapper}`)
+      ) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openActionMenuId]);
 
   // Fetch customer and orders
   const fetchAllData = useCallback(async () => {
@@ -234,6 +269,10 @@ function OrdersContent() {
       newQuantities[product.name] = item ? item.quantity.toString() : "";
     });
     setQuantities(newQuantities);
+    // Also populate GST type from order (if stored)
+    if (order.gstType) {
+      setOrderForm((prev) => ({ ...prev, gstType: order.gstType }));
+    }
   };
 
   // Handle quantity change for a product
@@ -249,22 +288,28 @@ function OrdersContent() {
     }
   };
 
-  // Calculate total amount for the order
+  // Calculate total amount for the order with GST
   const orderTotal = useMemo(() => {
-    let total = 0;
+    let subtotal = 0;
     productFields.forEach((product) => {
       const price = data.customer?.[product.priceKey] || 0;
       const quantity = parseFloat(quantities[product.name] || 0);
       if (quantity > 0) {
-        total += price * quantity;
+        subtotal += price * quantity;
       }
     });
-    return total;
-  }, [data.customer, quantities]);
+
+    if (orderForm.gstType === "exclusive") {
+      // Add GST (5%) to subtotal
+      return subtotal * (1 + GST_RATE / 100);
+    }
+    // inclusive – price already includes GST, so no extra
+    return subtotal;
+  }, [data.customer, quantities, orderForm.gstType]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name === "date" || name === "time") {
+    if (name === "date" || name === "comment" || name === "gstType") {
       setOrderForm((prev) => ({ ...prev, [name]: value }));
     }
     if (errors[name]) {
@@ -294,7 +339,6 @@ function OrdersContent() {
           _id: `${order._id}_${idx}`,
           orderId: order._id,
           date: new Date(order.date).toLocaleDateString("en-IN"),
-          time: order.time,
           product: item.product,
           quantity: item.quantity,
           ratePerUnit: item.ratePerUnit,
@@ -306,7 +350,7 @@ function OrdersContent() {
     return rows;
   }, [filteredOrders]);
 
-  // Handle select all orders
+  // Handle select all orders (all orders, not only unpaid)
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       const allIds = filteredOrders.map((order) => order._id);
@@ -321,28 +365,35 @@ function OrdersContent() {
     setCheckedIds((prev) =>
       prev.includes(orderId)
         ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId]
+        : [...prev, orderId],
     );
   };
 
-  // Bulk mark selected orders as paid
-  const handleBulkMarkAsPaid = async () => {
+  // Bulk update status
+  const handleBulkUpdateStatus = async (status) => {
     if (checkedIds.length === 0) return;
-    if (!window.confirm(`Mark ${checkedIds.length} order(s) as paid?`)) return;
+    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`))
+      return;
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/customer/order/bulk-update", {
+      const res = await fetch("/api/customer/order", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderIds: checkedIds, status: "Paid" }),
+        body: JSON.stringify({
+          orderIds: checkedIds,
+          status,
+          actionDoneBy: session?.user?.email,
+        }),
       });
 
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || "Bulk update failed");
       }
-      toast.success(`Successfully marked ${checkedIds.length} order(s) as paid`);
+      toast.success(
+        `Successfully marked ${checkedIds.length} order(s) as ${status}`,
+      );
       setCheckedIds([]);
       await fetchAllData();
     } catch (error) {
@@ -388,7 +439,6 @@ function OrdersContent() {
   const validateForm = () => {
     const newErrors = {};
     if (!orderForm.date) newErrors.date = "Date is required";
-    if (!orderForm.time) newErrors.time = "Time period is required";
 
     let hasQuantity = false;
     productFields.forEach((product) => {
@@ -419,11 +469,16 @@ function OrdersContent() {
       const price = data.customer[product.priceKey] || 0;
       const quantity = parseFloat(quantities[product.name] || 0);
       if (quantity > 0) {
+        // Calculate per‑item total with GST
+        let total = price * quantity;
+        if (orderForm.gstType === "exclusive") {
+          total = total * (1 + GST_RATE / 100);
+        }
         items.push({
           product: product.name,
           quantity: quantity,
           ratePerUnit: price,
-          totalAmount: price * quantity,
+          totalAmount: total,
         });
       }
     });
@@ -440,10 +495,13 @@ function OrdersContent() {
         customerName: data.customer.customerName,
         customerType: data.customer.customerType,
         date: orderForm.date,
-        time: orderForm.time,
         items,
+        comment: orderForm.comment,
         totalAmount: orderTotal,
         paymentStatus: orderForm.paymentStatus,
+        actionDoneBy: session?.user?.email,
+        gstRate: GST_RATE,
+        gstType: orderForm.gstType,
       };
 
       const res = await fetch(url, {
@@ -470,6 +528,7 @@ function OrdersContent() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
+    setDeleteLoading(id);
     try {
       const res = await fetch(`/api/customer/order?id=${id}`, {
         method: "DELETE",
@@ -480,27 +539,33 @@ function OrdersContent() {
       if (editingId._id === id) resetForm();
     } catch (error) {
       toast.error(error.message);
+    } finally {
+      setDeleteLoading(null);
+      setOpenActionMenuId(null);
     }
   };
 
   const handleEdit = (order) => {
     if (editingId._id === order._id) {
       resetForm();
+      setOpenActionMenuId(null);
       return;
     }
     setCheckedIds([]);
     setEditingId(order);
     setOrderForm({
       date: order.date.split("T")[0],
-      time: order.time || "AM",
       paymentStatus: order.paymentStatus || "Not Paid",
+      comment: order.comment || "",
+      gstType: order.gstType || "inclusive",
     });
     populateQuantitiesFromOrder(order);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    setOpenActionMenuId(null);
   };
 
   const resetForm = () => {
-    setOrderForm({ ...initialOrder, time: getCurrentTimePeriod() });
+    setOrderForm({ ...initialOrder });
     setEditingId({});
     setErrors({});
     initializeQuantities();
@@ -515,9 +580,21 @@ function OrdersContent() {
       (sum, order) => sum + (order.totalAmount || 0),
       0,
     );
+    const paidAmount = filteredOrders.reduce(
+      (sum, order) =>
+        order.paymentStatus == "Paid" ? sum + order.totalAmount : sum + 0,
+      0,
+    );
+    const dueAmount = filteredOrders.reduce(
+      (sum, order) =>
+        order.paymentStatus == "Not Paid" ? sum + order.totalAmount : sum + 0,
+      0,
+    );
     return {
       orderCount,
       totalAmount,
+      paidAmount,
+      dueAmount,
       avgOrderValue: orderCount ? totalAmount / orderCount : 0,
     };
   }, [filteredOrders]);
@@ -535,6 +612,9 @@ function OrdersContent() {
       </div>
     );
   }
+
+  const isSelectAllChecked =
+    filteredOrders.length > 0 && checkedIds.length === filteredOrders.length;
 
   return (
     <div className={styles.page_container}>
@@ -566,7 +646,7 @@ function OrdersContent() {
       {/* FORM SECTION */}
       <div className={styles.form_section}>
         <div className={styles.form_header}>
-          <h2>{editingId._id ? "Edit Order" : "Create New Order"}</h2>
+          <h2>{editingId._id ? "Edit Order" : "New Order"}</h2>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.order_form}>
@@ -581,65 +661,73 @@ function OrdersContent() {
               error={errors.date}
               required
             />
-            <TimePeriodSelect
-              value={orderForm.time}
+
+            {productFields.map((product) => {
+              const quantity = quantities[product.name] || "";
+              return (
+                <InputGroup
+                  key={product.name}
+                  label={`${product.name}`}
+                  name={product.name}
+                  type="text"
+                  inputMode="numeric"
+                  value={quantity}
+                  onChange={(e) =>
+                    handleQuantityChange(product.name, e.target.value)
+                  }
+                  placeholder={`Enter ${product.name} quantity`}
+                  error={errors[product.name]}
+                  disabled={submitting}
+                />
+              );
+            })}
+          </div>
+
+          <div className={styles.form_grid_orders_comment}>
+            <InputGroup
+              label="Comment"
+              name="comment"
+              type="text"
+              placeholder="Enter comments"
+              value={orderForm.comment}
               onChange={handleInputChange}
-              error={errors.time}
+              disabled={submitting}
+            />
+            <div className={styles.input_group}>
+              <label>GST Option</label>
+              <select
+                name="gstType"
+                value={orderForm.gstType}
+                onChange={handleInputChange}
+                className={styles.select_input}
+                disabled={submitting}
+              >
+                {GST_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <InputGroup
+              label="Order Total"
+              name="orderTotal"
+              value={`₹${formatNumberWithCommasNoDecimal(orderTotal)}`}
+              readOnly
+              placeholder="0"
             />
           </div>
 
-          {/* Products Section */}
-          <div className={styles.products_grid}>
-            <div className={styles.product_header}>
-              <span>Product & Rate</span>
-              <span>Quantity</span>
-              <span>Total (₹)</span>
-            </div>
-            {productFields.map((product) => {
-              const price = data.customer?.[product.priceKey] || 0;
-              const quantity = quantities[product.name] || "";
-              const total = price * (parseFloat(quantity) || 0);
-              return (
-                <div key={product.name} className={styles.product_row}>
-                  <div className={styles.rate_display}>
-                    <span className={styles.product_label}>
-                      {product.name} - ₹{formatNumberWithCommas(price)}
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={quantity}
-                    onChange={(e) =>
-                      handleQuantityChange(product.name, e.target.value)
-                    }
-                    placeholder="Enter quantity"
-                    className={styles.quantity_input}
-                    disabled={submitting}
-                  />
-                  <div className={styles.total_display}>
-                    {total > 0
-                      ? `₹${formatNumberWithCommasNoDecimal(total)}`
-                      : "₹0"}
-                  </div>
-                </div>
-              );
-            })}
-            {errors.general && (
-              <div className={styles.error_text}>{errors.general}</div>
-            )}
-            <div className={styles.order_total_row}>
-              <strong>Order Total:</strong>
-              <span>₹{formatNumberWithCommasNoDecimal(orderTotal)}</span>
-            </div>
-          </div>
+          {errors.general && (
+            <div className={styles.error_text}>{errors.general}</div>
+          )}
 
           {editingId._id && (
             <div className={styles.edit_payment_wrapper}>
               <label className={styles.edit_payment_label}>
                 Payment Status:
               </label>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <div className={styles.payment_toggle}>
                 <input
                   type="checkbox"
                   className={styles.payment_checkbox}
@@ -692,6 +780,9 @@ function OrdersContent() {
       {/* FILTER SECTION */}
       {data.orders.length > 0 && (
         <div className={styles.filter_section}>
+          <div className={styles.form_header}>
+            <h2>Filter by Date Range</h2>
+          </div>
           <div className={styles.filter_row}>
             <div className={styles.date_input_group}>
               <div className={styles.date_field}>
@@ -722,6 +813,13 @@ function OrdersContent() {
                 className={styles.btn_secondary}
               >
                 Reset
+              </button>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className={styles.btn_secondary_2}
+              >
+                Clear
               </button>
               <button
                 type="button"
@@ -760,7 +858,6 @@ function OrdersContent() {
         </div>
       )} */}
 
-      {/* SUMMARY SECTION */}
       {summary.orderCount > 0 && (
         <SummaryStats summary={summary} filters={filters} />
       )}
@@ -771,24 +868,35 @@ function OrdersContent() {
           <span className={styles.bulk_actions_text}>
             {checkedIds.length} order(s) selected
           </span>
-          <button
-            onClick={handleBulkMarkAsPaid}
-            disabled={submitting}
-            className={styles.primary_btn}
-          >
-            {submitting ? "Processing..." : "Mark Selected as Paid"}
-          </button>
-          <button
-            onClick={() => setCheckedIds([])}
-            disabled={submitting}
-            className={styles.clear_filter_link}
-          >
-            Cancel
-          </button>
+          <div className={styles.bulk_buttons}>
+            <button
+              onClick={() => handleBulkUpdateStatus("Paid")}
+              disabled={submitting}
+              className={styles.primary_btn}
+            >
+              {submitting ? "Processing..." : "Mark as Paid"}
+            </button>
+            <button
+              onClick={() => handleBulkUpdateStatus("Not Paid")}
+              disabled={submitting}
+              className={styles.secondary_btn}
+            >
+              {submitting ? "Processing..." : "Mark  as Unpaid"}
+            </button>
+            <button
+              onClick={() => {
+                setCheckedIds([]);
+              }}
+              disabled={submitting}
+              className={styles.clear_filter_link}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
-      {/* ORDERS LIST */}
+      {/* ORDERS TABLE */}
       <div className={styles.table_wrapper}>
         {loading ? (
           <LoadingSpinner />
@@ -798,102 +906,146 @@ function OrdersContent() {
           </div>
         ) : (
           <>
-            {/* Select All Checkbox */}
-            <div className={styles.select_all_container}>
-              <label className={styles.select_all_label}>
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredOrders.length > 0 &&
-                    checkedIds.length === filteredOrders.length
-                  }
-                  onChange={handleSelectAll}
-                  disabled={submitting}
-                />
-                <span>Select All</span>
-              </label>
-            </div>
-            <div className={styles.orders_grid}>
-              {filteredOrders.map((order) => (
-                <div
-                  key={order._id}
-                  className={`${styles.order_card} ${
-                    editingId._id === order._id ? styles.active_card : ""
-                  }`}
-                >
-                  <div className={styles.card_header}>
-                    <div className={styles.card_checkbox}>
-                      <input
-                        type="checkbox"
-                        checked={checkedIds.includes(order._id)}
-                        onChange={() => handleCheck(order._id)}
-                        disabled={submitting || editingId._id === order._id}
-                      />
-                    </div>
-                    <div className={styles.card_title_group}>
-                      <h3 className={styles.card_date}>
-                        {new Date(order.date).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                        <span className={styles.time_badge}>{order.time}</span>
-                      </h3>
-                      <span
+            <div className={styles.table_container}>
+              <table className={styles.table} aria-label="Orders list">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    {productFields.map((p) => (
+                      <th key={p.name} scope="col">
+                        {p.name}
+                      </th>
+                    ))}
+                    <th scope="col">Order Total</th>
+                    <th scope="col">Comment</th>
+                    <th scope="col">
+                      {" "}
+                      <div className={styles.select_all_wrapper}>
+                        <input
+                          type="checkbox"
+                          checked={isSelectAllChecked}
+                          onChange={handleSelectAll}
+                          disabled={submitting}
+                        />*
+                      </div>
+                    </th>
+
+                    <th scope="col">Status</th>
+                    {isAdmin && <th scope="col">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrders.map((order) => {
+                    const quantityMap = {};
+                    order.items.forEach((item) => {
+                      quantityMap[item.product] = item.quantity;
+                    });
+
+                    return (
+                      <tr
+                        key={order._id}
                         className={
-                          order.paymentStatus === "Paid"
-                            ? styles.status_paid
-                            : styles.status_due
+                          editingId._id === order._id ? styles.active_row : ""
                         }
                       >
-                        {order.paymentStatus}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.items_list}>
-                    <div className={styles.items_header}>
-                      <span>Product</span>
-                      <span className={styles.text_right}>Qty</span>
-                      <span className={styles.text_right}>Total</span>
-                    </div>
-                    {order.items.map((item, idx) => (
-                      <div key={idx} className={styles.item_row}>
-                        <span className={styles.product_name}>
-                          {item.product}
-                        </span>
-                        <span className={styles.item_qty}>{item.quantity}</span>
-                        <span className={styles.item_total}>
-                          ₹{formatNumberWithCommasNoDecimal(item.totalAmount)}
-                        </span>
-                      </div>
-                    ))}
-                    <div className={styles.card_total_row}>
-                      <span>Total</span>
-                      <span className={styles.card_total_amount}>
-                        ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.card_actions}>
-                    <button
-                      onClick={() => handleEdit(order)}
-                      className={styles.edit_btn}
-                      disabled={submitting}
-                    >
-                      {editingId._id === order._id ? "Editing..." : "Edit"}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(order._id)}
-                      className={styles.delete_btn}
-                      disabled={submitting}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+                        <td className={styles.date_cell}>
+                          {new Date(order.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "2-digit",
+                          })}
+                        </td>
+                        {productFields.map((product) => (
+                          <td
+                            key={product.name}
+                            className={styles.quantity_cell}
+                          >
+                            {quantityMap[product.name] || "-"}
+                          </td>
+                        ))}
+                        <td className={styles.total_cell}>
+                          ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
+                        </td>
+                        <td className={styles.comment_cell}>
+                          {order.comment ? (
+                            <span
+                              className={styles.comment}
+                              data-text={order.comment}
+                            >
+                              i
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className={styles.row_checkbox}
+                            checked={checkedIds.includes(order._id)}
+                            onChange={() => handleCheck(order._id)}
+                            disabled={!!editingId._id}
+                            title="Select order"
+                          />
+                        </td>
+                        <td className={styles.payment_cell}>
+                          {order.paymentStatus === "Not Paid" ? (
+                            <span className={styles.status_due}>Due</span>
+                          ) : (
+                            <span className={styles.status_paid}>Paid</span>
+                          )}
+                        </td>
+                        {isAdmin && (
+                          <td className={styles.actions_cell}>
+                            <div className={styles.actionMenuWrapper}>
+                              <button
+                                className={styles.actionMenuButton}
+                                onClick={() =>
+                                  setOpenActionMenuId(
+                                    openActionMenuId === order._id
+                                      ? null
+                                      : order._id,
+                                  )
+                                }
+                                disabled={
+                                  loading ||
+                                  deleteLoading === order._id ||
+                                  !!editingId._id
+                                }
+                                title="Actions"
+                              >
+                                ⋮
+                              </button>
+                              {openActionMenuId === order._id && (
+                                <div className={styles.actionMenuPopup}>
+                                  <button
+                                    onClick={() => handleEdit(order)}
+                                    className={styles.actionEditButton}
+                                    disabled={
+                                      loading || deleteLoading === order._id
+                                    }
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(order._id)}
+                                    className={styles.actionDeleteButton}
+                                    disabled={
+                                      loading || deleteLoading === order._id
+                                    }
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </>
         )}

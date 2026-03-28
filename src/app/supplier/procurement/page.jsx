@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import styles from "@/css/procurement.module.css"; 
+import styles from "@/css/procurement.module.css";
 import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
@@ -37,6 +38,7 @@ const initialForm = {
   fatPercentage: "",
   snfPercentage: "",
   paymentStatus: "Not Paid",
+  comment: "",
 };
 
 const initialFilters = {
@@ -172,6 +174,8 @@ function ProcurementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supplierId = searchParams.get("supplierId");
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
 
   const [loading, setLoading] = useState(true);
   const [checkedIds, setCheckedIds] = useState([]);
@@ -181,6 +185,7 @@ function ProcurementContent() {
   const [editingId, setEditingId] = useState({});
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
   const calculateTotals = useCallback(
     (quantity, fat, snf, supplierRate, supplierCustomRate) => {
@@ -217,6 +222,19 @@ function ProcurementContent() {
     },
     [editingId],
   );
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openActionMenuId &&
+        !event.target.closest(`.${styles.actionMenuWrapper}`)
+      ) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openActionMenuId]);
 
   const fetchAllData = useCallback(async () => {
     if (!supplierId) return;
@@ -307,26 +325,33 @@ function ProcurementContent() {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const eligibleIds = decoratedTableData
-        .filter((row) => row.paymentStatus === "Not Paid")
-        .map((row) => row._id);
-      setCheckedIds(eligibleIds);
+      const allIds = decoratedTableData.map((row) => row._id);
+      setCheckedIds(allIds);
     } else {
       setCheckedIds([]);
     }
   };
 
-  const handleBulkMarkAsPaid = async () => {
-    if (checkedIds.length === 0) return;
+  // Bulk update function that accepts a status
+  const handleBulkUpdateStatus = async (status) => {
+    if (checkedIds.length === 0) {
+      toast.warn("No records selected");
+      return;
+    }
 
-    if (!window.confirm(`Mark ${checkedIds.length} records as paid?`)) return;
+    if (!window.confirm(`Mark ${checkedIds.length} records as ${status}?`))
+      return;
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/supplier/procurement", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ procurementIds: checkedIds, status: "Paid" }),
+        body: JSON.stringify({
+          procurementIds: checkedIds,
+          status,
+          actionDoneBy: session?.user?.email,
+        }),
       });
 
       const contentType = res.headers.get("content-type");
@@ -341,7 +366,9 @@ function ProcurementContent() {
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || "Bulk update failed");
 
-      toast.success(`Successfully marked ${checkedIds.length} records as paid`);
+      toast.success(
+        `Successfully marked ${checkedIds.length} records as ${status}`,
+      );
       setCheckedIds([]);
       await fetchAllData();
     } catch (error) {
@@ -355,7 +382,9 @@ function ProcurementContent() {
   // ----- FILTER HANDLERS WITH TOASTS -----
   const confirmClearChecked = () => {
     if (checkedIds.length > 0) {
-      return window.confirm(`Checked records will be lost, do you want to continue?`);
+      return window.confirm(
+        `Checked records will be lost, do you want to continue?`,
+      );
     }
     return true;
   };
@@ -363,7 +392,7 @@ function ProcurementContent() {
   const handleFilterChange = (e) => {
     if (!confirmClearChecked()) return;
     setCheckedIds([]);
-    
+
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
@@ -454,6 +483,8 @@ function ProcurementContent() {
         rate: parseFloat(currentPricing.rate),
         totalAmount: parseFloat(currentPricing.totalAmount),
         paymentStatus: formData.paymentStatus,
+        comment: formData.comment?.trim() || "",
+        actionDoneBy: session?.user?.email,
       };
 
       const res = await fetch(url, {
@@ -517,6 +548,7 @@ function ProcurementContent() {
       fatPercentage: item.fatPercentage.toString(),
       snfPercentage: item.snfPercentage.toString(),
       paymentStatus: item.paymentStatus || "Not Paid",
+      comment: item.comment || "", // <-- added comment
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -531,7 +563,7 @@ function ProcurementContent() {
     if (!data.allProcurements.length) return [];
 
     const start = filters.startDate;
-    const end = filters.endDate; 
+    const end = filters.endDate;
 
     return data.allProcurements.filter((record) => {
       const recordDate = record.date.split("T")[0];
@@ -635,7 +667,9 @@ function ProcurementContent() {
       <div className={styles.error_state}>
         <h2>Supplier Not Found</h2>
         <p>
-          {" The supplier you're looking for doesn't exist or has been removed."}
+          {
+            " The supplier you're looking for doesn't exist or has been removed."
+          }
         </p>
         <div className={styles.error_actions}>
           <button
@@ -650,9 +684,9 @@ function ProcurementContent() {
     );
   }
 
-  // Pre-calculate eligible rows for the select all checkbox
-  const eligibleTableRows = decoratedTableData.filter(r => r.paymentStatus === "Not Paid");
-  const isSelectAllChecked = eligibleTableRows.length > 0 && checkedIds.length === eligibleTableRows.length;
+  const isSelectAllChecked =
+    decoratedTableData.length > 0 &&
+    checkedIds.length === decoratedTableData.length;
 
   return (
     <div className={styles.page_container}>
@@ -762,6 +796,16 @@ function ProcurementContent() {
               error={errors.snfPercentage}
               required
             />
+
+            <InputGroup
+              label="Comment"
+              name="comment"
+              type="text"
+              placeholder="Add a comment (optional)"
+              value={formData.comment}
+              onChange={handleInputChange}
+              disabled={submitting}
+            />
             <InputGroup
               label="Rate per Liter (₹)"
               name="rate"
@@ -791,7 +835,7 @@ function ProcurementContent() {
             />
           </div>
 
-          {editingId && editingId._id && editingId.paymentRecord ? (
+          {editingId && editingId._id && (
             <div className={styles.edit_payment_wrapper}>
               <label className={styles.edit_payment_label}>
                 Payment Status:
@@ -818,7 +862,7 @@ function ProcurementContent() {
                 )}
               </div>
             </div>
-          ) : null}
+          )}
 
           <div className={styles.form_actions}>
             <button
@@ -880,7 +924,6 @@ function ProcurementContent() {
               </div>
             </div>
             <div className={styles.filter_actions}>
-              {/* FIX: type="button" prevents form submission which destroys the URL query params */}
               <button
                 type="button"
                 onClick={resetFilterForm}
@@ -940,26 +983,35 @@ function ProcurementContent() {
         </div>
       )}
 
-      {/* BULK ACTIONS BANNER */}
+      {/* BULK ACTIONS BANNER - visible to all users */}
       {checkedIds.length > 0 && (
         <div className={styles.bulk_actions_banner}>
           <span className={styles.bulk_actions_text}>
             {checkedIds.length} record(s) selected
           </span>
-          <button
-            onClick={handleBulkMarkAsPaid}
-            disabled={submitting}
-            className={styles.primary_btn}
-          >
-            {submitting ? "Processing..." : "Mark Selected as Paid"}
-          </button>
-          <button
-            onClick={() => setCheckedIds([])}
-            disabled={submitting}
-            className={styles.clear_filter_link}
-          >
-            Cancel
-          </button>
+          <div className={styles.bulk_buttons}>
+            <button
+              onClick={() => handleBulkUpdateStatus("Paid")}
+              disabled={submitting}
+              className={styles.primary_btn}
+            >
+              {submitting ? "Processing..." : "Mark as Paid"}
+            </button>
+            <button
+              onClick={() => handleBulkUpdateStatus("Not Paid")}
+              disabled={submitting}
+              className={styles.secondary_btn}
+            >
+              {submitting ? "Processing..." : "Mark as Unpaid"}
+            </button>
+            <button
+              onClick={() => setCheckedIds([])}
+              disabled={submitting}
+              className={styles.clear_filter_link}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
@@ -1011,22 +1063,23 @@ function ProcurementContent() {
                   <th scope="col">TS Rate</th>
                   <th scope="col">Rate/L (₹)</th>
                   <th scope="col">Total (₹)</th>
+                  <th scope="col">Comment</th>
                   <th scope="col">
                     <div className={styles.select_all_wrapper}>
-                      {eligibleTableRows.length > 0 && (
-                        <input
-                          type="checkbox"
-                          className={styles.payment_checkbox}
-                          onChange={handleSelectAll}
-                          disabled={!!editingId._id}
-                          checked={isSelectAllChecked}
-                          title="Select All Eligible"
-                        />
-                      )}
-                      Status
+                    
+                   
+                      <input
+                        type="checkbox"
+                        className={styles.payment_checkbox}
+                        onChange={handleSelectAll}
+                        disabled={!!editingId._id}
+                        checked={isSelectAllChecked}
+                        title="Select All"
+                      /> *
                     </div>
                   </th>
-                  <th scope="col">Actions</th>
+                  <th scope="col">Status</th>
+                  {isAdmin && <th scope="col">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -1045,7 +1098,7 @@ function ProcurementContent() {
                             {new Date(row.date).toLocaleDateString("en-IN", {
                               day: "2-digit",
                               month: "short",
-                              year: "numeric",
+                              year: "2-digit",
                             })}
                           </span>
                         </div>
@@ -1053,7 +1106,6 @@ function ProcurementContent() {
                         `(${row.occurrenceCount})`
                       )}
                     </td>
-
                     <td className={styles.time_cell}>
                       <span
                         className={
@@ -1081,55 +1133,76 @@ function ProcurementContent() {
                     <td className={styles.total_cell}>
                       ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}
                     </td>
-
-                    <td className={styles.payment_cell}>
-                      {row.paymentStatus === "Not Paid" ? (
-                        <div className={styles.unpaid_wrapper}>
-                          <input
-                            type="checkbox"
-                            className={styles.payment_checkbox}
-                            value={row._id}
-                            disabled={!!editingId._id}
-                            checked={checkedIds.includes(row._id)}
-                            onChange={() => handleCheck(row._id)}
-                            title="Select to pay"
-                          />
-                          <span className={styles.status_due}>Due</span>
-                        </div>
-                      ) : row.paymentStatus === "Paid" || row.paymentRecord ? (
-                        <span className={styles.status_paid}>Paid</span>
+                    <td className={styles.comment_cell}>
+                      {row.comment ? (
+                        <span
+                          className={styles.comment}
+                          data-text={row.comment}
+                          title={row.comment}
+                        >
+                          i
+                        </span>
                       ) : (
-                        <span className={styles.status_na}>N/A</span>
+                        "-"
                       )}
                     </td>
-                    <td className={styles.actions_cell}>
-                      <div className={styles.action_buttons}>
-                        <button
-                          onClick={() => handleEdit(row)}
-                          className={styles.edit_btn}
-                          disabled={
-                            submitting ||
-                            new Date() - new Date(row.createdAt) >=
-                              10 * 24 * 60 * 60 * 1000
-                          }
-                          title="Edit record"
-                        >
-                          {editingId._id === row._id ? "Cancel" : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(row._id)}
-                          className={styles.delete_btn}
-                          disabled={
-                            submitting ||
-                            new Date() - new Date(row.createdAt) >=
-                              10 * 24 * 60 * 60 * 1000
-                          }
-                          title="Delete record"
-                        >
-                          Delete
-                        </button>
+
+                    <td>
+                      <input
+                        type="checkbox"
+                        className={styles.payment_checkbox}
+                        value={row._id}
+                        disabled={!!editingId._id}
+                        checked={checkedIds.includes(row._id)}
+                        onChange={() => handleCheck(row._id)}
+                        title="Select record"
+                      />
+                    </td>
+                    <td className={styles.payment_cell}>
+                      <div className={styles.unpaid_wrapper}>
+                        {row.paymentStatus === "Paid" ? (
+                          <span className={styles.status_paid}>Paid</span>
+                        ) : (
+                          <span className={styles.status_due}>Due</span>
+                        )}
                       </div>
                     </td>
+                    {isAdmin && (
+                      <td className={styles.actions_cell}>
+                        <div className={styles.actionMenuWrapper}>
+                          <button
+                            className={styles.actionMenuButton}
+                            onClick={() =>
+                              setOpenActionMenuId(
+                                openActionMenuId === row._id ? null : row._id,
+                              )
+                            }
+                            disabled={submitting || !!editingId._id}
+                            title="Actions"
+                          >
+                            ⋮
+                          </button>
+                          {openActionMenuId === row._id && (
+                            <div className={styles.actionMenuPopup}>
+                              <button
+                                onClick={() => handleEdit(row)}
+                                className={styles.actionEditButton}
+                                disabled={submitting}
+                              >
+                                {editingId._id === row._id ? "Cancel" : "Edit"}
+                              </button>
+                              <button
+                                onClick={() => handleDelete(row._id)}
+                                className={styles.actionDeleteButton}
+                                disabled={submitting}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

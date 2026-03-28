@@ -345,6 +345,9 @@
 .supplierTable th:nth-child(1) {
   text-align: left;
 }
+.supplierTable td:nth-child(5) {
+  text-align: center;
+}
 
 .supplierTable th {
   padding: 1rem;
@@ -360,6 +363,10 @@
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
   color: #334155;
+}
+
+.supplierTable td:nth-child(5) {
+  text-align: center;
 }
 
 .supplierTable tbody tr:hover {
@@ -438,62 +445,145 @@
   color: rgb(39, 121, 93);
 }
 
-.phoneCell {
+.phone {
+  display: inline-block;
+  background-color: #d2eaf5;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
   text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-.actionsCell {
-  min-width: 180px;
-}
-
-.actionButtons {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-.editButton,
-.deleteButton {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
   font-weight: 500;
+  color: rgb(39, 121, 93);
   cursor: pointer;
-  transition: all 0.2s ease;
-  /* min-width: 70px; */
+  font-size: 14px;
+  font-style: normal;
 }
 
-.editButton {
-  background-color: #dbeafe;
+.phoneCell {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Tooltip appears on hover of the .phone span */
+.phone:hover::after {
+  content: attr(data-number);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e293b;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+  z-index: 10;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Arrow */
+.phone:hover::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0.25rem;
+  border-style: solid;
+  border-color: #1e293b transparent transparent transparent;
+  margin-bottom: 0.25rem;
+  z-index: 10;
+}
+
+.actions_cell {
+  min-width: 60px;
+  justify-content: center !important;
+  text-align: center !important;
+  align-items: center !important;
+  position: relative;
+}
+
+.actionMenuWrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.actionMenuButton {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  color: #64748b;
+  transition: color 0.2s;
+  border-radius: 0.25rem;
+}
+
+.actionMenuButton:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.actionMenuButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionMenuPopup {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 0.25rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 1000;
+  min-width: 100px;
+  overflow: hidden;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.actionEditButton,
+.actionDeleteButton {
+  padding: 0.5rem 1rem;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.875rem;
+  width: 100%;
+  font-family: inherit;
+}
+
+.actionEditButton:hover:not(:disabled) {
+  background: #f1f5f9;
   color: #1e40af;
 }
 
-.editButton:hover:not(:disabled) {
-  background-color: #bfdbfe;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.editingActive {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.deleteButton {
-  background-color: #fee2e2;
+.actionDeleteButton:hover:not(:disabled) {
+  background: #fef2f2;
   color: #dc2626;
 }
 
-.deleteButton:hover:not(:disabled) {
-  background-color: #fecaca;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.editButton:disabled,
-.deleteButton:disabled {
+.actionEditButton:disabled,
+.actionDeleteButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -612,14 +702,5 @@
 
   .supplierTable {
     min-width: 700px;
-  }
-
-  .actionButtons {
-    flex-direction: rows;
-  }
-
-  .editButton,
-  .deleteButton {
-    width: 100%;
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
+import { useSession } from "next-auth/react"; // <-- added
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/supplier.module.css";
 
@@ -67,13 +68,16 @@ FormInput.displayName = "FormInput";
 // --- Main Component ---
 
 export default function Supplier() {
-  // Removed unused router
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin"; // <-- added
+
   const [createSupplier, setCreateSupplier] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState(null);
   const [searchDebounced, setSearchDebounced] = useState("");
 
   const initialFormState = useMemo(
@@ -93,6 +97,19 @@ export default function Supplier() {
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        openActionMenuId &&
+        !event.target.closest(`.${styles.actionMenuWrapper}`)
+      ) {
+        setOpenActionMenuId(null);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openActionMenuId]);
 
   // Debounce search
   useEffect(() => {
@@ -438,6 +455,7 @@ export default function Supplier() {
         <div className={styles.headerContent}>
           <h1>Suppliers</h1>
 
+          {/* Only admins can see the Create button */}
           {!createSupplier && (
             <div className={styles.createSection}>
               <button
@@ -643,13 +661,14 @@ export default function Supplier() {
                 <th scope="col">Type</th>
                 <th scope="col">TS Rate</th>
                 <th scope="col">Phone</th>
-                <th scope="col">Actions</th>
+                {/* Only show Actions column if user is admin */}
+                {isAdmin && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {loading && entries.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className={styles.loadingCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.loadingCell}>
                     <div className={styles.loadingContent}>
                       <div className={styles.tableSpinner}></div>
                       <span>Loading suppliers...</span>
@@ -658,7 +677,7 @@ export default function Supplier() {
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className={styles.noDataCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.noDataCell}>
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
@@ -666,7 +685,7 @@ export default function Supplier() {
                           ? `No suppliers found for "${searchDebounced}"`
                           : "No suppliers found"}
                       </p>
-                      {!searchDebounced && !createSupplier && (
+                      {!searchDebounced && !createSupplier && isAdmin && (
                         <button
                           onClick={() => {
                             setCreateSupplier(true);
@@ -708,45 +727,81 @@ export default function Supplier() {
                         ? `Rs: ${item.supplierCustomRate}`
                         : formatTSRate(item.supplierTSRate)}
                     </td>
-                    <td className={styles.phoneCell}>
-                      {item.supplierNumber || "-"}
+                    <td
+                      className={styles.phoneCell}
+                      title={item.supplierrNumber || "-"}
+                    >
+                      {item.supplierNumber ? (
+                        <span
+                          className={styles.phone}
+                          data-number={item.supplierNumber}
+                        >
+                          i
+                        </span>
+                      ) : (
+                        "-"
+                      )}
                     </td>
-                    <td className={styles.actionsCell}>
-                      <div className={styles.actionButtons}>
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className={`${styles.editButton} ${
-                            isEditing && formData.supplierId === item._id
-                              ? styles.editingActive
-                              : ""
-                          }`}
-                          disabled={loading || deleteLoading === item._id}
-                          title={
-                            isEditing && formData.supplierId === item._id
-                              ? "Cancel"
-                              : "Edit"
-                          }
-                        >
-                          {isEditing && formData.supplierId === item._id
-                            ? "Cancel"
-                            : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item._id)}
-                          className={styles.deleteButton}
-                          disabled={
-                            deleteLoading === item._id || loading || isEditing
-                          }
-                          title={isEditing ? "Delete disabled" : " Delete"}
-                        >
-                          {deleteLoading === item._id ? (
-                            <span className={styles.deleteSpinner}></span>
-                          ) : (
-                            "Delete"
+                    {isAdmin && (
+                      <td className={styles.actionsCell}>
+                        <div className={styles.actionMenuWrapper}>
+                          <button
+                            className={styles.actionMenuButton}
+                            onClick={() =>
+                              setOpenActionMenuId(
+                                openActionMenuId === item._id ? null : item._id,
+                              )
+                            }
+                            disabled={
+                              loading || deleteLoading === item._id || isEditing
+                            }
+                            title="Actions"
+                          >
+                            ⋮
+                          </button>
+                          {openActionMenuId === item._id && (
+                            <div className={styles.actionMenuPopup}>
+                              <button
+                                onClick={() => {
+                                  handleEdit(item);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className={styles.actionEditButton}
+                                disabled={loading || deleteLoading === item._id}
+                                title={
+                                  isEditing && formData.supplierId === item._id
+                                    ? "Cancel"
+                                    : "Edit"
+                                }
+                              >
+                                {isEditing && formData.supplierId === item._id
+                                  ? "Cancel"
+                                  : "Edit"}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleDelete(item._id);
+                                  setOpenActionMenuId(null);
+                                }}
+                                className={styles.actionDeleteButton}
+                                disabled={
+                                  deleteLoading === item._id ||
+                                  loading ||
+                                  isEditing
+                                }
+                                title={isEditing ? "Delete disabled" : "Delete"}
+                              >
+                                {deleteLoading === item._id ? (
+                                  <span className={styles.deleteSpinner}></span>
+                                ) : (
+                                  "Delete"
+                                )}
+                              </button>
+                            </div>
                           )}
-                        </button>
-                      </div>
-                    </td>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
