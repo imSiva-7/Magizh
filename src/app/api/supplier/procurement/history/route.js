@@ -26,33 +26,16 @@ export async function GET(request) {
     }
     const procurements = await collection
       .find(query)
-      // .limit(5000)
-      // .project({
-      //   _id: 1,
-      //   date: 1,
-      //   time: 1,
-      //   milkQuantity: 1,
-      //   fatPercentage: 1,
-      //   snfPercentage: 1,
-      //   rate: 1,
-      //   totalAmount: 1,
-      //   supplierId: 1,
-      //   supplierName: 1,
-      //   supplierType: 1,
-      //   supplierTSRate: 1,
-      //   createdAt: 1,
-      // })
       .sort({ date: -1, createdAt: -1 })
       .toArray();
 
-    // Convert ObjectId to string for JSON serialization
     const serializedProcurements = procurements.map((procurement) => ({
       ...procurement,
       _id: procurement._id.toString(),
       supplierId: procurement.supplierId?.toString() || null,
     }));
 
-    // Set cache headers
+  
     const headers = {
       "Content-Type": "application/json",
       "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
@@ -62,7 +45,7 @@ export async function GET(request) {
   } catch (error) {
     console.error("Error fetching procurements:", error);
 
-    // Return appropriate error response
+    
     return NextResponse.json(
       {
         error: "Failed to fetch procurement data",

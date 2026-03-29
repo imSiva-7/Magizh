@@ -191,6 +191,7 @@ export default function ProductionPage() {
       butter_quantity: parseDecimal(formData.butter_quantity),
       cream_quantity: parseDecimal(formData.cream_quantity),
       ghee_quantity: parseDecimal(formData.ghee_quantity),
+      actionDoneBy: session?.user?.email,
     };
 
     try {

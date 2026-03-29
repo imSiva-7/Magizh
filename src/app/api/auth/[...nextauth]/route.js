@@ -25,7 +25,7 @@ export const authOptions = {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
-          role: user.role || "unassigned",
+          role: user.role || "employee",
         };
       },
     }),
@@ -50,15 +50,15 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 
-  // 🔥 Explicit cookie configuration – REQUIRED for HTTPS production
+  
   cookies: {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",      // use "lax" for most apps, or "none" if cross‑site needed
+        sameSite: "lax",      
         path: "/",
-        secure:  true, // forces HTTPS‑only cookie
+        secure:  true, 
       },
     },
   },

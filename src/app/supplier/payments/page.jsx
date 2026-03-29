@@ -7,17 +7,17 @@ import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
+import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
 
-// ========== CONSTANTS ==========
 const INITIAL_FILTERS = {
   startDate: "2026-03-01",
   endDate: getTodayDate(),
 };
-const INITIAL_VISIBLE_COUNT = 20; // number of rows shown initially per supplier
 
-// ========== HELPER FUNCTIONS ==========
+const INITIAL_VISIBLE_COUNT = 20;
+
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
     const from = new Date(startDate).toLocaleDateString("en-IN");
@@ -48,7 +48,6 @@ const formatTimeBadge = (time) => {
   return timeUpper === "PM" ? "PM" : "AM";
 };
 
-// ========== LOADING SPINNER ==========
 const LoadingSpinner = () => (
   <div className={styles.loading_container}>
     <div className={styles.spinner}></div>
@@ -56,27 +55,24 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// ========== MAIN COMPONENT ==========
 export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
 
-  // Selection State
   const [checkedIds, setCheckedIds] = useState([]);
   const [checkedSupplierId, setCheckedSupplierId] = useState("");
 
-  // Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Pagination (show more) state – how many rows to display per supplier
   const [visibleCounts, setVisibleCounts] = useState({});
 
   const [isLoading, setIsLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch suppliers
   useEffect(() => {
     async function fetchSuppliers() {
       try {
@@ -96,8 +92,7 @@ export default function Payments() {
   const fetchSupplierProcurements = useCallback(
     async (signal) => {
       setIsLoading(true);
-      setCheckedIds([]);
-      setCheckedSupplierId("");
+
       try {
         const queryParams = new URLSearchParams();
         if (filters.startDate)
@@ -123,6 +118,8 @@ export default function Payments() {
           toast.error(error.message);
         }
       } finally {
+        setCheckedIds([]);
+        setCheckedSupplierId("");
         setIsLoading(false);
       }
     },
@@ -135,7 +132,6 @@ export default function Payments() {
     return () => controller.abort();
   }, [fetchSupplierProcurements]);
 
-  // Bulk update status (both Paid and Unpaid)
   const handleBulkUpdateStatus = async (status) => {
     if (checkedIds.length === 0) return;
     if (!window.confirm(`Mark ${checkedIds.length} records as ${status}?`))
@@ -146,7 +142,11 @@ export default function Payments() {
       const res = await fetch("/api/supplier/procurement", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ procurementIds: checkedIds, status }),
+        body: JSON.stringify({
+          procurementIds: checkedIds,
+          status,
+          actioDoneBy: session?.user?.email,
+        }),
       });
 
       const resData = await res.json();
@@ -157,7 +157,7 @@ export default function Payments() {
       );
       setCheckedIds([]);
       setCheckedSupplierId("");
-      await fetchSupplierProcurements(); // refresh data
+      await fetchSupplierProcurements();
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to process bulk payment");
@@ -180,9 +180,7 @@ export default function Payments() {
   };
 
   const handleSelectAll = (e, supplierId, procurements) => {
-    const eligibleIds = procurements
-      .filter((row) => row.paymentStatus !== "Paid")
-      .map((row) => row._id);
+    const eligibleIds = procurements.map((row) => row._id);
 
     if (e.target.checked) {
       setCheckedSupplierId(supplierId);
@@ -196,7 +194,6 @@ export default function Payments() {
     }
   };
 
-  // Show More handler
   const handleShowMore = (supplierId) => {
     setVisibleCounts((prev) => ({
       ...prev,
@@ -205,7 +202,6 @@ export default function Payments() {
     }));
   };
 
-  // Supplier Totals + Procurements (memoized)
   const supplierTotalsMap = useMemo(() => {
     const totals = {
       all: {
@@ -584,12 +580,10 @@ export default function Payments() {
             const displayedProcurements = procurements.slice(0, visibleCount);
             const hasMore = procurements.length > visibleCount;
 
-            const eligibleProcurements = procurements.filter(
-              (r) => r.paymentStatus !== "Paid",
-            );
+            // const eligibleProcurements = procurements;
             const isAllChecked =
-              eligibleProcurements.length > 0 &&
-              eligibleProcurements.every((r) => checkedIds.includes(r._id));
+             procurements.length > 0 &&
+              procurements.every((r) => checkedIds.includes(r._id));
 
             const isSupplierDisabled =
               checkedSupplierId !== "" && checkedSupplierId !== supplier._id;
@@ -672,7 +666,7 @@ export default function Payments() {
                         </button>
                         <button
                           onClick={() => {
-                            setCheckedIds([])
+                            setCheckedIds([]);
                             setCheckedSupplierId("");
                           }}
                           disabled={submitting}
@@ -683,7 +677,7 @@ export default function Payments() {
                       </div>
                     </div>
                   )}
-                {/* Procurement Table */}
+
                 <div className={styles.table_wrapper}>
                   <table className={styles.procurement_table}>
                     <thead>
@@ -697,7 +691,7 @@ export default function Payments() {
                         <th className={styles.table_header_cell}>
                           {" "}
                           <div className={styles.select_all_wrapper}>
-                            {eligibleProcurements.length > 0 && (
+                            {
                               <input
                                 type="checkbox"
                                 className={styles.payment_checkbox}
@@ -712,12 +706,12 @@ export default function Payments() {
                                     : "Select All Unpaid"
                                 }
                               />
-                            )}
-                           *
+                            }
+                            *
                           </div>
                         </th>
 
-                        <th className={styles.table_header_cell}> Status</th>
+                        <th className={styles.table_header_cell}>Status</th>
                       </tr>
                     </thead>
                     <tbody>

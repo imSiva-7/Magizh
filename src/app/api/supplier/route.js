@@ -19,7 +19,7 @@ const getDatabase = async () => {
   }
 };
 
-// GET all suppliers OR single supplier by ID
+
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
@@ -30,7 +30,7 @@ export async function GET(request) {
 
     const db = await getDatabase();
 
-    // CASE 1: Get single supplier by ID
+    
     if (supplierId) {
       if (!ObjectId.isValid(supplierId)) {
         return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
@@ -47,7 +47,7 @@ export async function GET(request) {
       return NextResponse.json(supplier);
     }
 
-    // CASE 2: Get all suppliers (with optional search)
+
     const query = {};
     if (search && search.trim()) {
       const searchTerm = search.trim();

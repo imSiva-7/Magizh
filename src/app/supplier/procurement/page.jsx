@@ -379,7 +379,6 @@ function ProcurementContent() {
     }
   };
 
-  // ----- FILTER HANDLERS WITH TOASTS -----
   const confirmClearChecked = () => {
     if (checkedIds.length > 0) {
       return window.confirm(
@@ -1066,8 +1065,6 @@ function ProcurementContent() {
                   <th scope="col">Comment</th>
                   <th scope="col">
                     <div className={styles.select_all_wrapper}>
-                    
-                   
                       <input
                         type="checkbox"
                         className={styles.payment_checkbox}
@@ -1075,7 +1072,8 @@ function ProcurementContent() {
                         disabled={!!editingId._id}
                         checked={isSelectAllChecked}
                         title="Select All"
-                      /> *
+                      />{" "}
+                      *
                     </div>
                   </th>
                   <th scope="col">Status</th>

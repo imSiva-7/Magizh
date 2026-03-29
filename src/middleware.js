@@ -24,7 +24,7 @@ const isPublicPath = (path) => {
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token;
+    const token = req.nextauth?.token;
     const path = req.nextUrl.pathname;
     const role = token?.role;
 

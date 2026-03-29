@@ -200,7 +200,6 @@ export async function PATCH(request) {
     const { procurementIds, status, actionDoneBy } = await request.json();
     console.log(actionDoneBy);
 
-    // 1. Validate the input
     if (!Array.isArray(procurementIds) || procurementIds.length === 0) {
       return NextResponse.json(
         { error: "No valid IDs provided for update" },
@@ -215,18 +214,16 @@ export async function PATCH(request) {
       );
     }
 
-    // 2. Initialize database connection
+   
     const client = await clientPromise;
     const db = client.db("production");
 
-    // 3. Convert string IDs to MongoDB ObjectIds
     const objectIds = procurementIds.map((id) => {
       const validation = validateObjectId(id);
       if (!validation.valid) throw new Error(`Invalid ID format: ${id}`);
       return new ObjectId(id);
     });
 
-    // 4. Perform the bulk update
     const result = await db.collection("procurements").updateMany(
       { _id: { $in: objectIds } },
       {
@@ -362,7 +359,6 @@ export async function POST(request) {
       totalAmount: parseFloat(totalAmount),
       paymentRecord: true,
       paymentStatus: "Not Paid",
-      paymentUpadatedOn: "",
       actionDoneBy: actionDoneBy,
       comment: comment,
       createdAt: new Date(),

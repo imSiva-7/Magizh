@@ -199,6 +199,7 @@ export async function POST(request) {
     const productionData = {
       date: data.date,
       batch: finalBatchName,
+      actionDoneBy: data.actionDoneBy,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
