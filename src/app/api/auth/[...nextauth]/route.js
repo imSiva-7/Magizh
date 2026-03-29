@@ -15,15 +15,12 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         const client = await clientPromise;
         const db = client.db("production");
         const user = await db.collection("users").findOne({ email: credentials.email });
         if (!user) return null;
-
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
-
         return {
           id: user._id.toString(),
           email: user.email,
@@ -52,6 +49,19 @@ export const authOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+
+  // 🔥 Explicit cookie configuration – REQUIRED for HTTPS production
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",      // use "lax" for most apps, or "none" if cross‑site needed
+        path: "/",
+        secure:  true, // forces HTTPS‑only cookie
+      },
+    },
+  },
 };
 
 const handler = NextAuth(authOptions);

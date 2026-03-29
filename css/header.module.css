@@ -157,32 +157,34 @@
 }
 
 .logoutButton {
-  background-color: #dc2626;
+  margin-top: .3rem;
+  background-color: #ffffff;
   color: white;
 }
 
 .logoutButton:hover {
-  background-color: #b91c1c;
+  background-color: #c9c9c9;
   transform: translateY(-2px);
 }
 
 .loginButton {
-  background-color: #3b82f6;
-  color: white;
+  margin-top: .5rem;
+  background-color: #ffffff;
+  color: rgb(0, 0, 0);
 }
 
 .loginButton:hover {
-  background-color: #2563eb;
+  background-color:#cacbcb;
   transform: translateY(-2px);
 }
 
 .registerButton {
-  background-color: #10b981;
+  /* background-color:rgb(39, 121, 93); */
   color: white;
 }
 
 .registerButton:hover {
-  background-color: #059669;
+  background-color: rgb(51, 154, 120);
   transform: translateY(-2px);
 }
 

@@ -42,7 +42,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password}),
+        body: JSON.stringify({ name, email, password }),
       });
 
       const data = await res.json();
@@ -68,24 +68,35 @@ export default function RegisterPage() {
       <div className={styles.card}>
         <div className={styles.header}>
           <h1>Create Account</h1>
-          <p>Join Magizh Dairy today</p>
+          <p>Magizh Dairy </p>
         </div>
 
         <div className={styles.form}>
           {success ? (
             <div className={styles.success_message}>
-              <svg className={styles.success_icon} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg
+                className={styles.success_icon}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
               <span>Registration successful! Redirecting to login...</span>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
               <div className={styles.input_group}>
-                <label htmlFor="name" className={styles.label}>Full Name</label>
+                <label htmlFor="name" className={styles.label}>
+                  Full Name
+                </label>
                 <input
                   id="name"
                   type="text"
+                  placeholder="Enter Name"
                   className={`${styles.input} ${error ? styles.input_error : ""}`}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -95,10 +106,13 @@ export default function RegisterPage() {
               </div>
 
               <div className={styles.input_group}>
-                <label htmlFor="email" className={styles.label}>Email Address</label>
+                <label htmlFor="email" className={styles.label}>
+                  Email Address
+                </label>
                 <input
                   id="email"
                   type="email"
+                  placeholder="example@magizhdairy.com"
                   autoComplete="email"
                   className={`${styles.input} ${error ? styles.input_error : ""}`}
                   value={email}
@@ -109,10 +123,13 @@ export default function RegisterPage() {
               </div>
 
               <div className={styles.input_group}>
-                <label htmlFor="password" className={styles.label}>Password</label>
+                <label htmlFor="password" className={styles.label}>
+                  Password
+                </label>
                 <input
                   id="password"
                   type="password"
+                  placeholder="Enter password"
                   autoComplete="new-password"
                   className={`${styles.input} ${error ? styles.input_error : ""}`}
                   value={password}
@@ -124,10 +141,13 @@ export default function RegisterPage() {
               </div>
 
               <div className={styles.input_group}>
-                <label htmlFor="confirm-password" className={styles.label}>Confirm Password</label>
+                <label htmlFor="confirm-password" className={styles.label}>
+                  Confirm Password
+                </label>
                 <input
                   id="confirm-password"
                   type="password"
+                  placeholder="Re-enter password"
                   autoComplete="new-password"
                   className={`${styles.input} ${error ? styles.input_error : ""}`}
                   value={confirmPassword}
@@ -137,9 +157,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {error && (
-                <div className={styles.error_message}>{error}</div>
-              )}
+              {error && <div className={styles.error_message}>{error}</div>}
 
               <button type="submit" className={styles.btn} disabled={loading}>
                 {loading ? (

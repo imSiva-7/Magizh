@@ -169,9 +169,10 @@ const sanitizeNumericInput = (value) => {
 
 const getCustomerTypeClass = (customerType) => {
   const typeClassMap = {
-    Regular: styles.type_regular_badge,
+    Distributor: styles.type_distributor_badge,
     Wholesale: styles.type_wholesale_badge,
     Retail: styles.type_retail_badge,
+    Restaurant: styles.type_restaurant_badge,
     Other: styles.type_other_badge,
   };
   return typeClassMap[customerType] || styles.default_customer;

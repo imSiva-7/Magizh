@@ -4,6 +4,8 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+import Image from "next/image";
+
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -65,7 +67,7 @@ export default function Home() {
             </>
           ) : (
             <Link href="/login" className={styles.loginLink}>
-              Log in
+               Log in
             </Link>
           )}
         </div>

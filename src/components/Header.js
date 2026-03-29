@@ -46,10 +46,7 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
-        <div
-          className={styles.logoSection}
-          onClick={() => router.push("/")}
-        >
+        <div className={styles.logoSection} onClick={() => router.push("/")}>
           <div className={styles.logo}>
             <div className={styles.logoImage}>
               <Image
@@ -94,7 +91,13 @@ export default function Header() {
                 className={styles.logoutButton}
                 aria-label="Logout"
               >
-                Logout
+                  <Image
+                          src="/logout.png"
+                          alt="Log out"
+                          width={20}
+                          height={20}
+                          priority
+                        />
               </button>
             </div>
           ) : (
@@ -104,15 +107,22 @@ export default function Header() {
                 className={styles.loginButton}
                 aria-label="Login"
               >
-                Login
+                <Image
+                  src="/user.png"
+                  alt="Account"
+                  width={20}
+                  height={20}
+                  priority
+                  // className={styles.logoIcon}
+                /> 
               </button>
-              <button
+              {/* <button
                 onClick={() => router.push("/register")}
                 className={styles.registerButton}
                 aria-label="Register"
               >
                 Register
-              </button>
+              </button> */}
             </div>
           )}
 
@@ -154,7 +164,15 @@ export default function Header() {
                         onClick={() => handleNavigation("/login")}
                         className={styles.mobileNavButton}
                       >
-                        <span className={styles.mobileNavText}>Login</span>
+                        <span className={styles.mobileNavText}>
+                        {" "}  <Image
+                            src="/user.png"
+                            alt="Account"
+                            width={20}
+                            height={20}
+                            priority
+                          /> 
+                        </span>
                       </button>
                     </li>
                     {/* <li className={styles.mobileNavItem}>
@@ -173,7 +191,15 @@ export default function Header() {
                       onClick={handleLogout}
                       className={styles.mobileNavButton}
                     >
-                      <span className={styles.mobileNavText}>Logout</span>
+                      <span className={styles.mobileNavText}>
+                        <Image
+                          src="/logout.png"
+                          alt="Log out"
+                          width={25}
+                          height={25}
+                          priority
+                        />
+                      </span>
                     </button>
                   </li>
                 )}

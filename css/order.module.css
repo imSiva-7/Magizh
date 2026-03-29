@@ -40,23 +40,23 @@
 }
 
 /* Customer Type Badges */
-.type_regular_badge,
+.type_distributor_badge,
 .type_wholesale_badge,
+.type_restaurant_badge,
 .type_retail_badge,
 .type_other_badge,
 .default_customer {
-  min-width: 70px;
-  text-align: center;
+  /* min-width: 70px; */
   display: inline-block;
-  padding: 0.5rem 0.5rem;
+  padding: 0.2rem 0.3rem;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.575rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.type_regular_badge {
+.type_restaurant_badge {
   background-color: #dbeafe;
   color: #1e40af;
   border: 1px solid #93c5fd;
@@ -71,9 +71,14 @@
   color: #92400e;
   border: 1px solid #fcd34d;
 }
-.type_other_badge {
+.type_distributor_badge {
   background-color: #f3e8ff;
   color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+.type_other_badge {
+  background-color: #f3e8ff;
+  color: #c447c0;
   border: 1px solid #d8b4fe;
 }
 .default_customer {

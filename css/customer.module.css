@@ -408,7 +408,7 @@
   letter-spacing: 0.5px;
 }
 
-.type-regular {
+.type-restaurant {
   background-color: #dbeafe;
   color: #1e40af;
   border: 1px solid #93c5fd;
@@ -426,9 +426,14 @@
   border: 1px solid #fcd34d;
 }
 
-.type-other {
+.type-distributor {
   background-color: #f3e8ff;
   color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+.type-other {
+  background-color: #f3e8ff;
+  color: #c447c0;
   border: 1px solid #d8b4fe;
 }
 

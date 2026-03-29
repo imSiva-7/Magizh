@@ -2,11 +2,11 @@
 /* Matching the design language of procurement.module.css */
 
 .container {
-  min-height: 100vh;
+  min-height: 55vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: white;
   padding: 1rem;
 }
 

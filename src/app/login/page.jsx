@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,7 @@ export default function LoginPage() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      router.push("/"); // or any protected page
+      router.push("/"); 
     }
   };
 
@@ -36,7 +37,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         <div className={styles.header}>
           <h1>Welcome Back</h1>
-          <p>Sign in to your Magizh Dairy account</p>
+          <p>Magizh Dairy account</p>
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
@@ -45,6 +46,7 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
+              placeholder="example@magizhdairy.com"
               className={`${styles.input} ${error ? styles.input_error : ""}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -58,6 +60,7 @@ export default function LoginPage() {
             <input
               id="password"
               type="password"
+              placeholder="Enter password"
               className={`${styles.input} ${error ? styles.input_error : ""}`}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -71,15 +74,15 @@ export default function LoginPage() {
             {loading ? (
               <>
                 <span className={styles.button_spinner}></span>
-                Signing in...
+                Logging in...
               </>
             ) : (
-              "Sign In"
+              "Log In"
             )}
           </button>
 
           <div className={styles.footer}>
-            Don't have an account? <Link href="/register">Create one</Link>
+            {"Don't have an account?"} <Link href="/register">Create one</Link>
           </div>
         </form>
       </div>
