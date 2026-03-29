@@ -9,14 +9,10 @@ const rolePermissions = {
 };
 
 const isPathAllowed = (path, userRole) => {
-  if (!userRole) {
-    console.warn("No user role found, denying access");
-    return false;
-  }
+  if (!userRole) return false;
   if (userRole === "admin" || userRole === "dev") return true;
   const allowed = rolePermissions[userRole];
-  if (!allowed) return false;
-  return allowed.some((prefix) => path.startsWith(prefix));
+  return allowed?.some((prefix) => path.startsWith(prefix));
 };
 
 export default withAuth(
@@ -25,14 +21,26 @@ export default withAuth(
     const path = req.nextUrl.pathname;
     const role = token?.role;
 
-    console.log(`[Auth] Path: ${path}, Role: ${role || "none"}`);
-
     if (!token) {
+      // API routes: return 401 JSON instead of redirect
+      if (path.startsWith("/api/")) {
+        return new NextResponse(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      // For page routes, redirect to login
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
     if (!isPathAllowed(path, role)) {
-      console.log(`[Auth] Access denied for ${role} to ${path}`);
+      // API routes: return 403 JSON
+      if (path.startsWith("/api/")) {
+        return new NextResponse(
+          JSON.stringify({ error: "Forbidden" }),
+          { status: 403, headers: { "Content-Type": "application/json" } }
+        );
+      }
       return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 

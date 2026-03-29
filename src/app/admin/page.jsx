@@ -53,7 +53,13 @@ export default function AdminPage() {
       });
       if (!res.ok) throw new Error("Update failed");
       toast.success("Role updated successfully");
-      // Remove from roleChanges if present
+
+      // If the updated user is the current user, refresh the session to reflect new role
+      if (userId === session?.user?.id) {
+        await update(); // This will fetch a new session from the server
+        toast.info("Your session has been updated with the new role.");
+      }
+
       setRoleChanges((prev) => {
         const newChanges = { ...prev };
         delete newChanges[userId];
@@ -72,7 +78,11 @@ export default function AdminPage() {
       toast.error("You cannot delete yourself");
       return;
     }
-    if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete user "${userName}"? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
     setDeleting(userId);
@@ -129,7 +139,7 @@ export default function AdminPage() {
   return (
     <div className={styles.container}>
       <ToastContainer position="top-right" autoClose={3000} />
-      
+
       {/* Header */}
       <div className={styles.header}>
         <h1>Admin Dashboard</h1>
@@ -201,16 +211,24 @@ export default function AdminPage() {
             <tbody>
               {filteredUsers.map((user) => {
                 const currentRole = roleChanges[user._id] ?? user.role;
-                const isChanged = roleChanges[user._id] !== undefined && roleChanges[user._id] !== user.role;
+                const isChanged =
+                  roleChanges[user._id] !== undefined &&
+                  roleChanges[user._id] !== user.role;
                 return (
                   <tr key={user._id}>
-                    <td className={styles.name_cell}>{session?.user?.email == user.email ? "You" : user.name || "-"}</td>
+                    <td className={styles.name_cell}>
+                      {session?.user?.email == user.email
+                        ? "You"
+                        : user.name || "-"}
+                    </td>
                     <td className={styles.email_cell}>{user.email}</td>
                     <td className={styles.role_cell}>
                       <select
                         value={currentRole}
-                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                        disabled={session?.user?.email == user.email }
+                        onChange={(e) =>
+                          handleRoleChange(user._id, e.target.value)
+                        }
+                        disabled={session?.user?.email == user.email}
                         className={styles.role_select}
                       >
                         {roleOptions.map((role) => (
@@ -228,14 +246,18 @@ export default function AdminPage() {
                         {isChanged && (
                           <button
                             onClick={() => updateRole(user._id, currentRole)}
-                            disabled={updating === user._id || deleting === user._id}
+                            disabled={
+                              updating === user._id || deleting === user._id
+                            }
                             className={styles.save_btn}
                           >
                             {updating === user._id ? "Saving..." : "Save"}
                           </button>
                         )}
                         <button
-                          onClick={() => deleteUser(user._id, user.name || user.email)}
+                          onClick={() =>
+                            deleteUser(user._id, user.name || user.email)
+                          }
                           disabled={session?.user?.email == user.email}
                           className={styles.delete_btn}
                         >

@@ -26,7 +26,7 @@ export async function POST(request) {
 
     // Allowed roles (only admin/dev can assign others)
     const allowedRoles = ["employee", "admin", "dev"];
-    const userRole = allowedRoles.includes(role) ? role : "non";
+    const userRole = allowedRoles.includes(role) ? role : "employee";
 
     const result = await users.insertOne({
       name,
