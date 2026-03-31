@@ -1,5 +1,5 @@
 /* ========== analytics.module.css ========== */
-/* Based on the same design language as procurement.module.css */
+/* Consistent with Procurement Module Design Language */
 
 .container {
   max-width: 1400px;
@@ -10,7 +10,7 @@
   min-height: 100vh;
 }
 
-/* ========== HEADER ========== */
+/* ========== 1. HEADER (Same as Procurement) ========== */
 .header {
   margin-bottom: 2rem;
   padding: 1.5rem;
@@ -18,49 +18,57 @@
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .title {
+  color: rgb(39, 121, 93);
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
-  color: rgb(39, 121, 93);
 }
 
-/* ========== FILTER BAR ========== */
+/* ========== 2. FILTER BAR (Matching Procurement Filter Form) ========== */
 .filterBar {
   background: white;
+  padding: 2rem;
   border-radius: 1rem;
-  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .dateInputGroup {
   display: flex;
   flex-direction: column;
+  /* display: ; */
   gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
 }
 
 .dateInputGroup label {
-  font-weight: 600;
   color: #475569;
+  font-weight: 600;
   font-size: 0.875rem;
 }
 
 .dateInputGroup input {
+  /* width: 100%; */
   padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 0.5rem;
   background: white;
-  color: #1e293b;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  color: #334155;
+  font-size: 1rem;
+  transition: all 0.2s ease;
 }
 
 .dateInputGroup input:focus {
@@ -69,58 +77,64 @@
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
-.dateInputGroup input:hover {
-  border-color: #cbd5e1;
-}
-
+/* Reset Button - Matching btn_reset/secondary_btn style */
 .filterBar button {
-  background: rgb(39, 121, 93);
-  color: white;
-  border: none;
   padding: 0.75rem 1.5rem;
+  transform: translateY(-2px);
+  border: none;
   border-radius: 0.5rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  align-self: flex-end;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
+  color: white;
 }
 
 .filterBar button:hover {
-  background: rgb(30, 100, 80);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(39, 121, 93, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
-/* ========== SUMMARY CARDS ========== */
+/* ========== 3. SUMMARY CARDS (Matching stat_item) ========== */
 .summaryCards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .card {
-  background: white;
-  border-radius: 1rem;
+  background: #ffffff;
   padding: 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   transition: all 0.2s ease;
-  text-align: center;
+  text-align: left; /* Aligned with procurement stat style */
 }
 
 .card:hover {
+  border-color: rgb(39, 121, 93);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card h3 {
   font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
-  margin: 0 0 0.75rem 0;
-  font-weight: 600;
+  margin: 0;
 }
 
 .card p {
@@ -130,54 +144,56 @@
   margin: 0;
 }
 
-/* ========== CHART CARDS ========== */
+/* ========== 4. CHART CARDS (Matching Table/Form Wrapper) ========== */
 .chartCard {
   background: white;
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 2rem;
   margin-bottom: 2rem;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
-}
-
-.chartCard:hover {
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .chartCard h2 {
+  color: #1e293b;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 1.25rem 0;
-  padding-bottom: 0.75rem;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 1rem;
   border-bottom: 2px solid #e2e8f0;
 }
 
-/* ========== LOADING SPINNER ========== */
+/* Recharts Tooltip Customization */
+:global(.recharts-default-tooltip) {
+  background-color: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ========== 5. LOADING & EMPTY STATES (Matching Procurement) ========== */
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 4rem;
   color: #64748b;
   background: white;
   border-radius: 1rem;
   border: 1px solid #e2e8f0;
-  margin: 2rem 0;
 }
 
 .loading:after {
   content: "";
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border: 3px solid #e2e8f0;
   border-top-color: rgb(39, 121, 93);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-  display: inline-block;
+  display: block;
+  margin-top: 1rem;
 }
 
 @keyframes spin {
@@ -186,36 +202,33 @@
   }
 }
 
-/* ========== RESPONSIVE ========== */
+/* ========== 6. RESPONSIVE (Matching Procurement Queries) ========== */
 @media (max-width: 768px) {
-  .container {
-    padding: 0.75rem;
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
   .filterBar {
+    padding: 1.5rem;
     flex-direction: column;
     align-items: stretch;
   }
 
-  .dateInputGroup input {
+  .dateInputGroup {
     width: 100%;
   }
 
   .filterBar button {
     width: 100%;
-    align-self: stretch;
   }
 
   .summaryCards {
     grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .card p {
-    font-size: 1.5rem;
   }
 
   .chartCard {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 }

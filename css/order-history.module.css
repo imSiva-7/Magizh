@@ -1,0 +1,272 @@
+/* ========== order-history.module.css ========== */
+
+.page_container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.page_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.page_title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: rgb(39, 121, 93);
+}
+
+/* ========== 1. FILTER CARD ========== */
+.filter_card {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.date_inputs_grid {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.date_field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.date_field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.date_input {
+  /* width: 100%; */
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.date_input:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.filter_buttons {
+  transform: translateY(-5px);
+  display: flex;
+  gap: 1rem;
+}
+
+/* ========== 2. STATS GRID ========== */
+.stats_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat_item {
+  background-color: #ffffff;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: transform 0.2s;
+}
+
+.stat_item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgb(39, 121, 93);
+}
+
+.stat_label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat_value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.paid_border {
+  border-left: 5px solid #10b981 !important;
+}
+.due_border {
+  border-left: 5px solid #ef4444 !important ;
+}
+
+/* ========== 3. TABLE STYLING ========== */
+.table_wrapper {
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.table_container {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.table thead {
+  background: #f1f5f9;
+}
+
+.table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.875rem;
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Specific Cell Styles */
+.date_cell {
+  width: 120px;
+}
+
+.date_text {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ascii_arrow {
+  color: #cbd5e1;
+  font-weight: bold;
+  padding-left: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.customer_name {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: rgb(39, 121, 93);
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.customer_name:hover {
+  background-color: rgba(39, 121, 93, 0.8);
+}
+
+.total_cell {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ========== 4. STATUS BADGES ========== */
+.status_paid,
+.status_due {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status_paid {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status_due {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ========== 5. BUTTONS ========== */
+.btn_primary {
+  background: rgb(39, 121, 93);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn_secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn_primary:hover {
+  background: rgb(30, 100, 80);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.2);
+}
+
+/* ========== 6. RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .date_inputs_grid {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats_grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .btn_primary,
+  .btn_secondary {
+    width: 100%;
+  }
+}

@@ -5,16 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
-
-
 export default function Footer() {
   const currentYear = new Date().getFullYear();
- const { data: session } = useSession();
+  const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin" || session?.user?.role === "dev";
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContainer}>
         <div className={styles.footerMain}>
+          {/* Brand Section */}
           <div className={styles.footerSection}>
             <div className={styles.footerLogo}>
               <Image
@@ -23,51 +23,70 @@ export default function Footer() {
                 width={150}
                 height={70}
                 className={styles.logoIcon}
+                priority
               />
             </div>
-            <div className={styles.footerSection}>
-              <h4 className={styles.sectionTitle}>Links</h4>
-              <ul className={styles.footerLinks}>
-               {isAdmin && <li>
-                    <Link href="/admin" className={styles.footerLink}>Admin Panel</Link>
-                </li>}
+            <p className={styles.footerDescription}>
+              Quality dairy products delivered with care.
+            </p>
+          </div>
+
+          {/* Quick Links Section */}
+          <div className={styles.footerSection}>
+            <h4 className={styles.sectionTitle}>Quick Links</h4>
+            <ul className={styles.footerLinks}>
+              {isAdmin && (
                 <li>
-                  <Link href="/productions" className={styles.footerLink}>
-                    Production
+                  <Link href="/admin" className={styles.footerLink}>
+                    Admin Panel
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href="/productions/history"
-                    className={styles.footerLink}
-                  >
-                    History
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/supplier" className={styles.footerLink}>
-                    Suppliers
-                  </Link>
-                </li>
-               
-              </ul>
-            </div>
+              )}
+              <li>
+                <Link href="/productions" className={styles.footerLink}>
+                  Production
+                </Link>
+              </li>
+              <li>
+                <Link href="/productions/history" className={styles.footerLink}>
+                  History
+                </Link>
+              </li>
+              <li>
+                <Link href="/supplier" className={styles.footerLink}>
+                  Suppliers
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact Section */}
+          <div className={styles.footerSection}>
+            <h4 className={styles.sectionTitle}>Contact</h4>
+            <ul className={styles.contactList}>
+              {/* <li className={styles.contactItem}>
+                <span className={styles.contactIcon}>📞</span>
+                <span>+91 12345 67890</span>
+              </li> */}
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}>✉️</span>
+                <span>hello@magizhdairy.com</span>
+              </li>
+              <li className={styles.contactItem}>
+                <span className={styles.contactIcon}>📍</span>
+                <span>Chennai, India</span>
+              </li>
+            </ul>
           </div>
         </div>
+
         <div className={styles.footerBottom}>
           <div className={styles.copyright}>
             <span className={styles.copyrightText}>
-              {/* © {currentYear} Diary milk oreo. All rights reserved. */}
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.5.2</span>
+            <span className={styles.version}>v1.5.3</span>
           </div>
-
-          {/* <div className={styles.technicalInfo}>
-            <span className={styles.techItem}>Database: MongoDB</span>
-            <span className={styles.techItem}>Framework: Next.js</span>
-            <span className={styles.techItem}>Hosting: Vercel</span>
-          </div> */}
         </div>
       </div>
     </footer>

@@ -1,208 +1,214 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react"; // ← added
+import { useSession, signOut } from "next-auth/react";
 import styles from "@/css/header.module.css";
+
+// Navigation data – moved outside component to avoid recreation
+const desktopNavItems = [
+  {
+    name: "Productions",
+    path: "/productions",
+    children: [{ name: "Production History", path: "/productions/history" }],
+  },
+  {
+    name: "Suppliers",
+    path: "/supplier",
+    children: [
+      { name: "Procurement History", path: "/supplier/procurement/history" },
+      { name: "Procurement Payments", path: "/supplier/payments" },
+    ],
+  },
+  {
+    name: "Customers",
+    path: "/customer",
+    children: [{ name: "Order History", path: "/customer/order/history" }],
+  },
+];
+
+const mobileNavItems = [
+  { name: "Production", path: "/productions" },
+  { name: "Production History", path: "/productions/history" },
+  { name: "Suppliers", path: "/supplier" },
+  { name: "Customers", path: "/customer" },
+  { name: "Order History", path: "/customer/Order/history" },
+  { name: "Procurement History", path: "/supplier/procurement/history" },
+  { name: "Procurement Payments", path: "/supplier/payments" },
+];
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: session, status } = useSession(); // ← added
+  const { data: session, status } = useSession();
+  const mobileMenuRef = useRef(null);
+  const menuButtonRef = useRef(null);
 
-  const navItems = [
-    { name: "Production", path: "/productions", icon: "" },
-    { name: "Production History", path: "/productions/history", icon: "" },
-    { name: "Suppliers", path: "/supplier", icon: "" },
-    { name: "Customers", path: "/customer", icon: "" },
-    { name: "Procurement History", path: "/supplier/procurement/history" },
-    { name: "Procurement Payments", path: "/supplier/payments" },
-  ];
+  // Close mobile menu when route changes
+  // useEffect(() => {
+  //   setMobileMenuOpen(false);
+  // }, [pathname]);
 
-  const isActive = (path) => {
-    if (path === "/") {
-      return pathname === "/";
-    }
-    return pathname.endsWith(path);
-  };
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        mobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(event.target)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
 
-  const handleNavigation = (path) => {
-    router.push(path);
-    setMobileMenuOpen(false);
-  };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [mobileMenuOpen]);
 
-  const handleLogout = () => {
-    signOut({ callbackUrl: "/" });
-  };
+  // Handle escape key to close menu
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (mobileMenuOpen && event.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+      }
+    };
 
-  // Loading state while session is being fetched
-  if (status === "loading") {
-    // You could return a simple loading spinner or nothing
-    return null;
-  }
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [mobileMenuOpen]);
+
+  const handleNavigation = useCallback(
+    (path) => {
+      router.push(path);
+      setMobileMenuOpen(false);
+    },
+    [router]
+  );
+
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev);
+  }, []);
+
+  if (status === "loading") return null;
 
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
+        {/* Logo */}
         <div className={styles.logoSection} onClick={() => router.push("/")}>
-          <div className={styles.logo}>
-            <div className={styles.logoImage}>
-              <Image
-                src="/favicon.ico"
-                alt="Magizh Dairy Logo"
-                width={180}
-                height={90}
-                priority
-                className={styles.logoIcon}
-              />
-            </div>
-          </div>
+          <Image
+            src="/favicon.ico"
+            alt="Company Logo"
+            width={120}
+            height={70}
+            priority
+          />
         </div>
 
-        <nav className={styles.desktopNav}>
+        {/* Desktop Navigation */}
+        <nav className={styles.desktopNav} aria-label="Main navigation">
           <ul className={styles.navList}>
-            {navItems.map((item) => (
+            {desktopNavItems.map((item) => (
               <li key={item.path} className={styles.navItem}>
-                <button
-                  onClick={() => handleNavigation(item.path)}
+                <Link
+                  href={item.path}
                   className={`${styles.navButton} ${
-                    isActive(item.path) ? styles.active : ""
+                    pathname.startsWith(item.path) ? styles.active : ""
                   }`}
-                  aria-label={`Go to ${item.name}`}
+                  aria-current={pathname.startsWith(item.path) ? "page" : undefined}
                 >
-                  <span className={styles.navText}>{item.name}</span>
-                </button>
+                  {item.name}
+                </Link>
+                {item.children && (
+                  <ul className={styles.dropdown} role="menu">
+                    {item.children.map((child) => (
+                      <li key={child.path} role="none">
+                        <Link
+                          href={child.path}
+                          className={styles.dropdownItem}
+                          role="menuitem"
+                          aria-current={
+                            pathname === child.path ? "page" : undefined
+                          }
+                        >
+                          <span className={styles.arrow}>↳ </span> {child.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
         </nav>
 
+        {/* Right side: user & mobile button */}
         <div className={styles.headerRight}>
-          {/* Authentication Section */}
           {session ? (
             <div className={styles.userSection}>
               <span className={styles.userName}>
-                Hi, {session.user.name || session.user.email}
+                Hi, {session.user?.name || "User"}
               </span>
               <button
-                onClick={handleLogout}
+                onClick={() => signOut()}
                 className={styles.logoutButton}
-                aria-label="Logout"
+                aria-label="Sign out"
               >
-                  <Image
-                          src="/logout.png"
-                          alt="Log out"
-                          width={20}
-                          height={20}
-                          priority
-                        />
+                <Image src="/logout.png" alt="" width={18} height={18} aria-hidden />
               </button>
             </div>
           ) : (
-            <div className={styles.authButtons}>
-              <button
-                onClick={() => router.push("/login")}
-                className={styles.loginButton}
-                aria-label="Login"
-              >
-                <Image
-                  src="/user.png"
-                  alt="Account"
-                  width={20}
-                  height={20}
-                  priority
-                  // className={styles.logoIcon}
-                /> 
-              </button>
-              {/* <button
-                onClick={() => router.push("/register")}
-                className={styles.registerButton}
-                aria-label="Register"
-              >
-                Register
-              </button> */}
-            </div>
+            <button
+              onClick={() => router.push("/login")}
+              className={styles.loginButton}
+              aria-label="Log in"
+            >
+              <Image src="/user.png" alt="" width={20} height={20} aria-hidden />
+            </button>
           )}
 
           <button
+            ref={menuButtonRef}
             className={styles.mobileMenuButton}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
+            onClick={toggleMobileMenu}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? "✕" : "☰"}
           </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Overlay */}
         {mobileMenuOpen && (
-          <div className={styles.mobileNavOverlay}>
+          <div
+            ref={mobileMenuRef}
+            className={styles.mobileNavOverlay}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation menu"
+          >
             <nav className={styles.mobileNav}>
               <ul className={styles.mobileNavList}>
-                {navItems.map((item) => (
-                  <li key={item.path} className={styles.mobileNavItem}>
-                    <button
-                      onClick={() => handleNavigation(item.path)}
+                {mobileNavItems.map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      href={item.path}
                       className={`${styles.mobileNavButton} ${
-                        isActive(item.path) ? styles.mobileActive : ""
+                        pathname === item.path ? styles.mobileActive : ""
                       }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={pathname === item.path ? "page" : undefined}
                     >
-                      <span className={styles.mobileNavIcon}>{item.icon}</span>
-                      <span className={styles.mobileNavText}>{item.name}</span>
-                      {isActive(item.path) && (
-                        <span className={styles.mobileActiveIndicator}>●</span>
-                      )}
-                    </button>
+                      {item.name}
+                    </Link>
                   </li>
                 ))}
-                {/* Add mobile auth links */}
-                {!session && (
-                  <>
-                    <li className={styles.mobileNavItem}>
-                      <button
-                        onClick={() => handleNavigation("/login")}
-                        className={styles.mobileNavButton}
-                      >
-                        <span className={styles.mobileNavText}>
-                        {" "}  <Image
-                            src="/user.png"
-                            alt="Account"
-                            width={20}
-                            height={20}
-                            priority
-                          /> 
-                        </span>
-                      </button>
-                    </li>
-                    {/* <li className={styles.mobileNavItem}>
-                      <button
-                        onClick={() => handleNavigation("/register")}
-                        className={styles.mobileNavButton}
-                      >
-                        <span className={styles.mobileNavText}>Register</span>
-                      </button>
-                    </li> */}
-                  </>
-                )}
-                {session && (
-                  <li className={styles.mobileNavItem}>
-                    <button
-                      onClick={handleLogout}
-                      className={styles.mobileNavButton}
-                    >
-                      <span className={styles.mobileNavText}>
-                        <Image
-                          src="/logout.png"
-                          alt="Log out"
-                          width={25}
-                          height={25}
-                          priority
-                        />
-                      </span>
-                    </button>
-                  </li>
-                )}
               </ul>
             </nav>
           </div>

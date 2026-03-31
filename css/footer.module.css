@@ -1,8 +1,6 @@
-/* footer.module.css */
 .footer {
-  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
-  color: #000000;
-  border-top: 1px solid #334155;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
   margin-top: auto;
 }
 
@@ -19,7 +17,7 @@
   gap: 2rem;
   margin-bottom: 2rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #e1e1e1;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .footerSection {
@@ -35,63 +33,27 @@
   margin-bottom: 0.5rem;
 }
 
-.footerLogoIcon {
-  font-size: 2rem;
-  animation: float 3s ease-in-out infinite;
+.logoIcon {
+  transition: transform 0.3s ease;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-}
-
-.footerTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  color: rgb(255, 255, 255);
-  background: rgb(39, 121, 93);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.logoIcon:hover {
+  transform: scale(1.02);
 }
 
 .footerDescription {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #475569;
   margin: 0;
 }
 
-.footerContact {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.contactItem {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-
-.contactIcon {
-  font-size: 1rem;
-  opacity: 0.8;
-}
-
-.contactText {
-  color: #e2e8f0;
-}
-
-/* Quick Links */
+/* Section Titles */
 .sectionTitle {
   font-size: 1.1rem;
   font-weight: 600;
-  color: rgb(0, 0, 0);
-  margin: 0 0 0rem 0;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
   position: relative;
   padding-bottom: 0.5rem;
 }
@@ -103,10 +65,11 @@
   left: 0;
   width: 40px;
   height: 3px;
-  background: rgb(39, 121, 93);
+  background: #27795d;
   border-radius: 2px;
 }
 
+/* Quick Links */
 .footerLinks {
   list-style: none;
   margin: 0;
@@ -117,10 +80,10 @@
 }
 
 .footerLink {
-  color: #010101;
+  color: #475569;
   text-decoration: none;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
   display: inline-block;
   position: relative;
 }
@@ -132,55 +95,41 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: rgb(39, 121, 93);
-  transition: width 0.3s ease;
+  background: #27795d;
+  transition: width 0.2s ease;
 }
 
 .footerLink:hover {
-  color: rgb(79, 79, 79);
-  transform: translateX(5px);
+  color: #27795d;
+  transform: translateX(4px);
 }
 
 .footerLink:hover::after {
   width: 100%;
 }
 
-/* Stats */
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.statItem {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 1rem;
+/* Contact List */
+.contactList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contactItem {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #475569;
 }
 
-.statItem:hover {
-  background: rgba(248, 248, 248, 0.1);
-  border-color: rgb(39, 121, 93);
-  transform: translateY(-2px);
-}
-
-.statValue {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: white;
-}
-
-.statLabel {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.contactIcon {
+  font-size: 1rem;
+  min-width: 24px;
+  opacity: 0.8;
 }
 
 /* Footer Bottom */
@@ -200,33 +149,17 @@
 }
 
 .copyrightText {
-  font-size: 0.9rem;
-  color: #94a3b8;
-}
-
-.version {
-  background: rgba(255, 255, 255, 0.2);
-  color: rgb(39, 121, 93);
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.technicalInfo {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #64748b;
 }
 
-.techItem {
+.version {
+  background: #f1f5f9;
+  color: #27795d;
   padding: 0.25rem 0.75rem;
-  background: rgba(206, 206, 206, 0.05);
-  border-radius: 12px;
-  border: 1px solid #334155;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* Responsive Design */
@@ -234,17 +167,17 @@
   .footerContainer {
     padding: 2rem 1.5rem;
   }
-  
+
   .footerMain {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .footerBottom {
     flex-direction: row;
     justify-content: space-between;
     text-align: left;
   }
-  
+
   .copyright {
     align-items: flex-start;
   }
@@ -254,7 +187,7 @@
   .footerContainer {
     padding: 3rem 2rem;
   }
-  
+
   .footerMain {
     grid-template-columns: 2fr 1fr 1fr;
   }
