@@ -74,7 +74,7 @@ export default function Footer() {
               </li>
               <li className={styles.contactItem}>
                 <span className={styles.contactIcon}>📍</span>
-                <span>Chennai, India</span>
+                <span> Gudiyatham, Vellore,  India</span>
               </li>
             </ul>
           </div>
@@ -85,7 +85,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.5.4</span>
+            <span className={styles.version}>v1.5.5</span>
           </div>
         </div>
       </div>
