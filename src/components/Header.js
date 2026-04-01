@@ -34,7 +34,7 @@ const mobileNavItems = [
   { name: "Production History", path: "/productions/history" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Customers", path: "/customer" },
-  { name: "Order History", path: "/customer/Order/history" },
+  { name: "Order History", path: "/customer/order/history" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
 ];

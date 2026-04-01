@@ -85,10 +85,20 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
-            <span className={styles.version}>v1.5.3</span>
+            <span className={styles.version}>v1.5.4</span>
           </div>
         </div>
       </div>
+
+      {/* -- SELECT * FROM Customers WHERE City != "";
+-- SELECT * FROM Customers WHERE City IN("Helsinki", "Berlin");
+-- SELECT Max(Price) FROM Products;
+-- SELECT * FROM Customers WHERE CustomerID IN (SELECT CustomerID FROM Orders Where ShipperID IN (SELECT 		 	ShipperID From Shippers where ShipperName = "United Package"));
+-- SELECT * FROM Customers WHERE Country IN (Select Country from Suppliers);
+-- SELECT CustomerName, Concat_ws(", ", PostalCode, City, Country) as PinCode From Customers;
+-- Select Orders.orderID, Orders.OrderDate, Customers.CustomerName FROM Customers, Orders WHERE 						 Customers.CustomerID=Orders.CustomerID;
+SELECT Orders.orderID, Customers.customerName, Orders.orderDate FROM Orders left JOIN Customers ON Customers.CustomerID = Orders.CustomerID; */}
     </footer>
   );
 }
+
