@@ -12,38 +12,38 @@ export default function Home() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/dashboard/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setStats(data);
-        } else {
-          // Fallback mock data
-          setStats({
-            totalOrders: 128,
-            totalMilk: 3540.5,
-            pendingPayments: 24500,
-            totalCustomers: 42,
-            totalSuppliers: 18,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch stats", error);
-        setStats({
-          totalOrders: 128,
-          totalMilk: 3540.5,
-          pendingPayments: 24500,
-          totalCustomers: 42,
-          totalSuppliers: 18,
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStats();
-  }, []);
+  // useEffect(() => {
+  //   async function fetchStats() {
+  //     try {
+  //       const res = await fetch("/api/dashboard/stats");
+  //       if (res.ok) {
+  //         const data = await res.json();
+  //         setStats(data);
+  //       } else {
+  //         // Fallback mock data
+  //         setStats({
+  //           totalOrders: 128,
+  //           totalMilk: 3540.5,
+  //           pendingPayments: 24500,
+  //           totalCustomers: 42,
+  //           totalSuppliers: 18,
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch stats", error);
+  //       setStats({
+  //         totalOrders: 128,
+  //         totalMilk: 3540.5,
+  //         pendingPayments: 24500,
+  //         totalCustomers: 42,
+  //         totalSuppliers: 18,
+  //       });
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+  //   fetchStats();
+  // }, []);
 
   const handleSignOut = () => signOut({ callbackUrl: "/login" });
 
@@ -61,9 +61,9 @@ export default function Home() {
               {session.user?.role === "admin" && (
                 <span className={styles.adminBadge}>Admin</span>
               )}
-              <button onClick={handleSignOut} className={styles.logoutBtn}>
+              {/* <button onClick={handleSignOut} className={styles.logoutBtn}>
                 Sign out
-              </button>
+              </button> */}
             </>
           ) : (
             <Link href="/login" className={styles.loginLink}>

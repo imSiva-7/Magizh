@@ -398,11 +398,11 @@
 }
 
 .typeBadge {
-  min-width: 70px;
+  min-width: 90px;
   display: inline-block;
-  padding: 0.2rem 0.4rem;
+  padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;
-  font-size: 0.575rem;
+  font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -584,7 +584,7 @@
 .actionMenuPopup {
   position: absolute;
   right: 0;
-  top: 100%;
+  bottom: 100%;
   margin-top: 0.25rem;
   background: white;
   border-radius: 0.5rem;

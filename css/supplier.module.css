@@ -536,7 +536,7 @@
 .actionMenuPopup {
   position: absolute;
   right: 0;
-  top: 100%;
+  bottom: 100%;
   margin-top: 0.25rem;
   background: white;
   border-radius: 0.5rem;

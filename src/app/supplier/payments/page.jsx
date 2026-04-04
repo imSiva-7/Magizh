@@ -59,7 +59,7 @@ export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "admin";
+  // const isAdmin = session?.user?.role === "admin";
 
   const [checkedIds, setCheckedIds] = useState([]);
   const [checkedSupplierId, setCheckedSupplierId] = useState("");
@@ -155,9 +155,19 @@ export default function Payments() {
       toast.success(
         `Successfully marked ${checkedIds.length} records as ${status}`,
       );
+
+      setProcurementRecords((prevRecords) =>
+        prevRecords.map((record) =>
+          checkedIds.includes(record._id)
+            ? { ...record, paymentStatus: status }
+            : record,
+        ),
+      );
       setCheckedIds([]);
       setCheckedSupplierId("");
-      await fetchSupplierProcurements();
+      setCheckedIds([]);
+      setCheckedSupplierId("");
+      // await fetchSupplierProcurements();
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to process bulk payment");
@@ -582,7 +592,7 @@ export default function Payments() {
 
             // const eligibleProcurements = procurements;
             const isAllChecked =
-             procurements.length > 0 &&
+              procurements.length > 0 &&
               procurements.every((r) => checkedIds.includes(r._id));
 
             const isSupplierDisabled =

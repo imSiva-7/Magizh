@@ -46,7 +46,6 @@ const initialFilters = {
   endDate: getTodayDate(),
 };
 
-// ========== REUSABLE COMPONENTS ==========
 const InputGroup = ({ label, error, required, readOnly, ...props }) => (
   <div className={styles.input_group}>
     <label className={required ? styles.required_label : ""}>
@@ -105,7 +104,16 @@ const SummaryStats = ({ summary, filters }) => (
       </span>
     </h3>
     <div className={styles.stats_grid}>
-      <StatItem label="Milk" value={summary.milk.toFixed(2)} unit="L" />
+      <StatItem
+        label="Milk"
+        value={formatNumberWithCommas(summary.milk.toFixed(2))}
+        unit="L"
+      />
+      <StatItem
+        label="Avg Fat/SNF"
+        value={`${summary.avgFat} / ${summary.avgSnf}`}
+        unit="%"
+      />
       <StatItem
         label="Daily Avg"
         value={
@@ -115,9 +123,13 @@ const SummaryStats = ({ summary, filters }) => (
         }
         unit="L/day"
       />
-      <StatItem label="Avg Fat" value={summary.avgFat} unit="%" />
-      <StatItem label="Avg SNF" value={summary.avgSnf} unit="%" />
       <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
+      <StatItem
+        label="Daily Avg"
+        value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
+        prefix="₹"
+      />
+
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.amount)}
@@ -628,6 +640,7 @@ function ProcurementContent() {
     return {
       ...totals,
       avgRate: totals.milk ? (totals.amount / totals.milk).toFixed(2) : "0.00",
+      avgRateDaily: (totals.amount / uniqueDates.size).toFixed(0) || "issue",
       avgFat,
       avgSnf,
       daysWithData: uniqueDates.size,
@@ -943,7 +956,7 @@ function ProcurementContent() {
                 onClick={loadTodayData}
                 className={`${styles.btn} ${styles.btn_today}`}
               >
-                Load Today
+                Today
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatDateForDisplay } from "./dateUtils";
 
 // --- Utility Functions ---
 const formatNumberWithCommas = (value, decimals = 2) => {
@@ -18,14 +19,6 @@ const formatDateForCSV = (dateStr) => {
     .padStart(2, "0")}-${date.getFullYear().toString().slice(-2)}`;
 };
 
-const formatDateForDisplay = (dateStr) => {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 const calculateTotals = (procurements) => {
   if (!procurements.length) {
@@ -77,7 +70,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("GUDIYATHAM | GST NO: XXXXXXXXXX", 14, 26);
+  doc.text("GUDIYATHAM | GST NO: 33AAKCM1234F1ZR", 14, 26);
   doc.text("Phone: +91 93636 46314, +91 75021 36314", 14, 32);
 
   // Bill Period Box (Top Right)
@@ -113,9 +106,6 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   if (supplier?.supplierName || supplier) {
     doc.text(`Name: ${supplier.supplierName || supplier}`, 18, infoStartY + 14);
   }
-  // if (supplier?.bankDetails) {
-  //   doc.text(`Bank:  ${supplier.bankDetails}`, 18, infoStartY + 20);
-  // }
 
   if (supplier?.supplierCustomRate) {
     doc.text(

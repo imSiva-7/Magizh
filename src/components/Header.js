@@ -33,10 +33,10 @@ const mobileNavItems = [
   { name: "Production", path: "/productions" },
   { name: "Production History", path: "/productions/history" },
   { name: "Suppliers", path: "/supplier" },
-  { name: "Customers", path: "/customer" },
-  { name: "Order History", path: "/customer/order/history" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
+  { name: "Customers", path: "/customer" },
+  { name: "Order History", path: "/customer/order/history" },
 ];
 
 export default function Header() {
@@ -88,7 +88,7 @@ export default function Header() {
       router.push(path);
       setMobileMenuOpen(false);
     },
-    [router]
+    [router],
   );
 
   const toggleMobileMenu = useCallback(() => {
@@ -105,8 +105,8 @@ export default function Header() {
           <Image
             src="/favicon.ico"
             alt="Company Logo"
-            width={120}
-            height={70}
+            width={130}
+            height={60}
             priority
           />
         </div>
@@ -121,7 +121,9 @@ export default function Header() {
                   className={`${styles.navButton} ${
                     pathname.startsWith(item.path) ? styles.active : ""
                   }`}
-                  aria-current={pathname.startsWith(item.path) ? "page" : undefined}
+                  aria-current={
+                    pathname.startsWith(item.path) ? "page" : undefined
+                  }
                 >
                   {item.name}
                 </Link>
@@ -160,7 +162,13 @@ export default function Header() {
                 className={styles.logoutButton}
                 aria-label="Sign out"
               >
-                <Image src="/logout.png" alt="" width={18} height={18} aria-hidden />
+                <Image
+                  src="/logout.png"
+                  alt=""
+                  width={18}
+                  height={18}
+                  aria-hidden
+                />
               </button>
             </div>
           ) : (
@@ -169,7 +177,13 @@ export default function Header() {
               className={styles.loginButton}
               aria-label="Log in"
             >
-              <Image src="/user.png" alt="" width={20} height={20} aria-hidden />
+              <Image
+                src="/user.png"
+                alt=""
+                width={20}
+                height={20}
+                aria-hidden
+              />
             </button>
           )}
 

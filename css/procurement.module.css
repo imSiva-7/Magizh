@@ -204,8 +204,7 @@
   background-position: right 1rem center;
   background-size: 1em;
   cursor: pointer;
-  /* appearance: none; */
-  /* -webkit-appearance: none; */
+  appearance: none;
 }
 
 .input:hover,
@@ -604,20 +603,20 @@ input[type="date"]::-webkit-date-and-time-value {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: #ffffff; 
+  background: #ffffff;
   padding: 1.5rem 1.5rem;
   border-radius: 0.75rem;
   margin-bottom: 1.5rem;
-  border: 1px solid #fde68a;
+  border: 1px solid #ffffff;
   flex-wrap: wrap;
 }
 
 .bulk_actions_text {
   font-weight: 600;
-   color: #64748b;
-  background:#f1f5f9;
-  padding: .5rem 0.75rem;
-  border-radius: .5rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
 }
 
@@ -648,7 +647,7 @@ input[type="date"]::-webkit-date-and-time-value {
 
 /* Red button (Unpaid) */
 .secondary_btn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background:  #5583c4;
   color: white;
   border: none;
   padding: 0.5rem 1.25rem;
@@ -660,7 +659,7 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .secondary_btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background:  #94bbf1;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);
 }
@@ -876,7 +875,7 @@ input[type="date"]::-webkit-date-and-time-value {
 .actionMenuPopup {
   position: absolute;
   right: 0;
-  top: 100%;
+  bottom: 100%;
   margin-top: 0.25rem;
   background: white;
   border-radius: 0.5rem;
