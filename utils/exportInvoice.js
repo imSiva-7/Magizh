@@ -89,9 +89,9 @@ export const exportInvoiceToPDF = (
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_DARK);
     doc.setFont("helvetica", "normal");
-    dateRange.singleDay
+   (dateRange.start == dateRange.end)
       ? doc.text(
-          `Period: ${dateRange.singleDay}`,
+          `Period: ${dateRange.start}`,
           pageWidth / 2 + 10,
           startY + 15,
         )
@@ -159,7 +159,8 @@ export const exportInvoiceToPDF = (
 
   // Tax logic (Assuming 5% GST for dairy if applicable)
   const gstRate = 0.05;
-  const taxAmount = isGST ? subTotal * gstRate : 0;
+  // const taxAmount = isGST ? subTotal * gstRate : 0;
+  const taxAmount =  subTotal * gstRate;
   const grandTotal = subTotal + taxAmount;
 
   if (finalY + 70 > doc.internal.pageSize.height) {

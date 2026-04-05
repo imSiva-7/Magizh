@@ -25,3 +25,11 @@ export const formatDateForDisplay = (dateString) => {
     year: "numeric",
   });
 };
+export const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "2-digit",
+  });
+};

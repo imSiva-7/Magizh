@@ -12,6 +12,7 @@ import {
 } from "@/utils/formatNumberWithComma";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
+import { formatDateForDisplay, formatDate } from "@/utils/dateUtils";
 import Image from "next/image";
 
 // ========== CONSTANTS ==========
@@ -343,7 +344,7 @@ function OrdersContent() {
     }
     const dateRange = date
       ? { start: date, end: date }
-      : { start: filters.startDate || "all", end: filters.endDate || "all" };
+      : { start: formatDateForDisplay(filters.startDate) || "all", end: formatDateForDisplay(filters.endDate) || "all" };
     const customerName = data.customer?.customerName || "Unknown";
     const fileName = date
       ? `${customerName}_invoice_${date}`
@@ -837,11 +838,7 @@ function OrdersContent() {
                       }
                     >
                       <td className={styles.date_cell}>
-                        {new Date(order.date).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "2-digit",
-                        })}
+                        {formatDate(order.date)}
                       </td>
                       {PRODUCT_FIELDS.map((p) => (
                         <td key={p.name} className={styles.quantity_cell}>
@@ -882,7 +879,7 @@ function OrdersContent() {
                       <td className={styles.invoice_cell}>
                         <button
                           onClick={() =>
-                            handleExport("pdf", [order], order.date)
+                            handleExport("pdf", [order], formatDateForDisplay(order.date))
                           }
                           className={styles.export_btn_table}
                           disabled={!filteredOrders.length}
