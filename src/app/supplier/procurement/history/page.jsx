@@ -335,13 +335,6 @@ function ProcurementHistoryContent() {
             </h3>
             <div className={styles.stats_grid}>
               <StatItem
-                label="Total Milk"
-                value={summary.milk.toFixed(2)}
-                unit="L"
-              />
-              <StatItem label="Average Fat" value={summary.avgFat} unit="%" />
-              <StatItem label="Average SNF" value={summary.avgSnf} unit="%" />
-              <StatItem
                 label={
                   filters.startDate === filters.endDate &&
                   filters.startDate !== ""
@@ -356,11 +349,30 @@ function ProcurementHistoryContent() {
                     : "L"
                 }
               />
+
+              {/* <StatItem label="Average Fat" value={} unit="%" /> */}
               <StatItem
-                label="Average Rate"
+                label="Avg Fat/SNF"
+                value={`${summary.avgFat} / ${summary.avgSnf}`}
+                unit="%"
+              />
+
+              <StatItem
+                label="Daily Avg Amount"
+                value={formatNumberWithCommasNoDecimal(summary.amount / (summary.daysWithData || 1))}
+                unit="/L"
+                prefix="₹"
+              />
+              <StatItem
+                label="Avg Rate"
                 value={summary.avgRate}
                 unit="/L"
                 prefix="₹"
+              />
+              <StatItem
+                label="Total Milk"
+                value={summary.milk.toFixed(2)}
+                unit="L"
               />
               <StatItem
                 label="Total Amount"

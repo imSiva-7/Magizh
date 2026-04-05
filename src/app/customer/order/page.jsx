@@ -125,7 +125,7 @@ const SummaryStats = ({ summary, filters }) => (
       </span>
     </h3>
     <div className={styles.stats_grid}>
-      <StatItem label="Total Orders" value={summary.orderCount} unit="" />
+      {/* <StatItem label="Total Orders" value={summary.orderCount} unit="" /> */}
       <StatItem
         label="Avg Order Value"
         value={summary.avgOrderValue.toFixed(2)}

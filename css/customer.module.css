@@ -375,6 +375,7 @@
   text-align: left !important ;
   font-weight: 500;
   min-width: 100px;
+  max-width: 200px !important;
 }
 
 .customerName {

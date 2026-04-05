@@ -105,16 +105,6 @@ const SummaryStats = ({ summary, filters }) => (
     </h3>
     <div className={styles.stats_grid}>
       <StatItem
-        label="Milk"
-        value={formatNumberWithCommas(summary.milk.toFixed(2))}
-        unit="L"
-      />
-      <StatItem
-        label="Avg Fat/SNF"
-        value={`${summary.avgFat} / ${summary.avgSnf}`}
-        unit="%"
-      />
-      <StatItem
         label="Daily Avg"
         value={
           summary.daysWithData
@@ -123,13 +113,26 @@ const SummaryStats = ({ summary, filters }) => (
         }
         unit="L/day"
       />
-      <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
+      
+
       <StatItem
-        label="Daily Avg"
+        label="Avg Fat/SNF"
+        value={`${summary.avgFat} / ${summary.avgSnf}`}
+        unit="%"
+      />
+       <StatItem
+        label="Daily Avg Amount"
         value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
         prefix="₹"
       />
 
+      <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
+     
+      <StatItem
+        label="Total Milk"
+        value={formatNumberWithCommas(summary.milk.toFixed(2))}
+        unit="L"
+      />
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.amount)}
