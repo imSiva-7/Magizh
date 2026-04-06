@@ -240,7 +240,6 @@ export async function DELETE(request) {
 
     const db = await getDatabase();
 
-    // Optional: check for dependencies (e.g., payments) – skip for now
     const result = await db
       .collection("orders")
       .deleteOne({ _id: new ObjectId(id) });
@@ -259,13 +258,13 @@ export async function DELETE(request) {
   }
 }
 
-// BULK UPDATE – e.g., mark multiple orders as paid
+// BULK UPDATE – supports status and/or comment updates
 export async function PATCH(request) {
   const METHOD = METHOD_NAMES.PATCH;
 
   try {
     const db = await getDatabase();
-    const { orderIds, status, actionDoneBy } = await request.json();
+    const { orderIds, status, comment, actionDoneBy } = await request.json();
 
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
       return NextResponse.json(
@@ -273,7 +272,17 @@ export async function PATCH(request) {
         { status: 400 },
       );
     }
-    if (!status || !["Paid", "Not Paid"].includes(status)) {
+
+    // At least one of status or comment must be provided
+    if (!status && comment === undefined) {
+      return NextResponse.json(
+        { error: "Either status or comment must be provided" },
+        { status: 400 },
+      );
+    }
+
+    // Validate status if provided
+    if (status && !["Paid", "Not Paid"].includes(status)) {
       return NextResponse.json(
         { error: "Valid status (Paid/Not Paid) is required" },
         { status: 400 },
@@ -292,17 +301,27 @@ export async function PATCH(request) {
       );
     }
 
+    // Build update object
+    const updateFields = {
+      updatedAt: new Date(),
+      updatedBy: actionDoneBy?.trim() || "",
+    };
+
+    if (status) {
+      updateFields.paymentStatus = status;
+      updateFields.paymentUpdatedAt = new Date();
+      updateFields.paymentRecordDoneBy = actionDoneBy?.trim() || "";
+    }
+
+    if (comment !== undefined) {
+      updateFields.comment = comment?.trim() || "";
+    }
+
     const result = await db
       .collection("orders")
       .updateMany(
         { _id: { $in: validObjectIds } },
-        {
-          $set: {
-            paymentStatus: status,
-            paymentUpdatedAt: new Date(),
-            paymentRecordDoneBy: actionDoneBy,
-          },
-        },
+        { $set: updateFields },
       );
 
     return NextResponse.json({

@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import styles from "@/css/header.module.css";
 
-// Navigation data – moved outside component to avoid recreation
+// Navigation data
 const desktopNavItems = [
   {
     name: "Productions",
@@ -25,18 +25,25 @@ const desktopNavItems = [
   {
     name: "Customers",
     path: "/customer",
-    children: [{ name: "Order History", path: "/customer/order/history" }],
+    children: [
+      { name: "Order History", path: "/customer/order/history" },
+      { name: "Order Payments", path: "/customer/payments" },
+    ],
   },
 ];
 
+// Complete mobile nav items (including all important pages)
 const mobileNavItems = [
-  { name: "Production", path: "/productions" },
+  { name: "Home", path: "/" },
+  { name: "Productions", path: "/productions" },
   { name: "Production History", path: "/productions/history" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
   { name: "Customers", path: "/customer" },
   { name: "Order History", path: "/customer/order/history" },
+  { name: "Order Payments", path: "/customer/payments" },
+  { name: "Analytics", path: "/analytics" },
 ];
 
 export default function Header() {
@@ -47,7 +54,7 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
-  // Close mobile menu when route changes
+  // Close mobile menu when route changes (FIXED: uncommented)
   // useEffect(() => {
   //   setMobileMenuOpen(false);
   // }, [pathname]);
@@ -70,7 +77,7 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
 
-  // Handle escape key to close menu
+  // Handle escape key
   useEffect(() => {
     const handleEscape = (event) => {
       if (mobileMenuOpen && event.key === "Escape") {
@@ -78,18 +85,26 @@ export default function Header() {
         menuButtonRef.current?.focus();
       }
     };
-
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [mobileMenuOpen]);
 
-  const handleNavigation = useCallback(
-    (path) => {
-      router.push(path);
-      setMobileMenuOpen(false);
-    },
-    [router],
-  );
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
+
+  // const handleNavigation = useCallback((path) => {
+  //   router.push(path);
+  //   setMobileMenuOpen(false);
+  // }, [router]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
@@ -198,34 +213,66 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Mobile Navigation Overlay */}
+        {/* Mobile Navigation Overlay - IMPROVED */}
         {mobileMenuOpen && (
-          <div
-            ref={mobileMenuRef}
-            className={styles.mobileNavOverlay}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile navigation menu"
-          >
-            <nav className={styles.mobileNav}>
-              <ul className={styles.mobileNavList}>
-                {mobileNavItems.map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      href={item.path}
-                      className={`${styles.mobileNavButton} ${
-                        pathname === item.path ? styles.mobileActive : ""
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                      aria-current={pathname === item.path ? "page" : undefined}
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+          <>
+            {/* Backdrop overlay */}
+            <div
+              className={styles.mobileBackdrop}
+              onClick={() => setMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              ref={mobileMenuRef}
+              className={styles.mobileNavOverlay}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation menu"
+            >
+              <div className={styles.mobileNavHeader}>
+                <span className={styles.mobileNavTitle}>Menu</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={styles.mobileCloseBtn}
+                  aria-label="Close menu"
+                >
+                  ✕
+                </button>
+              </div>
+              <nav className={styles.mobileNav}>
+                <ul className={styles.mobileNavList}>
+                  {mobileNavItems.map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        href={item.path}
+                        className={`${styles.mobileNavButton} ${
+                          pathname === item.path ? styles.mobileActive : ""
+                        }`}
+                        onClick={() => setMobileMenuOpen(false)}
+                        aria-current={pathname === item.path ? "page" : undefined}
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
+                  ))}
+                  {/* Logout option for mobile if logged in */}
+                  {session && (
+                    <li>
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setMobileMenuOpen(false);
+                        }}
+                        className={styles.mobileLogoutButton}
+                      >
+                        Sign Out
+                      </button>
+                    </li>
+                  )}
+                </ul>
+              </nav>
+            </div>
+          </>
         )}
       </div>
     </header>

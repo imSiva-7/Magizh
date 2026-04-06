@@ -21,14 +21,18 @@
   cursor: pointer;
   transition: opacity 0.2s ease;
 }
-
 .logoSection:hover {
   opacity: 0.8;
 }
 
 /* Desktop Navigation */
 .desktopNav {
-  display: none; /* hidden on mobile */
+  display: none;
+}
+@media (min-width: 768px) {
+  .desktopNav {
+    display: block;
+  }
 }
 
 .navList {
@@ -41,15 +45,11 @@
 
 .navItem {
   position: relative;
-  padding: 0;
- 
-  /* font-weight: 800; */
 }
 
 .navButton {
   display: inline-block;
   padding: 0.6rem 1.2rem;
-  /* margin: 1rem 0; */
   background: transparent;
   color: #334155;
   border: none;
@@ -59,14 +59,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
-   margin-right: 3rem;
+  margin-right: 3rem;
 }
-
 .navButton:hover {
   background: #f1f5f9;
   color: #1e293b;
 }
-
 .navButton.active {
   background: rgb(39, 121, 93);
   color: white;
@@ -83,22 +81,18 @@
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border-radius: 12px;
   display: none;
-  list-style: none;  
+  list-style: none;
   border: 1px solid #e2e8f0;
   padding: 0.5rem 0;
   z-index: 100;
-  padding-left: 0;
   margin: 0;
 }
-
 .navItem:hover .dropdown {
   display: block;
-  animation: fadeIn .5s ease;
+  animation: fadeIn 0.2s ease;
 }
-
 .dropdownItem {
   display: block;
-  /* width: 100%; */
   text-align: left;
   padding: 0.75rem 1rem;
   background: none;
@@ -108,17 +102,14 @@
   cursor: pointer;
   color: #334155;
   text-decoration: none;
-  transition: all .2s;
+  transition: all 0.2s;
 }
-
 .dropdownItem:hover {
   background: #f8fafc;
   color: rgb(39, 121, 93);
-  /* padding-left: 1.5rem; */
 }
-
 .dropdown li {
-  list-style: none;     
+  list-style: none;
 }
 .arrow {
   margin-right: 8px;
@@ -127,7 +118,6 @@
   display: inline-block;
   transition: transform 0.15s;
 }
-
 .dropdownItem:hover .arrow {
   transform: translateX(2px);
   color: rgb(39, 121, 93);
@@ -147,19 +137,12 @@
   background: #ffffff;
   padding: 0.4rem 0.8rem 0.4rem 1rem;
   border-radius: 40px;
-  transition: background 0.2s;
 }
-
-.userSection:hover {
-  background: #ffffff;
-}
-
 .userName {
   font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
 }
-
 .logoutButton {
   background: transparent;
   border: none;
@@ -171,11 +154,9 @@
   justify-content: center;
   transition: background 0.2s;
 }
-
 .logoutButton:hover {
   background: #e2e8f0;
 }
-
 .loginButton {
   background: transparent;
   border: none;
@@ -185,9 +166,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
 }
-
 .loginButton:hover {
   background: #f1f5f9;
 }
@@ -207,44 +186,100 @@
   transition: all 0.2s;
   color: #334155;
 }
-
 .mobileMenuButton:hover {
   background: #e2e8f0;
   transform: scale(0.98);
 }
+@media (min-width: 768px) {
+  .mobileMenuButton {
+    display: none;
+  }
+}
 
-/* Mobile Navigation Overlay */
-.mobileNavOverlay {
+/* --- IMPROVED MOBILE NAVIGATION --- */
+
+/* Backdrop overlay */
+.mobileBackdrop {
   position: fixed;
-  top: 70px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.98);
-  /* backdrop-filter: blur(8px); */
-  z-index: 999;
-  overflow-y: auto;
-  animation: slideDown 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  /* backdrop-filter: blur(2px); */
 }
 
+/* Slide‑in panel from right */
+.mobileNavOverlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 85%;
+  max-width: 320px;
+  background: white;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Header inside mobile panel */
+.mobileNavHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+}
+.mobileNavTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgb(39, 121, 93);
+}
+.mobileCloseBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.mobileCloseBtn:hover {
+  color: #1e293b;
+}
+
+/* Scrollable menu area */
 .mobileNav {
-  padding: 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.5rem;
 }
-
 .mobileNavList {
   list-style: none;
   display: flex;
-  width: 300px;
   flex-direction: column;
   gap: 0.75rem;
   margin: 0;
   padding: 0;
 }
-
 .mobileNavButton {
   display: block;
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1rem;
   background: #f8fafc;
   border: none;
   border-radius: 14px;
@@ -256,16 +291,35 @@
   transition: all 0.2s;
   text-decoration: none;
 }
-
 .mobileNavButton:hover {
   background: #f1f5f9;
   transform: translateX(4px);
 }
-
 .mobileNavButton.mobileActive {
   background: rgb(39, 121, 93);
   color: white;
   box-shadow: 0 2px 8px rgba(39, 121, 93, 0.3);
+}
+
+/* Logout button inside mobile menu */
+.mobileLogoutButton {
+  display: block;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: #fee2e2;
+  border: none;
+  border-radius: 14px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #dc2626;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 1rem;
+}
+.mobileLogoutButton:hover {
+  background: #fecaca;
+  transform: translateX(4px);
 }
 
 /* Animations */
@@ -280,34 +334,15 @@
   }
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive */
-@media (min-width: 768px) {
-  .desktopNav {
-    display: block;
-  }
-  .mobileMenuButton {
-    display: none;
-  }
-}
-
-/* Focus styles for accessibility */
+/* Accessibility focus styles */
 .navButton:focus-visible,
-/* .dropdownItem:focus-visible, */
+.dropdownItem:focus-visible,
 .logoutButton:focus-visible,
 .loginButton:focus-visible,
 .mobileMenuButton:focus-visible,
-.mobileNavButton:focus-visible {
+.mobileNavButton:focus-visible,
+.mobileCloseBtn:focus-visible,
+.mobileLogoutButton:focus-visible {
   outline: 2px solid rgb(39, 121, 93);
   outline-offset: 2px;
   border-radius: 8px;

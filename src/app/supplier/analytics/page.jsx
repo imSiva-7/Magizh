@@ -12,14 +12,20 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/analytics.module.css";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const getFormattedDateRange = (startDate, endDate) => {
+  if (startDate && endDate) {
+    const from = new Date(startDate).toLocaleDateString("en-IN");
+    const to = new Date(endDate).toLocaleDateString("en-IN");
+    return from === to ? from : `${from} – ${to}`;
+  }
+  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+  return "All Records";
+};
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState({
@@ -28,7 +34,6 @@ export default function AnalyticsPage() {
   });
   const [data, setData] = useState({ daily: [], overall: {} });
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("procurements"); // "procurements" or "orders"
 
   useEffect(() => {
     async function fetchData() {
@@ -52,71 +57,106 @@ export default function AnalyticsPage() {
     setDateRange((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Analytics Dashboard</h1>
+  const resetDateRange = () => {
+    setDateRange({
+      startDate: getPreviousMonthDate(),
+      endDate: getTodayDate(),
+    });
+  };
 
-      {/* Date Range Picker */}
-      <div className={styles.filterBar}>
-        <div className={styles.dateInputGroup}>
-          <label>From</label>
-          <input
-            type="date"
-            name="startDate"
-            value={dateRange.startDate}
-            onChange={handleDateChange}
-            max={dateRange.endDate}
-          />
+  return (
+    <div className={styles.page_container}>
+      {/* Header */}
+      <div className={styles.header}>
+        <h1 className={styles.page_title}>Analytics Dashboard</h1>
+      </div>
+
+      {/* Filter Section */}
+      <div className={styles.filter_section}>
+        <div className={styles.filter_title}>
+          <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.dateInputGroup}>
-          <label>To</label>
-          <input
-            type="date"
-            name="endDate"
-            value={dateRange.endDate}
-            onChange={handleDateChange}
-            min={dateRange.startDate}
-            max={getTodayDate()}
-          />
+        <div className={styles.date_input_group}>
+          <div className={styles.date_field}>
+            <label htmlFor="startDate">From Date</label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={dateRange.startDate}
+              onChange={handleDateChange}
+              max={dateRange.endDate || getTodayDate()}
+              className={styles.date_input}
+            />
+          </div>
+          <div className={styles.date_field}>
+            <label htmlFor="endDate">To Date</label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={dateRange.endDate}
+              onChange={handleDateChange}
+              min={dateRange.startDate}
+              max={getTodayDate()}
+              className={styles.date_input}
+            />
+          </div>
         </div>
-        <button
-          onClick={() =>
-            setDateRange({
-              startDate: getPreviousMonthDate(),
-              endDate: getTodayDate(),
-            })
-          }
-        >
-          Reset
-        </button>
+        <div className={styles.filter_actions}>
+          <button
+            type="button"
+            onClick={resetDateRange}
+            className={`${styles.btn} ${styles.btn_primary}`}
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
       {!loading && data.overall && (
-        <div className={styles.summaryCards}>
-          <div className={styles.card}>
-            <h3>Total Milk</h3>
-            <p>{data.overall.totalMilk?.toFixed(2)} L</p>
+        <div className={styles.summary_card}>
+          <div className={styles.summary_header}>
+            <h2>Summary</h2>
+            <span className={styles.date_range_badge}>
+              {getFormattedDateRange(dateRange.startDate, dateRange.endDate)}
+            </span>
           </div>
-          <div className={styles.card}>
-            <h3>Total Amount</h3>
-            <p>₹{data.overall.totalAmount?.toFixed(2)}</p>
-          </div>
-          <div className={styles.card}>
-            <h3>Total Records</h3>
-            <p>{data.overall.totalRecords}</p>
+          <div className={styles.stats_grid}>
+            <div className={styles.stat_item}>
+              <div className={styles.stat_label}>Total Milk</div>
+              <div className={styles.stat_value}>
+                {data.overall.totalMilk?.toFixed(2)} L
+              </div>
+            </div>
+            <div className={styles.stat_item}>
+              <div className={styles.stat_label}>Total Amount</div>
+              <div className={styles.stat_value}>
+                ₹{data.overall.totalAmount?.toFixed(2)}
+              </div>
+            </div>
+            <div className={styles.stat_item}>
+              <div className={styles.stat_label}>Total Records</div>
+              <div className={styles.stat_value}>
+                {data.overall.totalRecords}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Charts */}
       {loading ? (
-        <div className={styles.loading}>Loading charts...</div>
+        <div className={styles.loading_container}>
+          <div className={styles.spinner}></div>
+          <span className={styles.loading_text}>Loading charts...</span>
+        </div>
       ) : (
         <>
-          {/* Daily Milk Line Chart */}
-          <div className={styles.chartCard}>
-            <h2>Daily Milk Quantity</h2>
+          {/* Daily Milk Quantity Line Chart */}
+          <div className={styles.chart_card}>
+            <h3>Daily Milk Quantity</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -133,8 +173,10 @@ export default function AnalyticsPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className={styles.chartCard}>
-            <h2>Fat & SNF</h2>
+
+          {/* Fat & SNF Line Chart */}
+          <div className={styles.chart_card}>
+            <h3>Fat & SNF</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -158,9 +200,9 @@ export default function AnalyticsPage() {
             </ResponsiveContainer>
           </div>
 
-          {/* Daily Amount Bar Chart */}
-          <div className={styles.chartCard}>
-            <h2>Daily Total Amount</h2>
+          {/* Daily Total Amount Bar Chart */}
+          <div className={styles.chart_card}>
+            <h3>Daily Total Amount</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -172,8 +214,6 @@ export default function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* Fat/SNF Trends */}
         </>
       )}
     </div>

@@ -1,151 +1,237 @@
 /* ========== analytics.module.css ========== */
-/* Consistent with Procurement Module Design Language */
+/* Fully aligned with Procurement / Orders / Customer Payments design language */
 
-.container {
+/* ========== 1. BASE LAYOUT ========== */
+.page_container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 1rem;
-  font-family: "Segoe UI", sans-serif;
+  font-family: "Segoe UI", system-ui, sans-serif;
   background-color: #f8fafc;
   min-height: 100vh;
 }
 
-/* ========== 1. HEADER (Same as Procurement) ========== */
+/* ========== 2. HEADER (matches .header in orders) ========== */
 .header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 2rem;
   padding: 1.5rem;
   background: white;
   border-radius: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.title {
+.page_title {
   color: rgb(39, 121, 93);
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
 }
 
-/* ========== 2. FILTER BAR (Matching Procurement Filter Form) ========== */
-.filterBar {
-  background: white;
-  padding: 2rem;
+/* ========== 3. FILTER SECTION (same as .filter_section in orders) ========== */
+.filter_section {
+  background-color: #ffffff;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  flex-direction: column;
   gap: 1.5rem;
-  margin-top: 2rem;
 }
 
-.dateInputGroup {
+.filter_title h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Date inputs – matches .date_input_group */
+.date_input_group {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.date_field {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  /* display: ; */
   gap: 0.5rem;
-  flex: 1;
-  min-width: 200px;
 }
 
-.dateInputGroup label {
-  color: #475569;
+.date_field label {
   font-weight: 600;
+  color: #475569;
   font-size: 0.875rem;
 }
 
-.dateInputGroup input {
-  /* width: 100%; */
+.date_input {
   padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 0.5rem;
-  background: white;
-  color: #334155;
+  background-color: #ffffff;
+  color: #1e293b;
   font-size: 1rem;
+  font-family: inherit;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.dateInputGroup input:focus {
+.date_input:focus {
   outline: none;
   border-color: rgb(39, 121, 93);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
-/* Reset Button - Matching btn_reset/secondary_btn style */
-.filterBar button {
+.date_input:hover {
+  border-color: #cbd5e1;
+}
+
+/* Filter actions – same buttons as other pages */
+.filter_actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn {
   padding: 0.75rem 1.5rem;
-  transform: translateY(-2px);
   border: none;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
-  background: linear-gradient(
-    135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
-  );
+  min-width: 100px;
+  font-family: inherit;
+}
+
+.btn_primary {
+  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
   color: white;
 }
 
-.filterBar button:hover {
-  transform: translateY(-4px);
+.btn_primary:hover:not(:disabled) {
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
 }
 
-/* ========== 3. SUMMARY CARDS (Matching stat_item) ========== */
-.summaryCards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.btn_secondary {
+  background-color: #5583c4;
+  color: white;
 }
 
-.card {
-  background: #ffffff;
-  padding: 1.5rem;
+.btn_secondary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ========== 4. SUMMARY CARDS (matches .global_summary_card / .stats_grid) ========== */
+.summary_card {
+  background-color: #ffffff;
   border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.summary_header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.summary_header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(39, 121, 93);
+  margin: 0;
+}
+
+.date_range_badge {
+  font-size: 0.875rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.stats_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat_item {
+  background-color: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   transition: all 0.2s ease;
-  text-align: left; /* Aligned with procurement stat style */
 }
 
-.card:hover {
+.stat_item:hover {
   border-color: rgb(39, 121, 93);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.card h3 {
+.stat_label {
   font-size: 0.875rem;
+  font-weight: 600;
   color: #64748b;
-  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0;
 }
 
-.card p {
+.stat_value {
   font-size: 1.8rem;
   font-weight: 700;
   color: #1e293b;
-  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
 }
 
-/* ========== 4. CHART CARDS (Matching Table/Form Wrapper) ========== */
-.chartCard {
+.stat_unit {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* ========== 5. CHART CARDS (matches form_section / table_wrapper style) ========== */
+.chart_card {
   background: white;
   border-radius: 1rem;
   padding: 2rem;
@@ -154,7 +240,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.chartCard h2 {
+.chart_card h3 {
   color: #1e293b;
   font-size: 1.25rem;
   font-weight: 600;
@@ -163,7 +249,7 @@
   border-bottom: 2px solid #e2e8f0;
 }
 
-/* Recharts Tooltip Customization */
+/* Recharts tooltip – keep as is, but ensure it looks consistent */
 :global(.recharts-default-tooltip) {
   background-color: white !important;
   border: 1px solid #e2e8f0 !important;
@@ -171,29 +257,33 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* ========== 5. LOADING & EMPTY STATES (Matching Procurement) ========== */
-.loading {
+/* ========== 6. LOADING & EMPTY STATES (matches procurement) ========== */
+.loading_container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem;
+  padding: 3rem;
   color: #64748b;
+  text-align: center;
   background: white;
   border-radius: 1rem;
   border: 1px solid #e2e8f0;
 }
 
-.loading:after {
-  content: "";
-  width: 40px;
-  height: 40px;
+.spinner {
+  width: 48px;
+  height: 48px;
   border: 3px solid #e2e8f0;
   border-top-color: rgb(39, 121, 93);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  display: block;
-  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.loading_text {
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 @keyframes spin {
@@ -202,33 +292,71 @@
   }
 }
 
-/* ========== 6. RESPONSIVE (Matching Procurement Queries) ========== */
+.empty_state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #64748b;
+  text-align: center;
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.empty_icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty_state p {
+  color: #94a3b8;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* ========== 7. RESPONSIVE (matches other pages) ========== */
+@media (max-width: 1024px) {
+  .stats_grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .page_container {
+    padding: 0.75rem;
+  }
   .header {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .page_title {
+    font-size: 1.5rem;
+  }
+  .filter_section {
+    padding: 1.5rem;
+  }
+  .date_input_group {
+    flex-direction: column;
     gap: 1rem;
   }
-
-  .filterBar {
-    padding: 1.5rem;
+  .filter_actions {
+    justify-content: stretch;
+  }
+  .btn {
+    flex: 1;
+  }
+  .summary_header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
   }
-
-  .dateInputGroup {
-    width: 100%;
-  }
-
-  .filterBar button {
-    width: 100%;
-  }
-
-  .summaryCards {
+  .stats_grid {
     grid-template-columns: 1fr;
   }
-
-  .chartCard {
+  .chart_card {
     padding: 1.25rem;
   }
 }

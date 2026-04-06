@@ -521,7 +521,7 @@ export default function Payments() {
             className={`${styles.btn} ${styles.btn_today}`}
             disabled={isLoading}
           >
-            Load Today
+            Today
           </button>
         </div>
       </div>
@@ -696,7 +696,7 @@ export default function Payments() {
                         <th className={styles.table_header_cell}>Time</th>
                         <th className={styles.table_header_cell}>Qty (L)</th>
                         <th className={styles.table_header_cell}>Fat/SNF</th>
-                        <th className={styles.table_header_cell}>Rate/L</th>
+                        {/* <th className={styles.table_header_cell}>Rate/L</th> */}
                         <th className={styles.table_header_cell}>Total (₹)</th>
                         <th className={styles.table_header_cell}>
                           {" "}
@@ -766,12 +766,12 @@ export default function Payments() {
                               /{" "}
                               {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
                             </td>
-                            <td className={styles.table_cell}>
+                            {/* <td className={styles.table_cell}>
                               ₹
                               {formatNumberWithCommas(
                                 (parseFloat(row.rate) || 0).toFixed(2),
                               )}
-                            </td>
+                            </td> */}
                             <td
                               className={`${styles.table_cell} ${styles.cell_total}`}
                             >

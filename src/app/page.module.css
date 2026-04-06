@@ -1,4 +1,4 @@
-
+/* ========== PAGE CONTAINER ========== */
 .dashboard {
   max-width: 1400px;
   margin: 0 auto;
@@ -8,7 +8,7 @@
   min-height: 100vh;
 }
 
-/* Header */
+/* ========== HEADER ========== */
 .header {
   display: flex;
   justify-content: space-between;
@@ -64,7 +64,6 @@
   transition: all 0.2s;
   background: white;
 }
-
 .logoutBtn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
@@ -79,19 +78,195 @@
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
-
 .loginLink:hover {
   background: rgba(39, 121, 93, 0.1);
 }
 
-/* Stats Grid */
+/* ========== GLOBAL SUMMARY CARDS (reused from other pages) ========== */
+.global_summary_card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.global_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.global_title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgb(39, 121, 93);
+  margin: 0;
+}
+
+.date_range_badge {
+  font-size: 0.875rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.global_stats_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.global_stat_item {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+.global_stat_item:hover {
+  border-color: rgb(39, 121, 93);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.global_stat_label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.global_stat_value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+/* Text color helpers */
+.text_green {
+  color: #059669 !important;
+}
+.text_red {
+  color: #dc2626 !important;
+}
+
+/* ========== DUE TABLES ========== */
+.tableWrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+}
+
+.dueTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 400px;
+}
+.dueTable th,
+.dueTable td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+.dueTable th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+.dueTable tbody tr:hover {
+  background: #f8fafc;
+}
+.dueTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.viewLink {
+  background: rgb(39, 121, 93);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background 0.2s;
+  display: inline-block;
+}
+.viewLink:hover {
+  background: rgb(30, 100, 80);
+}
+
+/* ========== LOADING & ERROR STATES ========== */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  background: white;
+  border-radius: 1rem;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #e2e8f0;
+  border-top-color: rgb(39, 121, 93);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorContainer {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 1rem;
+  margin-top: 2rem;
+  border: 1px solid #fee2e2;
+}
+.retryBtn {
+  background: rgb(39, 121, 93);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.retryBtn:hover {
+  background: rgb(30, 100, 80);
+}
+
+/* ========== STATS GRID (quick stats, if used) ========== */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2.5rem;
 }
-
 .statCard {
   background: white;
   border-radius: 1rem;
@@ -103,12 +278,10 @@
   border: 1px solid #e2e8f0;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .statCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
-
 .statIcon {
   font-size: 2.5rem;
   background: #f1f5f9;
@@ -119,11 +292,9 @@
   justify-content: center;
   border-radius: 1rem;
 }
-
 .statContent {
   flex: 1;
 }
-
 .statLabel {
   font-size: 0.875rem;
   color: #64748b;
@@ -131,7 +302,6 @@
   letter-spacing: 0.5px;
   margin-bottom: 0.25rem;
 }
-
 .statValue {
   font-size: 1.75rem;
   font-weight: 700;
@@ -139,13 +309,12 @@
   line-height: 1.2;
 }
 
-/* Navigation Grid */
+/* ========== NAVIGATION GRID ========== */
 .navGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
 }
-
 .navCard {
   background: white;
   border-radius: 1rem;
@@ -158,13 +327,11 @@
   flex-direction: column;
   gap: 0.75rem;
 }
-
 .navCard:hover {
   transform: translateY(-4px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
   border-color: #cbd5e1;
 }
-
 .navIcon {
   font-size: 2rem;
   background: #f1f5f9;
@@ -176,14 +343,12 @@
   border-radius: 0.75rem;
   margin-bottom: 0.5rem;
 }
-
 .navCard h2 {
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
   color: rgb(39, 121, 93);
 }
-
 .navCard p {
   font-size: 0.875rem;
   color: #64748b;
@@ -191,7 +356,7 @@
   line-height: 1.4;
 }
 
-/* Responsive */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   .dashboard {
     padding: 1rem;
@@ -203,6 +368,14 @@
   }
   .userInfo {
     justify-content: center;
+  }
+  .global_header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .global_stats_grid {
+    grid-template-columns: 1fr;
   }
   .statsGrid {
     gap: 1rem;

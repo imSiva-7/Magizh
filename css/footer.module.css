@@ -144,9 +144,9 @@
     padding: 2rem 1.5rem;
   }
 
-  .footerMain {
+  /* .footerMain {
     grid-template-columns: repeat(2, 1fr);
-  }
+  } */
 
   .footerBottom {
     flex-direction: row;
