@@ -180,12 +180,21 @@
   font-size: 0.9rem;
   min-width: 400px;
 }
+
+.dueTable th:nth-child(1), 
+.dueTable td:nth-child(1) {
+  text-align: left !important;
+  align-items: left !important;
+}
+
 .dueTable th,
 .dueTable td {
   padding: 0.75rem;
-  text-align: left;
+  font-size: large;
+  text-align: center;
   border-bottom: 1px solid #e2e8f0;
 }
+
 .dueTable th {
   background: #f1f5f9;
   font-weight: 600;

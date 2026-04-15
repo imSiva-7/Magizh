@@ -12,8 +12,8 @@ import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
 
 const INITIAL_FILTERS = {
-  startDate: "2026-03-01",
-  endDate: getTodayDate(),
+  startDate: "",
+  endDate: "",
 };
 
 const INITIAL_VISIBLE_COUNT = 20;
@@ -335,7 +335,10 @@ export default function Payments() {
     if (!confirmClearChecked()) return;
     setCheckedIds([]);
     setCheckedSupplierId("");
-    setFilters(INITIAL_FILTERS);
+    setFilters({
+      startDate: getPreviousMonthDate(),
+      endDate: getTodayDate(),
+    });
     setStatusFilter("");
     toast.info("Filters reset to default.");
   };
@@ -344,7 +347,7 @@ export default function Payments() {
     if (!confirmClearChecked()) return;
     setCheckedIds([]);
     setCheckedSupplierId("");
-    setFilters({ startDate: "2026-03-01", endDate: "" });
+    setFilters({ startDate: "", endDate: "" });
     setStatusFilter("");
     toast.info("Date filters cleared.");
   };

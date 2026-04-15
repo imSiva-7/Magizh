@@ -14,8 +14,8 @@ import Image from "next/image";
 
 // ========== CONSTANTS ==========
 const INITIAL_FILTERS = {
-  startDate: getPreviousMonthDate(),
-  endDate: getTodayDate(),
+  startDate: "",
+  endDate: "",
 };
 
 const INITIAL_VISIBLE_COUNT = 20;
@@ -338,7 +338,10 @@ export default function CustomerPayments() {
     if (!confirmClearChecked()) return;
     setCheckedIds([]);
     setCheckedCustomerId("");
-    setFilters(INITIAL_FILTERS);
+    setFilters({
+      startDate: getPreviousMonthDate(),
+      endDate: getTodayDate(),
+    });
     setStatusFilter("");
     toast.info("Filters reset to default.");
   };
