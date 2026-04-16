@@ -278,12 +278,8 @@ input[type="date"]::-webkit-date-and-time-value {
   color: white;
 }
 .btn_secondary_2 {
-  background: linear-gradient(
-    135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
-  );
-  color: #e6eaf0;
+   background-color: #e2e8f0;
+  color: #1e293b;
 }
 .btn_primary {
   background: linear-gradient(
@@ -431,7 +427,7 @@ button:disabled {
 
 .stats_grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, minmax(200px, 1fr));
   gap: 1rem;
 }
 

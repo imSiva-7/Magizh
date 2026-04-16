@@ -19,7 +19,6 @@ const formatDateForCSV = (dateStr) => {
     .padStart(2, "0")}-${date.getFullYear().toString().slice(-2)}`;
 };
 
-
 const calculateTotals = (procurements) => {
   if (!procurements.length) {
     return { totalMilk: 0, totalAmount: 0, avgFat: 0, avgSnf: 0, avgRate: 0 };
@@ -382,7 +381,7 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   const headers = [
     "Date",
     "AM/PM",
-    "Quantity (Kg)",
+    // "Quantity (Kg)",
     "Quantity (Ltr)",
     "FAT %",
     "SNF %",
@@ -390,11 +389,11 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
     "Net Amount (Rs)",
   ];
   const csvRows = [];
-  csvRows.push(`"${supplier?.supplierName || "MAGIZH DAIRY PRIVATE LIMITED"}"`);
-  csvRows.push(`"GUDIYATHAM"`);
-  csvRows.push(
-    `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`,
-  );
+  csvRows.push(`Supplier Name: "${supplier?.supplierName || "MAGIZH DAIRY SUPPLIERS"}"`);
+  // csvRows.push(`"GUDIYATHAM"`);
+  // csvRows.push(
+  //   `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`,
+  // );
   csvRows.push(
     `"MILK BILL Date: ${formatDateForCSV(
       dateRange.start,
@@ -407,11 +406,11 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   let totalFat = 0;
   let totalSnf = 0;
   sortedProcurements.forEach((record) => {
-    const kg = (record.milkQuantity * 1.03).toFixed(2);
+    // const kg = (record.milkQuantity * 1.03).toFixed(2);
     const row = [
       formatDateForCSV(record.date),
       record.time || "AM",
-      kg,
+      // kg,
       record.milkQuantity.toFixed(2),
       record.fatPercentage.toFixed(2),
       record.snfPercentage.toFixed(2),
@@ -426,11 +425,13 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   });
   csvRows.push("");
   csvRows.push("SUMMARY");
-  csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
-  csvRows.push(`Total Amount,Rs ${totalAmount.toFixed(2)}`);
+
   csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
   csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
   csvRows.push(`Average Rate/L,Rs ${(totalAmount / totalMilkLtr).toFixed(2)}`);
+  csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
+  csvRows.push(`Total Amount,Rs ${totalAmount.toFixed(2)}`);
+
   const csvContent = csvRows.join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");

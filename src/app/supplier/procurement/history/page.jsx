@@ -205,8 +205,17 @@ function ProcurementHistoryContent() {
 
     const dateRange = {
       start:
-        new Date(procurementData.at(-1).date).toLocaleDateString() || "----",
-      end: new Date(procurementData[0].date).toLocaleDateString() || "----",
+        new Date(procurementData.at(-1).date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit",
+        }) || "----",
+      end:
+        new Date(procurementData[0].date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit",
+        }) || "----",
     };
     const supplierName = "All Suppliers records";
     const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
@@ -335,22 +344,11 @@ function ProcurementHistoryContent() {
             </h3>
             <div className={styles.stats_grid}>
               <StatItem
-                label={
-                  filters.startDate === filters.endDate &&
-                  filters.startDate !== ""
-                    ? "Easter Egg!"
-                    : "Milk per Day"
-                }
+                label={"Avg Milk"}
                 value={(summary.milk / (summary.daysWithData || 1)).toFixed(2)}
-                unit={
-                  filters.startDate === filters.endDate &&
-                  filters.startDate !== ""
-                    ? "LoL"
-                    : "L"
-                }
+                unit={"L"}
               />
 
-              {/* <StatItem label="Average Fat" value={} unit="%" /> */}
               <StatItem
                 label="Avg Fat/SNF"
                 value={`${summary.avgFat} / ${summary.avgSnf}`}
@@ -359,7 +357,9 @@ function ProcurementHistoryContent() {
 
               <StatItem
                 label="Daily Avg Amount"
-                value={formatNumberWithCommasNoDecimal(summary.amount / (summary.daysWithData || 1))}
+                value={formatNumberWithCommasNoDecimal(
+                  summary.amount / (summary.daysWithData || 1),
+                )}
                 unit="/L"
                 prefix="₹"
               />
@@ -371,7 +371,7 @@ function ProcurementHistoryContent() {
               />
               <StatItem
                 label="Total Milk"
-                value={summary.milk.toFixed(2)}
+                value={formatNumberWithCommasNoDecimal(summary.milk)}
                 unit="L"
               />
               <StatItem
@@ -481,15 +481,10 @@ function ProcurementHistoryContent() {
                 </thead>
 
                 <tbody>
-                  {decoratedTableData.map((row, index) => {
+                  {decoratedTableData.map((row) => {
                     const timeBadge = formatTimeBadge(row.time);
                     return (
-                      <tr
-                        key={
-                          row._id ||
-                          `${row.date}-${row.supplierName || "unknown"}-${index}`
-                        }
-                      >
+                      <tr key={row._id}>
                         <td className={styles.date_cell}>{row.displayDate}</td>
                         <td className={styles.supplier_cell}>
                           {row.supplierName ? (
@@ -551,7 +546,6 @@ function ProcurementHistoryContent() {
                             <span className={styles.status_na}>N/A</span>
                           )}
                         </td>
-                        {/* ===================================== */}
                       </tr>
                     );
                   })}

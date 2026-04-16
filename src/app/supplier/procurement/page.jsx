@@ -113,21 +113,20 @@ const SummaryStats = ({ summary, filters }) => (
         }
         unit="L/day"
       />
-      
 
       <StatItem
         label="Avg Fat/SNF"
         value={`${summary.avgFat} / ${summary.avgSnf}`}
         unit="%"
       />
-       <StatItem
+      <StatItem
         label="Daily Avg Amount"
         value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
         prefix="₹"
       />
 
       <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
-     
+
       <StatItem
         label="Total Milk"
         value={formatNumberWithCommas(summary.milk.toFixed(2))}
@@ -657,10 +656,17 @@ function ProcurementContent() {
     }
     const dateRange = {
       start:
-        new Date(filteredProcurements.at(-1).date).toLocaleDateString() ||
-        "----",
+        new Date(filteredProcurements.at(-1).date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit",
+        }) || "----",
       end:
-        new Date(filteredProcurements[0].date).toLocaleDateString() || "----",
+        new Date(filteredProcurements[0].date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit",
+        }) || "----",
     };
     const supplierName = data.supplier?.supplierName || "Unknown";
     const fileName =

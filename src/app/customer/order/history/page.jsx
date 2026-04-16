@@ -175,7 +175,7 @@ function OrderHistoryContent() {
           </h3>
           <div className={styles.stats_grid}>
             <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Total Orders</span>
+              <span className={styles.stat_label}>No. Of. Orders</span>
               <span className={styles.stat_value}>
                 {data.summary.orderCount}
               </span>
@@ -187,13 +187,13 @@ function OrderHistoryContent() {
               </span>
             </div>
             <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Paid Amount</span>
+              <span className={styles.stat_label}> Amount Recevied</span>
               <span className={`${styles.stat_value} ${styles.text_green}`}>
                 ₹{formatNumberWithCommasNoDecimal(data.summary.paidAmount)}
               </span>
             </div>
             <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Due Amount</span>
+              <span className={styles.stat_label}>Amount Due</span>
               <span className={`${styles.stat_value} ${styles.text_red}`}>
                 ₹{formatNumberWithCommasNoDecimal(data.summary.dueAmount)}
               </span>
@@ -294,7 +294,7 @@ function OrderHistoryContent() {
                       </span>
                     </td>
                     <td className={styles.comment_cell}>
-                      {order.comment || "—"}
+                      {order.comment || "-"}
                     </td>
                   </tr>
                 ))}

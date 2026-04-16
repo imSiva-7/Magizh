@@ -126,28 +126,29 @@ const SummaryStats = ({ summary, filters }) => (
       </span>
     </h3>
     <div className={styles.stats_grid}>
-      {/* <StatItem label="Total Orders" value={summary.orderCount} unit="" /> */}
+      <StatItem label="No. Of.  Orders" value={summary.orderCount} unit="" />
+
       <StatItem
-        label="Avg Order Value"
-        value={summary.avgOrderValue.toFixed(2)}
+        label="Total Amount"
+        value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
         prefix="₹"
       />
       <StatItem
-        label="Paid Amount"
+        label="Avg Order Value"
+        value={formatNumberWithCommasNoDecimal(summary.avgOrderValue)}
+        prefix="₹"
+      />
+      <StatItem
+        label="Amount Recevied"
         value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
         prefix="₹"
         colorClass={styles.text_green}
       />
       <StatItem
-        label="Due Amount"
+        label="Amount Due"
         value={formatNumberWithCommasNoDecimal(summary.dueAmount)}
         prefix="₹"
         colorClass={styles.text_red}
-      />
-      <StatItem
-        label="Total Amount"
-        value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
-        prefix="₹"
       />
     </div>
   </div>
@@ -344,7 +345,10 @@ function OrdersContent() {
     }
     const dateRange = date
       ? { start: date, end: date }
-      : { start: formatDateForDisplay(filters.startDate) || "all", end: formatDateForDisplay(filters.endDate) || "all" };
+      : {
+          start: formatDateForDisplay(filters.startDate) || "all",
+          end: formatDateForDisplay(filters.endDate) || "all",
+        };
     const customerName = data.customer?.customerName || "Unknown";
     const fileName = date
       ? `${customerName}_invoice_${date}`
@@ -809,11 +813,12 @@ function OrdersContent() {
                   <th>Order Total</th>
                   <th>Comment</th>
                   <th>
-                    <div className={styles.select_all_wrapper}>
+                    <div>
                       <input
                         type="checkbox"
                         checked={isSelectAllChecked}
                         onChange={handleSelectAll}
+                        className={styles.row_checkbox}
                         disabled={submitting}
                       />{" "}
                       *
@@ -879,14 +884,18 @@ function OrdersContent() {
                       <td className={styles.invoice_cell}>
                         <button
                           onClick={() =>
-                            handleExport("pdf", [order], formatDateForDisplay(order.date))
+                            handleExport(
+                              "pdf",
+                              [order],
+                              formatDateForDisplay(order.date),
+                            )
                           }
                           className={styles.export_btn_table}
                           disabled={!filteredOrders.length}
                         >
                           <Image
                             alt="Download"
-                            src="/downloads.png"
+                            src="/invoice-download.png"
                             width={20}
                             height={20}
                           />

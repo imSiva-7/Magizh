@@ -554,7 +554,7 @@ export default function Payments() {
               </div>
             </div>
             <div className={styles.global_stat_item}>
-              <div className={styles.global_stat_label}>Total Paid</div>
+              <div className={styles.global_stat_label}>Amount Paid</div>
               <div
                 className={`${styles.global_stat_value} ${styles.text_green}`}
               >
@@ -562,7 +562,7 @@ export default function Payments() {
               </div>
             </div>
             <div className={styles.global_stat_item}>
-              <div className={styles.global_stat_label}>Total Due</div>
+              <div className={styles.global_stat_label}>Amount Due</div>
               <div className={`${styles.global_stat_value} ${styles.text_red}`}>
                 ₹{formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}
               </div>

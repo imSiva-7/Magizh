@@ -286,10 +286,11 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .text_green {
-  color: #059669;
+color: #166534 !important;
+
 }
 .text_red {
-  color: #dc2626;
+  color: #991b1b !important;
 }
 
 /* ========== 5. ALERTS & LOADERS ========== */
@@ -405,6 +406,11 @@ input[type="date"]::-webkit-date-and-time-value {
   border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
   font-size: 0.875rem;
+}
+.table th:nth-child(1),
+.table th:nth-child(2) 
+{
+  text-align: left;
 }
 
 .table td {
