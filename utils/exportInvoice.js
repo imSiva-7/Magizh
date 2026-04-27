@@ -160,7 +160,8 @@ export const exportInvoiceToPDF = (
   // Tax logic (Assuming 5% GST for dairy if applicable)
   const gstRate = 0.05;
   // const taxAmount = isGST ? subTotal * gstRate : 0;
-  const taxAmount =  subTotal * gstRate;
+  // const taxAmount =  subTotal * gstRate;
+  const taxAmount =  0;
   const grandTotal = subTotal + taxAmount;
 
   if (finalY + 70 > doc.internal.pageSize.height) {
@@ -198,13 +199,13 @@ export const exportInvoiceToPDF = (
     { align: "right" },
   );
 
-  doc.text("GST (5%):", summaryX + 5, finalY + 12);
-  doc.text(
-    ` ${formatNumberWithCommas(taxAmount, 2)}`,
-    pageWidth - margin - 5,
-    finalY + 12,
-    { align: "right" },
-  );
+  // doc.text("GST (5%):", summaryX + 5, finalY + 12);
+  // doc.text(
+  //   ` ${formatNumberWithCommas(taxAmount, 2)}`,
+  //   pageWidth - margin - 5,
+  //   finalY + 12,
+  //   { align: "right" },
+  // );
 
   doc.setFillColor(...PRIMARY_COLOR);
   doc.rect(summaryX, finalY + 18, 71, 10, "F");
