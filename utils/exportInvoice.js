@@ -199,13 +199,14 @@ export const exportInvoiceToPDF = (
     { align: "right" },
   );
 
-  // doc.text("GST (5%):", summaryX + 5, finalY + 12);
-  // doc.text(
-  //   ` ${formatNumberWithCommas(taxAmount, 2)}`,
-  //   pageWidth - margin - 5,
-  //   finalY + 12,
-  //   { align: "right" },
-  // );
+  doc.text("GST (5%):", summaryX + 5, finalY + 12);
+  doc.text(
+    // ` ${formatNumberWithCommas(taxAmount, 2)}`,
+    ` Not-applicable`,
+    pageWidth - margin - 5,
+    finalY + 12,
+    { align: "right" },
+  );
 
   doc.setFillColor(...PRIMARY_COLOR);
   doc.rect(summaryX, finalY + 18, 71, 10, "F");

@@ -274,7 +274,7 @@ export async function POST(request) {
       actionDoneBy,
     } = body;
 
-    if (new Date() - new Date(date) > 10 * 24 * 60 * 60 * 1000) {
+    if (new Date() - new Date(date) > 20* 24 * 60 * 60 * 1000) {
       return NextResponse.json(
         {
           error:
