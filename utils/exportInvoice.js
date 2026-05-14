@@ -3,7 +3,7 @@ import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 import { formatNumberWithCommas } from "./formatNumberWithComma";
 
-const kg = ["Butter", "Fresh Cream", "Ghee", "Soft Paneer", "Premium Paneer"];
+const kg = ["Butter", "Fresh Cream", "Soft Paneer", "Premium Paneer"];
 
 // PDF Design Constants
 const PRIMARY_COLOR = [39, 121, 93]; // Corporate Green
@@ -67,7 +67,7 @@ export const exportInvoiceToPDF = (
     doc.setTextColor(...TEXT_DARK);
     doc.setFontSize(11);
     doc.text(
-      customer?.customerName || "Walking Customer",
+      customer?.customerName || "All Customers",
       margin + 5,
       startY + 15,
     );
@@ -75,7 +75,9 @@ export const exportInvoiceToPDF = (
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEXT_MUTED);
-    const address = customer?.address || "No Address Provided";
+    const address = customer?.customerName
+      ? customer?.address || "No Address Provided"
+      : "Not Applicable";
     const splitAddress = doc.splitTextToSize(address, 80);
     doc.text(splitAddress, margin + 5, startY + 20);
     if (customer?.mobile)
@@ -89,22 +91,18 @@ export const exportInvoiceToPDF = (
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_DARK);
     doc.setFont("helvetica", "normal");
-   (dateRange.start == dateRange.end)
-      ? doc.text(
-          `Period: ${dateRange.start}`,
-          pageWidth / 2 + 10,
-          startY + 15,
-        )
+    dateRange.start == dateRange.end
+      ? doc.text(`Period: ${dateRange.start}`, pageWidth / 2 + 10, startY + 15)
       : doc.text(
           `Period: ${dateRange.start} - ${dateRange.end}`,
           pageWidth / 2 + 10,
           startY + 15,
         );
-    doc.text(
-      `Invoice Date: ${formatDateForDisplay(new Date())}`,
-      pageWidth / 2 + 10,
-      startY + 20,
-    );
+    // doc.text(
+    //   `Invoice Date: ${formatDateForDisplay(new Date())}`,
+    //   pageWidth / 2 + 10,
+    //   startY + 20,
+    // );
     if (customer?.customerGST) {
       doc.setFont("helvetica", "bold");
       doc.text(
@@ -124,13 +122,24 @@ export const exportInvoiceToPDF = (
       productQuantities[item.product] =
         (productQuantities[item.product] || 0) + item.quantity;
 
-      return [
-        idx === 0 ? formatDateForDisplay(order.date) : ``, // Only show date on first item of order
-        item.product,
-        `${item.quantity} ${kg.includes(item.product) ? "Kg" : "L"}`,
-        `Rs. ${formatNumberWithCommas(item.ratePerUnit, 2)}`,
-        `Rs. ${formatNumberWithCommas(item.totalAmount, 2)}`,
-      ];
+      if (customer?.customerName) {
+        return [
+          idx === 0 ? formatDateForDisplay(order.date) : ``,
+          item.product,
+          `${item.quantity} ${kg.includes(item.product) ? "Kg" : "L"}`,
+          `Rs. ${formatNumberWithCommas(item.ratePerUnit, 2)}`,
+          `Rs. ${formatNumberWithCommas(item.totalAmount, 2)}`,
+        ];
+      } else {
+        return [
+          idx === 0 ? formatDateForDisplay(order.date) : ``,
+          idx === 0 ? `(${idx+1}) ${order.customerName}` : `(${idx+1})`,
+          item.product,
+          `${item.quantity} ${kg.includes(item.product) ? "Kg" : "L"}`,
+          `Rs. ${formatNumberWithCommas(item.ratePerUnit, 2)}`,
+          `Rs. ${formatNumberWithCommas(item.totalAmount, 2)}`,
+        ];
+      }
     });
   });
 
@@ -138,30 +147,53 @@ export const exportInvoiceToPDF = (
   drawHeader();
   drawAddressGrid(45);
 
-  autoTable(doc, {
-    startY: 85,
-    head: [["Date", "Product", "Qty", "Rate per (Kg/L)", "Total"]],
-    body: tableRows,
-    theme: "grid",
-    headStyles: { fillColor: PRIMARY_COLOR, halign: "center" },
-    columnStyles: {
-      0: { cellWidth: 30, halign: "left" },
-      1: { cellWidth: "auto" },
-      2: { cellWidth: 25, halign: "center" },
-      3: { cellWidth: 35, halign: "right" },
-      4: { cellWidth: 35, halign: "right" },
-    },
-    styles: { fontSize: 9, cellPadding: 4 },
-  });
+  if (customer?.customerName) {
+    autoTable(doc, {
+      startY: 85,
+      head: [["Date", "Product", "Qty (Kg/L)", "Rate per (Kg/L)", "Total"]],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: PRIMARY_COLOR, halign: "center" },
+      columnStyles: {
+        0: { cellWidth: 30, halign: "left" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: 25, halign: "center" },
+        3: { cellWidth: 35, halign: "right" },
+        4: { cellWidth: 35, halign: "right" },
+      },
+      styles: { fontSize: 9, cellPadding: 4 },
+    });
+  } else {
+    autoTable(doc, {
+      startY: 85,
+      head: [
+        ["Date", "Customer", "Product", "Qty ", "Rate per (Kg/L)", "Total"],
+      ],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: PRIMARY_COLOR, halign: "center" },
+      columnStyles: {
+        0: { cellWidth: 30, halign: "left" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: "auto" },
+        3: { cellWidth: 20, halign: "right" },
+        4: { cellWidth: 35, halign: "right" },
+        5: { cellWidth: 30, halign: "right" },
+      },
+      styles: { fontSize: 9, cellPadding: 4 },
+    });
+  }
 
   // --- 5. Summary & Tax Calculations ---
   let finalY = doc.lastAutoTable.finalY + 10;
 
   // Tax logic (Assuming 5% GST for dairy if applicable)
-  const gstRate = 0.05;
+
+  // const gstRate = 0.05;
   // const taxAmount = isGST ? subTotal * gstRate : 0;
   // const taxAmount =  subTotal * gstRate;
-  const taxAmount =  0;
+
+  const taxAmount = 0;
   const grandTotal = subTotal + taxAmount;
 
   if (finalY + 70 > doc.internal.pageSize.height) {
@@ -209,14 +241,14 @@ export const exportInvoiceToPDF = (
   );
 
   doc.setFillColor(...PRIMARY_COLOR);
-  doc.rect(summaryX, finalY + 18, 71, 10, "F");
+  doc.rect(summaryX, finalY + 20, 71, 10, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("GRAND AMOUNT:", summaryX + 5, finalY + 24);
+  doc.text("GRAND AMOUNT:", summaryX + 5, finalY + 26);
   doc.text(
     `Rs. ${formatNumberWithCommas(grandTotal, 2)}`,
     pageWidth - margin - 5,
-    finalY + 24,
+    finalY + 26,
     { align: "right" },
   );
 

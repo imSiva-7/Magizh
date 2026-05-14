@@ -561,7 +561,7 @@ function ProcurementContent() {
       fatPercentage: item.fatPercentage.toString(),
       snfPercentage: item.snfPercentage.toString(),
       paymentStatus: item.paymentStatus || "Not Paid",
-      comment: item.comment || "", // <-- added comment
+      comment: item.comment || "", 
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

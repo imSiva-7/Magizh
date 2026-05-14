@@ -156,6 +156,8 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const tableData = [];
   let totalMilkLtr = 0;
   let totalAmount = 0;
+  let totalPaid = 0;
+  let totalDue = 0;
   let totalFat = 0;
   let totalSnf = 0;
 
@@ -181,6 +183,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         record.supplierTSRate || "N/A",
         formatNumberWithCommas(record.rate, 2),
         formatNumberWithCommas(record.totalAmount, 2),
+        // ` ${formatNumberWithCommas(record.totalAmount, 2)} ${record.paymentStatus == "Paid" ? " (paid)" : " (due)"} `,
       ]);
     } else {
       tableData.push([
@@ -194,10 +197,13 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         record.supplierTSRate || "N/A",
         record.rate,
         formatNumberWithCommas(record.totalAmount, 2),
+        // ` ${formatNumberWithCommas(record.totalAmount, 2)} ${record.paymentStatus == "Paid" ? " (paid)" : " (due)"}`,
       ]);
     }
 
     totalMilkLtr += record.milkQuantity;
+    // totalPaid += record.paymentStatus == "Paid" ? record.totalAmount : 0;
+    // totalDue += record.paymentStatus !== "Paid" ? record.totalAmount : 0;
     totalAmount += record.totalAmount;
     totalFat += record.fatPercentage;
     totalSnf += record.snfPercentage;
@@ -240,7 +246,6 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
           1: { halign: "center", cellWidth: 14 },
           2: { halign: "left", fontStyle: "bold" },
           3: { halign: "right", fontStyle: "bold" },
-          // 4: { halign: "right" },
           4: { halign: "right" },
           5: { halign: "right" },
           5: { halign: "right" },
@@ -389,7 +394,9 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
     "Net Amount (Rs)",
   ];
   const csvRows = [];
-  csvRows.push(`Supplier Name: "${supplier?.supplierName || "MAGIZH DAIRY SUPPLIERS"}"`);
+  csvRows.push(
+    `Supplier Name: "${supplier?.supplierName || "MAGIZH DAIRY SUPPLIERS"}"`,
+  );
   // csvRows.push(`"GUDIYATHAM"`);
   // csvRows.push(
   //   `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`,

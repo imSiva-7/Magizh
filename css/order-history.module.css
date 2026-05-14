@@ -371,6 +371,7 @@ color: #166534 !important;
 
 .exportButtons {
   display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -429,6 +430,7 @@ color: #166534 !important;
 
 .date_cell {
   text-align: left !important;
+  min-width: 60px;
   font-weight: 500;
 }
 

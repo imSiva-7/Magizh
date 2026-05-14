@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/order-history.module.css";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
+import { formatDateForDisplay } from "@/utils/dateUtils";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import Link from "next/link";
 
@@ -72,9 +73,10 @@ function OrderHistoryContent() {
       return;
     }
     const dateRange = {
-      start: filters.startDate || "all",
-      end: filters.endDate || "all",
+      start: formatDateForDisplay(filters.startDate) || "all",
+      end: formatDateForDisplay(filters.endDate) || "all",
     };
+
     const fileName = `orders_${dateRange.start}_to_${dateRange.end}`;
 
     exportInvoiceToPDF(data.orders, "Orders History", dateRange, fileName);
@@ -203,30 +205,22 @@ function OrderHistoryContent() {
       )}
 
       {/* Export Section */}
-      {/* {!loading && data.summary?.orderCount > 0 && (
+      {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
             {data.summary.orderCount} order
             {data.summary.orderCount !== 1 ? "s" : ""} found
           </span>
-          <div className={styles.exportButtons}>
-            <button
-              onClick={() => handleExport("csv")}
-              className={styles.exportBtn}
-              disabled={!data.orders.length}
-            >
-              Export as CSV
-            </button>
-            <button
-              onClick={() => handleExport("pdf")}
-              className={styles.exportBtn}
-              disabled={!data.orders.length}
-            >
-              Export as PDF
-            </button>
-          </div>
+
+          <button
+            onClick={() => handleExport("pdf")}
+            className={styles.exportBtn}
+            disabled={!data.orders.length}
+          >
+            Export as PDF
+          </button>
         </div>
-      )} */}
+      )}
 
       {/* Table */}
       <div className={styles.table_wrapper}>
@@ -290,7 +284,7 @@ function OrderHistoryContent() {
                             : styles.status_due
                         }
                       >
-                        {order.paymentStatus}
+                        {order.paymentStatus === "Paid" ? "Paid" : "Due"}
                       </span>
                     </td>
                     <td className={styles.comment_cell}>

@@ -111,7 +111,7 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
 
   return (
     <div className={styles.comment_display}>
-      <span className={styles.comment_text}>{comment || "—"}</span>
+      <span className={styles.comment_text}>{comment || "-"}</span>
       <button
         onClick={() => setIsEditing(true)}
         className={styles.comment_edit_btn}
@@ -819,7 +819,7 @@ export default function CustomerPayments() {
                         className={styles.show_more_btn}
                         disabled={submitting}
                       >
-                        Show 20 More ({orders.length - visibleCount} more)
+                        Show More ({orders.length - visibleCount} more)
                       </button>
                     </div>
                   )}

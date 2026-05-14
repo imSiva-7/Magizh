@@ -42,8 +42,7 @@ const mobileNavItems = [
   { name: "Procurement Payments", path: "/supplier/payments" },
   { name: "Customers", path: "/customer" },
   { name: "Order History", path: "/customer/order/history" },
-  { name: "Order Payments", path: "/customer/payments" },
-  { name: "Analytics", path: "/analytics" },
+  { name: "Order Payments", path: "/customer/payments" }
 ];
 
 export default function Header() {
