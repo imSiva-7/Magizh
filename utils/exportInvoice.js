@@ -6,8 +6,8 @@ import { formatNumberWithCommas } from "./formatNumberWithComma";
 const kg = ["Butter", "Fresh Cream", "Soft Paneer", "Premium Paneer"];
 
 // PDF Design Constants
-const PRIMARY_COLOR = [39, 121, 93]; // Corporate Green
-const SECONDARY_BG = [240, 244, 242]; // Light green tint for boxes
+const PRIMARY_COLOR = [39, 121, 93];
+const SECONDARY_BG = [240, 244, 242];
 const TEXT_DARK = [33, 37, 41];
 const TEXT_MUTED = [100, 116, 139];
 
@@ -24,13 +24,10 @@ export const exportInvoiceToPDF = (
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
 
-  // --- 1. Header Section ---
   const drawHeader = () => {
-    // Top Bar
     doc.setFillColor(...PRIMARY_COLOR);
     doc.rect(0, 0, pageWidth, 8, "F");
 
-    // Title & Company Info
     doc.setTextColor(...PRIMARY_COLOR);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(22);
@@ -39,12 +36,11 @@ export const exportInvoiceToPDF = (
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...TEXT_MUTED);
-    doc.text("Premium Dairy", margin, 30);
+    doc.text("Your Premium Dairy Partner", margin, 30);
 
-    // Company Details (Right Aligned)
     doc.setTextColor(...TEXT_DARK);
     doc.setFont("helvetica", "bold");
-    doc.text("GSTIN: 33AAKCM1234F1ZR", pageWidth - margin, 25, {
+    doc.text("GSTIN: 33ACBFM9128J1Z4", pageWidth - margin, 25, {
       align: "right",
     });
     doc.setFont("helvetica", "normal");
@@ -54,12 +50,10 @@ export const exportInvoiceToPDF = (
     doc.text("Ph: +91 93636 46314", pageWidth - margin, 35, { align: "right" });
   };
 
-  // --- 2. Address Grid (From vs To) ---
   const drawAddressGrid = (startY) => {
     doc.setFillColor(...SECONDARY_BG);
     doc.rect(margin, startY, pageWidth - margin * 2, 35, "F");
 
-    // Bill To
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY_COLOR);
     doc.text("BILL TO:", margin + 5, startY + 8);
@@ -77,13 +71,12 @@ export const exportInvoiceToPDF = (
     doc.setTextColor(...TEXT_MUTED);
     const address = customer?.customerName
       ? customer?.address || "No Address Provided"
-      : "Not Applicable";
+      : "";
     const splitAddress = doc.splitTextToSize(address, 80);
     doc.text(splitAddress, margin + 5, startY + 20);
     if (customer?.mobile)
       doc.text(`Contact: ${customer.mobile}`, margin + 5, startY + 31);
 
-    // Invoice Info
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...PRIMARY_COLOR);
     doc.text("INVOICE DETAILS:", pageWidth / 2 + 10, startY + 8);
@@ -113,7 +106,6 @@ export const exportInvoiceToPDF = (
     }
   };
 
-  // --- 3. Data Processing ---
   let subTotal = 0;
   const productQuantities = {};
   const tableRows = orders.flatMap((order) => {
@@ -133,7 +125,7 @@ export const exportInvoiceToPDF = (
       } else {
         return [
           idx === 0 ? formatDateForDisplay(order.date) : ``,
-          idx === 0 ? `(${idx+1}) ${order.customerName}` : `(${idx+1})`,
+          idx === 0 ? `(${idx + 1}) ${order.customerName}` : `(${idx + 1})`,
           item.product,
           `${item.quantity} ${kg.includes(item.product) ? "Kg" : "L"}`,
           `Rs. ${formatNumberWithCommas(item.ratePerUnit, 2)}`,
@@ -143,7 +135,6 @@ export const exportInvoiceToPDF = (
     });
   });
 
-  // --- 4. Render Table ---
   drawHeader();
   drawAddressGrid(45);
 
@@ -184,7 +175,6 @@ export const exportInvoiceToPDF = (
     });
   }
 
-  // --- 5. Summary & Tax Calculations ---
   let finalY = doc.lastAutoTable.finalY + 10;
 
   // Tax logic (Assuming 5% GST for dairy if applicable)
@@ -201,7 +191,6 @@ export const exportInvoiceToPDF = (
     finalY = 20;
   }
 
-  // Left Side: Product Summary
   doc.setFont("helvetica", "bold");
   doc.text("Product Summary:", margin, finalY);
   doc.setFont("helvetica", "normal");
@@ -216,7 +205,6 @@ export const exportInvoiceToPDF = (
     itemY += 5;
   });
 
-  // Right Side: Totals Box
   const summaryX = pageWidth - 85;
   doc.setFillColor(...SECONDARY_BG);
   doc.rect(summaryX, finalY - 5, 71, 35, "F");
@@ -252,19 +240,19 @@ export const exportInvoiceToPDF = (
     { align: "right" },
   );
 
-  // --- 6. Payment Info & Signatures ---
-  doc.setTextColor(...TEXT_MUTED);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "bold");
-  doc.text("BANK DETAILS:", margin, finalY + 45);
-  doc.setFont("helvetica", "normal");
-  doc.text("Bank: State Bank of India | A/c: XXXXXXXXXX", margin, finalY + 50);
-  doc.text("IFSC: SBIN0001234", margin, finalY + 54);
+  if (customer?.customerName) {
+    doc.setTextColor(...TEXT_MUTED);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("GPAY DETAILS:", margin, finalY + 45);
+    doc.setFont("helvetica", "normal");
+    doc.text("Bank: State Bank of India | : XXXXXXXXXX", margin, finalY + 50);
+    // doc.text("IFSC: SBIN0001234", margin, finalY + 54);
+  }
 
-  // Signatures
   doc.setTextColor(...TEXT_DARK);
   doc.line(pageWidth - 60, finalY + 60, pageWidth - margin, finalY + 60);
-  doc.text("Authorized Signatory", pageWidth - 37, finalY + 65, {
+  doc.text("Authorized Signatory", pageWidth - 37, finalY + 69, {
     align: "center",
   });
 

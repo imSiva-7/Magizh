@@ -11,16 +11,6 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 
-// Helper: format date range label
-const getFormattedDateRange = (startDate, endDate) => {
-  if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
-    return from === to ? from : `${from} – ${to}`;
-  }
-  return "All Records";
-};
-
 // Reusable stat item component
 const StatItem = ({ label, value, colorClass = "" }) => (
   <div className={styles.global_stat_item}>
@@ -39,7 +29,10 @@ export default function Home() {
   });
 
   // Data states
-  const [customerData, setCustomerData] = useState({ orders: [], summary: {} });
+  const [customerData, setCustomerData] = useState({ 
+    orders: [], 
+    summary: {}
+  });
   const [supplierData, setSupplierData] = useState({
     procurements: [],
     summary: {},
@@ -225,7 +218,7 @@ export default function Home() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Customers Summary</h2>
-             <span className={styles.date_range_badge}>
+            <span className={styles.date_range_badge}>
               As of {getTodayDate()}
             </span>
           </div>
@@ -257,7 +250,7 @@ export default function Home() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>
-              Customers with Outstanding Dues
+              Customers
             </h2>
             <span className={styles.date_range_badge}>
               As of {getTodayDate()}
@@ -269,7 +262,7 @@ export default function Home() {
                 <tr>
                   <th>Customer Name</th>
                   <th>Total Due (₹)</th>
-                  <th>Action</th>
+                  {/* <th>Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -279,14 +272,14 @@ export default function Home() {
                     <td className={styles.text_red}>
                       ₹{formatNumberWithCommasNoDecimal(customer.due)}
                     </td>
-                    <td>
+                    {/* <td>
                       <Link
-                        href={`/customer/payments?customerId=${encodeURIComponent(customer.name)}`}
+                        href={`/customer/order?customerId=${customer.customerId}`}
                         className={styles.viewLink}
                       >
                         View Payments
                       </Link>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -301,7 +294,7 @@ export default function Home() {
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
-             As of {getTodayDate()}
+              As of {getTodayDate()}
             </span>
           </div>
           <div className={styles.global_stats_grid}>
@@ -373,49 +366,95 @@ export default function Home() {
       {/* ========== MAIN NAVIGATION GRID ========== */}
       <div className={styles.navGrid}>
         <Link href="/productions" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/industrial-park.png" alt="Productiion" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/industrial-park.png"
+              alt="Productiion"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Production</h2>
           <p>Record daily milk production and by‑products</p>
         </Link>
 
         <Link href="/customer" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/customer.png" alt="Customer" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image src="/customer.png" alt="Customer" width={30} height={30} />
+          </div>
           <h2>Customers</h2>
           <p>View and manage customer details</p>
         </Link>
 
         <Link href="/customer/payments" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/payment.png" alt="Customer payments" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/payment.png"
+              alt="Customer payments"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Customers Payments</h2>
           <p>Track and mark payments to Customers</p>
         </Link>
 
         <Link href="/supplier" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/wholesale.png" alt="Supplier" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
+          </div>
           <h2>Suppliers</h2>
           <p>Manage supplier information and rates</p>
         </Link>
 
         <Link href="/supplier/payments" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/pay.png" alt="Supplier payments" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/pay.png"
+              alt="Supplier payments"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Supplier Payments</h2>
           <p>Track and settle payments to suppliers</p>
         </Link>
 
         <Link href="/productions/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/bar-chart.png" alt="Production analytics" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/bar-chart.png"
+              alt="Production analytics"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Productions Analytics</h2>
           <p>View production insights and reports</p>
         </Link>
 
         <Link href="/supplier/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/data-report.png" alt="Supplier analytics" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/data-report.png"
+              alt="Supplier analytics"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Suppliers Analytics</h2>
           <p>View suppliers insights and reports</p>
         </Link>
 
         <Link href="/customer/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}><Image src ="/business-website.png" alt="Customer analytics" width={30} height={30} /></div>
+          <div className={styles.navIcon}>
+            <Image
+              src="/business-website.png"
+              alt="Customer analytics"
+              width={30}
+              height={30}
+            />
+          </div>
           <h2>Customers Analytics</h2>
           <p>View customer insights and reports</p>
         </Link>

@@ -11,6 +11,7 @@ import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
 
+
 const INITIAL_FILTERS = {
   startDate: "",
   endDate: "",
@@ -95,6 +96,7 @@ export default function Payments() {
 
       try {
         const queryParams = new URLSearchParams();
+        
         if (filters.startDate)
           queryParams.append("startDate", filters.startDate);
         if (filters.endDate) queryParams.append("endDate", filters.endDate);
@@ -363,10 +365,14 @@ export default function Payments() {
 
   const globalStats = supplierTotalsMap.all;
 
+
+// const vada = filteredSupplierList.map((supplier) => supplier.supplierID).sort((a, b) => b.supplierID.procurement.length - a.supplier.procurement.lenght)
+ 
+// console.log(vada);
   return (
     <div className={styles.page_container}>
       <ToastContainer
-        position="top-right"
+        position="top-right" 
         autoClose={3000}
         hideProgressBar={false}
         closeOnClick
@@ -819,7 +825,7 @@ export default function Payments() {
                         className={styles.show_more_btn}
                         disabled={submitting}
                       >
-                        Show 20 More of ({procurements.length - visibleCount}{" "}
+                        Show More({procurements.length - visibleCount}{" "}
                         more)
                       </button>
                     </div>

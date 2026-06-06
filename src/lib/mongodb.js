@@ -6,14 +6,13 @@ if (!uri) {
   throw new Error("❌ MONGODB_URI is not defined in environment variables");
 }
 
-// Different options for development vs production
 const options = {
   maxPoolSize: 10,
   serverSelectionTimeoutMS:
     process.env.NODE_ENV === "development" ? 10000 : 5000,
   socketTimeoutMS: 45000,
   connectTimeoutMS: 10000,
-  // Development-specific options
+ 
   ...(process.env.NODE_ENV === "development" && {
     monitorCommands: true,
   }),

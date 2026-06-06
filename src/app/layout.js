@@ -5,14 +5,14 @@ import AuthProvider from "./AuthProvider"; // import the client component
 
 export const metadata = {
   title: "Magizh Dairy",
-  description: "Let's goo",
+  description: "Your Premium dairy partner",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <AuthProvider>   {/* Wrap with AuthProvider */}
+        <AuthProvider>   
           <Header />
           <main>{children}</main>
           <Footer />

@@ -69,7 +69,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("GUDIYATHAM | GST NO: 33AAKCM1234F1ZR", 14, 26);
+  doc.text("GUDIYATHAM | GST NO:33ACBFM9128J1Z4", 14, 26);
   doc.text("Phone: +91 93636 46314, +91 75021 36314", 14, 32);
 
   // Bill Period Box (Top Right)
