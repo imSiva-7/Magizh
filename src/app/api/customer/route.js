@@ -71,7 +71,7 @@ export async function GET(request) {
     const customers = await db
       .collection("customers")
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({ customerName: 1 })
       .toArray();
 
     return NextResponse.json(customers);

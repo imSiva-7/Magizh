@@ -79,6 +79,8 @@ export default function Supplier() {
   const searchInputRef = useRef(null);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
   const [searchDebounced, setSearchDebounced] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const initialFormState = useMemo(
     () => ({
@@ -233,7 +235,7 @@ export default function Supplier() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/supplier");
+      const res = await fetch(`/api/supplier`);
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
@@ -249,7 +251,7 @@ export default function Supplier() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sortBy, sortOrder]);
 
   useEffect(() => {
     fetchData();
@@ -439,6 +441,7 @@ export default function Supplier() {
     if (isNaN(parsed)) return "-";
     return parsed.toFixed(2);
   };
+
 
   return (
     <div className={styles.container}>
@@ -637,6 +640,7 @@ export default function Supplier() {
             )}
           </div>
         </div>
+        
         <div className={styles.searchStats}>
           {loading ? (
             <span className={styles.loadingText}>Searching...</span>
@@ -668,7 +672,7 @@ export default function Supplier() {
             <tbody>
               {loading && entries.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 5 : 4} className={styles.loadingCell}>
+                  <td colSpan={isAdmin ? 6 : 5} className={styles.loadingCell}>
                     <div className={styles.loadingContent}>
                       <div className={styles.tableSpinner}></div>
                       <span>Loading suppliers...</span>
@@ -677,7 +681,7 @@ export default function Supplier() {
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 5 : 4} className={styles.noDataCell}>
+                  <td colSpan={isAdmin ? 6 : 5} className={styles.noDataCell}>
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>

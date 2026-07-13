@@ -72,10 +72,12 @@ export default function Payments() {
   const [visibleCounts, setVisibleCounts] = useState({});
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchSuppliers() {
+      setIsLoadingSuppliers(true);
       try {
         const res = await fetch("/api/supplier");
         if (!res.ok) throw new Error("Failed to fetch suppliers");
@@ -85,6 +87,8 @@ export default function Payments() {
         console.error(error);
         setSupplierList([]);
         toast.error(error.message);
+      } finally {
+        setIsLoadingSuppliers(false);
       }
     }
     fetchSuppliers();
@@ -300,13 +304,21 @@ export default function Payments() {
     return totals;
   }, [procurementRecords, statusFilter]);
 
-  // Filtered supplier list (by search)
+  // Filtered supplier list (by search) - sorted by total milk quantity
   const filteredSupplierList = useMemo(() => {
-    if (!searchQuery.trim()) return supplierList;
-    return supplierList.filter((supplier) =>
-      supplier.supplierName.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [supplierList, searchQuery]);
+    let filtered = searchQuery.trim()
+      ? supplierList.filter((supplier) =>
+          supplier.supplierName.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : supplierList;
+
+    // Sort by total milk quantity (highest first)
+    return filtered.sort((a, b) => {
+      const milkA = supplierTotalsMap[a._id]?.totalMilk || 0;
+      const milkB = supplierTotalsMap[b._id]?.totalMilk || 0;
+      return milkB - milkA; // Descending order (highest first)
+    });
+  }, [supplierList, searchQuery, supplierTotalsMap]);
 
   // Filter Handlers & Warnings
   const confirmClearChecked = () => {
@@ -578,7 +590,7 @@ export default function Payments() {
       )}
 
       {/* Supplier Grid (Cards) */}
-      {isLoading ? (
+      {(isLoading || isLoadingSuppliers) ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
         </div>

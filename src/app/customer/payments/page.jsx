@@ -117,7 +117,7 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
         className={styles.comment_edit_btn}
         title="Edit comment"
       >
-        <Image src="/edit.png" alt="edit" width={20} height={20} />
+        <Image src="/edit-comment.png" alt="edit" width={20} height={20} />
       </button>
     </div>
   );
@@ -136,12 +136,14 @@ export default function CustomerPayments() {
   const [statusFilter, setStatusFilter] = useState("");
   const [visibleCounts, setVisibleCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [savingCommentId, setSavingCommentId] = useState(null);
 
   // Fetch all customers
   useEffect(() => {
     async function fetchCustomers() {
+      setIsLoadingCustomers(true);
       try {
         const res = await fetch("/api/customer");
         if (!res.ok) throw new Error("Failed to fetch customers");
@@ -151,6 +153,8 @@ export default function CustomerPayments() {
         console.error(error);
         setCustomerList([]);
         toast.error(error.message);
+      } finally {
+        setIsLoadingCustomers(false);
       }
     }
     fetchCustomers();
@@ -423,13 +427,21 @@ export default function CustomerPayments() {
     return totals;
   }, [ordersData, statusFilter]);
 
-  // Filter customers by search
+  // Filter customers by search and sort by total orders (highest first)
   const filteredCustomerList = useMemo(() => {
-    if (!searchQuery.trim()) return customerList;
-    return customerList.filter((cust) =>
-      cust.customerName?.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [customerList, searchQuery]);
+    let filtered = searchQuery.trim()
+      ? customerList.filter((cust) =>
+          cust.customerName?.toLowerCase().includes(searchQuery.toLowerCase()),
+        )
+      : customerList;
+
+    // Sort by total number of orders (highest first)
+    return filtered.sort((a, b) => {
+      const ordersA = customerTotalsMap[a._id]?.orders?.length || 0;
+      const ordersB = customerTotalsMap[b._id]?.orders?.length || 0;
+      return ordersB - ordersA; // Descending order (highest first)
+    });
+  }, [customerList, searchQuery, customerTotalsMap]);
 
   const globalStats = customerTotalsMap.all;
 

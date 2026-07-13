@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 import { formatNumberWithCommas } from "./formatNumberWithComma";
+import QRCode from "qrcode"; // <-- new import for QR generation
 
 const kg = ["Butter", "Fresh Cream", "Soft Paneer", "Premium Paneer"];
 
@@ -11,7 +12,16 @@ const SECONDARY_BG = [240, 244, 242];
 const TEXT_DARK = [33, 37, 41];
 const TEXT_MUTED = [100, 116, 139];
 
-export const exportInvoiceToPDF = (
+// Helper to build the UPI intent URL with pre‑filled amount
+const buildUPILink = (amount) => {
+  const upiID = "magizhagro@upi";           // replace with your actual UPI ID
+  const payeeName = "MAGIZH AGRO PRODUCT";
+  const currency = "INR";
+  const amt = Number(amount).toFixed(2);    // remove commas, 2 decimals
+  return `upi://pay?pa=${upiID}&pn=${encodeURIComponent(payeeName)}&am=${amt}&cu=${currency}`;
+};
+
+export const exportInvoiceToPDF = async (   // <-- now async
   orders,
   customer,
   dateRange,
@@ -240,15 +250,46 @@ export const exportInvoiceToPDF = (
     { align: "right" },
   );
 
-  if (customer?.customerName) {
-    doc.setTextColor(...TEXT_MUTED);
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("GPAY DETAILS:", margin, finalY + 45);
-    doc.setFont("helvetica", "normal");
-    doc.text("Bank: State Bank of India | : XXXXXXXXXX", margin, finalY + 50);
-    // doc.text("IFSC: SBIN0001234", margin, finalY + 54);
-  }
+    // ========== UPI / GPay Payment Section ==========
+  const upiLink = buildUPILink(grandTotal);
+  const paymentY = finalY + 45;   // start below the grand total block
+
+  // Clickable link text
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  const linkText = "Pay via UPI / GPay";
+  const linkX = margin;
+  doc.textWithLink(linkText, linkX, paymentY, {
+    url: upiLink,
+  });
+
+  // Generate and embed the QR code (async)
+  const qrDataUrl = await QRCode.toDataURL(upiLink, { width: 200 });
+
+  // Place QR code below the link text, on the left side
+  const qrSize = 30; // mm
+  const qrX = margin;                     // left‑aligned with the link text
+  const qrY = paymentY + 8;               // 8mm below the link text
+  doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+
+  // Label under the QR code
+  doc.setFontSize(7);
+  doc.setTextColor(...TEXT_MUTED);
+  doc.text("Scan to pay", qrX + qrSize / 2, qrY + qrSize + 3, {
+    align: "center",
+  });
+
+  // The previous commented‑out GPay details block is replaced by the code above
+  // if (customer?.customerName) {
+  //   doc.setTextColor(...TEXT_MUTED);
+  //   doc.setFontSize(8);
+  //   doc.setFont("helvetica", "bold");
+  //   doc.text("GPAY DETAILS:", margin, finalY + 45);
+  //   doc.setFont("helvetica", "normal");
+  //   doc.text("Bank: State Bank of India | : XXXXXXXXXX", margin, finalY + 50);
+  //   doc.text("IFSC: SBIN0001234", margin, finalY + 54);
+  // }
 
   doc.setTextColor(...TEXT_DARK);
   doc.line(pageWidth - 60, finalY + 60, pageWidth - margin, finalY + 60);

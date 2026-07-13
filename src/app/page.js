@@ -11,7 +11,7 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 
-// Reusable stat item component
+
 const StatItem = ({ label, value, colorClass = "" }) => (
   <div className={styles.global_stat_item}>
     <div className={styles.global_stat_label}>{label}</div>
@@ -22,13 +22,11 @@ const StatItem = ({ label, value, colorClass = "" }) => (
 export default function Home() {
   const { data: session, status } = useSession();
 
-  // Filter state (default: last month to today)
   const [filters, setFilters] = useState({
     startDate: getPreviousMonthDate(),
     endDate: getTodayDate(),
   });
 
-  // Data states
   const [customerData, setCustomerData] = useState({ 
     orders: [], 
     summary: {}
@@ -337,7 +335,7 @@ export default function Home() {
                 <tr>
                   <th>Supplier Name</th>
                   <th>Total Due (₹)</th>
-                  <th>Action</th>
+                  {/* <th>Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -347,14 +345,14 @@ export default function Home() {
                     <td className={styles.text_red}>
                       ₹{formatNumberWithCommasNoDecimal(supplier.due)}
                     </td>
-                    <td>
+                    {/* <td>
                       <Link
                         href={`/supplier/payments?supplierId=${encodeURIComponent(supplier.name)}`}
                         className={styles.viewLink}
                       >
                         View Payments
                       </Link>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -363,7 +361,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* ========== MAIN NAVIGATION GRID ========== */}
       <div className={styles.navGrid}>
         <Link href="/productions" className={styles.navCard}>
           <div className={styles.navIcon}>

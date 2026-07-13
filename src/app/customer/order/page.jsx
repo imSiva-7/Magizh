@@ -608,7 +608,7 @@ function OrdersContent() {
                 value={orderForm.gstType}
                 onChange={handleInputChange}
                 className={styles.select_input}
-                disabled={submitting}
+                 disabled={submitting}
               >
                 {GST_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

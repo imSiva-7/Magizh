@@ -30,7 +30,7 @@ export async function GET(request) {
 
     const db = await getDatabase();
 
-    
+    // Handle single supplier fetch (unchanged)
     if (supplierId) {
       if (!ObjectId.isValid(supplierId)) {
         return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
@@ -61,7 +61,7 @@ export async function GET(request) {
     const suppliers = await db
       .collection("suppliers")
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({ supplierName: 1 })
       .toArray();
 
     return NextResponse.json(suppliers);

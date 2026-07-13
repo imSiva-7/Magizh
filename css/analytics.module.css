@@ -1,7 +1,4 @@
-/* ========== analytics.module.css ========== */
-/* Fully aligned with Procurement / Orders / Customer Payments design language */
 
-/* ========== 1. BASE LAYOUT ========== */
 .page_container {
   max-width: 1400px;
   margin: 0 auto;
@@ -11,7 +8,7 @@
   min-height: 100vh;
 }
 
-/* ========== 2. HEADER (matches .header in orders) ========== */
+
 .header {
   display: flex;
   align-items: center;
