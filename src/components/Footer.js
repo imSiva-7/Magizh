@@ -48,6 +48,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/stock" className={styles.footerLink}>
+                  Stock
+                </Link>
+              </li>
+              <li>
                 <Link href="/customer" className={styles.footerLink}>
                   Customers{" "}
                 </Link>
@@ -129,7 +134,7 @@ export default function Footer() {
               © {currentYear} Magizh Dairy. All rights reserved.
             </span>
 
-            <span className={styles.version}>v1.6.6</span>
+            <span className={styles.version}>v1.6.7</span>
           </div>
         </div>
       </div>
