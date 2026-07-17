@@ -27,6 +27,26 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const supplierId = searchParams.get("supplierId");
     const search = searchParams.get("search");
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+
+    // Validate sortBy parameter
+    const validSortFields = ["createdAt", "totalMilkQuantity"];
+    if (!validSortFields.includes(sortBy)) {
+      return NextResponse.json(
+        { error: "Invalid sortBy parameter. Allowed values: createdAt, totalMilkQuantity" },
+        { status: 400 }
+      );
+    }
+
+    // Validate sortOrder parameter
+    const validSortOrders = ["asc", "desc"];
+    if (!validSortOrders.includes(sortOrder)) {
+      return NextResponse.json(
+        { error: "Invalid sortOrder parameter. Allowed values: asc, desc" },
+        { status: 400 }
+      );
+    }
 
     const db = await getDatabase();
 

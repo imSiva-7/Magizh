@@ -16,7 +16,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/analytics.module.css";
 
 const COLORS = [
@@ -42,7 +42,7 @@ const getFormattedDateRange = (startDate, endDate) => {
 
 export default function ProductionAnalyticsPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: getPreviousMonthDate(),
+    startDate: getCurrentMonthStartDate(),
     endDate: getTodayDate(),
   });
   const [data, setData] = useState({
@@ -76,7 +76,7 @@ export default function ProductionAnalyticsPage() {
 
   const resetDateRange = () => {
     setDateRange({
-      startDate: getPreviousMonthDate(),
+      startDate: getCurrentMonthStartDate(),
       endDate: getTodayDate(),
     });
   };

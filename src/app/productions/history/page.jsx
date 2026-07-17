@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import styles from "@/css/history.module.css";
 import "react-toastify/dist/ReactToastify.css";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 
 // Helper function for date validation
@@ -149,7 +149,7 @@ const downloadCSV = (headers, rows, fromDate, toDate) => {
 export default function ProductionHistoryPage() {
   // State management
   const [filters, setFilters] = useState({
-    fromDate: getPreviousMonthDate(),
+    fromDate: getCurrentMonthStartDate(),
     toDate: getTodayDate(),
   });
   const [entries, setEntries] = useState([]);
@@ -215,7 +215,7 @@ export default function ProductionHistoryPage() {
 
   const resetFilters = () => {
     setFilters({
-      fromDate: getPreviousMonthDate(),
+      fromDate: getCurrentMonthStartDate(),
       toDate: getTodayDate(),
     });
   };

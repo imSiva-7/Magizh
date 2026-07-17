@@ -10,7 +10,7 @@ import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import { formatDateForDisplay, formatDate } from "@/utils/dateUtils";
 import Image from "next/image";
@@ -37,10 +37,11 @@ const initialOrder = {
   paymentStatus: "Not Paid",
   comment: "",
   gstType: "inclusive",
+  affectStockValue: true, // 👈 new field
 };
 
 const initialFilters = {
-  startDate: getPreviousMonthDate(),
+  startDate: getCurrentMonthStartDate(),
   endDate: getTodayDate(),
 };
 
@@ -50,11 +51,10 @@ const getDateRangeLabel = (startDate, endDate) => {
     return startDate === endDate
       ? startDate
       : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(
-          endDate,
+          endDate
         ).toLocaleDateString("en-IN")}`;
   }
-  if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
   return "All Records";
 };
@@ -126,8 +126,7 @@ const SummaryStats = ({ summary, filters }) => (
       </span>
     </h3>
     <div className={styles.stats_grid}>
-      <StatItem label="No. Of.  Orders" value={summary.orderCount} unit="" />
-
+      <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
@@ -139,7 +138,7 @@ const SummaryStats = ({ summary, filters }) => (
         prefix="₹"
       />
       <StatItem
-        label="Amount Recevied"
+        label="Amount Received"
         value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
         prefix="₹"
         colorClass={styles.text_green}
@@ -181,14 +180,8 @@ function OrdersContent() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const resetFilterForm = () => {
-    setFilters(initialFilters);
-  };
-
-  const clearFilters = () => {
-    setFilters({ startDate: "", endDate: "" });
-  };
-
+  const resetFilterForm = () => setFilters(initialFilters);
+  const clearFilters = () => setFilters({ startDate: "", endDate: "" });
   const todayFilter = () => {
     const today = getTodayDate();
     setFilters({ startDate: today, endDate: today });
@@ -239,10 +232,7 @@ function OrdersContent() {
   // Click outside for action menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        openActionMenuId &&
-        !event.target.closest(`.${styles.actionMenuWrapper}`)
-      ) {
+      if (openActionMenuId && !event.target.closest(`.${styles.actionMenuWrapper}`)) {
         setOpenActionMenuId(null);
       }
     };
@@ -257,15 +247,18 @@ function OrdersContent() {
       newQuantities[product.name] = item ? item.quantity.toString() : "";
     });
     setQuantities(newQuantities);
-    if (order.gstType)
-      setOrderForm((prev) => ({ ...prev, gstType: order.gstType }));
+    // Also restore gstType and affectStockValue from the order (if present)
+    setOrderForm((prev) => ({
+      ...prev,
+      gstType: order.gstType || "inclusive",
+      affectStockValue: order.affectStockValue !== undefined ? order.affectStockValue : true,
+    }));
   }, []);
 
   const handleQuantityChange = (productName, value) => {
     const sanitized = sanitizeNumericInput(value);
     setQuantities((prev) => ({ ...prev, [productName]: sanitized }));
-    if (errors[productName])
-      setErrors((prev) => ({ ...prev, [productName]: null }));
+    if (errors[productName]) setErrors((prev) => ({ ...prev, [productName]: null }));
   };
 
   const orderTotal = useMemo(() => {
@@ -306,16 +299,13 @@ function OrdersContent() {
 
   const handleCheck = (orderId) => {
     setCheckedIds((prev) =>
-      prev.includes(orderId)
-        ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId],
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
     );
   };
 
   const handleBulkUpdateStatus = async (status) => {
     if (!checkedIds.length) return;
-    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`))
-      return;
+    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`)) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/customer/order", {
@@ -375,8 +365,7 @@ function OrdersContent() {
       if (qty < 0) newErrors[product.name] = "Quantity must be ≥ 0";
       else if (qty > 0) hasQuantity = true;
     });
-    if (!hasQuantity)
-      newErrors.general = "At least one product must have a positive quantity";
+    if (!hasQuantity) newErrors.general = "At least one product must have a positive quantity";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -419,6 +408,7 @@ function OrdersContent() {
         actionDoneBy: session?.user?.email,
         gstRate: GST_RATE,
         gstType: orderForm.gstType,
+        affectStockValue: orderForm.affectStockValue, // 👈 send to backend
       };
       const res = await fetch(url, {
         method,
@@ -440,9 +430,7 @@ function OrdersContent() {
     if (!window.confirm("Delete this order?")) return;
     setDeleteLoading(id);
     try {
-      const res = await fetch(`/api/customer/order?id=${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(`/api/customer/order?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Delete failed");
       toast.success("Order deleted");
       await fetchAllData();
@@ -468,6 +456,7 @@ function OrdersContent() {
       paymentStatus: order.paymentStatus || "Not Paid",
       comment: order.comment || "",
       gstType: order.gstType || "inclusive",
+      affectStockValue: order.affectStockValue !== undefined ? order.affectStockValue : true,
     });
     populateQuantitiesFromOrder(order);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -483,25 +472,16 @@ function OrdersContent() {
 
   const summary = useMemo(() => {
     if (!filteredOrders.length)
-      return {
-        orderCount: 0,
-        totalAmount: 0,
-        paidAmount: 0,
-        dueAmount: 0,
-        avgOrderValue: 0,
-      };
+      return { orderCount: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0, avgOrderValue: 0 };
     const orderCount = filteredOrders.length;
-    const totalAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.totalAmount || 0),
-      0,
-    );
+    const totalAmount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
     const paidAmount = filteredOrders.reduce(
       (sum, o) => sum + (o.paymentStatus === "Paid" ? o.totalAmount : 0),
-      0,
+      0
     );
     const dueAmount = filteredOrders.reduce(
       (sum, o) => sum + (o.paymentStatus === "Not Paid" ? o.totalAmount : 0),
-      0,
+      0
     );
     return {
       orderCount,
@@ -519,10 +499,7 @@ function OrdersContent() {
     return (
       <div className={styles.error_state}>
         <h2>Customer Not Found</h2>
-        <button
-          onClick={() => router.push("/customer")}
-          className={styles.primary_btn}
-        >
+        <button onClick={() => router.push("/customer")} className={styles.primary_btn}>
           Back to Customers
         </button>
       </div>
@@ -541,15 +518,11 @@ function OrdersContent() {
           <div className={styles.header_title}>
             <h1>{data.customer?.customerName}</h1>
             <div className={styles.customer_info_badges}>
-              <span
-                className={getCustomerTypeClass(data.customer?.customerType)}
-              >
+              <span className={getCustomerTypeClass(data.customer?.customerType)}>
                 {data.customer?.customerType}
               </span>
               {data.customer?.customerGST && (
-                <span className={styles.gst_tag}>
-                  GST: {data.customer.customerGST}
-                </span>
+                <span className={styles.gst_tag}>GST: {data.customer.customerGST}</span>
               )}
             </div>
           </div>
@@ -581,9 +554,7 @@ function OrdersContent() {
                 type="text"
                 inputMode="numeric"
                 value={quantities[product.name] || ""}
-                onChange={(e) =>
-                  handleQuantityChange(product.name, e.target.value)
-                }
+                onChange={(e) => handleQuantityChange(product.name, e.target.value)}
                 placeholder={`Enter ${product.name} quantity`}
                 error={errors[product.name]}
                 disabled={submitting}
@@ -608,7 +579,7 @@ function OrdersContent() {
                 value={orderForm.gstType}
                 onChange={handleInputChange}
                 className={styles.select_input}
-                 disabled={submitting}
+                disabled={submitting}
               >
                 {GST_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -617,6 +588,8 @@ function OrdersContent() {
                 ))}
               </select>
             </div>
+            {/* 👇 New checkbox for affecting stock */}
+           
             <InputGroup
               label="Order Total"
               name="orderTotal"
@@ -624,17 +597,31 @@ function OrdersContent() {
               readOnly
               placeholder="0"
             />
+
+             <div className={styles.input_group}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={orderForm.affectStockValue}
+                  onChange={(e) =>
+                    setOrderForm((prev) => ({
+                      ...prev,
+                      affectStockValue: e.target.checked,
+                    }))
+                  }
+                  className={styles.checkbox}
+                  disabled={submitting}
+                />
+                <span className={styles.checkboxLabel}>Affect Stock Value</span>
+              </label>
+            </div>
           </div>
 
-          {errors.general && (
-            <div className={styles.error_text}>{errors.general}</div>
-          )}
+          {errors.general && <div className={styles.error_text}>{errors.general}</div>}
 
           {editingId._id && (
             <div className={styles.edit_payment_wrapper}>
-              <label className={styles.edit_payment_label}>
-                Payment Status:
-              </label>
+              <label className={styles.edit_payment_label}>Payment Status:</label>
               <div className={styles.payment_toggle}>
                 <input
                   type="checkbox"
@@ -661,11 +648,7 @@ function OrdersContent() {
           )}
 
           <div className={styles.form_actions}>
-            <button
-              type="submit"
-              disabled={submitting}
-              className={styles.primary_btn}
-            >
+            <button type="submit" disabled={submitting} className={styles.primary_btn}>
               {submitting
                 ? "Processing..."
                 : editingId._id
@@ -715,25 +698,13 @@ function OrdersContent() {
               </div>
             </div>
             <div className={styles.filter_actions}>
-              <button
-                type="button"
-                onClick={resetFilterForm}
-                className={styles.btn_secondary}
-              >
+              <button type="button" onClick={resetFilterForm} className={styles.btn_secondary}>
                 Reset
               </button>
-              <button
-                type="button"
-                onClick={clearFilters}
-                className={styles.btn_secondary_2}
-              >
+              <button type="button" onClick={clearFilters} className={styles.btn_secondary_2}>
                 Clear
               </button>
-              <button
-                type="button"
-                onClick={todayFilter}
-                className={styles.btn_primary}
-              >
+              <button type="button" onClick={todayFilter} className={styles.btn_primary}>
                 Today
               </button>
             </div>
@@ -741,9 +712,7 @@ function OrdersContent() {
         </div>
       )}
 
-      {summary.orderCount > 0 && (
-        <SummaryStats summary={summary} filters={filters} />
-      )}
+      {summary.orderCount > 0 && <SummaryStats summary={summary} filters={filters} />}
 
       {/* Export & Bulk Actions */}
       {filteredOrders.length > 0 && (
@@ -833,7 +802,7 @@ function OrdersContent() {
                 {filteredOrders.map((order) => {
                   const quantityMap = {};
                   order.items.forEach(
-                    (item) => (quantityMap[item.product] = item.quantity),
+                    (item) => (quantityMap[item.product] = item.quantity)
                   );
                   return (
                     <tr
@@ -855,10 +824,7 @@ function OrdersContent() {
                       </td>
                       <td className={styles.comment_cell}>
                         {order.comment ? (
-                          <span
-                            className={styles.comment}
-                            data-text={order.comment}
-                          >
+                          <span className={styles.comment} data-text={order.comment}>
                             i
                           </span>
                         ) : (
@@ -884,11 +850,7 @@ function OrdersContent() {
                       <td className={styles.invoice_cell}>
                         <button
                           onClick={() =>
-                            handleExport(
-                              "pdf",
-                              [order],
-                              formatDateForDisplay(order.date),
-                            )
+                            handleExport("pdf", [order], formatDateForDisplay(order.date))
                           }
                           className={styles.export_btn_table}
                           disabled={!filteredOrders.length}
@@ -908,9 +870,7 @@ function OrdersContent() {
                               className={styles.actionMenuButton}
                               onClick={() =>
                                 setOpenActionMenuId(
-                                  openActionMenuId === order._id
-                                    ? null
-                                    : order._id,
+                                  openActionMenuId === order._id ? null : order._id
                                 )
                               }
                               disabled={
@@ -926,18 +886,14 @@ function OrdersContent() {
                                 <button
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
-                                  disabled={
-                                    loading || deleteLoading === order._id
-                                  }
+                                  disabled={loading || deleteLoading === order._id}
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleDelete(order._id)}
                                   className={styles.actionDeleteButton}
-                                  disabled={
-                                    loading || deleteLoading === order._id
-                                  }
+                                  disabled={loading || deleteLoading === order._id}
                                 >
                                   Delete
                                 </button>

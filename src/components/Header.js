@@ -7,12 +7,16 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import styles from "@/css/header.module.css";
 
-// Navigation data
+// Desktop navigation items
 const desktopNavItems = [
   {
     name: "Productions",
     path: "/productions",
-    children: [{ name: "Production History", path: "/productions/history" }],
+    children: { name: "Production History", path: "/productions/history" },
+  },
+  {
+    name: "Stock",
+    path: "/stock",
   },
   {
     name: "Suppliers",
@@ -30,19 +34,22 @@ const desktopNavItems = [
       { name: "Order Payments", path: "/customer/payments" },
     ],
   },
+
 ];
 
-// Complete mobile nav items (including all important pages)
+// Mobile navigation items – must include all important pages
 const mobileNavItems = [
   { name: "Home", path: "/" },
   { name: "Productions", path: "/productions" },
   { name: "Production History", path: "/productions/history" },
+  { name: "Stock", path: "/stock" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
   { name: "Customers", path: "/customer" },
   { name: "Order History", path: "/customer/order/history" },
-  { name: "Order Payments", path: "/customer/payments" }
+  { name: "Order Payments", path: "/customer/payments" },
+
 ];
 
 export default function Header() {
@@ -52,11 +59,6 @@ export default function Header() {
   const { data: session, status } = useSession();
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
-
-  // Close mobile menu when route changes (FIXED: uncommented)
-  // useEffect(() => {
-  //   setMobileMenuOpen(false);
-  // }, [pathname]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -71,12 +73,11 @@ export default function Header() {
         setMobileMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [mobileMenuOpen]);
 
-  // Handle escape key
+  // Escape key closes mobile menu
   useEffect(() => {
     const handleEscape = (event) => {
       if (mobileMenuOpen && event.key === "Escape") {
@@ -88,7 +89,7 @@ export default function Header() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [mobileMenuOpen]);
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll when mobile menu open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -99,11 +100,6 @@ export default function Header() {
       document.body.style.overflow = "unset";
     };
   }, [mobileMenuOpen]);
-
-  // const handleNavigation = useCallback((path) => {
-  //   router.push(path);
-  //   setMobileMenuOpen(false);
-  // }, [router]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
@@ -132,9 +128,8 @@ export default function Header() {
               <li key={item.path} className={styles.navItem}>
                 <Link
                   href={item.path}
-                  className={`${styles.navButton} ${
-                    pathname.startsWith(item.path) ? styles.active : ""
-                  }`}
+                  className={`${styles.navButton} ${pathname.startsWith(item.path) ? styles.active : ""
+                    }`}
                   aria-current={
                     pathname.startsWith(item.path) ? "page" : undefined
                   }
@@ -143,20 +138,29 @@ export default function Header() {
                 </Link>
                 {item.children && (
                   <ul className={styles.dropdown} role="menu">
-                    {item.children.map((child) => (
-                      <li key={child.path} role="none">
+                    {Array.isArray(item.children) ? (
+                      item.children.map((child) => (
+                        <li key={child.path} role="none">
+                          <Link
+                            href={child.path}
+                            className={styles.dropdownItem}
+                            role="menuitem"
+                          >
+                            <span className={styles.arrow}>↳ </span> {child.name}
+                          </Link>
+                        </li>
+                      ))
+                    ) : (
+                      <li key={item.children.path} role="none">
                         <Link
-                          href={child.path}
+                          href={item.children.path}
                           className={styles.dropdownItem}
                           role="menuitem"
-                          aria-current={
-                            pathname === child.path ? "page" : undefined
-                          }
                         >
-                          <span className={styles.arrow}>↳ </span> {child.name}
+                          <span className={styles.arrow}>↳ </span> {item.children.name}
                         </Link>
                       </li>
-                    ))}
+                    )}
                   </ul>
                 )}
               </li>
@@ -212,10 +216,9 @@ export default function Header() {
           </button>
         </div>
 
-        {/* Mobile Navigation Overlay - IMPROVED */}
+        {/* Mobile Navigation Overlay */}
         {mobileMenuOpen && (
           <>
-            {/* Backdrop overlay */}
             <div
               className={styles.mobileBackdrop}
               onClick={() => setMobileMenuOpen(false)}
@@ -244,17 +247,17 @@ export default function Header() {
                     <li key={item.path}>
                       <Link
                         href={item.path}
-                        className={`${styles.mobileNavButton} ${
-                          pathname === item.path ? styles.mobileActive : ""
-                        }`}
+                        className={`${styles.mobileNavButton} ${pathname === item.path ? styles.mobileActive : ""
+                          }`}
                         onClick={() => setMobileMenuOpen(false)}
-                        aria-current={pathname === item.path ? "page" : undefined}
+                        aria-current={
+                          pathname === item.path ? "page" : undefined
+                        }
                       >
                         {item.name}
                       </Link>
                     </li>
                   ))}
-                  {/* Logout option for mobile if logged in */}
                   {session && (
                     <li>
                       <button

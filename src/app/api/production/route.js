@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 
 const VALID_PRODUCTS = [
@@ -28,13 +28,22 @@ const logger = (method, message, data = null) => {
   console.log(`[${timestamp}] [${method}] ${message}${dataString}`);
 };
 
+// ---------- Product to stock field mapping (must match order route) ----------
+const productToStockField = {
+  milk: "milk",
+  curd: "curd",
+  cream: "cream",
+  soft_paneer: "soft_paneer",
+  premium_paneer: "premium_paneer",
+  butter: "butter",
+  ghee: "ghee",
+};
+
+// ---------- Helpers ----------
 const parseQuantity = (val, isPercentage = false) => {
   if (val === "" || val === null || val === undefined) return null;
-
   const num = parseFloat(val);
-
   if (isNaN(num) || num < 0) return null;
-
   if (isPercentage) {
     return num <= 100 ? parseFloat(num.toFixed(1)) : null;
   } else {
@@ -63,7 +72,6 @@ const validateAtLeastOneProduct = (data) => {
 
 const validatePercentageFields = (data) => {
   const errors = [];
-
   if (data.fat_percentage) {
     const fat = parseFloat(data.fat_percentage);
     if (isNaN(fat) || fat > 7.0) {
@@ -76,27 +84,13 @@ const validatePercentageFields = (data) => {
       errors.push("SNF percentage should be below 12");
     }
   }
-
   return errors.length > 0 ? errors.join(", ") : null;
-};
-
-const getDatabase = async () => {
-  try {
-    const client = await clientPromise;
-    return client.db("production");
-  } catch (error) {
-    console.error("Database connection failed:", error.message);
-    throw new Error("Database connection failed");
-  }
 };
 
 const generateUniqueBatchName = async (db, batch, date) => {
   const existingEntries = await db
     .collection("entries")
-    .find({
-      date: date,
-      // batch: { $regex: `^${escapedBatch}` },
-    })
+    .find({ date: date })
     .sort({ createdAt: 1 })
     .toArray();
 
@@ -114,7 +108,28 @@ const generateUniqueBatchName = async (db, batch, date) => {
   return maxNumber > 0 ? `${batch} (${maxNumber + 1})` : `${batch} (1)`;
 };
 
+/**
+ * Helper: Insert ledger entries and update stock balance.
+ * @param {Object} db - Database instance
+ * @param {Array} entries - Array of ledger documents (type, product, quantity, ...)
+ * @param {Object} incFields - Fields to $inc on stock_balance (e.g., { milk: 100 })
+ */
+async function applyStockChanges(db, entries, incFields) {
+  if (entries.length === 0) return;
+
+  // 1. Insert one ledger entry per product movement
+  await db.collection("stock_ledger").insertMany(entries);
+
+  // 2. Update the live stock balance (create document if not exists)
+  await db.collection("stock_balance").updateOne(
+    { _id: "current" },
+    { $inc: incFields, $set: { updatedAt: new Date() } },
+    { upsert: true }
+  );
+}
+
 // ========== API HANDLERS ==========
+
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
@@ -142,7 +157,6 @@ export async function GET(request) {
       .toArray();
 
     logger(METHOD, `Success. Found ${entries.length} entries`);
-
     return NextResponse.json(entries);
   } catch (error) {
     logger(METHOD, "CRITICAL ERROR", error.message);
@@ -199,6 +213,7 @@ export async function POST(request) {
     const productionData = {
       date: data.date,
       batch: finalBatchName,
+      affectStockValue: data.affectStockValue,
       actionDoneBy: data.actionDoneBy,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -214,12 +229,54 @@ export async function POST(request) {
 
     // Insert into database
     const result = await db.collection("entries").insertOne(productionData);
-
     if (!result.acknowledged) {
       throw new Error("Database insertion failed");
     }
-
     logger(METHOD, "Insertion successful", { id: result.insertedId });
+
+    // ============= NEW: Stock Ledger + Balance Update =============
+    if (data.affectStockValue === true) {
+      // Build ledger entries and increment fields
+      const ledgerEntries = [];
+      const incFields = {};
+
+      // Only process quantity fields (not percentages)
+      const quantityProducts = VALID_PRODUCTS.filter(
+        (p) => !PERCENTAGE_FIELDS.includes(p)
+      );
+
+      for (const product of quantityProducts) {
+        const key = `${product}_quantity`;
+        const qty = productionData[key];
+
+        if (qty && qty > 0) {
+          const stockField = productToStockField[product]; // e.g., "milk"
+          if (stockField) {
+            ledgerEntries.push({
+              type: "production",
+              batch: finalBatchName,
+              product: stockField,          // stock field name
+              quantity: qty,                // positive = addition
+              date: data.date,
+              referenceId: result.insertedId,
+              actionDoneBy: data.actionDoneBy || "",
+              createdAt: new Date(),
+            });
+
+            incFields[stockField] = (incFields[stockField] || 0) + qty;
+          }
+        }
+      }
+
+      if (Object.keys(incFields).length > 0) {
+        await applyStockChanges(db, ledgerEntries, incFields);
+
+        // Optional low-stock alert (implement checkLowStockAndNotify separately)
+        // await checkLowStockAndNotify();
+      }
+
+      logger(METHOD, "Stock ledger and balance updated");
+    }
 
     return NextResponse.json(
       {
@@ -227,6 +284,7 @@ export async function POST(request) {
         id: result.insertedId,
         batch: finalBatchName,
         message: `Batch ${finalBatchName} saved successfully!`,
+        stockAffected: data.affectStockValue === true,
       },
       { status: 201 }
     );
@@ -256,13 +314,57 @@ export async function DELETE(request) {
     }
 
     const db = await getDatabase();
+
+    // Check if entry exists
+    const entry = await db.collection("entries").findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!entry) {
+      logger(METHOD, "Entry not found", { id });
+      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    }
+
+    // Delete the production entry
     const result = await db.collection("entries").deleteOne({
       _id: new ObjectId(id),
     });
 
-    if (result.deletedCount === 0) {
-      logger(METHOD, "Entry not found", { id });
-      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    // ============= Reverse stock if previously affected =============
+    if (entry.affectStockValue === true) {
+      const reversalEntries = [];
+      const incFields = {};
+
+      // Only quantity fields
+      const quantityProducts = VALID_PRODUCTS.filter(
+        (p) => !PERCENTAGE_FIELDS.includes(p)
+      );
+
+      for (const product of quantityProducts) {
+        const key = `${product}_quantity`;
+        const qty = entry[key];
+
+        if (qty && qty > 0) {
+          const stockField = productToStockField[product];
+          if (stockField) {
+            reversalEntries.push({
+              type: "reversal",
+              product: stockField,
+              quantity: -qty,             // negative to subtract back
+              date: entry.date,
+              referenceId: new ObjectId(id),
+              actionDoneBy: entry.actionDoneBy || "",
+              createdAt: new Date(),
+            });
+
+            incFields[stockField] = (incFields[stockField] || 0) - qty;
+          }
+        }
+      }
+
+      if (Object.keys(incFields).length > 0) {
+        await applyStockChanges(db, reversalEntries, incFields);
+      }
     }
 
     logger(METHOD, "Deletion successful", { id });
@@ -270,6 +372,7 @@ export async function DELETE(request) {
     return NextResponse.json({
       success: true,
       message: "Entry deleted successfully",
+      stockReversed: entry.affectStockValue === true,
     });
   } catch (error) {
     logger(METHOD, "CRITICAL ERROR", error.message);

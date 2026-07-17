@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/analytics.module.css";
 
 const getFormattedDateRange = (startDate, endDate) => {
@@ -29,7 +29,7 @@ const getFormattedDateRange = (startDate, endDate) => {
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState({
-    startDate: getPreviousMonthDate(),
+    startDate: getCurrentMonthStartDate(),
     endDate: getTodayDate(),
   });
   const [data, setData] = useState({ daily: [], overall: {} });
@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
 
   const resetDateRange = () => {
     setDateRange({
-      startDate: getPreviousMonthDate(),
+      startDate: getCurrentMonthStartDate(),
       endDate: getTodayDate(),
     });
   };

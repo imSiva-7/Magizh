@@ -4,13 +4,13 @@ import { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/procurement-history.module.css";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import Link from "next/link";
 
 const INITIAL_FILTERS = {
-  startDate: getPreviousMonthDate(),
+  startDate: getCurrentMonthStartDate(),
   endDate: getTodayDate(),
 };
 

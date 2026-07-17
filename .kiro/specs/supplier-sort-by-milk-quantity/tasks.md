@@ -7,7 +7,7 @@ This implementation adds supplier sorting by total milk quantity through three m
 ## Tasks
 
 - [ ] 1. Implement backend aggregation and API enhancements
-  - [ ] 1.1 Add query parameter validation to `/api/supplier` route
+  - [x] 1.1 Add query parameter validation to `/api/supplier` route
     - Add validation for `sortBy` parameter (allowed values: "createdAt", "totalMilkQuantity")
     - Add validation for `sortOrder` parameter (allowed values: "asc", "desc")
     - Return 400 error response for invalid parameter values

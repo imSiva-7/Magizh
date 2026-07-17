@@ -27,8 +27,8 @@ export default function Home() {
     endDate: getTodayDate(),
   });
 
-  const [customerData, setCustomerData] = useState({ 
-    orders: [], 
+  const [customerData, setCustomerData] = useState({
+    orders: [],
     summary: {}
   });
   const [supplierData, setSupplierData] = useState({
@@ -44,13 +44,13 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        const params = new URLSearchParams();
+        // const params = new URLSearchParams();
         // if (filters.startDate) params.append("startDate", filters.startDate);
         // if (filters.endDate) params.append("endDate", filters.endDate);
 
         const [customerRes, supplierRes] = await Promise.all([
-          fetch(`/api/customer/order/history?${params}`),
-          fetch(`/api/supplier/procurement/history?${params}`),
+          fetch(`/api/customer/order/history`),
+          fetch(`/api/supplier/procurement/history`),
         ]);
 
         // Handle customer data
@@ -153,11 +153,11 @@ export default function Home() {
           <div className={styles.logo}>
             <h1>Dairy Dashboard</h1>
           </div>
-          <div className={styles.userInfo}>Loading dashboard...</div>
+          {/* <div className={styles.userInfo}>Loading dashboard...</div> */}
         </header>
         <div className={styles.loadingContainer}>
           <div className={styles.spinner}></div>
-          <p>Fetching latest data...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -168,7 +168,7 @@ export default function Home() {
       <div className={styles.dashboard}>
         <header className={styles.header}>
           <div className={styles.logo}>
-            <h1>Dairy Dashboard</h1>
+            <h1>Dashboard</h1>
           </div>
           <div className={styles.userInfo}>Error</div>
         </header>
@@ -190,7 +190,7 @@ export default function Home() {
       {/* Header with user info */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <h1>Dairy Dashboard</h1>
+          <h1>Dashboard</h1>
         </div>
         <div className={styles.userInfo}>
           {status === "authenticated" ? (
@@ -199,9 +199,9 @@ export default function Home() {
               {session.user?.role === "admin" && (
                 <span className={styles.adminBadge}>Admin</span>
               )}
-              <button onClick={handleSignOut} className={styles.logoutBtn}>
+              {/* <button onClick={handleSignOut} className={styles.logoutBtn}>
                 Sign out
-              </button>
+              </button> */}
             </>
           ) : (
             <Link href="/login" className={styles.loginLink}>
@@ -210,6 +210,37 @@ export default function Home() {
           )}
         </div>
       </header>
+
+      {supplierData.summary.totalAmount > 0 && (
+        <div className={styles.global_summary_card}>
+          <div className={styles.global_header}>
+            <h2 className={styles.global_title}>All Suppliers Summary</h2>
+            <span className={styles.date_range_badge}>
+              As of {getTodayDate()}
+            </span>
+          </div>
+          <div className={styles.global_stats_grid}>
+            <StatItem
+              label="Total Milk"
+              value={`${formatNumberWithCommas(supplierData.summary.totalMilk.toFixed(1))} L`}
+            />
+            <StatItem
+              label="Total Amount"
+              value={`₹${formatNumberWithCommas(supplierData.summary.totalAmount.toFixed(2))}`}
+            />
+            <StatItem
+              label="Total Paid"
+              value={`₹${formatNumberWithCommas(supplierData.summary.paidAmount.toFixed(2))}`}
+              colorClass={styles.text_green}
+            />
+            <StatItem
+              label="Total Due"
+              value={`₹${formatNumberWithCommas(supplierData.summary.dueAmount.toFixed(2))}`}
+              colorClass={styles.text_red}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ========== CUSTOMER SUMMARY CARD ========== */}
       {customerData.summary.totalAmount > 0 && (
@@ -243,91 +274,12 @@ export default function Home() {
         </div>
       )}
 
-      {/* ========== CUSTOMER DUE TABLE ========== */}
-      {customerDueList.length > 0 && (
-        <div className={styles.global_summary_card}>
-          <div className={styles.global_header}>
-            <h2 className={styles.global_title}>
-              Customers
-            </h2>
-            <span className={styles.date_range_badge}>
-              As of {getTodayDate()}
-            </span>
-          </div>
-          <div className={styles.tableWrapper}>
-            <table className={styles.dueTable}>
-              <thead>
-                <tr>
-                  <th>Customer Name</th>
-                  <th>Total Due (₹)</th>
-                  {/* <th>Action</th> */}
-                </tr>
-              </thead>
-              <tbody>
-                {customerDueList.map((customer) => (
-                  <tr key={customer.name}>
-                    <td>{customer.name}</td>
-                    <td className={styles.text_red}>
-                      ₹{formatNumberWithCommasNoDecimal(customer.due)}
-                    </td>
-                    {/* <td>
-                      <Link
-                        href={`/customer/order?customerId=${customer.customerId}`}
-                        className={styles.viewLink}
-                      >
-                        View Payments
-                      </Link>
-                    </td> */}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ========== SUPPLIER SUMMARY CARD ========== */}
-      {supplierData.summary.totalAmount > 0 && (
-        <div className={styles.global_summary_card}>
-          <div className={styles.global_header}>
-            <h2 className={styles.global_title}>All Suppliers Summary</h2>
-            <span className={styles.date_range_badge}>
-              As of {getTodayDate()}
-            </span>
-          </div>
-          <div className={styles.global_stats_grid}>
-            <StatItem
-              label="Total Milk"
-              value={`${formatNumberWithCommas(supplierData.summary.totalMilk.toFixed(1))} L`}
-            />
-            <StatItem
-              label="Total Amount"
-              value={`₹${formatNumberWithCommas(supplierData.summary.totalAmount.toFixed(2))}`}
-            />
-            <StatItem
-              label="Total Paid"
-              value={`₹${formatNumberWithCommas(supplierData.summary.paidAmount.toFixed(2))}`}
-              colorClass={styles.text_green}
-            />
-            <StatItem
-              label="Total Due"
-              value={`₹${formatNumberWithCommas(supplierData.summary.dueAmount.toFixed(2))}`}
-              colorClass={styles.text_red}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ========== SUPPLIER DUE TABLE ========== */}
       {supplierDueList.length > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>
-              Suppliers with Outstanding Dues
+              Suppliers Dues
             </h2>
-            <span className={styles.date_range_badge}>
-              As of {getTodayDate()}
-            </span>
           </div>
           <div className={styles.tableWrapper}>
             <table className={styles.dueTable}>
@@ -361,6 +313,49 @@ export default function Home() {
         </div>
       )}
 
+      {customerDueList.length > 0 && (
+        <div className={styles.global_summary_card}>
+          <div className={styles.global_header}>
+            <h2 className={styles.global_title}>
+              Customers Dues
+            </h2>
+          </div>
+          <div className={styles.tableWrapper}>
+            <table className={styles.dueTable}>
+              <thead>
+                <tr>
+                  <th>Customer Name</th>
+                  <th>Total Due (₹)</th>
+                  {/* <th>Action</th> */}
+                </tr>
+              </thead>
+              <tbody>
+                {customerDueList.map((customer) => (
+                  <tr key={customer.name}>
+                    <td>{customer.name}</td>
+                    <td className={styles.text_red}>
+                      ₹{formatNumberWithCommasNoDecimal(customer.due)}
+                    </td>
+                    {/* <td>
+                      <Link
+                        href={`/customer/order?customerId=${customer.customerId}`}
+                        className={styles.viewLink}
+                      >
+                        View Payments
+                      </Link>
+                    </td> */}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+
+
+      {/* ========== SUPPLIER DUE TABLE ========== */}
+
       <div className={styles.navGrid}>
         <Link href="/productions" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -375,12 +370,35 @@ export default function Home() {
           <p>Record daily milk production and by‑products</p>
         </Link>
 
+        <Link href="/supplier" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
+          </div>
+          <h2>Suppliers</h2>
+          <p>Manage supplier information and rates</p>
+        </Link>
+
+
         <Link href="/customer" className={styles.navCard}>
           <div className={styles.navIcon}>
             <Image src="/customer.png" alt="Customer" width={30} height={30} />
           </div>
           <h2>Customers</h2>
           <p>View and manage customer details</p>
+        </Link>
+
+
+        <Link href="/supplier/payments" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/pay.png"
+              alt="Supplier payments"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Supplier Payments</h2>
+          <p>Track and settle payments to suppliers</p>
         </Link>
 
         <Link href="/customer/payments" className={styles.navCard}>
@@ -396,26 +414,7 @@ export default function Home() {
           <p>Track and mark payments to Customers</p>
         </Link>
 
-        <Link href="/supplier" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
-          </div>
-          <h2>Suppliers</h2>
-          <p>Manage supplier information and rates</p>
-        </Link>
 
-        <Link href="/supplier/payments" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/pay.png"
-              alt="Supplier payments"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Supplier Payments</h2>
-          <p>Track and settle payments to suppliers</p>
-        </Link>
 
         <Link href="/productions/analytics" className={styles.navCard}>
           <div className={styles.navIcon}>

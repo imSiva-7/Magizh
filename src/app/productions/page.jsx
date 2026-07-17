@@ -113,6 +113,7 @@ export default function ProductionPage() {
     butter_quantity: "",
     cream_quantity: "",
     ghee_quantity: "",
+    affectStockValue: true,
   };
 
   const [formData, setFormData] = useState(initialFormState);
@@ -191,6 +192,7 @@ export default function ProductionPage() {
       butter_quantity: parseDecimal(formData.butter_quantity),
       cream_quantity: parseDecimal(formData.cream_quantity),
       ghee_quantity: parseDecimal(formData.ghee_quantity),
+      affectStockValue: formData.affectStockValue,
       actionDoneBy: session?.user?.email,
     };
 
@@ -369,6 +371,24 @@ export default function ProductionPage() {
                 placeholder="50"
                 step="0.1"
               />
+              <div className={styles.inputGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.affectStockValue}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        affectStockValue: e.target.checked,
+                      }))
+                    }
+                    className={styles.checkbox}
+                  />
+                  <span className={styles.checkboxLabel}>
+                    Affect Stock Value
+                  </span>
+                </label>
+              </div>
             </div>
           </section>
 

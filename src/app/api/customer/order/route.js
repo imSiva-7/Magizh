@@ -1,25 +1,48 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 
+// -------------------------------------------------------------------
+// Constants & mappings
+// -------------------------------------------------------------------
 const METHOD_NAMES = {
-  GET: "GET /api/order",
-  POST: "POST /api/order",
-  PUT: "PUT /api/order",
-  DELETE: "DELETE /api/order",
-  PATCH: "PATCH /api/order/bulk",
+  GET: "GET /api/customer/order",
+  POST: "POST /api/customer/order",
+  PUT: "PUT /api/customer/order",
+  DELETE: "DELETE /api/customer/order",
+  PATCH: "PATCH /api/customer/order",
 };
 
-const getDatabase = async () => {
-  try {
-    const client = await clientPromise;
-    return client.db("production");
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw new Error("Database error");
-  }
+const productToStockField = {
+  "Milk": "milk",
+  "Butter": "butter",
+  "Fresh Cream": "cream",
+  "Curd": "curd",
+  "Ghee": "ghee",
+  "Soft Paneer": "soft_paneer",
+  "Premium Paneer": "premium_paneer",
 };
 
+// -------------------------------------------------------------------
+// Helper: insert stock ledger entries and update balance atomically
+// -------------------------------------------------------------------
+async function applyStockChanges(db, entries, incFields) {
+  if (entries.length === 0) return;
+
+  // 1. Insert ledger records (per‑product movements)
+  await db.collection("stock_ledger").insertMany(entries);
+
+  // 2. Update the live balance document (upsert = create if missing)
+  await db.collection("stock_balance").updateOne(
+    { _id: "current" },
+    { $inc: incFields, $set: { updatedAt: new Date() } },
+    { upsert: true }
+  );
+}
+
+// -------------------------------------------------------------------
+// GET – fetch orders (by id or customerId)
+// -------------------------------------------------------------------
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
@@ -34,7 +57,7 @@ export async function GET(request) {
       if (!ObjectId.isValid(orderId)) {
         return NextResponse.json(
           { error: "Invalid order ID" },
-          { status: 400 },
+          { status: 400 }
         );
       }
       const order = await db
@@ -49,14 +72,14 @@ export async function GET(request) {
     if (!customerId) {
       return NextResponse.json(
         { error: "customerId is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (!ObjectId.isValid(customerId)) {
       return NextResponse.json(
         { error: "Invalid customer ID" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -73,6 +96,9 @@ export async function GET(request) {
   }
 }
 
+// -------------------------------------------------------------------
+// POST – create order, optionally deduct from stock
+// -------------------------------------------------------------------
 export async function POST(request) {
   const METHOD = METHOD_NAMES.POST;
 
@@ -80,17 +106,17 @@ export async function POST(request) {
     const db = await getDatabase();
     const data = await request.json();
 
+    // --- validation ---
     if (!data.customerId) {
       return NextResponse.json(
         { error: "customerId is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
-
     if (!ObjectId.isValid(data.customerId)) {
       return NextResponse.json(
         { error: "Invalid customerId" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -103,12 +129,13 @@ export async function POST(request) {
       customerType,
       comment,
       actionDoneBy,
+      affectStockValue,   // 👈 new field from frontend
     } = data;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
         { error: "At least one order item is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -116,11 +143,12 @@ export async function POST(request) {
       if (!item.product || !item.quantity || !item.ratePerUnit) {
         return NextResponse.json(
           { error: "Each item must have product, quantity, and ratePerUnit" },
-          { status: 400 },
+          { status: 400 }
         );
       }
     }
 
+    // --- build order document (include affectStockValue) ---
     const orderData = {
       customerId: new ObjectId(data.customerId),
       customerName: customerName?.trim() || "",
@@ -136,29 +164,81 @@ export async function POST(request) {
       paymentStatus: paymentStatus || "Not Paid",
       comment: comment?.trim() || "",
       actionDoneBy: actionDoneBy?.trim() || "",
+      affectStockValue: affectStockValue !== false,   // default true if not provided
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
+    // --- insert order ---
     const result = await db.collection("orders").insertOne(orderData);
+
+    // --- stock deduction (only if affectStockValue is true) ---
+    if (orderData.affectStockValue) {
+      const ledgerEntries = [];
+      const incFields = {};
+
+      for (const item of orderData.items) {
+        const stockField = productToStockField[item.product];
+        if (!stockField) continue;
+
+        const quantity = parseFloat(item.quantity);
+        if (quantity <= 0) continue;
+
+        // Negative quantity for deduction
+        ledgerEntries.push({
+          type: "order",
+          product: stockField,
+          quantity: -quantity,
+          date: orderData.date,
+          referenceId: result.insertedId,
+          actionDoneBy: actionDoneBy?.trim() || "",
+          createdAt: new Date(),
+        });
+
+        incFields[stockField] = (incFields[stockField] || 0) - quantity;
+      }
+
+      if (Object.keys(incFields).length > 0) {
+        // Check stock availability
+        const currentBalance = await db.collection("stock_balance").findOne({ _id: "current" });
+        for (const [field, delta] of Object.entries(incFields)) {
+          const current = currentBalance?.[field] || 0;
+          if (current + delta < 0) {
+            return NextResponse.json(
+              { error: `Insufficient stock for ${field}. Available: ${current}` },
+              { status: 400 }
+            );
+          }
+        }
+
+        await applyStockChanges(db, ledgerEntries, incFields);
+
+        // Optional low‑stock alert (implement checkLowStockAndNotify separately)
+        // await checkLowStockAndNotify();
+      }
+    }
 
     return NextResponse.json(
       {
         _id: result.insertedId,
         ...orderData,
         message: "Order created successfully",
+        stockDeducted: orderData.affectStockValue,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json(
       { error: "Failed to create order", details: error.message },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
+// -------------------------------------------------------------------
+// PUT – update order, adjust stock if items / affectStockValue change
+// -------------------------------------------------------------------
 export async function PUT(request) {
   const METHOD = METHOD_NAMES.PUT;
 
@@ -169,51 +249,129 @@ export async function PUT(request) {
     if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Valid order ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const db = await getDatabase();
     const data = await request.json();
 
+    // Get the existing order for stock reversal
+    const oldOrder = await db.collection("orders").findOne({ _id: new ObjectId(id) });
+    if (!oldOrder) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // --- build update fields ---
     const updateData = { updatedAt: new Date() };
 
-    // Basic fields
     if (data.date !== undefined) updateData.date = data.date;
-    if (data.paymentStatus !== undefined)
-      updateData.paymentStatus = data.paymentStatus;
-    if (data.comment !== undefined)
-      updateData.comment = data.comment?.trim() || "";
-    if (data.actionDoneBy !== undefined)
-      updateData.actionDoneBy = data.actionDoneBy?.trim() || "";
+    if (data.paymentStatus !== undefined) updateData.paymentStatus = data.paymentStatus;
+    if (data.comment !== undefined) updateData.comment = data.comment?.trim() || "";
+    if (data.actionDoneBy !== undefined) updateData.actionDoneBy = data.actionDoneBy?.trim() || "";
 
-    // Items handling
+    // New affectStockValue flag
+    const newAffectStock = data.affectStockValue !== undefined ? data.affectStockValue : oldOrder.affectStockValue;
+    updateData.affectStockValue = newAffectStock;
+
+    let newItems = null;
     if (data.items !== undefined) {
       if (!Array.isArray(data.items) || data.items.length === 0) {
         return NextResponse.json(
           { error: "Items array cannot be empty" },
-          { status: 400 },
+          { status: 400 }
         );
       }
-      updateData.items = data.items.map((item) => ({
+      newItems = data.items.map((item) => ({
         product: item.product.trim(),
         quantity: parseFloat(item.quantity) || 0,
         ratePerUnit: parseFloat(item.ratePerUnit) || 0,
         totalAmount: parseFloat(item.totalAmount) || 0,
       }));
-      // Recalculate total amount if needed, or trust frontend
-      updateData.totalAmount = updateData.items.reduce(
-        (sum, item) => sum + item.totalAmount,
-        0,
-      );
+      updateData.items = newItems;
+      updateData.totalAmount = newItems.reduce((sum, item) => sum + item.totalAmount, 0);
     }
 
-    const result = await db
-      .collection("orders")
-      .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
+    // --- perform update ---
+    await db.collection("orders").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateData }
+    );
 
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    // --- stock adjustment logic ---
+    // 1. Reverse old stock if old order affected stock
+    const oldAffected = oldOrder.affectStockValue !== false;
+    if (oldAffected && (newItems || newAffectStock === false)) {
+      // Re-add old items
+      const reversalEntries = [];
+      const reversalInc = {};
+
+      for (const item of (oldOrder.items || [])) {
+        const stockField = productToStockField[item.product];
+        if (!stockField) continue;
+
+        const qty = parseFloat(item.quantity);
+        if (qty <= 0) continue;
+
+        reversalEntries.push({
+          type: "reversal",
+          product: stockField,
+          quantity: qty,               // positive = add back
+          date: oldOrder.date,
+          referenceId: new ObjectId(id),
+          actionDoneBy: data.actionDoneBy?.trim() || "",
+          createdAt: new Date(),
+        });
+
+        reversalInc[stockField] = (reversalInc[stockField] || 0) + qty;
+      }
+
+      if (Object.keys(reversalInc).length > 0) {
+        await applyStockChanges(db, reversalEntries, reversalInc);
+      }
+    }
+
+    // 2. Deduct new stock if new affectStockValue is true and items provided
+    if (newAffectStock && newItems) {
+      const deductionEntries = [];
+      const deductionInc = {};
+
+      for (const item of newItems) {
+        const stockField = productToStockField[item.product];
+        if (!stockField) continue;
+
+        const qty = parseFloat(item.quantity);
+        if (qty <= 0) continue;
+
+        deductionEntries.push({
+          type: "order",
+          product: stockField,
+          quantity: -qty,
+          date: updateData.date || oldOrder.date,
+          referenceId: new ObjectId(id),
+          actionDoneBy: data.actionDoneBy?.trim() || "",
+          createdAt: new Date(),
+        });
+
+        deductionInc[stockField] = (deductionInc[stockField] || 0) - qty;
+      }
+
+      if (Object.keys(deductionInc).length > 0) {
+        // Check stock availability
+        const currentBalance = await db.collection("stock_balance").findOne({ _id: "current" });
+        for (const [field, delta] of Object.entries(deductionInc)) {
+          const current = currentBalance?.[field] || 0;
+          if (current + delta < 0) {
+            // We already reversed old stock, but now the new deduction would go negative
+            return NextResponse.json(
+              { error: `Insufficient stock for ${field} after update. Available: ${current}` },
+              { status: 400 }
+            );
+          }
+        }
+
+        await applyStockChanges(db, deductionEntries, deductionInc);
+      }
     }
 
     return NextResponse.json({ message: "Order updated successfully" });
@@ -223,7 +381,9 @@ export async function PUT(request) {
   }
 }
 
-// DELETE an order
+// -------------------------------------------------------------------
+// DELETE – remove order, restore stock if it was deducted
+// -------------------------------------------------------------------
 export async function DELETE(request) {
   const METHOD = METHOD_NAMES.DELETE;
 
@@ -234,23 +394,56 @@ export async function DELETE(request) {
     if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Valid order ID required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     const db = await getDatabase();
+    const order = await db.collection("orders").findOne({ _id: new ObjectId(id) });
 
-    const result = await db
-      .collection("orders")
-      .deleteOne({ _id: new ObjectId(id) });
-
-    if (result.deletedCount === 0) {
+    if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    // Delete the order
+    await db.collection("orders").deleteOne({ _id: new ObjectId(id) });
+
+    // Restore stock only if the order affected stock
+    if (order.affectStockValue !== false) {
+      const reversalEntries = [];
+      const incFields = {};
+
+      if (order.items && Array.isArray(order.items)) {
+        for (const item of order.items) {
+          const stockField = productToStockField[item.product];
+          if (!stockField) continue;
+
+          const quantity = parseFloat(item.quantity);
+          if (quantity <= 0) continue;
+
+          reversalEntries.push({
+            type: "reversal",
+            product: stockField,
+            quantity: quantity,               // add back
+            date: order.date,
+            referenceId: new ObjectId(id),
+            actionDoneBy: order.actionDoneBy || "",
+            createdAt: new Date(),
+          });
+
+          incFields[stockField] = (incFields[stockField] || 0) + quantity;
+        }
+      }
+
+      if (Object.keys(incFields).length > 0) {
+        await applyStockChanges(db, reversalEntries, incFields);
+      }
     }
 
     return NextResponse.json({
       message: "Order deleted successfully",
       deletedId: id,
+      stockRestored: order.affectStockValue !== false,
     });
   } catch (error) {
     console.error(`${METHOD} error:`, error);
@@ -258,7 +451,9 @@ export async function DELETE(request) {
   }
 }
 
-// BULK UPDATE – supports status and/or comment updates
+// -------------------------------------------------------------------
+// PATCH – bulk update (status/comment) – no stock impact
+// -------------------------------------------------------------------
 export async function PATCH(request) {
   const METHOD = METHOD_NAMES.PATCH;
 
@@ -269,27 +464,24 @@ export async function PATCH(request) {
     if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
       return NextResponse.json(
         { error: "orderIds array is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // At least one of status or comment must be provided
     if (!status && comment === undefined) {
       return NextResponse.json(
         { error: "Either status or comment must be provided" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Validate status if provided
     if (status && !["Paid", "Not Paid"].includes(status)) {
       return NextResponse.json(
         { error: "Valid status (Paid/Not Paid) is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Convert string IDs to ObjectId, filter invalid ones
     const validObjectIds = orderIds
       .map((id) => (ObjectId.isValid(id) ? new ObjectId(id) : null))
       .filter((id) => id !== null);
@@ -297,11 +489,10 @@ export async function PATCH(request) {
     if (validObjectIds.length === 0) {
       return NextResponse.json(
         { error: "No valid order IDs provided" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Build update object
     const updateFields = {
       updatedAt: new Date(),
       updatedBy: actionDoneBy?.trim() || "",
@@ -319,10 +510,7 @@ export async function PATCH(request) {
 
     const result = await db
       .collection("orders")
-      .updateMany(
-        { _id: { $in: validObjectIds } },
-        { $set: updateFields },
-      );
+      .updateMany({ _id: { $in: validObjectIds } }, { $set: updateFields });
 
     return NextResponse.json({
       message: `Updated ${result.modifiedCount} orders`,

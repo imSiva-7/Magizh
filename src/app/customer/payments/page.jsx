@@ -1,6 +1,6 @@
 "use client";
 
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "@/css/customer-payment.module.css";
 import {
@@ -343,7 +343,7 @@ export default function CustomerPayments() {
     setCheckedIds([]);
     setCheckedCustomerId("");
     setFilters({
-      startDate: getPreviousMonthDate(),
+      startDate: getCurrentMonthStartDate(),
       endDate: getTodayDate(),
     });
     setStatusFilter("");
@@ -811,7 +811,7 @@ export default function CustomerPayments() {
                                 disabled={isCustomerDisabled}
                               />
                             </td>
-                            <td className={styles.table_cell}>
+                            <td className={`${styles.table_cell} ${styles.cell_comment}`}>
                               <CommentEditor
                                 orderId={order._id}
                                 initialComment={order.comment}

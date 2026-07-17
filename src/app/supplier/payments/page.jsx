@@ -1,6 +1,6 @@
 "use client";
 
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "@/css/supplier-payment.module.css";
 import {
@@ -350,7 +350,7 @@ export default function Payments() {
     setCheckedIds([]);
     setCheckedSupplierId("");
     setFilters({
-      startDate: getPreviousMonthDate(),
+      startDate: getCurrentMonthStartDate(),
       endDate: getTodayDate(),
     });
     setStatusFilter("");

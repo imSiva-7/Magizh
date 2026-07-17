@@ -2,7 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 
-// --- Utility Functions ---
+// ========== UTILITY FUNCTIONS ==========
 const formatNumberWithCommas = (value, decimals = 2) => {
   const num = Number(value);
   if (!Number.isFinite(num)) return (0).toFixed(decimals);
@@ -43,10 +43,16 @@ const calculateTotals = (procurements) => {
   };
 };
 
-// --- PDF Design Constants ---
-const COMPANY_COLOR = [39, 121, 93]; // Corporate Blue
-const TEXT_COLOR = [44, 62, 80]; // Dark Grey
+// ========== PDF DESIGN CONSTANTS (MODERN & MINIMAL) ==========
+const BRAND_GREEN = [39, 121, 93];        // Primary brand color
+const BRAND_LIGHT = [234, 245, 241];      // Light green background
+const TEXT_PRIMARY = [30, 41, 59];        // Dark slate
+const TEXT_SECONDARY = [100, 116, 139];   // Muted gray
+const DIVIDER = [226, 232, 240];          // Light divider
+const WHITE = [255, 255, 255];
+const TABLE_ALT = [248, 250, 252];        // Alternating row color
 
+// ========== PDF EXPORT ==========
 export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   if (!procurements.length) {
     alert("No data to export");
@@ -56,180 +62,164 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const marginBottom = 20; // Safe margin at bottom
+  const margin = 15;
+  const marginBottom = 20;
 
-  // --- 1. Header Section ---
-  doc.setFillColor(...COMPANY_COLOR);
-  doc.rect(0, 0, pageWidth, 40, "F");
+  // ========== HEADER SECTION (MODERN DESIGN) ==========
+  // Top accent bar
+  doc.setFillColor(...BRAND_GREEN);
+  doc.rect(0, 0, pageWidth, 3, "F");
 
-  doc.setTextColor(255, 255, 255);
+  // Company header background
+  doc.setFillColor(...BRAND_LIGHT);
+  doc.rect(0, 3, pageWidth, 32, "F");
+
+  // Company name
+  doc.setTextColor(...BRAND_GREEN);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text("MAGIZH AGRO PRODUCT", 14, 18);
+  doc.setFontSize(24);
+  doc.text("MAGIZH AGRO PRODUCT", margin, 15);
 
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("GUDIYATHAM | GST NO:33ACBFM9128J1Z4", 14, 26);
-  doc.text("Phone: +91 93636 46314, +91 75021 36314", 14, 32);
-
-  // Bill Period Box (Top Right)
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(pageWidth - 70, 8, 60, 24, 2, 2, "F");
-
-  doc.setTextColor(...COMPANY_COLOR);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("BILL PERIOD", pageWidth - 65, 14);
-
-  doc.setTextColor(0, 0, 0);
+  // Company details
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
+  doc.setTextColor(...TEXT_SECONDARY);
+  doc.text("GUDIYATHAM | GST NO:33ACBFM9128J1Z4", margin, 22);
+  doc.text("Phone: +91 93636 46314, +91 75021 36314", margin, 28);
+
+  // Bill Period Box (Modern card design)
+  doc.setFillColor(...WHITE);
+  doc.setDrawColor(...DIVIDER);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(pageWidth - 68, 8, 56, 22, 3, 3, "FD");
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...BRAND_GREEN);
+  doc.text("BILL PERIOD", pageWidth - 65, 14);
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...TEXT_PRIMARY);
   doc.text(`From: ${dateRange.start}`, pageWidth - 65, 20);
   doc.text(`To:     ${dateRange.end}`, pageWidth - 65, 26);
 
-  // --- 2. Supplier Details Section (Boxed) ---
-  const infoStartY = 50;
+  // ========== SUPPLIER DETAILS SECTION (CLEAN CARD) ==========
+  const infoStartY = 42;
 
-  doc.setDrawColor(200, 200, 200);
-  doc.setFillColor(250, 250, 250);
-  doc.roundedRect(14, infoStartY, pageWidth - 28, 25, 2, 2, "FD");
+  doc.setDrawColor(...DIVIDER);
+  doc.setLineWidth(0.5);
+  doc.setFillColor(...WHITE);
+  doc.roundedRect(margin, infoStartY, pageWidth - margin * 2, 24, 3, 3, "FD");
 
-  doc.setTextColor(...TEXT_COLOR);
+  doc.setTextColor(...BRAND_GREEN);
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text("SUPPLIER DETAILS", 18, infoStartY + 6);
+  doc.text("SUPPLIER DETAILS", margin + 5, infoStartY + 8);
 
-  // Left side of box
+  // Supplier information
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT_PRIMARY);
+  
   if (supplier?.supplierName || supplier) {
-    doc.text(`Name: ${supplier.supplierName || supplier}`, 18, infoStartY + 14);
+    doc.text(`Name: ${supplier.supplierName || supplier}`, margin + 5, infoStartY + 15);
   }
 
   if (supplier?.supplierCustomRate) {
     doc.text(
       `Custom Rate in Rs: ${supplier.supplierCustomRate}`,
-      18,
+      margin + 5,
       infoStartY + 20,
     );
   }
 
-  // Right side of box
   if (supplier?.supplierTSRate && !supplier?.supplierCustomRate) {
     doc.text(
       `Total Solids Rate: ${supplier.supplierTSRate}`,
-      18,
+      margin + 5,
       infoStartY + 20,
     );
   }
 
-  // --- 3. Table Section ---
+  // ========== TABLE SECTION (MODERN STYLING) ==========
   const headers = [
-    [
-      "Date",
-      "Time",
-      // "Qty (Kg)",
-      "Qty (Ltr)",
-      "FAT %",
-      "SNF %",
-      "TS Rate",
-      "Rate/L",
-      "Amount (Rs)",
-    ],
+    ["Date", "Time", "Qty (Ltr)", "FAT %", "SNF %", "TS Rate", "Rate/L", "Amount (Rs)"]
   ];
 
   const headersWithSupplierName = [
-    [
-      "Date",
-      "Time",
-      "Supplier Name",
-      // "Qty (Kg)",
-      "Qty (Ltr)",
-      "FAT %",
-      "SNF %",
-      "TS Rate",
-      "Rate/L",
-      "Amount (Rs)",
-    ],
+    ["Date", "Time", "Supplier Name", "Qty (Ltr)", "FAT %", "SNF %", "TS Rate", "Rate/L", "Amount (Rs)"]
   ];
 
   const tableData = [];
   let totalMilkLtr = 0;
   let totalAmount = 0;
-  let totalPaid = 0;
-  let totalDue = 0;
   let totalFat = 0;
   let totalSnf = 0;
 
-  // Sorting
+  // Sort procurements
   const sortedProcurements = [...procurements].sort((a, b) => {
     const dateCompare = new Date(a.date) - new Date(b.date);
     if (dateCompare !== 0) return dateCompare;
     return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
   });
-  let uniquieDates = new Set();
+  
+  let uniqueDates = new Set();
 
   sortedProcurements.forEach((record) => {
-    const kg = (record.milkQuantity * 1.03).toFixed(2);
-
     if (supplier?.supplierName) {
       tableData.push([
-        !uniquieDates.has(record.date) ? formatDateForCSV(record.date) : "",
+        !uniqueDates.has(record.date) ? formatDateForCSV(record.date) : "",
         record.time || "AM",
-        // formatNumberWithCommas(kg, 2),
         formatNumberWithCommas(record.milkQuantity, 2),
         parseFloat(record.fatPercentage).toFixed(1),
         parseFloat(record.snfPercentage).toFixed(1),
         record.supplierTSRate || "N/A",
         formatNumberWithCommas(record.rate, 2),
         formatNumberWithCommas(record.totalAmount, 2),
-        // ` ${formatNumberWithCommas(record.totalAmount, 2)} ${record.paymentStatus == "Paid" ? " (paid)" : " (due)"} `,
       ]);
     } else {
       tableData.push([
-        !uniquieDates.has(record.date) ? formatDateForCSV(record.date) : "",
+        !uniqueDates.has(record.date) ? formatDateForCSV(record.date) : "",
         record.time || "AM",
         record.supplierName || "Unknown",
-        // formatNumberWithCommas(kg, 2),
         formatNumberWithCommas(record.milkQuantity, 2),
         parseFloat(record.fatPercentage).toFixed(1),
         parseFloat(record.snfPercentage).toFixed(1),
         record.supplierTSRate || "N/A",
         record.rate,
         formatNumberWithCommas(record.totalAmount, 2),
-        // ` ${formatNumberWithCommas(record.totalAmount, 2)} ${record.paymentStatus == "Paid" ? " (paid)" : " (due)"}`,
       ]);
     }
 
     totalMilkLtr += record.milkQuantity;
-    // totalPaid += record.paymentStatus == "Paid" ? record.totalAmount : 0;
-    // totalDue += record.paymentStatus !== "Paid" ? record.totalAmount : 0;
     totalAmount += record.totalAmount;
     totalFat += record.fatPercentage;
     totalSnf += record.snfPercentage;
-    uniquieDates.add(record.date);
+    uniqueDates.add(record.date);
   });
-  //  siva here too
+
   autoTable(doc, {
     head: supplier?.supplierName ? headers : headersWithSupplierName,
     body: tableData,
-    startY: infoStartY + 30,
-    theme: "striped",
-    margin: { bottom: 20 }, // Ensure autoTable leaves space at bottom
+    startY: infoStartY + 28,
+    theme: "plain",
+    margin: { bottom: marginBottom },
     styles: {
       fontSize: 9,
       cellPadding: 3,
       valign: "middle",
-      lineColor: [220, 220, 220],
-      lineWidth: 0.1,
+      lineColor: DIVIDER,
+      lineWidth: 0.3,
+      textColor: TEXT_PRIMARY,
     },
     headStyles: {
-      fillColor: COMPANY_COLOR,
-      textColor: 255,
+      fillColor: BRAND_GREEN,
+      textColor: WHITE,
       fontStyle: "bold",
       halign: "center",
+      fontSize: 9,
     },
-
     columnStyles: supplier?.supplierName
       ? {
           0: { halign: "center", cellWidth: 22 },
@@ -248,26 +238,22 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
           3: { halign: "right", fontStyle: "bold" },
           4: { halign: "right" },
           5: { halign: "right" },
-          5: { halign: "right" },
           6: { halign: "right" },
-          7: { halign: "right", fontStyle: "bold" },
+          7: { halign: "right" },
+          8: { halign: "right", fontStyle: "bold" },
         },
     alternateRowStyles: {
-      fillColor: [245, 248, 250],
+      fillColor: TABLE_ALT,
     },
   });
 
-  // --- 4. Summary & Totals Section ---
-  // Calculate final Y position after table
-  let finalY = doc.lastAutoTable.finalY + 10;
-
-  // Height needed for summary box (50) + Footer space (roughly 40)
-  // If we are too close to the bottom, start a new page
+  // ========== SUMMARY & TOTALS SECTION (MODERN CARD) ==========
+  let finalY = doc.lastAutoTable.finalY + 12;
   const requiredSpace = 100;
 
   if (finalY + requiredSpace > pageHeight) {
     doc.addPage();
-    finalY = 20; // Reset Y to top of new page
+    finalY = 20;
   }
 
   // Calculate Averages
@@ -275,132 +261,133 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const avgSnf = (totalSnf / procurements.length).toFixed(2);
   const avgRate = totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0;
 
-  // Draw Summary Box (Right Aligned)
-  const summaryWidth = 90;
-  const summaryX = pageWidth - summaryWidth - 14;
+  // Summary Box (Modern card with shadow effect)
+  const summaryWidth = 92;
+  const summaryX = pageWidth - summaryWidth - margin;
 
-  // Box Background
-  doc.setFillColor(245, 245, 245);
-  doc.rect(summaryX, finalY, summaryWidth, 50, "F");
-  doc.setDrawColor(200, 200, 200);
-  doc.rect(summaryX, finalY, summaryWidth, 50, "S");
+  // Card background
+  doc.setFillColor(...WHITE);
+  doc.setDrawColor(...DIVIDER);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 52, 3, 3, "FD");
 
-  doc.setTextColor(...TEXT_COLOR);
-  doc.setFontSize(10);
+  // Card header
+  doc.setFillColor(...BRAND_LIGHT);
+  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 10, 3, 3, "F");
 
-  // Helper to draw summary row
-  const drawSummaryRow = (label, value, y, isBold = false) => {
-    doc.setFont("helvetica", isBold ? "bold" : "normal");
-    doc.text(label, summaryX + 5, y);
-    doc.text(value, pageWidth - 19, y, { align: "right" });
-  };
-
+  doc.setTextColor(...BRAND_GREEN);
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("PAYMENT SUMMARY", summaryX + 5, finalY + 8);
-  doc.setDrawColor(...COMPANY_COLOR);
-  doc.line(summaryX + 5, finalY + 10, pageWidth - 19, finalY + 10);
+  doc.text("PAYMENT SUMMARY", summaryX + 5, finalY + 2);
 
-  doc.setFontSize(10);
+  // Summary rows
+  const drawSummaryRow = (label, value, y, isBold = false) => {
+    doc.setFont("helvetica", isBold ? "bold" : "normal");
+    doc.setTextColor(...TEXT_PRIMARY);
+    doc.setFontSize(9);
+    doc.text(label, summaryX + 5, y);
+    doc.text(value, pageWidth - margin - 5, y, { align: "right" });
+  };
+
   drawSummaryRow(
     "Total Milk:",
     `${formatNumberWithCommas(totalMilkLtr, 2)} Ltr`,
-    finalY + 18,
+    finalY + 11,
   );
-  drawSummaryRow("Avg FAT:", `${avgFat} %`, finalY + 24);
-  drawSummaryRow("Avg SNF:", `${avgSnf} %`, finalY + 30);
+  drawSummaryRow("Avg FAT:", `${avgFat} %`, finalY + 18);
+  drawSummaryRow("Avg SNF:", `${avgSnf} %`, finalY + 25);
   drawSummaryRow(
     "Avg Rate:",
     `Rs. ${formatNumberWithCommas(avgRate, 2)}`,
-    finalY + 36,
+    finalY + 32,
   );
 
-  // Grand Total Highlight
-  doc.setFillColor(...COMPANY_COLOR);
-  doc.rect(summaryX, finalY + 41, summaryWidth, 9, "F");
-  doc.setTextColor(255, 255, 255);
+  // Grand Total (Highlighted)
+  doc.setFillColor(...BRAND_GREEN);
+  doc.roundedRect(summaryX, finalY + 38, summaryWidth, 9, 2, 2, "F");
+  
+  doc.setTextColor(...WHITE);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.text("NET PAYABLE", summaryX + 5, finalY + 47);
+  doc.setFontSize(11);
+  doc.text("NET PAYABLE", summaryX + 5, finalY + 44);
   doc.text(
     `Rs. ${formatNumberWithCommas(totalAmount, 2)}`,
-    pageWidth - 19,
-    finalY + 47,
+    pageWidth - margin - 5,
+    finalY + 44,
     { align: "right" },
   );
 
-  // --- 5. Footer Section ---
-  const footerY = finalY + 65; // Position below summary
+  // ========== FOOTER SECTION (PROFESSIONAL) ==========
+  const footerY = finalY + 63;
 
-  // Double check if footer fits (in case summary fits but footer doesn't)
   if (footerY > pageHeight - 15) {
     doc.addPage();
-    // If we added a page for footer, we need to reset Y variables
-    // But usually, the check in step 4 handles this.
   }
 
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
+  doc.setTextColor(...TEXT_PRIMARY);
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
 
-  // Signature Lines
+  // Signature Lines (Clean design)
   const sigY = footerY;
-  doc.setDrawColor(100, 100, 100);
+  doc.setDrawColor(...DIVIDER);
+  doc.setLineWidth(0.5);
 
   // Prepared By
-  doc.line(20, sigY, 70, sigY);
-  doc.text("Prepared By", 45, sigY + 5, { align: "center" });
+  doc.line(margin + 5, sigY, margin + 55, sigY);
+  doc.text("Prepared By", margin + 30, sigY + 5, { align: "center" });
 
   // Verified By
   doc.line(pageWidth / 2 - 25, sigY, pageWidth / 2 + 25, sigY);
   doc.text("Verified By", pageWidth / 2, sigY + 5, { align: "center" });
 
   // Receiver
-  doc.line(pageWidth - 70, sigY, pageWidth - 20, sigY);
-  doc.text("Receiver Signature", pageWidth - 45, sigY + 5, { align: "center" });
+  doc.line(pageWidth - margin - 55, sigY, pageWidth - margin - 5, sigY);
+  doc.text("Receiver Signature", pageWidth - margin - 30, sigY + 5, { align: "center" });
 
-  // Timestamp footer
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
+  // Timestamp footer (Bottom bar)
+  doc.setFillColor(...BRAND_GREEN);
+  doc.rect(0, pageHeight - 10, pageWidth, 3, "F");
+
+  doc.setFontSize(7);
+  doc.setTextColor(...TEXT_SECONDARY);
   doc.text(
     `Generated on: ${new Date().toLocaleString("en-IN")}`,
     pageWidth / 2,
-    pageHeight - 5,
+    pageHeight - 4,
     { align: "center" },
   );
 
   doc.save(`${fileName || "procurement_bill"}.pdf`);
 };
 
-// Original CSV Export (Preserved as is)
+// ========== CSV EXPORT (PRESERVED AS IS) ==========
 export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   if (!procurements.length) {
     alert("No data to export");
     return;
   }
+  
   const sortedProcurements = [...procurements].sort((a, b) => {
     const dateCompare = new Date(a.date) - new Date(b.date);
     if (dateCompare !== 0) return dateCompare;
     return (a.time === "AM" ? -1 : 1) - (b.time === "AM" ? -1 : 1);
   });
+  
   const headers = [
     "Date",
     "AM/PM",
-    // "Quantity (Kg)",
     "Quantity (Ltr)",
     "FAT %",
     "SNF %",
     "Rate/L (Rs)",
     "Net Amount (Rs)",
   ];
+  
   const csvRows = [];
   csvRows.push(
     `Supplier Name: "${supplier?.supplierName || "MAGIZH DAIRY SUPPLIERS"}"`,
   );
-  // csvRows.push(`"GUDIYATHAM"`);
-  // csvRows.push(
-  //   `"Phone: ${supplier?.supplierNumber || "Mobile: +91 75021 36314"}"`,
-  // );
   csvRows.push(
     `"MILK BILL Date: ${formatDateForCSV(
       dateRange.start,
@@ -408,16 +395,16 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   );
   csvRows.push("");
   csvRows.push(headers.join(","));
+  
   let totalMilkLtr = 0;
   let totalAmount = 0;
   let totalFat = 0;
   let totalSnf = 0;
+  
   sortedProcurements.forEach((record) => {
-    // const kg = (record.milkQuantity * 1.03).toFixed(2);
     const row = [
       formatDateForCSV(record.date),
       record.time || "AM",
-      // kg,
       record.milkQuantity.toFixed(2),
       record.fatPercentage.toFixed(2),
       record.snfPercentage.toFixed(2),
@@ -430,9 +417,9 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
     totalFat += record.fatPercentage;
     totalSnf += record.snfPercentage;
   });
+  
   csvRows.push("");
   csvRows.push("SUMMARY");
-
   csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
   csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
   csvRows.push(`Average Rate/L,Rs ${(totalAmount / totalMilkLtr).toFixed(2)}`);

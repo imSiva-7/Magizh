@@ -579,6 +579,11 @@
   white-space: nowrap;
 }
 
+.table_header_cell:last-child {
+  text-align: right;
+  padding-right: 1rem;
+}
+
 .select_all_wrapper {
   display: flex;
   align-items: center;
@@ -613,6 +618,11 @@
 .cell_total {
   font-weight: 600;
   color: #1e293b;
+}
+
+.cell_comment {
+  text-align: right !important;
+  padding-right: 1rem !important;
 }
 
 .continuation_arrow {
@@ -651,7 +661,7 @@
 .comment_display {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 

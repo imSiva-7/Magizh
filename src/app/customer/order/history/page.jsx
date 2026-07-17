@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/order-history.module.css";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
 import { formatDateForDisplay } from "@/utils/dateUtils";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import Link from "next/link";
+import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 const LoadingSpinner = () => (
   <div className={styles.loading_container}>
@@ -17,13 +19,76 @@ const LoadingSpinner = () => (
   </div>
 );
 
+// Comment editor component with button toggle
+const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [comment, setComment] = useState(initialComment || "");
+
+  const handleSave = async () => {
+    await onSave(orderId, comment);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setComment(initialComment || "");
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className={styles.comment_edit_container}>
+        <input
+          type="text"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className={styles.comment_input}
+          autoFocus
+          disabled={isSaving}
+          placeholder="Add comment..."
+        />
+        <div className={styles.comment_actions}>
+          <button
+            onClick={handleSave}
+            className={styles.comment_save_btn}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save"}
+          </button>
+          <button
+            onClick={handleCancel}
+            className={styles.comment_cancel_btn}
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.comment_display}>
+      <span className={styles.comment_text}>{comment || "-"}</span>
+      <button
+        onClick={() => setIsEditing(true)}
+        className={styles.comment_edit_btn}
+        title="Edit comment"
+      >
+        <Image src="/edit-comment.png" alt="edit" width={20} height={20} />
+      </button>
+    </div>
+  );
+};
+
 function OrderHistoryContent() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ orders: [], summary: {} });
   const [filters, setFilters] = useState({
-    startDate: getPreviousMonthDate(),
+    startDate: getCurrentMonthStartDate(),
     endDate: getTodayDate(),
   });
+  const [savingCommentId, setSavingCommentId] = useState(null);
+  const { data: session } = useSession();
 
   const fetchHistory = useCallback(async () => {
     try {
@@ -83,10 +148,53 @@ function OrderHistoryContent() {
     toast.success("PDF exported");
   };
 
+  // Comment update handler
+  const handleCommentUpdate = async (orderId, newComment) => {
+    if (savingCommentId === orderId) return;
+    setSavingCommentId(orderId);
+
+    const previousComment =
+      data.orders.find((o) => o._id === orderId)?.comment || "";
+    setData((prev) => ({
+      ...prev,
+      orders: prev.orders.map((order) =>
+        order._id === orderId ? { ...order, comment: newComment } : order,
+      ),
+    }));
+
+    try {
+      const res = await fetch("/api/customer/order", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderIds: [orderId],
+          comment: newComment,
+          actionDoneBy: session?.user?.email,
+        }),
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || "Failed to update comment");
+      toast.success("Comment updated");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Could not update comment");
+      setData((prev) => ({
+        ...prev,
+        orders: prev.orders.map((order) =>
+          order._id === orderId
+            ? { ...order, comment: previousComment }
+            : order,
+        ),
+      }));
+    } finally {
+      setSavingCommentId(null);
+    }
+  };
+
   const todayFilter = () =>
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
   const resetFilters = () =>
-    setFilters({ startDate: getPreviousMonthDate(), endDate: getTodayDate() });
+    setFilters({ startDate: getCurrentMonthStartDate(), endDate: getTodayDate() });
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
 
   return (
@@ -288,7 +396,12 @@ function OrderHistoryContent() {
                       </span>
                     </td>
                     <td className={styles.comment_cell}>
-                      {order.comment || "-"}
+                      <CommentEditor
+                        orderId={order._id}
+                        initialComment={order.comment}
+                        onSave={handleCommentUpdate}
+                        isSaving={savingCommentId === order._id}
+                      />
                     </td>
                   </tr>
                 ))}

@@ -10,7 +10,7 @@ import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
-import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 
 // ========== CONSTANTS & UTILITIES ==========
@@ -42,7 +42,7 @@ const initialForm = {
 };
 
 const initialFilters = {
-  startDate: getPreviousMonthDate(),
+  startDate: getCurrentMonthStartDate(),
   endDate: getTodayDate(),
 };
 
