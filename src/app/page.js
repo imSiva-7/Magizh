@@ -11,7 +11,6 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 
-
 const StatItem = ({ label, value, colorClass = "" }) => (
   <div className={styles.global_stat_item}>
     <div className={styles.global_stat_label}>{label}</div>
@@ -29,7 +28,7 @@ export default function Home() {
 
   const [customerData, setCustomerData] = useState({
     orders: [],
-    summary: {}
+    summary: {},
   });
   const [supplierData, setSupplierData] = useState({
     procurements: [],
@@ -44,10 +43,6 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
-        // const params = new URLSearchParams();
-        // if (filters.startDate) params.append("startDate", filters.startDate);
-        // if (filters.endDate) params.append("endDate", filters.endDate);
-
         const [customerRes, supplierRes] = await Promise.all([
           fetch(`/api/customer/order/history`),
           fetch(`/api/supplier/procurement/history`),
@@ -116,6 +111,7 @@ export default function Home() {
     customerData.orders.forEach((order) => {
       if (order.paymentStatus === "Not Paid") {
         const existing = dueMap.get(order.customerId) || {
+          id: order.customerId,
           name: order.customerName,
           due: 0,
         };
@@ -131,9 +127,9 @@ export default function Home() {
     const dueMap = new Map();
     supplierData.procurements.forEach((proc) => {
       if (proc.paymentStatus !== "Paid") {
-        // Not Paid or partial
         const existing = dueMap.get(proc.supplierId) || {
           name: proc.supplierName,
+          id: proc.supplierId,
           due: 0,
         };
         existing.due += proc.totalAmount || 0;
@@ -143,17 +139,14 @@ export default function Home() {
     return Array.from(dueMap.values()).sort((a, b) => b.due - a.due);
   }, [supplierData.procurements]);
 
-  const handleSignOut = () => signOut({ callbackUrl: "/login" });
-
   // Loading state
   if (loading) {
     return (
       <div className={styles.dashboard}>
         <header className={styles.header}>
           <div className={styles.logo}>
-            <h1>Dairy Dashboard</h1>
+            <h1>Dashboard</h1>
           </div>
-          {/* <div className={styles.userInfo}>Loading dashboard...</div> */}
         </header>
         <div className={styles.loadingContainer}>
           <div className={styles.spinner}></div>
@@ -199,9 +192,6 @@ export default function Home() {
               {session.user?.role === "admin" && (
                 <span className={styles.adminBadge}>Admin</span>
               )}
-              {/* <button onClick={handleSignOut} className={styles.logoutBtn}>
-                Sign out
-              </button> */}
             </>
           ) : (
             <Link href="/login" className={styles.loginLink}>
@@ -211,6 +201,7 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Supplier Summary Card */}
       {supplierData.summary.totalAmount > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
@@ -242,7 +233,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* ========== CUSTOMER SUMMARY CARD ========== */}
+      {/* Customer Summary Card */}
       {customerData.summary.totalAmount > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
@@ -261,7 +252,7 @@ export default function Home() {
               value={`₹${formatNumberWithCommas(customerData.summary.totalAmount.toFixed(2))}`}
             />
             <StatItem
-              label="Total Recived"
+              label="Total Received"
               value={`₹${formatNumberWithCommas(customerData.summary.paidAmount.toFixed(2))}`}
               colorClass={styles.text_green}
             />
@@ -274,12 +265,11 @@ export default function Home() {
         </div>
       )}
 
+      {/* Supplier Due Table */}
       {supplierDueList.length > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}>
-              Suppliers Dues
-            </h2>
+            <h2 className={styles.global_title}>Suppliers Dues</h2>
           </div>
           <div className={styles.tableWrapper}>
             <table className={styles.dueTable}>
@@ -287,24 +277,22 @@ export default function Home() {
                 <tr>
                   <th>Supplier Name</th>
                   <th>Total Due (₹)</th>
-                  {/* <th>Action</th> */}
                 </tr>
               </thead>
               <tbody>
                 {supplierDueList.map((supplier) => (
-                  <tr key={supplier.name}>
-                    <td>{supplier.name}</td>
+                  <tr key={supplier.id}>
+                    <td>
+                      <Link
+                        href={`/supplier/procurement?supplierId=${supplier.id}`}
+                        className={styles.supplierName}
+                      >
+                        {supplier.name || "-"}
+                      </Link>
+                    </td>
                     <td className={styles.text_red}>
                       ₹{formatNumberWithCommasNoDecimal(supplier.due)}
                     </td>
-                    {/* <td>
-                      <Link
-                        href={`/supplier/payments?supplierId=${encodeURIComponent(supplier.name)}`}
-                        className={styles.viewLink}
-                      >
-                        View Payments
-                      </Link>
-                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -313,12 +301,11 @@ export default function Home() {
         </div>
       )}
 
+      {/* Customer Due Table */}
       {customerDueList.length > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}>
-              Customers Dues
-            </h2>
+            <h2 className={styles.global_title}>Customers Dues</h2>
           </div>
           <div className={styles.tableWrapper}>
             <table className={styles.dueTable}>
@@ -326,24 +313,22 @@ export default function Home() {
                 <tr>
                   <th>Customer Name</th>
                   <th>Total Due (₹)</th>
-                  {/* <th>Action</th> */}
                 </tr>
               </thead>
               <tbody>
                 {customerDueList.map((customer) => (
-                  <tr key={customer.name}>
-                    <td>{customer.name}</td>
+                  <tr key={customer.id}>
+                    <td>
+                      <Link
+                        href={`/customer/order?customerId=${customer.id}`}
+                        className={styles.customerName}
+                      >
+                        {customer.name || "-"}
+                      </Link>
+                    </td>
                     <td className={styles.text_red}>
                       ₹{formatNumberWithCommasNoDecimal(customer.due)}
                     </td>
-                    {/* <td>
-                      <Link
-                        href={`/customer/order?customerId=${customer.customerId}`}
-                        className={styles.viewLink}
-                      >
-                        View Payments
-                      </Link>
-                    </td> */}
                   </tr>
                 ))}
               </tbody>
@@ -352,16 +337,13 @@ export default function Home() {
         </div>
       )}
 
-
-
-      {/* ========== SUPPLIER DUE TABLE ========== */}
-
+      {/* Navigation Cards */}
       <div className={styles.navGrid}>
         <Link href="/productions" className={styles.navCard}>
           <div className={styles.navIcon}>
             <Image
               src="/industrial-park.png"
-              alt="Productiion"
+              alt="Production"
               width={30}
               height={30}
             />
@@ -378,7 +360,6 @@ export default function Home() {
           <p>Manage supplier information and rates</p>
         </Link>
 
-
         <Link href="/customer" className={styles.navCard}>
           <div className={styles.navIcon}>
             <Image src="/customer.png" alt="Customer" width={30} height={30} />
@@ -386,7 +367,6 @@ export default function Home() {
           <h2>Customers</h2>
           <p>View and manage customer details</p>
         </Link>
-
 
         <Link href="/supplier/payments" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -413,8 +393,6 @@ export default function Home() {
           <h2>Customers Payments</h2>
           <p>Track and mark payments to Customers</p>
         </Link>
-
-
 
         <Link href="/productions/analytics" className={styles.navCard}>
           <div className={styles.navIcon}>

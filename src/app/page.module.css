@@ -181,6 +181,24 @@
   min-width: 400px;
 }
 
+/* Supplier & Customer name links in dashboard due tables */
+.supplierName,
+.customerName {
+  color: rgb(39, 121, 93);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.3rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.supplierName:hover,
+.customerName:hover {
+  background-color: rgba(39, 121, 93, 0.1);
+  text-decoration: underline;
+}
+
 .dueTable th:nth-child(1), 
 .dueTable td:nth-child(1) {
   text-align: left !important;
