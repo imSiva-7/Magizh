@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
+import { ObjectId } from "mongodb"; // added for DB query
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -34,10 +35,32 @@ export const authOptions = {
   pages: { signIn: "/login" },
   callbacks: {
     async jwt({ token, user }) {
+      // First login / explicit sign-in: set initial token values
       if (user) {
         token.id = user.id;
         token.role = user.role;
       }
+
+      // On every subsequent request, refresh role & verify user exists
+      if (token?.id) {
+        const client = await clientPromise;
+        const db = client.db("production");
+        const dbUser = await db.collection("users").findOne({
+          _id: new ObjectId(token.id),
+        });
+
+        if (!dbUser) {
+          // User was deleted – invalidate the token so middleware rejects them
+          return {};
+        }
+
+        // Always use the latest role from the database
+        token.role = dbUser.role || "employee";
+        // Keep name/email in sync if they change
+        token.name = dbUser.name;
+        token.email = dbUser.email;
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -50,15 +73,14 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 
-  
   cookies: {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",      
+        sameSite: "lax",
         path: "/",
-        secure:  true, 
+        secure: true,
       },
     },
   },

@@ -613,8 +613,8 @@ export default function Payments() {
 
             // const eligibleProcurements = procurements;
             const isAllChecked =
-              procurements.length > 0 &&
-              procurements.every((r) => checkedIds.includes(r._id));
+              displayedProcurements.length > 0 &&
+              displayedProcurements.every((r) => checkedIds.includes(r._id));
 
             const isSupplierDisabled =
               checkedSupplierId !== "" && checkedSupplierId !== supplier._id;
@@ -727,7 +727,7 @@ export default function Payments() {
                                 type="checkbox"
                                 className={styles.payment_checkbox}
                                 onChange={(e) =>
-                                  handleSelectAll(e, supplier._id, procurements)
+                                  handleSelectAll(e, supplier._id, displayedProcurements)
                                 }
                                 disabled={isSupplierDisabled}
                                 checked={isAllChecked}

@@ -3,9 +3,9 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 const rolePermissions = {
-  admin: ["/admin", "/customer", "/supplier", "/productions", "/api/admin"],
-  dev: ["/admin", "/customer", "/supplier", "/productions", "/api/admin"],
-  employee: ["/customer", "/supplier", "/productions"],
+  admin: ["/admin", "/customer", "/supplier", "/productions", "/stock", "/api/admin"],
+  dev: ["/admin", "/customer", "/supplier", "/productions", "/stock", "/api/admin",],
+  employee: ["/customer", "/supplier", "/stock", "/productions"],
 };
 
 const isPathAllowed = (path, userRole) => {
@@ -75,9 +75,11 @@ export default withAuth(
 export const config = {
   matcher: [
     "/productions/:path*",
+    "/stock/:path*",
     "/supplier/:path*",
     "/customer/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
+    
   ],
 };

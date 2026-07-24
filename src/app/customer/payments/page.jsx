@@ -652,8 +652,8 @@ export default function CustomerPayments() {
             const hasMore = orders.length > visibleCount;
 
             const isAllChecked =
-              orders.length > 0 &&
-              orders.every((o) => checkedIds.includes(o._id));
+              displayedOrders.length > 0 &&
+              displayedOrders.every((o) => checkedIds.includes(o._id));
             const isCustomerDisabled =
               checkedCustomerId !== "" && checkedCustomerId !== customer._id;
 
@@ -747,7 +747,7 @@ export default function CustomerPayments() {
                               type="checkbox"
                               className={styles.payment_checkbox}
                               onChange={(e) =>
-                                handleSelectAll(e, customer._id, orders)
+                                handleSelectAll(e, customer._id, displayedOrders)
                               }
                               disabled={isCustomerDisabled}
                               checked={isAllChecked}

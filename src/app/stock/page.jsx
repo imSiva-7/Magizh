@@ -305,7 +305,7 @@ export default function StockPage() {
       {/* ====== Average Supplier Price Card ====== */}
       <div className={styles.global_summary_card}>
         <div className={styles.global_header}>
-          <h2 className={styles.global_title}>Average Price</h2>
+          <h2 className={styles.global_title}>Average selling Price</h2>
         </div>
         <div className={styles.global_stats_grid}>
           {STOCK_PRODUCTS.map((product) => (

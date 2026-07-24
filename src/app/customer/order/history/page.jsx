@@ -132,6 +132,26 @@ function OrderHistoryContent() {
     });
   }, [data.orders]);
 
+  // Generate invoice for a single order
+  const handleSingleInvoice = (order) => {
+    const customerDetails = {
+      customerName: order.customerName || "Customer",
+      customerType: order.customerType || "",
+      address: "", // optional – fill from API if needed
+      mobile: "",
+      customerGST: "",
+    };
+    const dateStr =
+      formatDateForDisplay(order.date) || order.date.split("T")[0];
+    const fileName = `invoice_${order.customerName}_${dateStr}`;
+    exportInvoiceToPDF(
+      [order],
+      customerDetails,
+      { start: dateStr, end: dateStr },
+      fileName,
+    );
+  };
+
   const handleExport = (format) => {
     if (!data.orders.length) {
       toast.error("No data to export");
@@ -194,7 +214,10 @@ function OrderHistoryContent() {
   const todayFilter = () =>
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
   const resetFilters = () =>
-    setFilters({ startDate: getCurrentMonthStartDate(), endDate: getTodayDate() });
+    setFilters({
+      startDate: getCurrentMonthStartDate(),
+      endDate: getTodayDate(),
+    });
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
 
   return (
@@ -358,6 +381,7 @@ function OrderHistoryContent() {
                   <th>Customer</th>
                   <th>Total (₹)</th>
                   <th>Status</th>
+                  <th>Invoice</th>
                   <th>Comment</th>
                 </tr>
               </thead>
@@ -394,6 +418,21 @@ function OrderHistoryContent() {
                       >
                         {order.paymentStatus === "Paid" ? "Paid" : "Due"}
                       </span>
+                    </td>
+                    <td className={styles.invoice_cell}>
+                      <button
+                        onClick={() => handleSingleInvoice(order)}
+                        className={styles.export_btn_table}
+                        disabled={loading}
+                        title="Download invoice"
+                      >
+                        <Image
+                          src="/invoice-download.png"
+                          alt="invoice"
+                          width={20}
+                          height={20}
+                        />
+                      </button>
                     </td>
                     <td className={styles.comment_cell}>
                       <CommentEditor

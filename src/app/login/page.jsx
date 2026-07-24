@@ -37,7 +37,7 @@ export default function LoginPage() {
     <div className={styles.container}>
       <div className={styles.card}>
         <div className={styles.header}>
-          <h1>Welcome Back</h1>
+          <h1>Welcome Back!</h1>
           <p>Magizh Dairy account</p>
         </div>
 
@@ -82,9 +82,9 @@ export default function LoginPage() {
             )}
           </button>
 
-          <div className={styles.footer}>
+          {/* <div className={styles.footer}>
             {"Don't have an account?"} <Link href="/register">Create one</Link>
-          </div>
+          </div> */}
         </form>
       </div>
     </div>

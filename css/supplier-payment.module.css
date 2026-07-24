@@ -365,13 +365,13 @@
 /* Search stats */
 .search_stats {
   display: flex;
-  align-items: center;
+  align-items: left;
   gap: 1rem;
   font-size: 0.875rem;
   color: #64748b;
   padding-top: 0.5rem;
   border-top: 1px dashed #e2e8f0;
-  justify-content: center;
+  justify-content: left;
 }
 
 .result_count {
