@@ -17,7 +17,7 @@ const WHITE = [255, 255, 255];
 
 // Helper to build the UPI intent URL
 const buildUPILink = (amount) => {
-  const upiID = "magizhagro@upi";
+  const upiID = "boim-837163140233@boi";
   const payeeName = "MAGIZH AGRO PRODUCT";
   const currency = "INR";
   const amt = Number(amount).toFixed(2);
@@ -54,7 +54,7 @@ export const exportInvoiceToPDF = async (
     // Tagline with elegant style
     doc.setFontSize(8);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text("Premium Dairy Excellence", margin, 30);
+    doc.text("Your Premium Dairy Parter", margin, 24);
 
     // Company details on the right (minimal)
     doc.setFontSize(9);
@@ -72,10 +72,10 @@ export const exportInvoiceToPDF = async (
     doc.text("⤴", pageWidth - margin - 3.8, 34.5);
     
     // Add WhatsApp share link annotation
-    const whatsappMessage = `Invoice for ${customer?.customerName || "Customer"} - Period: ${dateRange.start === dateRange.end ? dateRange.start : `${dateRange.start} to ${dateRange.end}`} - Total: Rs. ${formatNumberWithCommas(grandTotal, 2)}`;
-    doc.link(pageWidth - margin - 6, 30.5, 5, 5, { 
-      url: `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}` 
-    });
+    // const whatsappMessage = `Invoice for ${customer?.customerName || "Customer"} - Period: ${dateRange.start === dateRange.end ? dateRange.start : `${dateRange.start} to ${dateRange.end}`} - Total: Rs. ${formatNumberWithCommas(grandTotal, 2)}`;
+    // doc.link(pageWidth - margin - 6, 30.5, 5, 5, { 
+    //   url: `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}` 
+    // });
 
     // Invoice title banner
     doc.setFillColor(...BRAND_LIGHT);
