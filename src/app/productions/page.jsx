@@ -113,7 +113,7 @@ export default function ProductionPage() {
     butter_quantity: "",
     cream_quantity: "",
     ghee_quantity: "",
-    affectStockValue: true,
+    affectStockValue: false,
   };
 
   const [formData, setFormData] = useState(initialFormState);

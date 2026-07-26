@@ -37,7 +37,7 @@ const initialOrder = {
   paymentStatus: "Not Paid",
   comment: "",
   gstType: "inclusive",
-  affectStockValue: true, // 👈 new field
+  affectStockValue: false, // 👈 new field
 };
 
 const initialFilters = {
