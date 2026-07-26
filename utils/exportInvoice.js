@@ -52,9 +52,9 @@ export const exportInvoiceToPDF = async (
     
    
     // Tagline with elegant style
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text("Your Premium Dairy Parter", margin, 24);
+    doc.text("Your Premium Dairy Partner", margin+1, 24);
 
     // Company details on the right (minimal)
     doc.setFontSize(9);
@@ -65,11 +65,11 @@ export const exportInvoiceToPDF = async (
     doc.text("+91 93636 46314", pageWidth - margin, 25, { align: "right" });
 
     // Share icon with WhatsApp functionality (top right corner)
-    doc.setFillColor(...BRAND_GREEN);
-    doc.circle(pageWidth - margin - 3, 33, 2.5, "F");
-    doc.setTextColor(...WHITE);
-    doc.setFontSize(10);
-    doc.text("⤴", pageWidth - margin - 3.8, 34.5);
+    // doc.setFillColor(...BRAND_GREEN);
+    // doc.circle(pageWidth - margin - 3, 33, 2.5, "F");
+    // doc.setTextColor(...WHITE);
+    // doc.setFontSize(10);
+    // doc.text("⤴", pageWidth - margin - 3.8, 34.5);
     
     // Add WhatsApp share link annotation
     // const whatsappMessage = `Invoice for ${customer?.customerName || "Customer"} - Period: ${dateRange.start === dateRange.end ? dateRange.start : `${dateRange.start} to ${dateRange.end}`} - Total: Rs. ${formatNumberWithCommas(grandTotal, 2)}`;
@@ -136,7 +136,7 @@ export const exportInvoiceToPDF = async (
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(...TEXT_SECONDARY);
-      doc.text(`📞 ${customer.mobile}`, margin + 5, nextY + 3);
+      doc.text(` ${customer.mobile}`, margin + 5, nextY + 3);
     }
 
     // Right box - Invoice Details
@@ -397,10 +397,10 @@ export const exportInvoiceToPDF = async (
   doc.text("Scan to Pay", margin + 53.5, paymentY + 33, { align: "center" });
 
   // Bank details (minimal)
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...TEXT_SECONDARY);
-  doc.text("UPI ID: magizhagro@upi", margin + 5, paymentY + 25);
+  // doc.setFont("helvetica", "normal");
+  // doc.setFontSize(8);
+  // doc.setTextColor(...TEXT_SECONDARY);
+  // doc.text("UPI ID: boim-837163140233@boi", margin + 5, paymentY + 25);
 
   // ========== SIGNATURE SECTION ==========
   const sigY = paymentY + 45;
@@ -421,7 +421,7 @@ export const exportInvoiceToPDF = async (
   doc.setFontSize(7);
   doc.setTextColor(...TEXT_SECONDARY);
   doc.text(
-    "Thank you for your business! | This is a computer-generated invoice.",
+    "Thank you for being a valuable customer!",
     pageWidth / 2,
     footerY + 7,
     { align: "center" }
