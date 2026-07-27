@@ -23,7 +23,7 @@ let clientPromise;
 
 if (process.env.NODE_ENV === "development") {
   console.log("🔧 Development mode - MongoDB config:", {
-    uri: uri.substring(0, 50) + "...",
+    uri: uri + "...",
     hasAtlas: uri.includes("mongodb+srv"),
     isLocalhost: uri.includes("localhost"),
   });

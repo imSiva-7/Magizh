@@ -49,12 +49,12 @@ export const exportInvoiceToPDF = async (
     doc.setFont("helvetica", "bold");
     doc.setFontSize(26);
     doc.text("MAGIZH AGRO PRODUCT", margin, 18);
-    
-   
+
+
     // Tagline with elegant style
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text("Your Premium Dairy Partner", margin+1, 24);
+    doc.text("Your Premium Dairy Partner", margin + 1, 24);
 
     // Company details on the right (minimal)
     doc.setFontSize(9);
@@ -70,7 +70,7 @@ export const exportInvoiceToPDF = async (
     // doc.setTextColor(...WHITE);
     // doc.setFontSize(10);
     // doc.text("⤴", pageWidth - margin - 3.8, 34.5);
-    
+
     // Add WhatsApp share link annotation
     // const whatsappMessage = `Invoice for ${customer?.customerName || "Customer"} - Period: ${dateRange.start === dateRange.end ? dateRange.start : `${dateRange.start} to ${dateRange.end}`} - Total: Rs. ${formatNumberWithCommas(grandTotal, 2)}`;
     // doc.link(pageWidth - margin - 6, 30.5, 5, 5, { 
@@ -118,7 +118,7 @@ export const exportInvoiceToPDF = async (
       : "";
     const splitAddress = doc.splitTextToSize(address, boxWidth - 10);
     doc.text(splitAddress, margin + 5, startY + 22);
-    
+
     // Customer GST on left side (below address, above phone)
     let nextY = startY + 22 + (splitAddress.length * 4);
     if (customer?.customerGST) {
@@ -131,7 +131,7 @@ export const exportInvoiceToPDF = async (
       doc.text(customer.customerGST, margin + 15, nextY + 3);
       nextY += 5;
     }
-    
+
     if (customer?.mobile) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
@@ -151,7 +151,7 @@ export const exportInvoiceToPDF = async (
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_PRIMARY);
-    
+
     doc.text("Invoice Date:", rightBoxX + 5, startY + 16);
     doc.setFont("helvetica", "bold");
     doc.text(formatDateForDisplay(new Date()), rightBoxX + 35, startY + 16);
@@ -159,13 +159,13 @@ export const exportInvoiceToPDF = async (
     doc.setFont("helvetica", "normal");
     doc.text("Period:", rightBoxX + 5, startY + 22);
     doc.setFont("helvetica", "bold");
-    const periodText = dateRange.start === dateRange.end 
-      ? dateRange.start 
+    const periodText = dateRange.start === dateRange.end
+      ? dateRange.start
       : `${dateRange.start} - ${dateRange.end}`;
     const splitPeriod = doc.splitTextToSize(periodText, boxWidth - 40);
     doc.text(splitPeriod, rightBoxX + 35, startY + 22);
 
-   
+
   };
 
   // ========== CALCULATE TOTALS ==========
@@ -207,7 +207,7 @@ export const exportInvoiceToPDF = async (
 
   // ========== ITEMS TABLE (Modern Design) ==========
   const tableStartY = 100;
-  
+
   if (customer?.customerName) {
     autoTable(doc, {
       startY: tableStartY,
@@ -357,53 +357,48 @@ export const exportInvoiceToPDF = async (
     { align: "right" }
   );
 
-  // ========== PAYMENT SECTION (UPI/QR) ==========
+  // ========== PAYMENT SECTION (UPI/QR) - VERTICAL LAYOUT ==========
   const paymentY = finalY + 50;
+  const paymentBoxX = margin;
+  const paymentBoxW = 35;      // narrow box
+  const paymentBoxH = 70;      // taller to stack vertically
+  const paymentBoxPadding = 3;
 
-  // Payment box
+  // Payment box (vertical)
   doc.setFillColor(...BRAND_LIGHT);
-  doc.roundedRect(margin, paymentY, 70, 40, 3, 3, "F");
+  doc.roundedRect(paymentBoxX, paymentY, paymentBoxW, paymentBoxH, 3, 3, "F");
 
+  // Title
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(8);
   doc.setTextColor(...BRAND_GREEN);
-  doc.text("PAYMENT OPTIONS", margin + 5, paymentY + 7);
+  doc.text("PAYMENT", paymentBoxX + paymentBoxPadding, paymentY + 7);
+  doc.text("OPTIONS", paymentBoxX + paymentBoxPadding, paymentY + 12);
 
-  // UPI Link - Fixed to be clickable
+  // UPI Link - clickable
   const upiLink = buildUPILink(grandTotal);
-  doc.setFontSize(9);
+  doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...BRAND_GREEN);
-  doc.text("Pay via UPI / GPay", margin + 5, paymentY + 14);
-  
-  // Create clickable link area over the text
-  const linkWidth = 45;
-  const linkHeight = 5;
-  doc.link(margin + 5, paymentY + 9.5, linkWidth, linkHeight, { url: upiLink });
-  
-  // Add underline to show it's clickable
-  // doc.setDrawColor(...BRAND_GREEN);
-  // doc.setLineWidth(0.3);
-  // doc.line(margin + 5, paymentY + 15, margin + linkWidth, paymentY + 15);
+  doc.text("Pay via UPI", paymentBoxX + paymentBoxPadding, paymentY + 19);
+  // Make the text clickable
+  doc.link(paymentBoxX + paymentBoxPadding, paymentY + 15, 30, 5, { url: upiLink });
 
-  // QR Code
+  // QR Code – centered in the box
+  const qrSize = 20;
+  const qrX = paymentBoxX + (paymentBoxW - qrSize) / 2;
+  const qrY = paymentY + 25;
   const qrDataUrl = await QRCode.toDataURL(upiLink, { width: 200 });
-  const qrSize = 25;
-  doc.addImage(qrDataUrl, "PNG", margin + 41, paymentY + 5, qrSize, qrSize);
+  doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
 
+  // "Scan to Pay" below QR
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_SECONDARY);
-  doc.text("Scan to Pay", margin + 53.5, paymentY + 33, { align: "center" });
-
-  // Bank details (minimal)
-  // doc.setFont("helvetica", "normal");
-  // doc.setFontSize(8);
-  // doc.setTextColor(...TEXT_SECONDARY);
-  // doc.text("UPI ID: boim-837163140233@boi", margin + 5, paymentY + 25);
+  doc.text("Scan to Pay", paymentBoxX + paymentBoxW / 2, qrY + qrSize + 5, { align: "center" });
 
   // ========== SIGNATURE SECTION ==========
-  const sigY = paymentY + 45;
+  const sigY = paymentY + paymentBoxH + 8; // 8px gap after the box
   doc.setDrawColor(...DIVIDER);
   doc.line(pageWidth - margin - 50, sigY, pageWidth - margin, sigY);
   doc.setFont("helvetica", "normal");
