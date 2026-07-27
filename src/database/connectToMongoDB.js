@@ -2,6 +2,7 @@ import clientPromise from "@/lib/mongodb";
 
 const getDatabase = async () => {
   try {
+    
     const client = await clientPromise;
     return client.db("production");
   } catch (error) {
