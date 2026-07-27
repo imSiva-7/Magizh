@@ -186,14 +186,14 @@ export default function Home() {
       </header>
 
       {/* Production Summary with its own stat item class */}
-      {productionSummary && (
+       {/* {productionSummary && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Total Production</h2>
             <span className={styles.date_range_badge}>All time</span>
           </div>
           <div className={styles.three_col_grid}>
-            {/* <StatItem label="Milk (L)" value={formatNumberWithCommas(productionSummary.milk_quantity.toFixed(1))} className={styles.production_stat_item} /> */}
+          Comment this  <StatItem label="Milk (L)" value={formatNumberWithCommas(productionSummary.milk_quantity.toFixed(1))} className={styles.production_stat_item} />
             <StatItem label="Curd (kg)" value={formatNumberWithCommas(productionSummary.curd_quantity.toFixed(1))} className={styles.production_stat_item} />
             <StatItem label="Cream (kg)" value={formatNumberWithCommas(productionSummary.cream_quantity.toFixed(1))} className={styles.production_stat_item} />
             <StatItem label="Soft Paneer (kg)" value={formatNumberWithCommas(productionSummary.soft_paneer_quantity.toFixed(1))} className={styles.production_stat_item} />
@@ -202,10 +202,10 @@ export default function Home() {
             <StatItem label="Ghee (L)" value={formatNumberWithCommas(productionSummary.ghee_quantity.toFixed(1))} className={styles.production_stat_item} />
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Stock Summary with its own stat item class */}
-      {stockBalance && (
+      {/* {stockBalance && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Current Stock</h2>
@@ -220,7 +220,7 @@ export default function Home() {
             <StatItem label="Premium Paneer (kg)" value={formatNumberWithCommas((stockBalance.premium_paneer || 0).toFixed(1))} className={styles.stock_stat_item} />
           </div>
         </div>
-      )}
+      )}  */}
 
       {/* Supplier Summary */}
       {supplierData.summary.totalAmount > 0 && (
