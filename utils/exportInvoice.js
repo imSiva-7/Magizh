@@ -361,7 +361,7 @@ export const exportInvoiceToPDF = async (
   const paymentY = finalY + 50;
   const paymentBoxX = margin;
   const paymentBoxW = 35;      // narrow box
-  const paymentBoxH = 70;      // taller to stack vertically
+  const paymentBoxH = 55;      // taller to stack vertically
   const paymentBoxPadding = 3;
 
   // Payment box (vertical)
@@ -373,7 +373,7 @@ export const exportInvoiceToPDF = async (
   doc.setFontSize(8);
   doc.setTextColor(...BRAND_GREEN);
   doc.text("PAYMENT", paymentBoxX + paymentBoxPadding, paymentY + 7);
-  doc.text("OPTIONS", paymentBoxX + paymentBoxPadding, paymentY + 12);
+  // doc.text("OPTIONS", paymentBoxX + paymentBoxPadding, paymentY + 12);
 
   // UPI Link - clickable
   const upiLink = buildUPILink(grandTotal);
