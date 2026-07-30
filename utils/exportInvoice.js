@@ -361,7 +361,7 @@ export const exportInvoiceToPDF = async (
   const paymentY = finalY + 50;
   const paymentBoxX = margin;
   const paymentBoxW = 35;      // narrow box
-  const paymentBoxH = 55;      // taller to stack vertically
+  const paymentBoxH = 45;      // taller to stack vertically
   const paymentBoxPadding = 3;
 
   // Payment box (vertical)
@@ -380,14 +380,14 @@ export const exportInvoiceToPDF = async (
   doc.setFontSize(7);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...BRAND_GREEN);
-  doc.text("Pay via UPI", paymentBoxX + paymentBoxPadding, paymentY + 19);
+  doc.text("Pay via UPI", paymentBoxX + paymentBoxPadding, paymentY + 13);
   // Make the text clickable
   doc.link(paymentBoxX + paymentBoxPadding, paymentY + 15, 30, 5, { url: upiLink });
 
   // QR Code – centered in the box
   const qrSize = 20;
   const qrX = paymentBoxX + (paymentBoxW - qrSize) / 2;
-  const qrY = paymentY + 25;
+  const qrY = paymentY + 18;
   const qrDataUrl = await QRCode.toDataURL(upiLink, { width: 200 });
   doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
 
