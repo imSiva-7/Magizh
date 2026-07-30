@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
+// import { MongoClient } from "mongodb";
+import {clientPromise} from "@/lib/mongodb"
 
-const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
+// const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
 
 export async function GET(request) {
   try {
