@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 // import { MongoClient } from "mongodb";
-import {clientPromise} from "@/lib/mongodb"
+import clientPromise from "@/lib/mongodb"
 
 // const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
 
