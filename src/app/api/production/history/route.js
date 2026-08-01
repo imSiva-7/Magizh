@@ -1,5 +1,5 @@
 import { MongoClient } from "mongodb";
-
+import clientPromise from "@/lib/mongodb";
 const uri = process.env.MONGODB_URI;
 const dbName = "production";
 
@@ -8,7 +8,7 @@ let db;
 
 async function connectToDatabase() {
   if (!db) {
-    client = new MongoClient(uri);
+    client = await clientPromise;
     await client.connect();
     db = client.db(dbName);
   }

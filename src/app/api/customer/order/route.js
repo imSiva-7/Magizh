@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
+import clientPromise from "@/lib/mongodb";
 
 // -------------------------------------------------------------------
 // Constants & mappings
