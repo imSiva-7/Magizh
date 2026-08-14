@@ -328,7 +328,7 @@ function OrdersContent() {
     }
   };
 
-  const handleExport = (format, orders, date) => {
+  const handleExport = async (format, orders, date) => {
     if (!orders?.length) {
       toast.error("No data to export");
       return;
@@ -351,7 +351,7 @@ function OrdersContent() {
       customerGST: data.customer?.customerGST,
     };
     if (format === "pdf") {
-      exportInvoiceToPDF(orders, customerDetails, dateRange, fileName);
+      await exportInvoiceToPDF(orders, customerDetails, dateRange, fileName);
       toast.success("PDF exported");
     }
   };

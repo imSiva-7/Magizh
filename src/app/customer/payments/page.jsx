@@ -11,6 +11,9 @@ import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
 import Image from "next/image";
+import { exportInvoiceToPDF } from "@/utils/exportInvoice";
+import { formatDateForDisplay } from "@/utils/dateUtils";
+
 
 // ========== CONSTANTS ==========
 const INITIAL_FILTERS = {
@@ -445,6 +448,25 @@ export default function CustomerPayments() {
 
   const globalStats = customerTotalsMap.all;
 
+  const handleSingleInvoice = async (order, customer) => {
+    const customerDetails = {
+      customerName: customer.customerName,
+      customerType: customer.customerType || "",
+      address: customer.customerAddress || "",
+      mobile: customer.customerMobile || "",
+      customerGST: customer.customerGST || "",
+    };
+    const dateStr = formatDateForDisplay(order.date) || order.date.split("T")[0];
+    const fileName = `${customer.customerName}_invoice_${dateStr}`;
+    await exportInvoiceToPDF(
+      [order],
+      customerDetails,
+      { start: dateStr, end: dateStr },
+      fileName,
+    );
+    toast.success("Invoice downloaded");
+  };
+
   return (
     <div className={styles.page_container}>
       <ToastContainer position="top-right" autoClose={3000} />
@@ -740,6 +762,7 @@ export default function CustomerPayments() {
                         <th className={styles.table_header_cell}>
                           Order Total (₹)
                         </th>
+                        <th>Invoice</th>
                         <th className={styles.table_header_cell}>Status</th>
                         <th className={styles.table_header_cell}>
                           <div className={styles.select_all_wrapper}>
@@ -747,7 +770,11 @@ export default function CustomerPayments() {
                               type="checkbox"
                               className={styles.payment_checkbox}
                               onChange={(e) =>
-                                handleSelectAll(e, customer._id, displayedOrders)
+                                handleSelectAll(
+                                  e,
+                                  customer._id,
+                                  displayedOrders,
+                                )
                               }
                               disabled={isCustomerDisabled}
                               checked={isAllChecked}
@@ -794,6 +821,15 @@ export default function CustomerPayments() {
                               )}
                             </td>
                             <td className={styles.table_cell}>
+                              <button
+                                onClick={() => handleSingleInvoice(order, customer)}
+                                className={styles.invoice_btn}
+                                title="Download Invoice"
+                              >
+                                <Image src="/invoice-download.png" alt="invoice" width={20} height={20} />
+                              </button>
+                            </td>
+                            <td className={styles.table_cell}>
                               {order.paymentStatus === "Paid" ? (
                                 <span className={styles.status_paid}>Paid</span>
                               ) : (
@@ -811,7 +847,9 @@ export default function CustomerPayments() {
                                 disabled={isCustomerDisabled}
                               />
                             </td>
-                            <td className={`${styles.table_cell} ${styles.cell_comment}`}>
+                            <td
+                              className={`${styles.table_cell} ${styles.cell_comment}`}
+                            >
                               <CommentEditor
                                 orderId={order._id}
                                 initialComment={order.comment}

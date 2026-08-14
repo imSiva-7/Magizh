@@ -133,7 +133,7 @@ function OrderHistoryContent() {
   }, [data.orders]);
 
   // Generate invoice for a single order
-  const handleSingleInvoice = (order) => {
+  const handleSingleInvoice = async (order) => {
     const customerDetails = {
       customerName: order.customerName || "Customer",
       customerType: order.customerType || "",
@@ -144,7 +144,7 @@ function OrderHistoryContent() {
     const dateStr =
       formatDateForDisplay(order.date) || order.date.split("T")[0];
     const fileName = `invoice_${order.customerName}_${dateStr}`;
-    exportInvoiceToPDF(
+    await exportInvoiceToPDF(
       [order],
       customerDetails,
       { start: dateStr, end: dateStr },
@@ -152,7 +152,7 @@ function OrderHistoryContent() {
     );
   };
 
-  const handleExport = (format) => {
+  const handleExport = async (format) => {
     if (!data.orders.length) {
       toast.error("No data to export");
       return;
@@ -164,7 +164,7 @@ function OrderHistoryContent() {
 
     const fileName = `orders_${dateRange.start}_to_${dateRange.end}`;
 
-    exportInvoiceToPDF(data.orders, "Orders History", dateRange, fileName);
+    await exportInvoiceToPDF(data.orders, "Orders History", dateRange, fileName);
     toast.success("PDF exported");
   };
 
