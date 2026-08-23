@@ -110,37 +110,6 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <>
-  <style jsx>{`
-    // @keyframes birthdayGlow {
-    //   0% {
-    //     box-shadow: 0 0 10px #ff9a9e;
-    //     transform: scale(1);
-    //   }
-    //   100% {
-    //     box-shadow: 0 0 25px #ff6f91;
-    //     transform: scale(1.02);
-    //   }
-    // }
-
-    .birthday-marquee {
-      background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
-      color: white;
-      font-size: 1.5rem;
-      font-weight: bold;
-      padding: 0.75rem 1rem;
-      border-radius: 0.75rem;
-      letter-spacing: 1px;
-      margin: 1rem 0;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      // animation: birthdayGlow 2s ease-in-out infinite alternate;
-    }
-  `}</style>
-{session.user?.email === "ponnurangam@gmail.com" ?
-  <marquee className="birthday-mar">
-    🎉 Happy Birthday Pani🐷🐷🐷🐷🐷🐷! 🎂
-  </marquee> : <marquee className="birthday-mar">
-    🎉 Happy Birthday Bavani 🎂
-  </marquee>}
 </>
       <div className={styles.headerContainer}>
         {/* Logo */}
