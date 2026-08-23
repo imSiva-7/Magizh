@@ -357,14 +357,14 @@ export const exportInvoiceToPDF = async (
     { align: "right" }
   );
 
-  // ========== PAYMENT SECTION (UPI/QR) - VERTICAL LAYOUT ==========
+   // ========== PAYMENT SECTION (UPI/QR) - VERTICAL LAYOUT ==========
   const paymentY = finalY + 50;
   const paymentBoxX = margin;
   const paymentBoxW = 35;      // narrow box
-  const paymentBoxH = 45;      // taller to stack vertically
+  const paymentBoxH = 45;      // slightly taller to accommodate button
   const paymentBoxPadding = 3;
 
-  // Payment box (vertical)
+  // Payment box background
   doc.setFillColor(...BRAND_LIGHT);
   doc.roundedRect(paymentBoxX, paymentY, paymentBoxW, paymentBoxH, 3, 3, "F");
 
@@ -372,30 +372,53 @@ export const exportInvoiceToPDF = async (
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(...BRAND_GREEN);
-  doc.text("PAYMENT", paymentBoxX + paymentBoxPadding, paymentY + 7);
-  // doc.text("OPTIONS", paymentBoxX + paymentBoxPadding, paymentY + 12);
+  doc.text("PAYMENT OPTIONS", paymentBoxX + paymentBoxPadding, paymentY + 7);
 
-  // UPI Link - clickable
-  const upiLink = buildUPILink(grandTotal);
-  doc.setFontSize(7);
+  // ===== UPI Button (clickable) =====
+  const buttonX = paymentBoxX + paymentBoxPadding;
+  const buttonY = paymentY + 10;
+  const buttonW = paymentBoxW - 2 * paymentBoxPadding; // 29
+  const buttonH = 6;
+
+  // Button background (green)
+  doc.setFillColor(...BRAND_GREEN);
+  doc.roundedRect(buttonX, buttonY, buttonW, buttonH, 1.5, 1.5, "F");
+
+  // Button text
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...BRAND_GREEN);
-  doc.text("Pay via UPI", paymentBoxX + paymentBoxPadding, paymentY + 13);
-  // Make the text clickable
-  doc.link(paymentBoxX + paymentBoxPadding, paymentY + 15, 30, 5, { url: upiLink });
+  doc.setFontSize(7);
+  doc.setTextColor(...WHITE);
+  doc.text("Pay via UPI", buttonX + buttonW / 2, buttonY + 4, {
+    align: "center",
+  });
 
-  // QR Code – centered in the box
-  const qrSize = 20;
-  const qrX = paymentBoxX + (paymentBoxW - qrSize) / 2;
-  const qrY = paymentY + 18;
-  const qrDataUrl = await QRCode.toDataURL(upiLink, { width: 200 });
-  doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+  // Make the button clickable (link covers entire button)
+  const upiLink = buildUPILink(grandTotal);
+  doc.link(buttonX, buttonY, buttonW, buttonH, { url: upiLink });
 
-  // "Scan to Pay" below QR
+  // "or" separator
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_SECONDARY);
-  doc.text("Scan to Pay", paymentBoxX + paymentBoxW / 2, qrY + qrSize + 5, { align: "center" });
+  doc.text("or scan QR", paymentBoxX + paymentBoxW / 2, paymentY + 20, {
+    align: "center",
+  });
+
+  // QR Code – centered below the button
+  const qrSize = 20;
+  const qrX = paymentBoxX + (paymentBoxW - qrSize) / 2;
+  const qrY = paymentY + 22;
+  const qrDataUrl = await QRCode.toDataURL(upiLink, { width: 200 });
+  doc.addImage(qrDataUrl, "PNG", qrX, qrY, qrSize, qrSize);
+
+  // "Scan to Pay" caption below QR
+  // doc.setFontSize(6);
+  // doc.setFont("helvetica", "normal");
+  // doc.setTextColor(...TEXT_SECONDARY);
+  // doc.text("Scan to Pay", paymentBoxX + paymentBoxW / 2, qrY + qrSize + 3, {
+  //   align: "center",
+  // });
+  
 
   // ========== SIGNATURE SECTION ==========
   const sigY = paymentY + paymentBoxH + 8; // 8px gap after the box

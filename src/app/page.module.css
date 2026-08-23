@@ -222,6 +222,13 @@
 .dueTable td:nth-child(1) {
   text-align: left !important;
   align-items: left !important;
+  max-width: 120px;
+}
+
+.dueTable th:nth-child(2),
+.dueTable td:nth-child(2) {
+  text-align: justify !important;
+  align-items: left !important;
 }
 
 .dueTable th,

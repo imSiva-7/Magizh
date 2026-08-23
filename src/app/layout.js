@@ -1,6 +1,9 @@
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+
+import FireworksOnce from "@/components/fireworks";
 import AuthProvider from "./AuthProvider"; // import the client component
 
 export const metadata = {
@@ -14,6 +17,8 @@ export default function RootLayout({ children }) {
       <body>
         <AuthProvider>   
           <Header />
+          <FireworksOnce />
+          
           <main>{children}</main>
           <Footer />
         </AuthProvider>

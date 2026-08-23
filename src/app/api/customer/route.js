@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -10,16 +10,6 @@ const METHOD_NAMES = {
   POST: "POST /api/customer",
   PUT: "PUT /api/customer",
   DELETE: "DELETE /api/customer",
-};
-
-const getDatabase = async () => {
-  try {
-    const client = await clientPromise;
-    return client.db("production");
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw new Error("Database error");
-  }
 };
 
 // Helper: parse price field to number or null
@@ -123,7 +113,10 @@ export async function POST(request) {
       updatedAt: new Date(),
     };
 
+  
+
     const result = await db.collection("customers").insertOne(customerData);
+   
 
     return NextResponse.json(
       {

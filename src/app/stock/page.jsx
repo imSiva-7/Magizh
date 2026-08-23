@@ -438,7 +438,7 @@ export default function StockPage() {
       <div className={styles.tableContainer}>
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}> Stock Valuation</h2>
+            <h2 className={styles.global_title}>Stock Valuation</h2>
           </div>
           <div className={styles.table_wrapper}>
             <table className={styles.procurement_table}>
@@ -447,7 +447,6 @@ export default function StockPage() {
                   <th className={styles.table_header_cell}>Product</th>
                   <th className={styles.table_header_cell}>Min Stock</th>
                   <th className={styles.table_header_cell}>In Stock</th>
-                  {/* <th className={styles.table_header_cell}>Avg Price</th> */}
                   <th className={styles.table_header_cell}>Stock Value</th>
                 </tr>
               </thead>
@@ -465,15 +464,10 @@ export default function StockPage() {
                       <td
                         className={`${styles.table_cell} ${isLow ? styles.text_red : ""}`}
                       >
-                        {qty.toFixed(2)} {product.unit}
-                        {isLow && (
-                          <span className={styles.lowWarning}>
-                            {" "}
-                            ⚠️ Below min
-                          </span>
-                        )}
+                        <span className={styles.quantityDisplay}>
+                          {qty.toFixed(2)} {product.unit}
+                        </span>
                       </td>
-                      {/* <td className={styles.table_cell}>₹{avgPrice.toFixed(2)}</td> */}
                       <td
                         className={`${styles.table_cell} ${styles.cell_total}`}
                       >
@@ -503,323 +497,244 @@ export default function StockPage() {
             </table>
           </div>
         </div>
+
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}> Stock Valuation</h2>
+            <h2 className={styles.global_title}>Stock Analytics</h2>
           </div>
-         
-        <div style={{ padding: "2rem" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
-              gap: "2rem",
-              marginBottom: "2rem",
-            }}
-          >
-            <div
-              style={{
-                background: "white",
-                padding: "1.5rem",
-                borderRadius: "1rem",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                  marginBottom: "1rem",
-                  textAlign: "center",
-                }}
-              >
-                Stock Value Distribution
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={STOCK_PRODUCTS.map((product) => ({
-                      name: product.name,
-                      value: balance
-                        ? (balance[product.field] || 0) *
-                          (averagePrices[product.field] || 0)
-                        : 0,
-                    })).filter((item) => item.value > 0)}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {STOCK_PRODUCTS.map((_, index) => {
-                      const COLORS = [
-                        "#27795d",
-                        "#34a853",
-                        "#fbbc04",
-                        "#ea4335",
-                        "#4285f4",
-                        "#9c27b0",
-                      ];
-                      return (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      );
-                    })}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) =>
-                      `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`
-                    }
-                    contentStyle={{
-                      background: "white",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "0.5rem",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+
+          <div className={styles.charts_container}>
+            <div className={styles.charts_grid}>
+              <div className={styles.chart_card}>
+                <h3>Stock Value Distribution</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={STOCK_PRODUCTS.map((product) => ({
+                        name: product.name,
+                        value: balance
+                          ? (balance[product.field] || 0) *
+                            (averagePrices[product.field] || 0)
+                          : 0,
+                      })).filter((item) => item.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {STOCK_PRODUCTS.map((_, index) => {
+                        const COLORS = [
+                          "#27795d",
+                          "#34a853",
+                          "#fbbc04",
+                          "#ea4335",
+                          "#4285f4",
+                          "#9c27b0",
+                        ];
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        );
+                      })}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value) =>
+                        `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`
+                      }
+                      contentStyle={{
+                        background: "white",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "0.5rem",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className={styles.chart_card}>
+                <h3>Stock Quantity Distribution</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={STOCK_PRODUCTS.map((product) => ({
+                        name: product.name,
+                        value: balance ? balance[product.field] || 0 : 0,
+                      })).filter((item) => item.value > 0)}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {STOCK_PRODUCTS.map((_, index) => {
+                        const COLORS = [
+                          "#1e40af",
+                          "#7c3aed",
+                          "#db2777",
+                          "#ea580c",
+                          "#65a30d",
+                          "#0891b2",
+                        ];
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        );
+                      })}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value) => `${value.toFixed(2)}`}
+                      contentStyle={{
+                        background: "white",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "0.5rem",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
-            <div
-              style={{
-                background: "white",
-                padding: "1.5rem",
-                borderRadius: "1rem",
-                border: "1px solid #e2e8f0",
-                boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-              }}
-            >
-              <h3
-                style={{
-                  fontSize: "1.125rem",
-                  fontWeight: 600,
-                  color: "#1e293b",
-                  marginBottom: "1rem",
-                  textAlign: "center",
-                }}
-              >
-                Stock Quantity Distribution
-              </h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={STOCK_PRODUCTS.map((product) => ({
-                      name: product.name,
-                      value: balance ? balance[product.field] || 0 : 0,
-                    })).filter((item) => item.value > 0)}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name}: ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {STOCK_PRODUCTS.map((_, index) => {
-                      const COLORS = [
-                        "#1e40af",
-                        "#7c3aed",
-                        "#db2777",
-                        "#ea580c",
-                        "#65a30d",
-                        "#0891b2",
-                      ];
-                      return (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      );
-                    })}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) => `${value.toFixed(2)}`}
-                    contentStyle={{
-                      background: "white",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "0.5rem",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: "1.5rem",
-              borderRadius: "1rem",
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: "#1e293b",
-                marginBottom: "1rem",
-                textAlign: "center",
-              }}
-            >
-              Stock Value by Product
-            </h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart
-                data={STOCK_PRODUCTS.map((product) => ({
-                  name: product.name,
-                  quantity: balance ? balance[product.field] || 0 : 0,
-                  value: balance
-                    ? (balance[product.field] || 0) *
-                      (averagePrices[product.field] || 0)
-                    : 0,
-                  avgPrice: averagePrices[product.field] || 0,
-                }))}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                  label={{
-                    value: "Value (₹)",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: { fontSize: 12, fill: "#64748b" },
-                  }}
-                />
-                <Tooltip
-                  formatter={(value, name) => {
-                    if (name === "value")
-                      return [
-                        `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`,
-                        "Stock Value",
-                      ];
-                    if (name === "quantity")
-                      return [value.toFixed(2), "Quantity"];
-                    if (name === "avgPrice")
-                      return [`₹${value.toFixed(2)}`, "Avg Price"];
-                    return value;
-                  }}
-                  contentStyle={{
-                    background: "white",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ paddingTop: "20px" }}
-                  iconType="circle"
-                />
-                <Bar
-                  dataKey="value"
-                  fill="rgb(39, 121, 93)"
-                  radius={[8, 8, 0, 0]}
-                  name="Stock Value (₹)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: "1.5rem",
-              borderRadius: "1rem",
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-              marginTop: "2rem",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "1.125rem",
-                fontWeight: 600,
-                color: "#1e293b",
-                marginBottom: "1rem",
-                textAlign: "center",
-              }}
-            >
-              Current Stock vs Minimum Threshold
-            </h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart
-                data={STOCK_PRODUCTS.map((product) => {
-                  const qty = balance ? balance[product.field] || 0 : 0;
-                  const threshold = thresholds[product.field] || 0;
-                  return {
+            <div className={styles.full_width_chart}>
+              <h3>Stock Value by Product</h3>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart
+                  data={STOCK_PRODUCTS.map((product) => ({
                     name: product.name,
-                    current: qty,
-                    threshold: threshold,
-                    status: threshold > 0 && qty < threshold ? "Low" : "OK",
-                  };
-                })}
-                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="name"
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: "#64748b" }}
-                  label={{
-                    value: "Quantity",
-                    angle: -90,
-                    position: "insideLeft",
-                    style: { fontSize: 12, fill: "#64748b" },
-                  }}
-                />
-                <Tooltip
-                  formatter={(value) => value.toFixed(2)}
-                  contentStyle={{
-                    background: "white",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: "0.5rem",
-                  }}
-                />
-                <Legend
-                  wrapperStyle={{ paddingTop: "20px" }}
-                  iconType="circle"
-                />
-                <Bar
-                  dataKey="current"
-                  fill="#10b981"
-                  radius={[8, 8, 0, 0]}
-                  name="Current Stock"
-                />
-                <Bar
-                  dataKey="threshold"
-                  fill="#f59e0b"
-                  radius={[8, 8, 0, 0]}
-                  name="Minimum Threshold"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+                    quantity: balance ? balance[product.field] || 0 : 0,
+                    value: balance
+                      ? (balance[product.field] || 0) *
+                        (averagePrices[product.field] || 0)
+                      : 0,
+                    avgPrice: averagePrices[product.field] || 0,
+                  }))}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    tick={{ fontSize: 12, fill: "#64748b" }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#64748b" }}
+                    label={{
+                      value: "Value (₹)",
+                      angle: -90,
+                      position: "insideLeft",
+                      style: { fontSize: 12, fill: "#64748b" },
+                    }}
+                  />
+                  <Tooltip
+                    formatter={(value, name) => {
+                      if (name === "value")
+                        return [
+                          `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`,
+                          "Stock Value",
+                        ];
+                      if (name === "quantity")
+                        return [value.toFixed(2), "Quantity"];
+                      if (name === "avgPrice")
+                        return [`₹${value.toFixed(2)}`, "Avg Price"];
+                      return value;
+                    }}
+                    contentStyle={{
+                      background: "white",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "20px" }}
+                    iconType="circle"
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="rgb(39, 121, 93)"
+                    radius={[8, 8, 0, 0]}
+                    name="Stock Value (₹)"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className={styles.full_width_chart}>
+              <h3>Current Stock vs Minimum Threshold</h3>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart
+                  data={STOCK_PRODUCTS.map((product) => {
+                    const qty = balance ? balance[product.field] || 0 : 0;
+                    const threshold = thresholds[product.field] || 0;
+                    return {
+                      name: product.name,
+                      current: qty,
+                      threshold: threshold,
+                      status: threshold > 0 && qty < threshold ? "Low" : "OK",
+                    };
+                  })}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={100}
+                    tick={{ fontSize: 12, fill: "#64748b" }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#64748b" }}
+                    label={{
+                      value: "Quantity",
+                      angle: -90,
+                      position: "insideLeft",
+                      style: { fontSize: 12, fill: "#64748b" },
+                    }}
+                  />
+                  <Tooltip
+                    formatter={(value) => value.toFixed(2)}
+                    contentStyle={{
+                      background: "white",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "0.5rem",
+                    }}
+                  />
+                  <Legend
+                    wrapperStyle={{ paddingTop: "20px" }}
+                    iconType="circle"
+                  />
+                  <Bar
+                    dataKey="current"
+                    fill="#10b981"
+                    radius={[8, 8, 0, 0]}
+                    name="Current Stock"
+                  />
+                  <Bar
+                    dataKey="threshold"
+                    fill="#f59e0b"
+                    radius={[8, 8, 0, 0]}
+                    name="Minimum Threshold"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       </div>
-       </div>
 
       {/* ====== Recent Movements (Last 30) ====== */}
       <div className={styles.global_summary_card} style={{ marginTop: "2rem" }}>

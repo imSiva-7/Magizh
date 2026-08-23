@@ -1,8 +1,7 @@
 
 import { NextResponse } from "next/server";
-import { MongoClient, ObjectId } from "mongodb";
-
-const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
+import getDatabase from "@/database/connectToMongoDB";
+import { ObjectId } from "mongodb";
 
 const validateObjectId = (id) => {
   if (!id || !ObjectId.isValid(id)) {
@@ -103,8 +102,7 @@ export async function GET(request) {
         return NextResponse.json({ error: validation.error }, { status: 400 });
       }
 
-      const client = await clientPromise;
-      const db = client.db("production");
+      const db = await getDatabase();
 
       const procurement = await db
         .collection("procurements")
@@ -132,8 +130,7 @@ export async function GET(request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     // Build query with date filtering
     const query = { supplierId: new ObjectId(supplierId) };
@@ -215,8 +212,7 @@ export async function PATCH(request) {
     }
 
    
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     const objectIds = procurementIds.map((id) => {
       const validation = validateObjectId(id);
@@ -311,8 +307,7 @@ export async function POST(request) {
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     // Check for duplicate entry (same supplier, same date, same time)
     const duplicate = await checkDuplicateEntry(
@@ -424,8 +419,7 @@ export async function PUT(request) {
       );
     }
 
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     // Check if record exists
     const existingRecord = await db
@@ -513,8 +507,7 @@ export async function DELETE(request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     // Check if record exists first
     const existingRecord = await db

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
-import clientPromise from "@/lib/mongodb";
+
 
 // -------------------------------------------------------------------
 // Constants & mappings
@@ -23,6 +23,96 @@ const productToStockField = {
   "Soft Paneer": "soft_paneer",
   "Premium Paneer": "premium_paneer",
 };
+
+// New mapping for total_orders fields
+const productToTotalField = {
+  "Milk": "milkTotalQuantity",
+  "Butter": "butterTotalQuantity",
+  "Fresh Cream": "freshCreamTotalQuantity",
+  "Curd": "curdTotalQuantity",
+  "Ghee": "gheeTotalQuantity",
+  "Soft Paneer": "softPaneerTotalQuantity",
+  "Premium Paneer": "premiumPaneerTotalQuantity",
+};
+
+// -------------------------------------------------------------------
+// Helper: get quantity for a product from items array
+// -------------------------------------------------------------------
+function getQuantity(items, productName) {
+  const item = items?.find(i => i.product === productName);
+  return item ? parseFloat(item.quantity) || 0 : 0;
+}
+
+// -------------------------------------------------------------------
+// Helper: apply order changes to total_orders (customer + global)
+// operation: "add" or "remove"
+// -------------------------------------------------------------------
+async function applyOrderToTotals(db, order, operation) {
+  const multiplier = operation === "add" ? 1 : -1;
+  const customerId = order.customerId;
+
+  // Build increment object for customer document
+  const incCustomer = {
+    totalAmount: multiplier * (order.totalAmount || 0),
+    totalOrders: multiplier * 1,
+    milkTotalQuantity: multiplier * getQuantity(order.items, "Milk"),
+    butterTotalQuantity: multiplier * getQuantity(order.items, "Butter"),
+    freshCreamTotalQuantity: multiplier * getQuantity(order.items, "Fresh Cream"),
+    curdTotalQuantity: multiplier * getQuantity(order.items, "Curd"),
+    gheeTotalQuantity: multiplier * getQuantity(order.items, "Ghee"),
+    softPaneerTotalQuantity: multiplier * getQuantity(order.items, "Soft Paneer"),
+    premiumPaneerTotalQuantity: multiplier * getQuantity(order.items, "Premium Paneer"),
+  };
+
+  // Upsert customer document
+  await db.collection("total_orders").updateOne(
+    { _id: customerId },
+    {
+      $inc: incCustomer,
+      $set: { updatedAt: new Date() },
+      $setOnInsert: {
+        paidAmount: 0,
+        dueAmount: 0,
+        customerName: order.customerName || "",
+        customerType: order.customerType || "",
+      },
+    },
+    { upsert: true }
+  );
+
+  // Recalculate customer's due amount (totalAmount - paidAmount)
+  const customerDoc = await db.collection("total_orders").findOne({ _id: customerId });
+  if (customerDoc) {
+    await db.collection("total_orders").updateOne(
+      { _id: customerId },
+      { $set: { dueAmount: customerDoc.totalAmount - (customerDoc.paidAmount || 0) } }
+    );
+  }
+
+  // Upsert global document
+  const incGlobal = { ...incCustomer };
+  await db.collection("total_orders").updateOne(
+    { _id: "global" },
+    {
+      $inc: incGlobal,
+      $set: { updatedAt: new Date() },
+      $setOnInsert: {
+        paidAmount: 0,
+        dueAmount: 0,
+      },
+    },
+    { upsert: true }
+  );
+
+  // Recalculate global due amount
+  const globalDoc = await db.collection("total_orders").findOne({ _id: "global" });
+  if (globalDoc) {
+    await db.collection("total_orders").updateOne(
+      { _id: "global" },
+      { $set: { dueAmount: globalDoc.totalAmount - (globalDoc.paidAmount || 0) } }
+    );
+  }
+}
 
 // -------------------------------------------------------------------
 // Helper: insert stock ledger entries and update balance atomically
@@ -130,7 +220,7 @@ export async function POST(request) {
       customerType,
       comment,
       actionDoneBy,
-      affectStockValue,   // 👈 new field from frontend
+      affectStockValue,
     } = data;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -165,7 +255,7 @@ export async function POST(request) {
       paymentStatus: paymentStatus || "Not Paid",
       comment: comment?.trim() || "",
       actionDoneBy: actionDoneBy?.trim() || "",
-      affectStockValue: affectStockValue !== false,   // default true if not provided
+      affectStockValue: affectStockValue !== false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -213,11 +303,11 @@ export async function POST(request) {
         }
 
         await applyStockChanges(db, ledgerEntries, incFields);
-
-        // Optional low‑stock alert (implement checkLowStockAndNotify separately)
-        // await checkLowStockAndNotify();
       }
     }
+
+    // Update total_orders collection
+    await applyOrderToTotals(db, orderData, "add");
 
     return NextResponse.json(
       {
@@ -257,7 +347,7 @@ export async function PUT(request) {
     const db = await getDatabase();
     const data = await request.json();
 
-    // Get the existing order for stock reversal
+    // Get the existing order for stock reversal and totals reversal
     const oldOrder = await db.collection("orders").findOne({ _id: new ObjectId(id) });
     if (!oldOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -293,17 +383,15 @@ export async function PUT(request) {
       updateData.totalAmount = newItems.reduce((sum, item) => sum + item.totalAmount, 0);
     }
 
-    // --- perform update ---
+    // --- perform update on orders collection ---
     await db.collection("orders").updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
     );
 
-    // --- stock adjustment logic ---
-    // 1. Reverse old stock if old order affected stock
+    // --- stock adjustment logic (unchanged) ---
     const oldAffected = oldOrder.affectStockValue !== false;
     if (oldAffected && (newItems || newAffectStock === false)) {
-      // Re-add old items
       const reversalEntries = [];
       const reversalInc = {};
 
@@ -317,7 +405,7 @@ export async function PUT(request) {
         reversalEntries.push({
           type: "reversal",
           product: stockField,
-          quantity: qty,               // positive = add back
+          quantity: qty,
           date: oldOrder.date,
           referenceId: new ObjectId(id),
           actionDoneBy: data.actionDoneBy?.trim() || "",
@@ -332,7 +420,6 @@ export async function PUT(request) {
       }
     }
 
-    // 2. Deduct new stock if new affectStockValue is true and items provided
     if (newAffectStock && newItems) {
       const deductionEntries = [];
       const deductionInc = {};
@@ -358,12 +445,10 @@ export async function PUT(request) {
       }
 
       if (Object.keys(deductionInc).length > 0) {
-        // Check stock availability
         const currentBalance = await db.collection("stock_balance").findOne({ _id: "current" });
         for (const [field, delta] of Object.entries(deductionInc)) {
           const current = currentBalance?.[field] || 0;
           if (current + delta < 0) {
-            // We already reversed old stock, but now the new deduction would go negative
             return NextResponse.json(
               { error: `Insufficient stock for ${field} after update. Available: ${current}` },
               { status: 400 }
@@ -374,6 +459,20 @@ export async function PUT(request) {
         await applyStockChanges(db, deductionEntries, deductionInc);
       }
     }
+
+    // --- update total_orders: reverse old order and add new order ---
+    await applyOrderToTotals(db, oldOrder, "remove");
+
+    // Construct new order object for totals (we can use the updated data, but need the original customerId and other fields)
+    const updatedOrderData = {
+      ...oldOrder,
+      ...updateData,
+      customerId: oldOrder.customerId, // ensure we use the old customerId (if it hasn't changed)
+      items: newItems || oldOrder.items,
+      totalAmount: updateData.totalAmount !== undefined ? updateData.totalAmount : oldOrder.totalAmount,
+    };
+
+    await applyOrderToTotals(db, updatedOrderData, "add");
 
     return NextResponse.json({ message: "Order updated successfully" });
   } catch (error) {
@@ -425,7 +524,7 @@ export async function DELETE(request) {
           reversalEntries.push({
             type: "reversal",
             product: stockField,
-            quantity: quantity,               // add back
+            quantity: quantity,
             date: order.date,
             referenceId: new ObjectId(id),
             actionDoneBy: order.actionDoneBy || "",
@@ -441,6 +540,9 @@ export async function DELETE(request) {
       }
     }
 
+    // Update total_orders collection: remove this order's contribution
+    await applyOrderToTotals(db, order, "remove");
+
     return NextResponse.json({
       message: "Order deleted successfully",
       deletedId: id,
@@ -453,7 +555,7 @@ export async function DELETE(request) {
 }
 
 // -------------------------------------------------------------------
-// PATCH – bulk update (status/comment) – no stock impact
+// PATCH – bulk update (status/comment) – no stock impact, no totals impact
 // -------------------------------------------------------------------
 export async function PATCH(request) {
   const METHOD = METHOD_NAMES.PATCH;
@@ -512,6 +614,9 @@ export async function PATCH(request) {
     const result = await db
       .collection("orders")
       .updateMany({ _id: { $in: validObjectIds } }, { $set: updateFields });
+
+    // No longer update total_orders here because it has its own paidAmount field.
+    // The paymentStatus on orders does not affect total_orders anymore.
 
     return NextResponse.json({
       message: `Updated ${result.modifiedCount} orders`,

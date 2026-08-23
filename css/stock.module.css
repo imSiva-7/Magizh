@@ -373,6 +373,58 @@
   text-align: center;
 }
 
+/* ========== CHART CONTAINERS ========== */
+.charts_container {
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.charts_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.chart_card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.chart_card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.full_width_chart {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.full_width_chart h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.quantityDisplay {
+  white-space: nowrap;
+}
+
 /* ========== RESPONSIVE (adjust as needed) ========== */
 @media (max-width: 768px) {
   .page_container {
@@ -403,5 +455,25 @@
 
   .procurement_table {
     min-width: 500px;
+  }
+
+  /* Chart responsive fixes */
+  .charts_container {
+    padding: 1rem;
+  }
+
+  .charts_grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .chart_card,
+  .full_width_chart {
+    padding: 1rem;
+  }
+
+  .chart_card h3,
+  .full_width_chart h3 {
+    font-size: 1rem;
   }
 }

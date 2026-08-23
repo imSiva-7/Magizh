@@ -251,7 +251,7 @@ export default function Supplier() {
     } finally {
       setLoading(false);
     }
-  }, [sortBy, sortOrder]);
+  }, []);
 
   useEffect(() => {
     fetchData();

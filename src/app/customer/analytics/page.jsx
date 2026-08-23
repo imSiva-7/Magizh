@@ -17,6 +17,7 @@ import {
   Cell
 } from "recharts";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
@@ -144,31 +145,31 @@ export default function CustomerAnalyticsPage() {
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Total Orders</div>
                   <div className={styles.stat_value}>
-                    {data.overall.totalOrders || 0}
+                    {formatNumberWithCommas(data.overall.totalOrders || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Total Items</div>
                   <div className={styles.stat_value}>
-                    {data.overall.totalItems || 0}
+                    {formatNumberWithCommas(data.overall.totalItems || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Total Amount</div>
                   <div className={styles.stat_value}>
-                    ₹{(data.overall.totalAmount || 0).toFixed(2)}
+                    ₹{formatNumberWithCommas(data.overall.totalAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Paid</div>
                   <div className={`${styles.stat_value} ${styles.text_green}`}>
-                    ₹{(data.overall.paidAmount || 0).toFixed(2)}
+                    ₹{formatNumberWithCommas(data.overall.paidAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Due</div>
                   <div className={`${styles.stat_value} ${styles.text_red}`}>
-                    ₹{(data.overall.dueAmount || 0).toFixed(2)}
+                    ₹{formatNumberWithCommas(data.overall.dueAmount || 0)}
                   </div>
                 </div>
               </div>

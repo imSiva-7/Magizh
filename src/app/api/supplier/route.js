@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 
 const METHOD_NAMES = {
@@ -7,16 +7,6 @@ const METHOD_NAMES = {
   POST: "POST /api/supplier",
   PUT: "PUT /api/supplier",
   DELETE: "DELETE /api/supplier",
-};
-
-const getDatabase = async () => {
-  try {
-    const client = await clientPromise;
-    return client.db("production");
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw new Error("Database error");
-  }
 };
 
 

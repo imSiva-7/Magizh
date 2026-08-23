@@ -2,8 +2,9 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 import bcrypt from "bcryptjs";
-import { ObjectId } from "mongodb"; // added for DB query
+import { ObjectId } from "mongodb";
 
 export const authOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -16,8 +17,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const client = await clientPromise;
-        const db = client.db("production");
+        const db = await getDatabase();
         const user = await db.collection("users").findOne({ email: credentials.email });
         if (!user) return null;
         const isValid = await bcrypt.compare(credentials.password, user.password);
@@ -43,8 +43,7 @@ export const authOptions = {
 
       // On every subsequent request, refresh role & verify user exists
       if (token?.id) {
-        const client = await clientPromise;
-        const db = client.db("production");
+        const db = await getDatabase();
         const dbUser = await db.collection("users").findOne({
           _id: new ObjectId(token.id),
         });

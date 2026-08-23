@@ -14,6 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
 const getFormattedDateRange = (startDate, endDate) => {
@@ -127,19 +128,19 @@ export default function AnalyticsPage() {
             <div className={styles.stat_item}>
               <div className={styles.stat_label}>Total Milk</div>
               <div className={styles.stat_value}>
-                {data.overall.totalMilk?.toFixed(2)} L
+                {formatNumberWithCommas(data.overall.totalMilk || 0)} <span className={styles.stat_unit}>L</span>
               </div>
             </div>
             <div className={styles.stat_item}>
               <div className={styles.stat_label}>Total Amount</div>
               <div className={styles.stat_value}>
-                ₹{data.overall.totalAmount?.toFixed(2)}
+                ₹{formatNumberWithCommas(data.overall.totalAmount || 0)}
               </div>
             </div>
             <div className={styles.stat_item}>
               <div className={styles.stat_label}>Total Records</div>
               <div className={styles.stat_value}>
-                {data.overall.totalRecords}
+                {formatNumberWithCommas(data.overall.totalRecords || 0)}
               </div>
             </div>
           </div>

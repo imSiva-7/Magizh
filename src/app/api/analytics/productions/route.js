@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import getDatabase from "@/database/connectToMongoDB";
 
 const VALID_PRODUCTS = [
   "milk",
@@ -21,8 +21,7 @@ export async function GET(request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const client = await clientPromise;
-    const db = client.db("production");
+    const db = await getDatabase();
 
     // Build date filter
     const matchStage = {};

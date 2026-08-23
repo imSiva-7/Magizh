@@ -15,7 +15,6 @@ import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import { formatDateForDisplay, formatDate } from "@/utils/dateUtils";
 import Image from "next/image";
 
-// ========== CONSTANTS ==========
 const PRODUCT_FIELDS = [
   { name: "Milk", priceKey: "milkPrice" },
   { name: "Butter", priceKey: "butterPrice" },
@@ -37,7 +36,7 @@ const initialOrder = {
   paymentStatus: "Not Paid",
   comment: "",
   gstType: "inclusive",
-  affectStockValue: false, // 👈 new field
+  affectStockValue: false,
 };
 
 const initialFilters = {
@@ -45,40 +44,29 @@ const initialFilters = {
   endDate: getTodayDate(),
 };
 
-// ========== HELPER FUNCTIONS ==========
-const getDateRangeLabel = (startDate, endDate) => {
-  if (startDate && endDate) {
-    return startDate === endDate
-      ? startDate
-      : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(
-          endDate
-        ).toLocaleDateString("en-IN")}`;
+// ---------- Helper Functions ----------
+const getCustomerTypeClass = (customerType) => {
+  switch (customerType?.toLowerCase()) {
+    case "distributor":
+      return styles.type_distributor_badge;
+    case "wholesale":
+      return styles.type_wholesale_badge;
+    case "retail":
+      return styles.type_retail_badge;
+    case "restaurant":
+      return styles.type_restaurant_badge;
+    case "other":
+      return styles.type_other_badge;
+    default:
+      return styles.default_customer;
   }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-  return "All Records";
 };
 
 const sanitizeNumericInput = (value) => {
-  let sanitized = value.replace(/[^\d.]/g, "");
-  const parts = sanitized.split(".");
-  if (parts.length > 2) sanitized = parts[0] + "." + parts.slice(1).join("");
-  if (parts[1]) sanitized = parts[0] + "." + parts[1].substring(0, 2);
-  return sanitized;
+  return value.replace(/[^0-9.]/g, "");
 };
 
-const getCustomerTypeClass = (customerType) => {
-  const typeClassMap = {
-    Distributor: styles.type_distributor_badge,
-    Wholesale: styles.type_wholesale_badge,
-    Retail: styles.type_retail_badge,
-    Restaurant: styles.type_restaurant_badge,
-    Other: styles.type_other_badge,
-  };
-  return typeClassMap[customerType] || styles.default_customer;
-};
-
-// ========== REUSABLE COMPONENTS ==========
+// ---------- Helper Components ----------
 const LoadingSpinner = () => (
   <div className={styles.page_container}>
     <div className={styles.loading_container}>
@@ -117,43 +105,123 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
   </div>
 );
 
-const SummaryStats = ({ summary, filters }) => (
-  <div className={styles.summary_box}>
-    <h3>
-      Summary{" "}
-      <span className={styles.date_range_badge}>
-        {getDateRangeLabel(filters.startDate, filters.endDate)}
-      </span>
-    </h3>
-    <div className={styles.stats_grid}>
-      <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
-      <StatItem
-        label="Total Amount"
-        value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
-        prefix="₹"
-      />
-      <StatItem
-        label="Avg Order Value"
-        value={formatNumberWithCommasNoDecimal(summary.avgOrderValue)}
-        prefix="₹"
-      />
-      <StatItem
-        label="Amount Received"
-        value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
-        prefix="₹"
-        colorClass={styles.text_green}
-      />
-      <StatItem
-        label="Amount Due"
-        value={formatNumberWithCommasNoDecimal(summary.dueAmount)}
-        prefix="₹"
-        colorClass={styles.text_red}
-      />
-    </div>
+const AmountStatItem = ({ label, value, unit, prefix = "", colorClass = "", onEdit }) => (
+  <div className={styles.stat_item}>
+    <span className={styles.stat_label}>{label}</span>
+    <span className={`${styles.stat_value} ${colorClass}`}>
+      {prefix}
+      {value}
+      <span className={styles.stat_unit}>{unit}</span>
+    </span>
+    {onEdit && (
+      <button onClick={onEdit} className={styles.edit_btn}>Add Amount</button>
+    )}
   </div>
 );
 
-// ========== MAIN COMPONENT ==========
+const AmountReceivedPopup = ({ isOpen, currentValue, onClose, onSubmit }) => {
+  const [inputValue, setInputValue] = useState("");
+
+  // Update input value when popup opens with new currentValue
+  useEffect(() => {
+    if (isOpen) {
+      // Use a small delay to avoid synchronous state update
+      const timer = setTimeout(() => {
+        setInputValue("");
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [currentValue, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    const amount = parseFloat(inputValue);
+    if (isNaN(amount)) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+    onSubmit(amount);
+  };
+
+  return (
+    <div className={styles.modal_overlay}>
+      <div className={styles.modal_content}>
+        <h3>Modify Received Amount</h3>
+        <label>
+           Received amount:
+          <input
+            type="number"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            // min="0"
+            autoFocus
+            step="1"
+            placeholder="postive or negative number"
+
+
+          />
+        </label>
+        <div className={styles.modal_actions}>
+          <button onClick={handleSubmit}>Submit</button>
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SummaryStats = ({ summary, filters, onEditPaid }) => {
+  const getDateRangeLabel = (startDate, endDate) => {
+    if (startDate && endDate) {
+      return startDate === endDate
+        ? startDate
+        : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    }
+    if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+    if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    return "All Records";
+  };
+
+  return (
+    <div className={styles.summary_box}>
+      <h3>
+        Summary{" "}
+        <span className={styles.date_range_badge}>
+          {getDateRangeLabel(filters.startDate, filters.endDate)}
+        </span>
+      </h3>
+      <div className={styles.stats_grid}>
+        <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
+        <StatItem
+          label="Total Amount"
+          value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
+          prefix="₹"
+        />
+        <StatItem
+          label="Avg Order Value"
+          value={formatNumberWithCommasNoDecimal(summary.avgOrderValue)}
+          prefix="₹"
+        />
+        <AmountStatItem
+          label="Amount Received"
+          value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
+          prefix="₹"
+          colorClass={styles.text_green}
+          onEdit={onEditPaid}
+        />
+        <StatItem
+          label="Amount Due"
+          value={formatNumberWithCommasNoDecimal(summary.dueAmount)}
+          prefix="₹"
+          colorClass={styles.text_red}
+        />
+      </div>
+    </div>
+  );
+};
+
+// ---------- Main Component ----------
 function OrdersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -171,30 +239,35 @@ function OrdersContent() {
   const [quantities, setQuantities] = useState({});
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
+  // New state for balance
+  const [customerBalance, setCustomerBalance] = useState(null);
+  const [showPaidPopup, setShowPaidPopup] = useState(false);
+
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
 
-  // ========== FILTER HANDLERS ==========
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const resetFilterForm = () => setFilters(initialFilters);
-  const clearFilters = () => setFilters({ startDate: "", endDate: "" });
-  const todayFilter = () => {
-    const today = getTodayDate();
-    setFilters({ startDate: today, endDate: today });
-  };
-
-  // Initialize quantities
+  // Initialize quantities - defined first to avoid circular dependency
   const initializeQuantities = useCallback(() => {
     const initial = {};
     PRODUCT_FIELDS.forEach((p) => (initial[p.name] = ""));
     setQuantities(initial);
   }, []);
 
-  // Fetch data
+  // Fetch customer balance from total_orders
+  const fetchCustomerBalance = useCallback(async () => {
+    if (!customerId) return;
+    try {
+      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomerBalance(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch balance:", error);
+    }
+  }, [customerId]);
+
+  // Fetch all data (customer + orders + balance)
   const fetchAllData = useCallback(async () => {
     if (!customerId) return;
     try {
@@ -213,12 +286,13 @@ function OrdersContent() {
         orders: Array.isArray(ordersData) ? ordersData : [],
       });
       initializeQuantities();
+      fetchCustomerBalance(); // refresh balance after orders load
     } catch (error) {
       toast.error(error.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [customerId, initializeQuantities]);
+  }, [customerId, initializeQuantities, fetchCustomerBalance]);
 
   useEffect(() => {
     if (!customerId) {
@@ -247,7 +321,6 @@ function OrdersContent() {
       newQuantities[product.name] = item ? item.quantity.toString() : "";
     });
     setQuantities(newQuantities);
-    // Also restore gstType and affectStockValue from the order (if present)
     setOrderForm((prev) => ({
       ...prev,
       gstType: order.gstType || "inclusive",
@@ -292,6 +365,78 @@ function OrdersContent() {
       return true;
     });
   }, [data.orders, filters]);
+
+  // Summary now uses total_orders balance if available
+  const summary = useMemo(() => {
+    if (customerBalance) {
+      return {
+        orderCount: customerBalance.totalOrders || 0,
+        totalAmount: customerBalance.totalAmount || 0,
+        paidAmount: customerBalance.paidAmount || 0,
+        dueAmount: customerBalance.dueAmount || 0,
+        avgOrderValue: customerBalance.totalOrders
+          ? customerBalance.totalAmount / customerBalance.totalOrders
+          : 0,
+      };
+    }
+    // Fallback to order-based summary if balance not loaded
+    if (!filteredOrders.length)
+      return { orderCount: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0, avgOrderValue: 0 };
+    const orderCount = filteredOrders.length;
+    const totalAmount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const paidAmount = filteredOrders.reduce(
+      (sum, o) => sum + (o.paymentStatus === "Paid" ? o.totalAmount : 0),
+      0
+    );
+    const dueAmount = filteredOrders.reduce(
+      (sum, o) => sum + (o.paymentStatus === "Not Paid" ? o.totalAmount : 0),
+      0
+    );
+    return {
+      orderCount,
+      totalAmount,
+      paidAmount,
+      dueAmount,
+      avgOrderValue: orderCount ? totalAmount / orderCount : 0,
+    };
+  }, [filteredOrders, customerBalance]);
+
+  const handlePaidSubmit = async (newPaidAmount) => {
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paidAmount: newPaidAmount }),
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update balance");
+      }
+      toast.success("Balance updated");
+      fetchCustomerBalance(); 
+      setShowPaidPopup(false);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ... other handlers (filter, export, validate, submit, delete, edit) remain the same ...
+
+  // We'll include them unchanged for completeness
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetFilterForm = () => setFilters(initialFilters);
+  const clearFilters = () => setFilters({ startDate: "", endDate: "" });
+  const todayFilter = () => {
+    const today = getTodayDate();
+    setFilters({ startDate: today, endDate: today });
+  };
 
   const handleSelectAll = (e) => {
     setCheckedIds(e.target.checked ? filteredOrders.map((o) => o._id) : []);
@@ -408,7 +553,7 @@ function OrdersContent() {
         actionDoneBy: session?.user?.email,
         gstRate: GST_RATE,
         gstType: orderForm.gstType,
-        affectStockValue: orderForm.affectStockValue, // 👈 send to backend
+        affectStockValue: orderForm.affectStockValue,
       };
       const res = await fetch(url, {
         method,
@@ -417,7 +562,7 @@ function OrdersContent() {
       });
       if (!res.ok) throw new Error("Submission failed");
       toast.success(editingId._id ? "Order updated" : "Order created");
-      await fetchAllData();
+      await fetchAllData(); // this now also refreshes balance
       resetForm();
     } catch (error) {
       toast.error(error.message);
@@ -470,28 +615,6 @@ function OrdersContent() {
     initializeQuantities();
   };
 
-  const summary = useMemo(() => {
-    if (!filteredOrders.length)
-      return { orderCount: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0, avgOrderValue: 0 };
-    const orderCount = filteredOrders.length;
-    const totalAmount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-    const paidAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.paymentStatus === "Paid" ? o.totalAmount : 0),
-      0
-    );
-    const dueAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.paymentStatus === "Not Paid" ? o.totalAmount : 0),
-      0
-    );
-    return {
-      orderCount,
-      totalAmount,
-      paidAmount,
-      dueAmount,
-      avgOrderValue: orderCount ? totalAmount / orderCount : 0,
-    };
-  }, [filteredOrders]);
-
   const isSelectAllChecked =
     filteredOrders.length > 0 && checkedIds.length === filteredOrders.length;
 
@@ -499,7 +622,7 @@ function OrdersContent() {
     return (
       <div className={styles.error_state}>
         <h2>Customer Not Found</h2>
-        <button onClick={() => router.push("/customer")} className={styles.primary_btn}>
+        <button onClick={() => router.push("/customer")} className={styles.error_state_primary_btn}>
           Back to Customers
         </button>
       </div>
@@ -588,8 +711,6 @@ function OrdersContent() {
                 ))}
               </select>
             </div>
-            {/* 👇 New checkbox for affecting stock */}
-           
             <InputGroup
               label="Order Total"
               name="orderTotal"
@@ -597,8 +718,7 @@ function OrdersContent() {
               readOnly
               placeholder="0"
             />
-
-             <div className={styles.input_group}>
+            <div className={styles.input_group}>
               <label>
                 <input
                   type="checkbox"
@@ -619,48 +739,12 @@ function OrdersContent() {
 
           {errors.general && <div className={styles.error_text}>{errors.general}</div>}
 
-          {editingId._id && (
-            <div className={styles.edit_payment_wrapper}>
-              <label className={styles.edit_payment_label}>Payment Status:</label>
-              <div className={styles.payment_toggle}>
-                <input
-                  type="checkbox"
-                  className={styles.payment_checkbox}
-                  checked={orderForm.paymentStatus === "Paid"}
-                  onChange={(e) =>
-                    setOrderForm((prev) => ({
-                      ...prev,
-                      paymentStatus: e.target.checked ? "Paid" : "Not Paid",
-                    }))
-                  }
-                />
-                <span
-                  className={
-                    orderForm.paymentStatus === "Paid"
-                      ? styles.status_paid
-                      : styles.status_due
-                  }
-                >
-                  {orderForm.paymentStatus === "Paid" ? "Paid" : "Due"}
-                </span>
-              </div>
-            </div>
-          )}
-
           <div className={styles.form_actions}>
             <button type="submit" disabled={submitting} className={styles.primary_btn}>
-              {submitting
-                ? "Processing..."
-                : editingId._id
-                  ? "Update Order"
-                  : "Create Order"}
+              {submitting ? "Processing..." : editingId._id ? "Update Order" : "Create Order"}
             </button>
             {editingId._id && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.secondary_btn}
-              >
+              <button type="button" onClick={resetForm} className={styles.secondary_btn}>
                 Cancel Edit
               </button>
             )}
@@ -712,7 +796,13 @@ function OrdersContent() {
         </div>
       )}
 
-      {summary.orderCount > 0 && <SummaryStats summary={summary} filters={filters} />}
+      {summary.orderCount > 0 && (
+        <SummaryStats
+          summary={summary}
+          filters={filters}
+          onEditPaid={() => setShowPaidPopup(true)}
+        />
+      )}
 
       {/* Export & Bulk Actions */}
       {filteredOrders.length > 0 && (
@@ -721,42 +811,8 @@ function OrdersContent() {
             {filteredOrders.length} order(s) found
           </div>
           <div className={styles.export_buttons}>
-            <button
-              onClick={() => handleExport("pdf", filteredOrders)}
-              className={styles.export_btn}
-            >
+            <button onClick={() => handleExport("pdf", filteredOrders)} className={styles.export_btn}>
               DOWNLOAD INVOICE
-            </button>
-          </div>
-        </div>
-      )}
-
-      {checkedIds.length > 0 && (
-        <div className={styles.bulk_actions_banner}>
-          <span className={styles.bulk_actions_text}>
-            {checkedIds.length} order(s) selected
-          </span>
-          <div className={styles.bulk_buttons}>
-            <button
-              onClick={() => handleBulkUpdateStatus("Paid")}
-              disabled={submitting}
-              className={styles.primary_btn}
-            >
-              Mark as Paid
-            </button>
-            <button
-              onClick={() => handleBulkUpdateStatus("Not Paid")}
-              disabled={submitting}
-              className={styles.secondary_btn}
-            >
-              Mark as Unpaid
-            </button>
-            <button
-              onClick={() => setCheckedIds([])}
-              disabled={submitting}
-              className={styles.clear_filter_link}
-            >
-              Cancel
             </button>
           </div>
         </div>
@@ -781,19 +837,6 @@ function OrdersContent() {
                   ))}
                   <th>Order Total</th>
                   <th>Comment</th>
-                  <th>
-                    <div>
-                      <input
-                        type="checkbox"
-                        checked={isSelectAllChecked}
-                        onChange={handleSelectAll}
-                        className={styles.row_checkbox}
-                        disabled={submitting}
-                      />{" "}
-                      *
-                    </div>
-                  </th>
-                  <th>Status</th>
                   <th>Invoice</th>
                   {isAdmin && <th>Actions</th>}
                 </tr>
@@ -801,27 +844,16 @@ function OrdersContent() {
               <tbody>
                 {filteredOrders.map((order) => {
                   const quantityMap = {};
-                  order.items.forEach(
-                    (item) => (quantityMap[item.product] = item.quantity)
-                  );
+                  order.items.forEach((item) => (quantityMap[item.product] = item.quantity));
                   return (
-                    <tr
-                      key={order._id}
-                      className={
-                        editingId._id === order._id ? styles.active_row : ""
-                      }
-                    >
-                      <td className={styles.date_cell}>
-                        {formatDate(order.date)}
-                      </td>
+                    <tr key={order._id} className={editingId._id === order._id ? styles.active_row : ""}>
+                      <td className={styles.date_cell}>{formatDate(order.date)}</td>
                       {PRODUCT_FIELDS.map((p) => (
                         <td key={p.name} className={styles.quantity_cell}>
                           {quantityMap[p.name] || "-"}
                         </td>
                       ))}
-                      <td className={styles.total_cell}>
-                        ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
-                      </td>
+                      <td className={styles.total_cell}>₹{formatNumberWithCommasNoDecimal(order.totalAmount)}</td>
                       <td className={styles.comment_cell}>
                         {order.comment ? (
                           <span className={styles.comment} data-text={order.comment}>
@@ -831,36 +863,13 @@ function OrdersContent() {
                           "-"
                         )}
                       </td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          className={styles.row_checkbox}
-                          checked={checkedIds.includes(order._id)}
-                          onChange={() => handleCheck(order._id)}
-                          disabled={!!editingId._id}
-                        />
-                      </td>
-                      <td className={styles.payment_cell}>
-                        {order.paymentStatus === "Not Paid" ? (
-                          <span className={styles.status_due}>Due</span>
-                        ) : (
-                          <span className={styles.status_paid}>Paid</span>
-                        )}
-                      </td>
                       <td className={styles.invoice_cell}>
                         <button
-                          onClick={() =>
-                            handleExport("pdf", [order], formatDateForDisplay(order.date))
-                          }
+                          onClick={() => handleExport("pdf", [order], formatDateForDisplay(order.date))}
                           className={styles.export_btn_table}
                           disabled={!filteredOrders.length}
                         >
-                          <Image
-                            alt="Download"
-                            src="/invoice-download.png"
-                            width={20}
-                            height={20}
-                          />
+                          <Image alt="Download" src="/invoice-download.png" width={20} height={20} />
                         </button>
                       </td>
                       {isAdmin && (
@@ -869,15 +878,9 @@ function OrdersContent() {
                             <button
                               className={styles.actionMenuButton}
                               onClick={() =>
-                                setOpenActionMenuId(
-                                  openActionMenuId === order._id ? null : order._id
-                                )
+                                setOpenActionMenuId(openActionMenuId === order._id ? null : order._id)
                               }
-                              disabled={
-                                loading ||
-                                deleteLoading === order._id ||
-                                !!editingId._id
-                              }
+                              disabled={loading || deleteLoading === order._id || !!editingId._id}
                             >
                               ⋮
                             </button>
@@ -910,6 +913,14 @@ function OrdersContent() {
           </div>
         )}
       </div>
+
+      {/* Edit Paid Amount Modal */}
+      <AmountReceivedPopup
+        isOpen={showPaidPopup}
+        currentValue={customerBalance?.paidAmount?.toString() || "0"}
+        onClose={() => setShowPaidPopup(false)}
+        onSubmit={handlePaidSubmit}
+      />
     </div>
   );
 }

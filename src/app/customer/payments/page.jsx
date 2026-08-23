@@ -14,7 +14,6 @@ import Image from "next/image";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import { formatDateForDisplay } from "@/utils/dateUtils";
 
-
 // ========== CONSTANTS ==========
 const INITIAL_FILTERS = {
   startDate: "",
@@ -62,6 +61,30 @@ const StatItem = ({ label, value, unit = "", colorClass = "" }) => (
       {value}
       {unit && <span className={styles.stat_unit}>{unit}</span>}
     </div>
+  </div>
+);
+const PaidStatItem = ({ label, value, unit = "", colorClass = "", onEditClick }) => (
+  <div className={styles.stat_card}>
+    <div className={styles.stat_card_label}>{label}</div>
+    <div className={`${styles.stat_card_value} ${colorClass}`}>
+      {value}
+      {unit && <span className={styles.stat_unit}>{unit}</span>}
+    </div>
+    {onEditClick && (
+      <button
+        onClick={onEditClick}
+        className={styles.edit_payment_btn}
+        title="Record Payment"
+      >
+        <Image 
+          src="/payment.png" 
+          alt="payment" 
+          width={16} 
+          height={16} 
+        />
+        <span>Edit</span>
+      </button>
+    )}
   </div>
 );
 
@@ -126,10 +149,87 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   );
 };
 
+// Payment popup component
+const PaymentPopup = ({ isOpen, customerId, customerName, currentPaid, currentDue, onClose, onSuccess }) => {
+  const [inputValue, setInputValue] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputValue("");
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async () => {
+    const amount = parseFloat(inputValue);
+    if (isNaN(amount)) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paidAmount: amount }),
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to update payment");
+      }
+      
+      toast.success("Payment updated successfully");
+      onSuccess();
+      onClose();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.modal_overlay}>
+      <div className={styles.modal_content}>
+        <h3>Record Payment - {customerName}</h3>
+        <div className={styles.payment_info}>
+          <p>Current Paid: <span className={styles.text_green}>₹{formatNumberWithCommas(currentPaid)}</span></p>
+          <p>Current Due: <span className={styles.text_red}>₹{formatNumberWithCommas(currentDue)}</span></p>
+        </div>
+        <label>
+          Payment Amount:
+          <input
+            type="number"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            autoFocus
+            step="0.01"
+            placeholder="Enter positive or negative amount"
+            disabled={submitting}
+          />
+        </label>
+        <div className={styles.modal_actions}>
+          <button onClick={handleSubmit} disabled={submitting}>
+            {submitting ? "Processing..." : "Submit"}
+          </button>
+          <button onClick={onClose} disabled={submitting}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ========== MAIN COMPONENT ==========
 export default function CustomerPayments() {
   const [customerList, setCustomerList] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
+  const [customerTotals, setCustomerTotals] = useState({}); // Changed to object
   const { data: session } = useSession();
 
   const [checkedIds, setCheckedIds] = useState([]);
@@ -142,19 +242,50 @@ export default function CustomerPayments() {
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [savingCommentId, setSavingCommentId] = useState(null);
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  // Fetch all customers
+  // Fetch all customers and their totals from total_orders API
   useEffect(() => {
     async function fetchCustomers() {
       setIsLoadingCustomers(true);
       try {
-        const res = await fetch("/api/customer");
-        if (!res.ok) throw new Error("Failed to fetch customers");
-        const data = await res.json();
-        setCustomerList(Array.isArray(data) ? data : data.data || []);
+        const [custRes, totalRes] = await Promise.all([
+          fetch("/api/customer"),
+          fetch("/api/customer/total_orders"), // Fetch all customer totals
+        ]);
+
+        if (!custRes.ok) throw new Error("Failed to fetch customers");
+        if (!totalRes.ok) throw new Error("Failed to fetch customer totals");
+
+        const [customerData, totalData] = await Promise.all([
+          custRes.json(),
+          totalRes.json(),
+        ]);
+
+        setCustomerList(
+          Array.isArray(customerData) ? customerData : customerData.data || [],
+        );
+
+        // Convert total_orders array to a map for easy lookup
+        const totalsMap = {};
+        if (Array.isArray(totalData)) {
+          totalData.forEach((total) => {
+            if (total._id && total._id !== "global") {
+              totalsMap[total._id.toString()] = {
+                totalAmount: total.totalAmount || 0,
+                paidAmount: total.paidAmount || 0,
+                dueAmount: total.dueAmount || 0,
+                totalOrders: total.totalOrders || 0,
+              };
+            }
+          });
+        }
+        setCustomerTotals(totalsMap);
       } catch (error) {
         console.error(error);
         setCustomerList([]);
+        setCustomerTotals({});
         toast.error(error.message);
       } finally {
         setIsLoadingCustomers(false);
@@ -372,63 +503,82 @@ export default function CustomerPayments() {
   };
 
   // Build customer totals and filtered orders
+  // Note: Total amounts now come from total_orders API (customerTotals state)
+  // This useMemo only groups orders by customer and applies filters
   const customerTotalsMap = useMemo(() => {
     const totals = {
       all: {
         totalAmount: 0,
         paidAmount: 0,
         dueAmount: 0,
+        totalOrders: 0,
         orders: [],
         uniqueDates: new Set(),
       },
     };
 
-    if (ordersData.length === 0) return totals;
+    // Initialize totals for each customer from API data (customerTotals)
+    Object.keys(customerTotals).forEach((custId) => {
+      const apiData = customerTotals[custId];
+      totals[custId] = {
+        totalAmount: apiData.totalAmount || 0,
+        paidAmount: apiData.paidAmount || 0,
+        dueAmount: apiData.dueAmount || 0,
+        totalOrders: apiData.totalOrders || 0,
+        orders: [],
+        uniqueDates: new Set(),
+      };
+    });
 
-    ordersData.forEach((order) => {
-      const custId = order.customerId;
-      if (!totals[custId]) {
-        totals[custId] = {
-          totalAmount: 0,
-          paidAmount: 0,
-          dueAmount: 0,
-          orders: [],
-          uniqueDates: new Set(),
-        };
-      }
+    // Group orders by customer and apply status filter
+    if (ordersData.length > 0) {
+      ordersData.forEach((order) => {
+        const custId = order.customerId;
+        
+        // Initialize customer totals if not already present
+        if (!totals[custId]) {
+          totals[custId] = {
+            totalAmount: 0,
+            paidAmount: 0,
+            dueAmount: 0,
+            totalOrders: 0,
+            orders: [],
+            uniqueDates: new Set(),
+          };
+        }
 
-      const amount = parseFloat(order.totalAmount) || 0;
-      const isPaid = order.paymentStatus === "Paid";
-      const date = order.date;
+        const isPaid = order.paymentStatus === "Paid";
+        const date = order.date;
 
-      totals[custId].totalAmount += amount;
-      totals[custId].uniqueDates.add(date);
-      if (isPaid) {
-        totals[custId].paidAmount += amount;
-      } else {
-        totals[custId].dueAmount += amount;
-      }
+        totals[custId].uniqueDates.add(date);
 
-      if (statusFilter === "Paid" && isPaid) {
-        totals[custId].orders.push(order);
-      } else if (statusFilter === "Not Paid" && !isPaid) {
-        totals[custId].orders.push(order);
-      } else if (statusFilter === "") {
-        totals[custId].orders.push(order);
-      }
-      totals.all.orders.push(order);
-      totals.all.totalAmount += amount;
+        // Apply status filter to orders array
+        if (statusFilter === "Paid" && isPaid) {
+          totals[custId].orders.push(order);
+          totals.all.orders.push(order);
+        } else if (statusFilter === "Not Paid" && !isPaid) {
+          totals[custId].orders.push(order);
+          totals.all.orders.push(order);
+        } else if (statusFilter === "") {
+          totals[custId].orders.push(order);
+          totals.all.orders.push(order);
+        }
 
-      totals.all.uniqueDates.add(date);
-      if (isPaid) {
-        totals.all.paidAmount += amount;
-      } else {
-        totals.all.dueAmount += amount;
-      }
+        totals.all.uniqueDates.add(date);
+      });
+    }
+
+    // Calculate global totals from customerTotals API data
+    Object.keys(customerTotals).forEach((custId) => {
+      const apiData = customerTotals[custId];
+      totals.all.totalAmount += apiData.totalAmount || 0;
+      totals.all.paidAmount += apiData.paidAmount || 0;
+      totals.all.dueAmount += apiData.dueAmount || 0;
+      totals.all.totalOrders += apiData.totalOrders || 0;
     });
 
     return totals;
-  }, [ordersData, statusFilter]);
+  }, [ordersData, statusFilter, customerTotals]);
 
   // Filter customers by search and sort by total orders (highest first)
   const filteredCustomerList = useMemo(() => {
@@ -456,7 +606,8 @@ export default function CustomerPayments() {
       mobile: customer.customerMobile || "",
       customerGST: customer.customerGST || "",
     };
-    const dateStr = formatDateForDisplay(order.date) || order.date.split("T")[0];
+    const dateStr =
+      formatDateForDisplay(order.date) || order.date.split("T")[0];
     const fileName = `${customer.customerName}_invoice_${dateStr}`;
     await exportInvoiceToPDF(
       [order],
@@ -465,6 +616,39 @@ export default function CustomerPayments() {
       fileName,
     );
     toast.success("Invoice downloaded");
+  };
+
+  // Handle opening payment popup
+  const handleOpenPayment = (customer) => {
+    setSelectedCustomer(customer);
+    setShowPaymentPopup(true);
+  };
+
+  // Handle successful payment - refresh data
+  const handlePaymentSuccess = async () => {
+    // Refresh customer totals
+    try {
+      const totalRes = await fetch("/api/customer/total_orders");
+      if (totalRes.ok) {
+        const totalData = await totalRes.json();
+        const totalsMap = {};
+        if (Array.isArray(totalData)) {
+          totalData.forEach((total) => {
+            if (total._id && total._id !== "global") {
+              totalsMap[total._id.toString()] = {
+                totalAmount: total.totalAmount || 0,
+                paidAmount: total.paidAmount || 0,
+                dueAmount: total.dueAmount || 0,
+                totalOrders: total.totalOrders || 0,
+              };
+            }
+          });
+        }
+        setCustomerTotals(totalsMap);
+      }
+    } catch (error) {
+      console.error("Failed to refresh totals:", error);
+    }
   };
 
   return (
@@ -623,19 +807,19 @@ export default function CustomerPayments() {
         </div>
       </div>
 
-      {/* Global Summary */}
+      {/* Global Summary - Data from total_orders API */}
       {!isLoading && globalStats.totalAmount > 0 && !searchQuery && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Customers Summary</h2>
             <span className={styles.date_range_badge}>
-              {getFormattedDateRange(filters.startDate, filters.endDate)}
+              All Time Totals
             </span>
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
               label="Total Orders"
-              value={globalStats.orders?.length || 0}
+              value={formatNumberWithCommasNoDecimal(globalStats.totalOrders || 0)}
             />
             <StatItem
               label="Total Amount"
@@ -663,11 +847,15 @@ export default function CustomerPayments() {
       ) : (
         <div className={styles.supplier_grid}>
           {filteredCustomerList.map((customer) => {
+            // Get totals from API data
+            const apiTotals = customerTotals[customer._id];
             const stats = customerTotalsMap[customer._id];
-            if (!stats || stats.totalAmount === 0 || stats.orders.length === 0)
-              return null;
-
-            const orders = stats.orders;
+            
+            // Only show customers that have data in total_orders API
+            if (!apiTotals || apiTotals.totalAmount === 0) return null;
+            
+            // Get orders for this customer (filtered by date and status)
+            const orders = stats?.orders || [];
             const visibleCount =
               visibleCounts[customer._id] || INITIAL_VISIBLE_COUNT;
             const displayedOrders = orders.slice(0, visibleCount);
@@ -696,23 +884,49 @@ export default function CustomerPayments() {
                       {customer.customerType || "Other"}
                     </span>
                   </div>
+                  <div className={styles.header_right}>
+                    <button
+                      onClick={() => handleOpenPayment(customer)}
+                      className={styles.payment_btn}
+                      title="Record Payment"
+                      disabled={submitting}
+                    >
+                      {/* <Image 
+                        src="/payment.png" 
+                        alt="payment" 
+                        width={20} 
+                        height={20} 
+                      /> */}
+                      <span>Payment</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* Quick Stats Row */}
+                {/* Quick Stats Row - Data from total_orders API */}
                 <div className={styles.quick_stats}>
-                  <StatItem label="Total Orders" value={orders.length} />
-                  <StatItem
-                    label="Total Amount"
-                    value={`₹${formatNumberWithCommasNoDecimal(stats.totalAmount)}`}
+                  <StatItem 
+                    label="Total Orders" 
+                    value={customerTotals[customer._id]?.totalOrders || 0} 
                   />
                   <StatItem
+                    label="Total Amount"
+                    value={`₹${formatNumberWithCommasNoDecimal(
+                      customerTotals[customer._id]?.totalAmount || 0
+                    )}`}
+                  />
+                  <PaidStatItem
                     label="Paid"
-                    value={`₹${formatNumberWithCommasNoDecimal(stats.paidAmount)}`}
+                    value={`₹${formatNumberWithCommasNoDecimal(
+                      customerTotals[customer._id]?.paidAmount || 0
+                    )}`}
                     colorClass={styles.text_green}
+                    onEditClick={() => handleOpenPayment(customer)}
                   />
                   <StatItem
                     label="Due"
-                    value={`₹${formatNumberWithCommasNoDecimal(stats.dueAmount)}`}
+                    value={`₹${formatNumberWithCommasNoDecimal(
+                      customerTotals[customer._id]?.dueAmount || 0
+                    )}`}
                     colorClass={styles.text_red}
                   />
                 </div>
@@ -763,7 +977,7 @@ export default function CustomerPayments() {
                           Order Total (₹)
                         </th>
                         <th>Invoice</th>
-                        <th className={styles.table_header_cell}>Status</th>
+                        {/* <th className={styles.table_header_cell}>Status</th>
                         <th className={styles.table_header_cell}>
                           <div className={styles.select_all_wrapper}>
                             <input
@@ -786,7 +1000,7 @@ export default function CustomerPayments() {
                             />
                             *
                           </div>
-                        </th>
+                        </th> */}
                         <th className={styles.table_header_cell}>Comment</th>
                       </tr>
                     </thead>
@@ -822,14 +1036,21 @@ export default function CustomerPayments() {
                             </td>
                             <td className={styles.table_cell}>
                               <button
-                                onClick={() => handleSingleInvoice(order, customer)}
+                                onClick={() =>
+                                  handleSingleInvoice(order, customer)
+                                }
                                 className={styles.invoice_btn}
                                 title="Download Invoice"
                               >
-                                <Image src="/invoice-download.png" alt="invoice" width={20} height={20} />
+                                <Image
+                                  src="/invoice-download.png"
+                                  alt="invoice"
+                                  width={20}
+                                  height={20}
+                                />
                               </button>
                             </td>
-                            <td className={styles.table_cell}>
+                            {/* <td className={styles.table_cell}>
                               {order.paymentStatus === "Paid" ? (
                                 <span className={styles.status_paid}>Paid</span>
                               ) : (
@@ -846,7 +1067,7 @@ export default function CustomerPayments() {
                                 }
                                 disabled={isCustomerDisabled}
                               />
-                            </td>
+                            </td> */}
                             <td
                               className={`${styles.table_cell} ${styles.cell_comment}`}
                             >
@@ -887,6 +1108,22 @@ export default function CustomerPayments() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Payment Popup */}
+      {selectedCustomer && (
+        <PaymentPopup
+          isOpen={showPaymentPopup}
+          customerId={selectedCustomer._id}
+          customerName={selectedCustomer.customerName}
+          currentPaid={customerTotals[selectedCustomer._id]?.paidAmount || 0}
+          currentDue={customerTotals[selectedCustomer._id]?.dueAmount || 0}
+          onClose={() => {
+            setShowPaymentPopup(false);
+            setSelectedCustomer(null);
+          }}
+          onSuccess={handlePaymentSuccess}
+        />
       )}
     </div>
   );

@@ -1,19 +1,4 @@
-import { MongoClient } from "mongodb";
-import clientPromise from "@/lib/mongodb";
-const uri = process.env.MONGODB_URI;
-const dbName = "production";
-
-let client;
-let db;
-
-async function connectToDatabase() {
-  if (!db) {
-    client = await clientPromise;
-    await client.connect();
-    db = client.db(dbName);
-  }
-  return db;
-}
+import getDatabase from "@/database/connectToMongoDB";
 
 export async function GET(request) {
   try {
@@ -21,7 +6,7 @@ export async function GET(request) {
     const fromDate = searchParams.get("fromDate");
     const toDate = searchParams.get("toDate");
 
-    const db = await connectToDatabase();
+    const db = await getDatabase();
     const collection = db.collection("entries");
 
     const query = {};

@@ -17,6 +17,7 @@ import {
   Cell,
 } from "recharts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
 const COLORS = [
@@ -151,25 +152,25 @@ export default function ProductionAnalyticsPage() {
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Total Batches</div>
                   <div className={styles.stat_value}>
-                    {data.totals.totalBatches}
+                    {formatNumberWithCommas(data.totals.totalBatches || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Total Milk</div>
                   <div className={styles.stat_value}>
-                    {data.totals.milk?.toFixed(2)} L
+                    {formatNumberWithCommas(data.totals.milk || 0)} <span className={styles.stat_unit}>L</span>
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg Fat</div>
                   <div className={styles.stat_value}>
-                    {data.totals.avgFat}%
+                    {data.totals.avgFat || 0}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg SNF</div>
                   <div className={styles.stat_value}>
-                    {data.totals.avgSnf}%
+                    {data.totals.avgSnf || 0}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
               </div>
