@@ -82,7 +82,7 @@ const PaidStatItem = ({ label, value, unit = "", colorClass = "", onEditClick })
           width={16} 
           height={16} 
         />
-        <span>Edit</span>
+        <span>Add Amount </span>
       </button>
     )}
   </div>
@@ -207,7 +207,7 @@ const PaymentPopup = ({ isOpen, customerId, customerName, currentPaid, currentDu
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             autoFocus
-            step="0.01"
+            step="1"
             placeholder="Enter positive or negative amount"
             disabled={submitting}
           />
