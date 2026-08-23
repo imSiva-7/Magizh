@@ -135,10 +135,12 @@ export default function Header() {
       // animation: birthdayGlow 2s ease-in-out infinite alternate;
     }
   `}</style>
-
+{session.user?.email === "ponnurangam@gmail.com" ?
   <marquee className="birthday-mar">
-    🎉 Happy Birthday Dummy! 🎂
-  </marquee>
+    🎉 Happy Birthday Pani🐷🐷🐷🐷🐷🐷! 🎂
+  </marquee> : <marquee className="birthday-mar">
+    🎉 Happy Birthday Bavani 🎂
+  </marquee>}
 </>
       <div className={styles.headerContainer}>
         {/* Logo */}
