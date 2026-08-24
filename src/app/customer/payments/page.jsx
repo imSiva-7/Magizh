@@ -884,22 +884,22 @@ export default function CustomerPayments() {
                       {customer.customerType || "Other"}
                     </span>
                   </div>
-                  <div className={styles.header_right}>
+                  {/* <div className={styles.header_right}>
                     <button
                       onClick={() => handleOpenPayment(customer)}
                       className={styles.payment_btn}
                       title="Record Payment"
                       disabled={submitting}
                     >
-                      {/* <Image 
+                      <Image 
                         src="/payment.png" 
                         alt="payment" 
                         width={20} 
                         height={20} 
-                      /> */}
+                      />
                       <span>Payment</span>
                     </button>
-                  </div>
+                  </div> */}
                 </div>
 
                 {/* Quick Stats Row - Data from total_orders API */}
