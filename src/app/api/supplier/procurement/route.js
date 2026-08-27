@@ -270,15 +270,15 @@ export async function POST(request) {
       actionDoneBy,
     } = body;
 
-    if (new Date() - new Date(date) > 20* 24 * 60 * 60 * 1000) {
-      return NextResponse.json(
-        {
-          error:
-            "Procurement date can't be more than 10 days back, Contact Admin",
-        },
-        { status: 400 },
-      );
-    }
+    // if (new Date() - new Date(date) > 20* 24 * 60 * 60 * 1000) {
+    //   return NextResponse.json(
+    //     {
+    //       error:
+    //         "Procurement date can't be more than 10 days back, Contact Admin",
+    //     },
+    //     { status: 400 },
+    //   );
+    // }
 
     // Validate supplier ID
     const supplierValidation = validateObjectId(supplierId);
