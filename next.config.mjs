@@ -17,22 +17,7 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
-
-  // Webpack configuration with safe undefined check
-  webpack: (config, { dev }) => {
-    if (dev) {
-      // Ensure optimization object exists before spreading it
-      config.optimization = {
-        ...(config.optimization || {}),
-        moduleIds: 'deterministic',
-        splitChunks: false,
-      };
-    }
-    return config;
-  },
 };
 
-// SAFE EXPORT CHECK:
-// If your file is next.config.mjs, keep the line below.
-// If your file is next.config.js, change it to: module.exports = nextConfig;
+// Use export default for .mjs, or module.exports = nextConfig; for .js
 export default nextConfig;
