@@ -113,9 +113,9 @@ const AmountStatItem = ({ label, value, unit, prefix = "", colorClass = "", onEd
       {value}
       <span className={styles.stat_unit}>{unit}</span>
     </span>
-    {onEdit && (
+    {/* {onEdit && (
       <button onClick={onEdit} className={styles.edit_btn}>Add Amount</button>
-    )}
+    )} */}
   </div>
 );
 
@@ -173,23 +173,24 @@ const AmountReceivedPopup = ({ isOpen, currentValue, onClose, onSubmit }) => {
 
 const SummaryStats = ({ summary, filters, onEditPaid }) => {
   const getDateRangeLabel = (startDate, endDate) => {
-    if (startDate && endDate) {
-      return startDate === endDate
-        ? startDate
-        : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(endDate).toLocaleDateString("en-IN")}`;
-    }
-    if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-    if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-    return "All Records";
+    // if (startDate && endDate) {
+    //   return startDate === endDate
+    //     ? startDate
+    //     : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    // }
+    // if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+    // if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    // return "All Records";
+    return "";
   };
 
   return (
     <div className={styles.summary_box}>
       <h3>
         Summary{" "}
-        <span className={styles.date_range_badge}>
+        {/* <span className={styles.date_range_badge}>
           {getDateRangeLabel(filters.startDate, filters.endDate)}
-        </span>
+        </span> */}
       </h3>
       <div className={styles.stats_grid}>
         <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
