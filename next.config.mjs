@@ -14,28 +14,25 @@ const nextConfig = {
 
   // Memory optimization for development
   experimental: {
-    // Reduce memory usage during development
     workerThreads: false,
     cpus: 1,
   },
 
-  // Webpack configuration to reduce memory usage
-  webpack: (config, { dev, isServer }) => {
+  // Webpack configuration with safe undefined check
+  webpack: (config, { dev }) => {
     if (dev) {
-      // Reduce memory footprint in development
+      // Ensure optimization object exists before spreading it
       config.optimization = {
-        ...config.optimization,
+        ...(config.optimization || {}),
         moduleIds: 'deterministic',
         splitChunks: false,
       };
-      
-      // Disable source maps in development if memory is an issue
-      // Uncomment the line below if you continue to have memory issues
-      // config.devtool = false;
     }
-    
     return config;
   },
 };
 
+// SAFE EXPORT CHECK:
+// If your file is next.config.mjs, keep the line below.
+// If your file is next.config.js, change it to: module.exports = nextConfig;
 export default nextConfig;
