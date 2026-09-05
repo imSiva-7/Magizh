@@ -1,163 +1,130 @@
-// import { NextResponse } from "next/server";
-// import getDatabase from "@/database/connectToMongoDB";
-
-// export async function POST(request) {
-//   try {
-//     // Token check disabled for now – you can enable later
-//     const data = await request.json();
-
-//     const {
-//       deviceId,
-//       employeeId,
-//       timestamp,
-//       verifyType,
-//       attendanceState,
-//       temperature,
-//       maskStatus,
-//       employeeName,   // if the device sends a name, use it
-//       department,     // if available
-//     } = data;
-
-//     // Basic validation (optional, but recommended)
-//     if (!employeeId || !timestamp) {
-//       return NextResponse.json(
-//         { success: false, message: "Missing employeeId or timestamp" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const db = await getDatabase();
-
-//     const methodMap = {
-//       1: "fingerprint",
-//       2: "face",
-//       3: "card",
-//       4: "password",
-//       15: "face",
-//     };
-//     const method = methodMap[verifyType] || "unknown";
-
-//     const type = attendanceState === 0 ? "check-in" : "check-out";
-//     const date = new Date(timestamp).toISOString().split("T")[0];
-
-//     // Build attendance document without employee lookup
-//     const attendanceDoc = {
-//       employeeId,
-//       employeeName: employeeName || "",   // if not provided, empty string
-//       department: department || "",
-//       timestamp: new Date(timestamp),
-//       date,
-//       type,
-//       method,
-//       deviceId: deviceId || "MB400",
-//       status: "on-time",                  // you can add logic later
-//       temperature: temperature || null,
-//       maskStatus: maskStatus || null,
-//       createdAt: new Date(),
-//     };
-
-//     const result = await db.collection("attendance").insertOne(attendanceDoc);
-
-//     return NextResponse.json({
-//       success: true,
-//       id: result.insertedId,
-//       message: "Attendance recorded successfully",
-//     });
-//   } catch (error) {
-//     console.error("Attendance push error:", error);
-//     return NextResponse.json(
-//       { success: false, message: error.message },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import getDatabase from "@/database/connectToMongoDB";
 
 /**
- * 1. HANDLE INITIALIZATION HANDSHAKE (GET)
- * When the machine boots or connects, it checks if your server speaks the ZK protocol.
+ * 1. GET HANDSHAKE
+ * Device queries server parameters upon boot or heartbeat.
  */
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const sn = searchParams.get('SN'); // Device Serial Number
+    const sn = searchParams.get("SN") || searchParams.get("sn");
 
-    console.log(`[ZKTeco] Device Connection Handshake. Serial Number: ${sn}`);
+    console.log(`[ZKTeco Handshake] Device SN: ${sn}`);
 
-    // ZK protocol strictly requires a plain text "OK" body response to clear the yellow triangle
-    return new NextResponse('OK', {
-      headers: { 
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
+    // ZKTeco Push SDK requires exact plain-text "OK" with text/plain header
+    return new Response("OK", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });
   } catch (error) {
-    console.error('[ZKTeco Handshake Error]:', error);
-    return new NextResponse('ERROR', { status: 500 });
+    console.error("[ZKTeco Handshake Error]:", error);
+    return new Response("ERROR", { status: 500 });
   }
 }
 
 /**
- * 2. HANDLE REAL-TIME PUNCHE LOGS (POST)
- * When an employee uses their face/finger/card, the device pushes raw text data.
+ * 2. POST PUNCH LOGS & OPERATIONS
+ * Handles incoming raw tab-separated ADMS data streams.
  */
 export async function POST(request) {
   try {
-    const rawText = await request.text();
-    console.log('[ZKTeco] Raw Data Received:\n', rawText);
+    const { searchParams } = new URL(request.url);
+    const deviceId = searchParams.get("SN") || searchParams.get("sn") || "MB400";
+    const table = searchParams.get("table"); // e.g., 'ATTLOG' or 'OPLOG'
 
-    if (!rawText || rawText.trim() === '') {
-      return new NextResponse('OK', { headers: { 'Content-Type': 'text/plain' } });
+    const rawText = await request.text();
+    console.log(`[ZKTeco Raw Data Received - Table: ${table}]:\n`, rawText);
+
+    if (!rawText || rawText.trim() === "") {
+      return new Response("OK", {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      });
     }
 
-    // Split payload into individual lines
-    const lines = rawText.split('\n');
-    const parsedLogs = [];
+    const lines = rawText.split("\n");
+    const recordsToInsert = [];
+
+    const verifyTypeMap = {
+      0: "password",
+      1: "fingerprint",
+      2: "card",
+      15: "face",
+    };
 
     for (let line of lines) {
       line = line.trim();
       if (!line) continue;
 
-      // ZK ADMS punch logs usually start with data string definitions or payload identifiers
-      // A standard raw punch format looks like: 
-      // 9999\t2026-09-05 08:30:22\t0\t0\t0\t0
-      // (Fields: UserID, Timestamp, VerifyMode, PunchState, WorkCode, Reserved)
-      
-      const fields = line.split('\t'); // Split by tabs
-      
-      if (fields.length >= 2) {
-        const userId = fields[0];
-        const timestamp = fields[1];
-        const punchState = fields[3] || '0'; // 0 = Check In, 1 = Check Out (usually)
+      // Tab-separated string parsing
+      const fields = line.split("\t");
 
-        // Validate that it looks like a valid log line (e.g. date check)
-        if (timestamp.includes('-') && timestamp.includes(':')) {
-          parsedLogs.push({
-            userId,
-            timestamp: new Date(timestamp),
-            punchState
+      /**
+       * STANDARD ATTLOG FORMAT:
+       * fields[0] = User ID / Employee ID (e.g. "56321")
+       * fields[1] = Timestamp (e.g. "2026-09-05 02:44:16")
+       * fields[2] = Attendance State / Punch Type (0 = Check In, 1 = Check Out)
+       * fields[3] = Verify Type (1 = Finger, 15 = Face, 2 = Card, etc.)
+       * fields[4] = Work Code (Optional)
+       */
+      
+      // Filter lines containing valid dates
+      if (fields.length >= 2 && fields[1]?.includes("-") && fields[1]?.includes(":")) {
+        const employeeId = fields[0].replace(/^OPLOG\s+/, "").trim(); // strip header prefix if present
+        const timestampStr = fields[1].trim();
+        const attendanceState = parseInt(fields[2] || "0", 10);
+        const verifyType = parseInt(fields[3] || "1", 10);
+
+        const parsedTimestamp = new Date(timestampStr);
+
+        // Validate timestamp validity
+        if (!isNaN(parsedTimestamp.getTime())) {
+          const type = attendanceState === 0 ? "check-in" : "check-out";
+          const method = verifyTypeMap[verifyType] || "unknown";
+          const date = timestampStr.split(" ")[0];
+
+          recordsToInsert.push({
+            employeeId,
+            employeeName: "",
+            department: "",
+            timestamp: parsedTimestamp,
+            date,
+            type,
+            method,
+            deviceId,
+            status: "on-time",
+            rawLine: line,
+            createdAt: new Date(),
           });
         }
       }
     }
 
-    if (parsedLogs.length > 0) {
-      console.log('[ZKTeco] Successfully parsed logs:', parsedLogs);
-      
-      // TODO: Connect your database here and save the records
-      // Example: await db.attendance.createMany({ data: parsedLogs });
+    // Insert records into MongoDB
+    if (recordsToInsert.length > 0) {
+      const db = await getDatabase();
+      const result = await db.collection("attendance").insertMany(recordsToInsert);
+      console.log(`[ZKTeco MongoDB] Inserted ${result.insertedCount} attendance records.`);
     }
 
-    // The device will cache logs and retry indefinitely unless it gets a specific response matching its count
-    // Telling it "OK" accepts the data buffer completely.
-    return new NextResponse('OK', {
-      headers: { 'Content-Type': 'text/plain' },
+    // Returning exact raw "OK" tells the hardware the data was safely processed
+    return new Response("OK", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-store",
+      },
     });
-
   } catch (error) {
-    console.error('[ZKTeco Data Processing Error]:', error);
-    // Don't crash the device pipeline; return an error so it tries again later
-    return new NextResponse('ERROR', { status: 500 });
+    console.error("[ZKTeco Processing Error]:", error);
+    // Return 500 plain text so the device holds records in local cache to retry later
+    return new Response("ERROR", {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
