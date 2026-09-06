@@ -46,6 +46,7 @@ const calculateTotals = (procurements) => {
 // ========== PDF DESIGN CONSTANTS (MODERN & MINIMAL) ==========
 const BRAND_GREEN = [39, 121, 93];        // Primary brand color
 const BRAND_LIGHT = [234, 245, 241];      // Light green background
+const ACCENT_GOLD = [251, 188, 4];        // Gold accent for highlights
 const TEXT_PRIMARY = [30, 41, 59];        // Dark slate
 const TEXT_SECONDARY = [100, 116, 139];   // Muted gray
 const DIVIDER = [226, 232, 240];          // Light divider
@@ -65,82 +66,103 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const margin = 15;
   const marginBottom = 20;
 
-  // ========== HEADER SECTION (MODERN DESIGN) ==========
+  // ========== HEADER SECTION (MINIMAL & MODERN - MATCHING INVOICE) ==========
   // Top accent bar
   doc.setFillColor(...BRAND_GREEN);
   doc.rect(0, 0, pageWidth, 3, "F");
 
-  // Company header background
-  doc.setFillColor(...BRAND_LIGHT);
-  doc.rect(0, 3, pageWidth, 32, "F");
-
-  // Company name
+  // Company name with modern typography
   doc.setTextColor(...BRAND_GREEN);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
-  doc.text("MAGIZH AGRO PRODUCT", margin, 15);
+  doc.setFontSize(26);
+  doc.text("MAGIZH AGRO PRODUCT", margin, 18);
 
-  // Company details
+  // Tagline with elegant style
   doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_SECONDARY);
-  doc.text("GUDIYATHAM | GST NO:33ACBFM9128J1Z4", margin, 22);
-  doc.text("Phone: +91 93636 46314, +91 75021 36314", margin, 28);
+  doc.text("Your Premium Dairy Partner", margin + 1, 24);
 
-  // Bill Period Box (Modern card design)
-  doc.setFillColor(...WHITE);
-  doc.setDrawColor(...DIVIDER);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(pageWidth - 68, 8, 56, 22, 3, 3, "FD");
-
+  // Company details on the right (minimal)
   doc.setFontSize(9);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...BRAND_GREEN);
-  doc.text("BILL PERIOD", pageWidth - 65, 14);
-
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
   doc.setTextColor(...TEXT_PRIMARY);
-  doc.text(`From: ${dateRange.start}`, pageWidth - 65, 20);
-  doc.text(`To:     ${dateRange.end}`, pageWidth - 65, 26);
+  doc.setFont("helvetica", "normal");
+  doc.text("GSTIN: 33ACBFM9128J1Z4", pageWidth - margin, 15, { align: "right" });
+  doc.text("Gudiyatham, Tamil Nadu", pageWidth - margin, 20, { align: "right" });
+  doc.text("+91 93636 46314", pageWidth - margin, 25, { align: "right" });
 
-  // ========== SUPPLIER DETAILS SECTION (CLEAN CARD) ==========
-  const infoStartY = 42;
+  // Procurement Bill title banner
+  doc.setFillColor(...BRAND_LIGHT);
+  doc.roundedRect(margin, 38, pageWidth - margin * 2, 12, 2, 2, "F");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(...BRAND_GREEN);
+  doc.text("PROCUREMENT BILL", pageWidth / 2, 46, { align: "center" });
 
+  // ========== SUPPLIER & BILL DETAILS (CLEAN GRID - MATCHING INVOICE) ==========
+  const infoStartY = 56;
+  const boxHeight = 40;
+  const boxWidth = (pageWidth - margin * 3) / 2;
+
+  // Left box - Supplier Details
   doc.setDrawColor(...DIVIDER);
   doc.setLineWidth(0.5);
-  doc.setFillColor(...WHITE);
-  doc.roundedRect(margin, infoStartY, pageWidth - margin * 2, 24, 3, 3, "FD");
+  doc.roundedRect(margin, infoStartY, boxWidth, boxHeight, 3, 3);
 
-  doc.setTextColor(...BRAND_GREEN);
-  doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...BRAND_GREEN);
   doc.text("SUPPLIER DETAILS", margin + 5, infoStartY + 8);
 
-  // Supplier information
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...TEXT_PRIMARY);
+  doc.text(
+    supplier?.supplierName || "All Suppliers",
+    margin + 5,
+    infoStartY + 16
+  );
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.setTextColor(...TEXT_PRIMARY);
-  
-  if (supplier?.supplierName || supplier) {
-    doc.text(`Name: ${supplier.supplierName || supplier}`, margin + 5, infoStartY + 15);
-  }
+  doc.setTextColor(...TEXT_SECONDARY);
 
+  let detailY = infoStartY + 23;
+  
   if (supplier?.supplierCustomRate) {
-    doc.text(
-      `Custom Rate in Rs: ${supplier.supplierCustomRate}`,
-      margin + 5,
-      infoStartY + 20,
-    );
+    doc.text(`Custom Rate: Rs. ${supplier.supplierCustomRate}/L`, margin + 5, detailY);
+    detailY += 5;
   }
 
   if (supplier?.supplierTSRate && !supplier?.supplierCustomRate) {
-    doc.text(
-      `Total Solids Rate: ${supplier.supplierTSRate}`,
-      margin + 5,
-      infoStartY + 20,
-    );
+    doc.text(`TS Rate: ${supplier.supplierTSRate}`, margin + 5, detailY);
+    detailY += 5;
   }
+
+  // Right box - Bill Details
+  const rightBoxX = margin * 2 + boxWidth;
+  doc.roundedRect(rightBoxX, infoStartY, boxWidth, boxHeight, 3, 3);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...BRAND_GREEN);
+  doc.text("BILL DETAILS", rightBoxX + 5, infoStartY + 8);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT_PRIMARY);
+
+  doc.text("Bill Date:", rightBoxX + 5, infoStartY + 16);
+  doc.setFont("helvetica", "bold");
+  doc.text(formatDateForDisplay(new Date()), rightBoxX + 30, infoStartY + 16);
+
+  doc.setFont("helvetica", "normal");
+  doc.text("Period:", rightBoxX + 5, infoStartY + 22);
+  doc.setFont("helvetica", "bold");
+  const periodText = dateRange.start === dateRange.end
+    ? dateRange.start
+    : `${dateRange.start} - ${dateRange.end}`;
+  const splitPeriod = doc.splitTextToSize(periodText, boxWidth - 40);
+  doc.text(splitPeriod, rightBoxX + 30, infoStartY + 22);
 
   // ========== TABLE SECTION (MODERN STYLING) ==========
   const headers = [
@@ -202,7 +224,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   autoTable(doc, {
     head: supplier?.supplierName ? headers : headersWithSupplierName,
     body: tableData,
-    startY: infoStartY + 28,
+    startY: infoStartY + 44,
     theme: "plain",
     margin: { bottom: marginBottom },
     styles: {
@@ -219,6 +241,10 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
       fontStyle: "bold",
       halign: "center",
       fontSize: 9,
+      cellPadding: { top: 4, bottom: 4, left: 3, right: 3 },
+    },
+    bodyStyles: {
+      cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
     },
     columnStyles: supplier?.supplierName
       ? {
@@ -247,9 +273,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     },
   });
 
-  // ========== SUMMARY & TOTALS SECTION (MODERN CARD) ==========
-  let finalY = doc.lastAutoTable.finalY + 12;
-  const requiredSpace = 100;
+  // ========== SUMMARY & TOTALS SECTION (MODERN CARD - MATCHING INVOICE) ==========
+  let finalY = doc.lastAutoTable.finalY + 10;
+  const requiredSpace = 80;
 
   if (finalY + requiredSpace > pageHeight) {
     doc.addPage();
@@ -261,101 +287,128 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   const avgSnf = (totalSnf / procurements.length).toFixed(2);
   const avgRate = totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0;
 
-  // Summary Box (Modern card with shadow effect)
+  // Summary card on the right (matching invoice style)
   const summaryWidth = 92;
   const summaryX = pageWidth - summaryWidth - margin;
 
-  // Card background
-  doc.setFillColor(...WHITE);
+  // Card background with increased height to include metrics
   doc.setDrawColor(...DIVIDER);
   doc.setLineWidth(0.5);
-  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 52, 3, 3, "FD");
+  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 72, 3, 3);
 
-  // Card header
-  doc.setFillColor(...BRAND_LIGHT);
-  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 10, 3, 3, "F");
-
-  doc.setTextColor(...BRAND_GREEN);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("PAYMENT SUMMARY", summaryX + 5, finalY + 2);
-
-  // Summary rows
+  // Helper function for summary rows
   const drawSummaryRow = (label, value, y, isBold = false) => {
     doc.setFont("helvetica", isBold ? "bold" : "normal");
     doc.setTextColor(...TEXT_PRIMARY);
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.text(label, summaryX + 5, y);
     doc.text(value, pageWidth - margin - 5, y, { align: "right" });
   };
 
+  // Milk Metrics Section (above subtotal, same styling)
+  let currentY = finalY + 5;
+  
   drawSummaryRow(
-    "Total Milk:",
+    "Total Milk",
     `${formatNumberWithCommas(totalMilkLtr, 2)} Ltr`,
-    finalY + 11,
+    currentY,
   );
-  drawSummaryRow("Avg FAT:", `${avgFat} %`, finalY + 18);
-  drawSummaryRow("Avg SNF:", `${avgSnf} %`, finalY + 25);
+  currentY += 7;
+  
   drawSummaryRow(
-    "Avg Rate:",
-    `Rs. ${formatNumberWithCommas(avgRate, 2)}`,
-    finalY + 32,
+    "Avg FAT",
+    `${avgFat}%`,
+    currentY,
   );
+  currentY += 7;
+  
+  drawSummaryRow(
+    "Avg SNF",
+    `${avgSnf}%`,
+    currentY,
+  );
+  currentY += 7;
+  
+  drawSummaryRow(
+    "Avg Rate",
+    `Rs. ${formatNumberWithCommas(avgRate, 2)}/L`,
+    currentY,
+  );
+  currentY += 9;
 
-  // Grand Total (Highlighted)
+  // Divider after metrics
+  doc.setDrawColor(...DIVIDER);
+  doc.line(summaryX + 5, currentY, pageWidth - margin - 5, currentY);
+  currentY += 7;
+
+  // Subtotal
+  drawSummaryRow(
+    "Subtotal",
+    `Rs. ${formatNumberWithCommas(totalAmount, 2)}`,
+    currentY,
+  );
+  currentY += 7;
+  
+  // GST
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...TEXT_PRIMARY);
+  doc.text("GST (0%)", summaryX + 5, currentY);
+  doc.setTextColor(...TEXT_SECONDARY);
+  doc.text("Not Applicable", pageWidth - margin - 5, currentY, {
+    align: "right",
+  });
+  currentY += 6;
+
+  // Divider before total
+  doc.setDrawColor(...DIVIDER);
+  doc.line(summaryX + 5, currentY, pageWidth - margin - 5, currentY);
+
+  // Grand Total (Highlighted - matching invoice)
   doc.setFillColor(...BRAND_GREEN);
-  doc.roundedRect(summaryX, finalY + 38, summaryWidth, 9, 2, 2, "F");
+  doc.roundedRect(summaryX, currentY + 4, summaryWidth, 15, 2, 2, "F");
   
   doc.setTextColor(...WHITE);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("NET PAYABLE", summaryX + 5, finalY + 44);
+  doc.text("NET PAYABLE", summaryX + 5, currentY + 13);
+  doc.setFontSize(13);
   doc.text(
     `Rs. ${formatNumberWithCommas(totalAmount, 2)}`,
     pageWidth - margin - 5,
-    finalY + 44,
+    currentY + 13,
     { align: "right" },
   );
 
-  // ========== FOOTER SECTION (PROFESSIONAL) ==========
-  const footerY = finalY + 63;
+  // ========== SIGNATURE & FOOTER SECTION (MATCHING INVOICE STYLE) ==========
+  const sigY = finalY + 80;
 
-  if (footerY > pageHeight - 15) {
+  if (sigY > pageHeight - 20) {
     doc.addPage();
   }
 
-  doc.setTextColor(...TEXT_PRIMARY);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-
-  // Signature Lines (Clean design)
-  const sigY = footerY;
+  // Signature line (matching invoice)
   doc.setDrawColor(...DIVIDER);
-  doc.setLineWidth(0.5);
+  doc.line(pageWidth - margin - 50, sigY, pageWidth - margin, sigY);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT_PRIMARY);
+  doc.text("Authorized Signature", pageWidth - margin - 25, sigY + 6, {
+    align: "center",
+  });
 
-  // Prepared By
-  doc.line(margin + 5, sigY, margin + 55, sigY);
-  doc.text("Prepared By", margin + 30, sigY + 5, { align: "center" });
-
-  // Verified By
-  doc.line(pageWidth / 2 - 25, sigY, pageWidth / 2 + 25, sigY);
-  doc.text("Verified By", pageWidth / 2, sigY + 5, { align: "center" });
-
-  // Receiver
-  doc.line(pageWidth - margin - 55, sigY, pageWidth - margin - 5, sigY);
-  doc.text("Receiver Signature", pageWidth - margin - 30, sigY + 5, { align: "center" });
-
-  // Timestamp footer (Bottom bar)
+  // Footer banner
+  const footerY = pageHeight - 15;
   doc.setFillColor(...BRAND_GREEN);
-  doc.rect(0, pageHeight - 10, pageWidth, 3, "F");
+  doc.rect(0, footerY, pageWidth, 3, "F");
 
   doc.setFontSize(7);
   doc.setTextColor(...TEXT_SECONDARY);
   doc.text(
-    `Generated on: ${new Date().toLocaleString("en-IN")}`,
+    "Thank you for being a valuable partner!",
     pageWidth / 2,
-    pageHeight - 4,
-    { align: "center" },
+    footerY + 7,
+    { align: "center" }
   );
 
   doc.save(`${fileName || "procurement_bill"}.pdf`);

@@ -7,10 +7,10 @@ if (!uri) {
 }
 
 const options = {
-  maxPoolSize: 10,
-  minPoolSize: 2,
+  maxPoolSize: 20,
+  minPoolSize: 5,
   maxIdleTimeMS: 60000, // Close idle connections after 60 seconds
-  serverSelectionTimeoutMS: process.env.NODE_ENV === "development" ? 10000 : 5000,
+  serverSelectionTimeoutMS: process.env.NODE_ENV === "development" ? 15000 : 30000,
   socketTimeoutMS: 45000,
   connectTimeoutMS: 10000,
   ...(process.env.NODE_ENV === "development" && {

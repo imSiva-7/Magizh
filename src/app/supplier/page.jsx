@@ -473,7 +473,7 @@ export default function Supplier() {
                 aria-label="Create new supplier"
               >
                 <span className={styles.plusIcon}>+</span>
-                Create New Supplier
+               New Supplier
               </button>
             </div>
           )}

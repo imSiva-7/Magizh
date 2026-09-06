@@ -426,14 +426,7 @@ export default function ProductionPage() {
                     onClick={navigateToHistory}
                     className={styles.historyBtn}
                   >
-                    View History
-                  </button>
-                  <button
-                    onClick={fetchEntries}
-                    className={styles.refreshBtn}
-                    disabled={loading}
-                  >
-                    Refresh
+                    View More
                   </button>
                 </div>
               </div>

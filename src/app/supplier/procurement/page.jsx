@@ -745,7 +745,7 @@ function ProcurementContent() {
                 </span>
               ) : (
                 <span className={styles.ts_rate_tag}>
-                  Total Solids Rate:{" "}
+                  TSR:{" "}
                   {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
                 </span>
               )}

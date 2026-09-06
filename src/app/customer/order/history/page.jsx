@@ -296,7 +296,7 @@ function OrderHistoryContent() {
       </div>
 
       {/* Summary Cards */}
-      {!loading && data.summary?.orderCount > 0 && (
+      {/* {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.stats_card}>
           <h3 className={styles.stats_header}>
             Summary
@@ -333,7 +333,7 @@ function OrderHistoryContent() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Export Section */}
       {!loading && data.summary?.orderCount > 0 && (

@@ -120,21 +120,17 @@ export default function Footer() {
         </div>
 
         <div className={styles.footerBottom}>
-          <div className={styles.copyright}>
+          <div className={styles.copyright}> <span className={styles.copyrightText}>
+             {`Enjoy the rest of your 
+              ${new Date(getTodayDate()).toLocaleDateString("en-IN", {
+                weekday: "long"
+              })}`}
+            </span>
             <span className={styles.copyrightText}>
-              Today:{" "}
-              {new Date(getTodayDate()).toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
+              © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
 
-            <span className={styles.copyrightText}>
-              © {currentYear} Magizh Dairy. All rights reserved.
-            </span>
-
-            <span className={styles.version}>v1.7.0</span>
+            <span className={styles.version}>v1.7.1</span>
           </div>
         </div>
       </div>

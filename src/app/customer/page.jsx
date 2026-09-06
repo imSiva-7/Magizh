@@ -469,7 +469,7 @@ export default function Customer() {
                 aria-label="Create new customer"
               >
                 <span className={styles.plusIcon}>+</span>
-                Create New Customer
+                 New Customer
               </button>
             </div>
           )}

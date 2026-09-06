@@ -180,17 +180,17 @@ const SummaryStats = ({ summary, filters, onEditPaid }) => {
     // }
     // if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
     // if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-    // return "All Records";
-    return "";
+    return "All Time";
+    // return "";
   };
 
   return (
     <div className={styles.summary_box}>
       <h3>
         Summary{" "}
-        {/* <span className={styles.date_range_badge}>
+        <span className={styles.date_range_badge}>
           {getDateRangeLabel(filters.startDate, filters.endDate)}
-        </span> */}
+        </span>
       </h3>
       <div className={styles.stats_grid}>
         <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
@@ -753,11 +753,21 @@ function OrdersContent() {
         </form>
       </div>
 
+      
+      {summary.orderCount > 0 && (
+        <SummaryStats
+          summary={summary}
+          filters={filters}
+          onEditPaid={() => setShowPaidPopup(true)}
+        />
+      )}
+
       {/* Filter Section */}
       {data.orders.length > 0 && (
         <div className={styles.filter_section}>
           <div className={styles.form_header}>
             <h2>Filter by Date Range</h2>
+            <span>(Does not have an effect on summary)</span>
           </div>
           <div className={styles.filter_row}>
             <div className={styles.date_input_group}>
@@ -797,13 +807,6 @@ function OrdersContent() {
         </div>
       )}
 
-      {summary.orderCount > 0 && (
-        <SummaryStats
-          summary={summary}
-          filters={filters}
-          onEditPaid={() => setShowPaidPopup(true)}
-        />
-      )}
 
       {/* Export & Bulk Actions */}
       {filteredOrders.length > 0 && (

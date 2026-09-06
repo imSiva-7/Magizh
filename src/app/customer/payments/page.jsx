@@ -23,17 +23,17 @@ const INITIAL_FILTERS = {
 const INITIAL_VISIBLE_COUNT = 20;
 
 // ========== HELPER FUNCTIONS ==========
-const getFormattedDateRange = (startDate, endDate) => {
-  if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
-    return from === to ? from : `${from} to ${to}`;
-  }
-  if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-  return "All Records";
-};
+// const getFormattedDateRange = (startDate, endDate) => {
+//   if (startDate && endDate) {
+//     const from = new Date(startDate).toLocaleDateString("en-IN");
+//     const to = new Date(endDate).toLocaleDateString("en-IN");
+//     return from === to ? from : `${from} to ${to}`;
+//   }
+//   if (startDate)
+//     return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
+//   if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+//   return "All Records";
+// };
 
 const getCustomerTypeClass = (customerType) => {
   const typeClassMap = {
@@ -63,28 +63,29 @@ const StatItem = ({ label, value, unit = "", colorClass = "" }) => (
     </div>
   </div>
 );
-const PaidStatItem = ({ label, value, unit = "", colorClass = "", onEditClick }) => (
+const PaidStatItem = ({
+  label,
+  value,
+  unit = "",
+  colorClass = "",
+  onEditClick,
+}) => (
   <div className={styles.stat_card}>
     <div className={styles.stat_card_label}>{label}</div>
     <div className={`${styles.stat_card_value} ${colorClass}`}>
       {value}
       {unit && <span className={styles.stat_unit}>{unit}</span>}
     </div>
-    {onEditClick && (
+    {/* {onEditClick && (
       <button
         onClick={onEditClick}
         className={styles.edit_payment_btn}
         title="Record Payment"
       >
-        <Image 
-          src="/payment.png" 
-          alt="payment" 
-          width={16} 
-          height={16} 
-        />
+        <Image src="/payment.png" alt="payment" width={16} height={16} />
         <span>Add Amount </span>
       </button>
-    )}
+    )} */}
   </div>
 );
 
@@ -150,7 +151,15 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
 };
 
 // Payment popup component
-const PaymentPopup = ({ isOpen, customerId, customerName, currentPaid, currentDue, onClose, onSuccess }) => {
+const PaymentPopup = ({
+  isOpen,
+  customerId,
+  customerName,
+  currentPaid,
+  currentDue,
+  onClose,
+  onSuccess,
+}) => {
   const [inputValue, setInputValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -171,17 +180,20 @@ const PaymentPopup = ({ isOpen, customerId, customerName, currentPaid, currentDu
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paidAmount: amount }),
-      });
-      
+      const res = await fetch(
+        `/api/customer/total_orders?customerId=${customerId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paidAmount: amount }),
+        },
+      );
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to update payment");
       }
-      
+
       toast.success("Payment updated successfully");
       onSuccess();
       onClose();
@@ -197,8 +209,18 @@ const PaymentPopup = ({ isOpen, customerId, customerName, currentPaid, currentDu
       <div className={styles.modal_content}>
         <h3>Record Payment - {customerName}</h3>
         <div className={styles.payment_info}>
-          <p>Current Paid: <span className={styles.text_green}>₹{formatNumberWithCommas(currentPaid)}</span></p>
-          <p>Current Due: <span className={styles.text_red}>₹{formatNumberWithCommas(currentDue)}</span></p>
+          <p>
+            Current Paid:{" "}
+            <span className={styles.text_green}>
+              ₹{formatNumberWithCommas(currentPaid)}
+            </span>
+          </p>
+          <p>
+            Current Due:{" "}
+            <span className={styles.text_red}>
+              ₹{formatNumberWithCommas(currentDue)}
+            </span>
+          </p>
         </div>
         <label>
           Payment Amount:
@@ -534,7 +556,7 @@ export default function CustomerPayments() {
     if (ordersData.length > 0) {
       ordersData.forEach((order) => {
         const custId = order.customerId;
-        
+
         // Initialize customer totals if not already present
         if (!totals[custId]) {
           totals[custId] = {
@@ -710,10 +732,11 @@ export default function CustomerPayments() {
       {/* Date & Status Filters */}
       <div className={styles.filter_section}>
         <div className={styles.filter_title}>
-          <h2>Filter by Date Range & Status</h2>
+          <h2>Filter by Date Range</h2>
+          <span>(Does not have an effect on summary & stats)</span>
         </div>
 
-        <div className={styles.radio_group}>
+        {/* <div className={styles.radio_group}>
           <label className={styles.radio_label}>
             <input
               type="radio"
@@ -747,7 +770,7 @@ export default function CustomerPayments() {
             />
             <span className={styles.text_red}>Due</span>
           </label>
-        </div>
+        </div> */}
 
         <div className={styles.date_input_group}>
           <div className={styles.date_field}>
@@ -812,14 +835,14 @@ export default function CustomerPayments() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>All Customers Summary</h2>
-            <span className={styles.date_range_badge}>
-              All Time Totals
-            </span>
+            <span className={styles.date_range_badge}>All Time Totals</span>
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
               label="Total Orders"
-              value={formatNumberWithCommasNoDecimal(globalStats.totalOrders || 0)}
+              value={formatNumberWithCommasNoDecimal(
+                globalStats.totalOrders || 0,
+              )}
             />
             <StatItem
               label="Total Amount"
@@ -850,10 +873,10 @@ export default function CustomerPayments() {
             // Get totals from API data
             const apiTotals = customerTotals[customer._id];
             const stats = customerTotalsMap[customer._id];
-            
+
             // Only show customers that have data in total_orders API
             if (!apiTotals || apiTotals.totalAmount === 0) return null;
-            
+
             // Get orders for this customer (filtered by date and status)
             const orders = stats?.orders || [];
             const visibleCount =
@@ -884,10 +907,10 @@ export default function CustomerPayments() {
                       {customer.customerType || "Other"}
                     </span>
                   </div>
-                  {/* <div className={styles.header_right}>
+                  <div className={styles.header_right}>
                     <button
                       onClick={() => handleOpenPayment(customer)}
-                      className={styles.payment_btn}
+                      className={styles.edit_payment_btn}
                       title="Record Payment"
                       disabled={submitting}
                     >
@@ -897,27 +920,27 @@ export default function CustomerPayments() {
                         width={20} 
                         height={20} 
                       />
-                      <span>Payment</span>
+                      <span>Add Amount</span>
                     </button>
-                  </div> */}
+                  </div>
                 </div>
 
                 {/* Quick Stats Row - Data from total_orders API */}
                 <div className={styles.quick_stats}>
-                  <StatItem 
-                    label="Total Orders" 
-                    value={customerTotals[customer._id]?.totalOrders || 0} 
+                  <StatItem
+                    label="Total Orders (All Time)"
+                    value={customerTotals[customer._id]?.totalOrders || 0}
                   />
                   <StatItem
                     label="Total Amount"
                     value={`₹${formatNumberWithCommasNoDecimal(
-                      customerTotals[customer._id]?.totalAmount || 0
+                      customerTotals[customer._id]?.totalAmount || 0,
                     )}`}
                   />
                   <PaidStatItem
                     label="Paid"
                     value={`₹${formatNumberWithCommasNoDecimal(
-                      customerTotals[customer._id]?.paidAmount || 0
+                      customerTotals[customer._id]?.paidAmount || 0,
                     )}`}
                     colorClass={styles.text_green}
                     onEditClick={() => handleOpenPayment(customer)}
@@ -925,7 +948,7 @@ export default function CustomerPayments() {
                   <StatItem
                     label="Due"
                     value={`₹${formatNumberWithCommasNoDecimal(
-                      customerTotals[customer._id]?.dueAmount || 0
+                      customerTotals[customer._id]?.dueAmount || 0,
                     )}`}
                     colorClass={styles.text_red}
                   />

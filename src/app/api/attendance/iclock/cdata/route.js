@@ -76,10 +76,10 @@ export async function POST(request) {
       if (fields.length >= 2 && fields[1]?.includes("-") && fields[1]?.includes(":")) {
         const employeeId = fields[0].replace(/^OPLOG\s+/, "").trim(); // strip header prefix if present
         const timestampStr = fields[1].trim();
+        const localDate = new Date(timestampStr.replace(" ", "T") + "+05:30");
         const attendanceState = parseInt(fields[2] || "0", 10);
         const verifyType = parseInt(fields[3] || "1", 10);
 
-        const parsedTimestamp = new Date(timestampStr);
 
         // Validate timestamp validity
         if (!isNaN(parsedTimestamp.getTime())) {
@@ -91,7 +91,7 @@ export async function POST(request) {
             employeeId,
             employeeName: "",
             department: "",
-            timestamp: parsedTimestamp,
+            timestamp: localDate,
             date,
             type,
             method,

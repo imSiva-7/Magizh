@@ -51,7 +51,7 @@
   color: #1e293b;
   margin: 0;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  /* border-bottom: 2px solid #e2e8f0; */
 }
 
 /* Search */
@@ -123,8 +123,9 @@
   align-items: center;
   padding: 0.5rem 0;
   border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-}
+  padding-top: 0.5rem;
+  /* border-bottom: 1px solid #e2e8f0; */
+} 
 
 .radio_label {
   display: flex;
@@ -401,9 +402,9 @@
 .type_restaurant_badge,
 .type_other_badge,
 .default_customer {
-  padding: 0.5rem 0.75rem;
+  padding: 0.2rem 0.2rem;
   border-radius: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.4rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -497,10 +498,10 @@
 }
 
 .edit_payment_btn:hover:not(:disabled) {
-  background: rgb(39, 121, 93);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(39, 121, 93, 0.3);
+  /* background: rgb(39, 121, 93); */
+  /* color: white; */
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(191, 191, 191, 0.3);
 }
 
 .edit_payment_btn:disabled {

@@ -39,11 +39,11 @@
   gap: 1.5rem;
 }
 
-.filter_title {
+/* .filter_title {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
   border-bottom: 2px solid #e2e8f0;
-}
+} */
 
 .filter_title h2 {
   font-size: 1.5rem;
@@ -114,32 +114,6 @@
   color: #dc2626;
 }
 
-/* Radio group for status filter */
-.radio_group {
-  display: flex;
-  /* flex-wrap: wrap; */
-  gap: 1.5rem;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.radio_label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-  color: #334155;
-  cursor: pointer;
-}
-
-.radio_label input[type="radio"] {
-  width: 1rem;
-  height: 1rem;
-  accent-color: rgb(39, 121, 93);
-  cursor: pointer;
-}
 
 .text_green {
   color: #166534 !important;
@@ -160,7 +134,7 @@
   align-items: center;
   padding: 0.5rem 0;
   border-top: 1px solid #e2e8f0;
-  border-bottom: 1px solid #e2e8f0;
+  /* border-bottom: 1px solid #e2e8f0; */
 }
 
 .radio_label {
