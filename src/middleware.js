@@ -3,7 +3,7 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 const rolePermissions = {
-  admin: ["/admin", "/customer", "/supplier", "/productions", "/stock", "/api/admin"],
+  admin: ["/admin", "/customer", "/supplier", "/productions", "/stock", "/api/admin", "/employee"],
   dev: ["/admin", "/customer", "/supplier", "/productions", "/stock", "/api/admin",],
   employee: ["/customer", "/supplier", "/stock", "/productions"],
 };
@@ -80,6 +80,7 @@ export const config = {
     "/customer/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
+    "/employee"
     
   ],
 };

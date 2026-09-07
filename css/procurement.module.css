@@ -1111,12 +1111,22 @@ input[type="date"]::-webkit-date-and-time-value {
   .export_section {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
   }
   
-  /* .export_buttons {
-    flex-direction: column;
-    align-items: stretch;
-  } */
+  .export_buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .export_btn {
+    flex: 1;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
 
   .table {
     min-width: 900px;
@@ -1148,6 +1158,21 @@ input[type="date"]::-webkit-date-and-time-value {
     .export_section {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .export_buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .export_btn {
+    flex: 1;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
   }
   .date_field label {
     font-size: 0.8125rem;
