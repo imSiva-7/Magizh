@@ -42,6 +42,7 @@ export default function Footer() {
                   </Link>
                 </li>
               )}
+
               <li>
                 <Link href="/productions" className={styles.footerLink}>
                   Productions
@@ -63,14 +64,21 @@ export default function Footer() {
                   Suppliers
                 </Link>
               </li>
+              {isAdmin && (
+                <li>
+                  <Link href="/employee" className={styles.footerLink}>
+                    Employees
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
-            <div className={styles.footerSection}>
+          <div className={styles.footerSection}>
             <h4 className={styles.sectionTitle}>ANALYTICS</h4>
             <ul className={styles.footerLinks}>
               <li>
                 <Link href="/supplier/analytics" className={styles.footerLink}>
-                  Procurements 
+                  Procurements
                 </Link>
               </li>
               <li>
@@ -78,13 +86,13 @@ export default function Footer() {
                   href="/productions/analytics"
                   className={styles.footerLink}
                 >
-                  Production 
+                  Production
                 </Link>
               </li>
 
               <li>
                 <Link href="/customer/analytics" className={styles.footerLink}>
-                  Orders 
+                  Orders
                 </Link>
               </li>
             </ul>
@@ -116,20 +124,20 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-        
         </div>
 
         <div className={styles.footerBottom}>
-          <div className={styles.copyright}> <span className={styles.copyrightText}>
-             {`Enjoy the rest of your 
+          <div className={styles.copyright}>
+            {" "}
+            <span className={styles.copyrightText}>
+              {`Enjoy the rest of your 
               ${new Date(getTodayDate()).toLocaleDateString("en-IN", {
-                weekday: "long"
+                weekday: "long",
               })}`}
             </span>
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-
             <span className={styles.version}>v1.7.1</span>
           </div>
         </div>

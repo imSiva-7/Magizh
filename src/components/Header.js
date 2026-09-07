@@ -49,6 +49,7 @@ const mobileNavItems = [
   { name: "Customers", path: "/customer" },
   { name: "Order History", path: "/customer/order/history" },
   { name: "Order Payments", path: "/customer/payments" },
+ 
 
 ];
 
@@ -57,6 +58,8 @@ export default function Header() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
+   const isAdmin =
+    session?.user?.role === "admin";
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
