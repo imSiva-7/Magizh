@@ -64,7 +64,7 @@ export async function GET(request) {
     const employees = await db
       .collection("employee")
       .find(query)
-      .sort({ createdAt: -1 })
+      .sort({ empID: 1 })
       .toArray();
 
     return NextResponse.json(employees);
