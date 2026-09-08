@@ -79,6 +79,7 @@ export async function GET(request) {
       .toArray();
 
     // Calculate work hours per day
+    // Since there's only one machine, first punch = check-in, last punch = check-out
     const dailyRecords = {};
 
     attendanceRecords.forEach((record) => {
@@ -91,14 +92,28 @@ export async function GET(request) {
           records: [],
         };
       }
-
       dailyRecords[date].records.push(record);
+    });
 
-      if (record.type === "check-in" && !dailyRecords[date].checkIn) {
-        dailyRecords[date].checkIn = record.time;
-      }
-      if (record.type === "check-out") {
-        dailyRecords[date].checkOut = record.time;
+    // Process each day to determine first and last punch
+    Object.keys(dailyRecords).forEach((date) => {
+      const dayRecords = dailyRecords[date].records;
+      
+      if (dayRecords.length > 0) {
+        // Sort records by time to get first and last
+        dayRecords.sort((a, b) => {
+          const timeA = a.time || "00:00:00";
+          const timeB = b.time || "00:00:00";
+          return timeA.localeCompare(timeB);
+        });
+
+        // First punch = check-in
+        dailyRecords[date].checkIn = dayRecords[0].time;
+        
+        // Last punch = check-out (if there's more than one punch)
+        if (dayRecords.length > 1) {
+          dailyRecords[date].checkOut = dayRecords[dayRecords.length - 1].time;
+        }
       }
     });
 

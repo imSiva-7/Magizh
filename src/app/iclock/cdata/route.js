@@ -48,7 +48,6 @@ export async function POST(request) {
 
     const lines = rawText.split("\n");
     const recordsToInsert = [];
-
     const verifyTypeMap = {
       0: "password",
       1: "fingerprint",
@@ -97,10 +96,10 @@ export async function POST(request) {
               timestamp: localDate,
               date,
               time,
-              type,
+              // type,
               method,
               deviceId,
-              status: "on-time",
+              // status: "on-time",
               rawLine: line,
               createdAt: new Date(),
             });
