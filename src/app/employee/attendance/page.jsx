@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/attendance.module.css";
 
-export default function EmployeeAttendance() {
+function AttendanceContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -548,5 +548,18 @@ export default function EmployeeAttendance() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function EmployeeAttendance() {
+  return (
+    <Suspense fallback={
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <p>Loading...</p>
+      </div>
+    }>
+      <AttendanceContent />
+    </Suspense>
   );
 }
