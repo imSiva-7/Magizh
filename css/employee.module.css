@@ -393,6 +393,22 @@
   color: #1e293b;
 }
 
+.employeeName {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background-color: rgb(39, 121, 93);
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.employeeName:hover {
+  background-color: rgba(225, 225, 225, 0.2);
+  color: rgb(39, 121, 93);
+}
+
 .empIDCell {
   min-width: 100px;
   text-align: center;

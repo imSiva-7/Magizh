@@ -715,6 +715,7 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .table_container {
   overflow-x: auto;
+  overflow-y: visible;
   /* -webkit-overflow-scrolling: touch; */
   border-radius: 0.5rem;
   border: 1px solid #e2e8f0;
@@ -728,6 +729,8 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .table thead {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  position: relative;
+  z-index: 1;
 }
 .table th {
   padding: 1rem;

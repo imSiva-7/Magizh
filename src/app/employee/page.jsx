@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/employee.module.css";
@@ -717,7 +718,14 @@ export default function Employee() {
               ) : (
                 filteredEntries.map((item) => (
                   <tr key={item._id} className={styles.tableRow}>
-                    <td className={styles.nameCell}>{item.name || "-"}</td>
+                    <td className={styles.nameCell}>
+                      <Link
+                        href={`/employee/attendance?empID=${item.empID}`}
+                        className={styles.employeeName}
+                      >
+                        {item.name || "-"}
+                      </Link>
+                    </td>
                     <td className={styles.empIDCell}>
                       <span className={styles.empIDBadge}>
                         {item.empID || "-"}

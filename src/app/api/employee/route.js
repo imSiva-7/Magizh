@@ -92,7 +92,7 @@ export async function POST(request) {
 
     // Check empID uniqueness
     const existingEmployee = await db
-      .collection("employees")
+      .collection("employee")
       .findOne({ empID: data.empID });
 
     if (existingEmployee) {

@@ -60,47 +60,56 @@ export async function POST(request) {
       line = line.trim();
       if (!line) continue;
 
-      // Tab-separated string parsing
-      const fields = line.split("\t");
+      try {
+        // Tab-separated string parsing
+        const fields = line.split("\t");
 
-      /**
-       * STANDARD ATTLOG FORMAT:
-       * fields[0] = User ID / Employee ID (e.g. "56321")
-       * fields[1] = Timestamp (e.g. "2026-09-05 02:44:16")
-       * fields[2] = Attendance State / Punch Type (0 = Check In, 1 = Check Out)
-       * fields[3] = Verify Type (1 = Finger, 15 = Face, 2 = Card, etc.)
-       * fields[4] = Work Code (Optional)
-       */
-      
-      // Filter lines containing valid dates
-      if (fields.length >= 2 && fields[1]?.includes("-") && fields[1]?.includes(":")) {
-        const employeeId = fields[0].replace(/^OPLOG\s+/, "").trim(); // strip header prefix if present
-        const timestampStr = fields[1].trim();
-        const localDate = new Date(timestampStr.replace(" ", "T") + "+05:30");
-        const attendanceState = parseInt(fields[2] || "0", 10);
-        const verifyType = parseInt(fields[3] || "1", 10);
+        /**
+         * STANDARD ATTLOG FORMAT:
+         * fields[0] = User ID / Employee ID (e.g. "56321")
+         * fields[1] = Timestamp (e.g. "2026-09-05 02:44:16")
+         * fields[2] = Attendance State / Punch Type (0 = Check In, 1 = Check Out)
+         * fields[3] = Verify Type (1 = Finger, 15 = Face, 2 = Card, etc.)
+         * fields[4] = Work Code (Optional)
+         */
+        
+        // Filter lines containing valid dates
+        if (fields.length >= 2 && fields[1]?.includes("-") && fields[1]?.includes(":")) {
+          const employeeId = fields[0].replace(/^OPLOG\s+/, "").trim(); // strip header prefix if present
+          const timestampStr = fields[1].trim();
+          
+          // Parse timestamp correctly
+          const localDate = new Date(timestampStr.replace(" ", "T") + "+05:30");
+          const attendanceState = parseInt(fields[2] || "0", 10);
+          const verifyType = parseInt(fields[3] || "1", 10);
 
+          // Validate timestamp validity
+          if (!isNaN(localDate.getTime())) {
+            const type = attendanceState === 0 ? "check-in" : "check-out";
+            const method = verifyTypeMap[verifyType] || "unknown";
+            const date = timestampStr.split(" ")[0];
+            const time = timestampStr.split(" ")[1] || "";
 
-        // Validate timestamp validity
-        if (!isNaN(parsedTimestamp.getTime())) {
-          const type = attendanceState === 0 ? "check-in" : "check-out";
-          const method = verifyTypeMap[verifyType] || "unknown";
-          const date = timestampStr.split(" ")[0];
-
-          recordsToInsert.push({
-            employeeId,
-            employeeName: "",
-            department: "",
-            timestamp: localDate,
-            date,
-            type,
-            method,
-            deviceId,
-            status: "on-time",
-            rawLine: line,
-            createdAt: new Date(),
-          });
+            recordsToInsert.push({
+              employeeId,
+              employeeName: "",
+              department: "",
+              timestamp: localDate,
+              date,
+              time,
+              type,
+              method,
+              deviceId,
+              status: "on-time",
+              rawLine: line,
+              createdAt: new Date(),
+            });
+          }
         }
+      } catch (lineError) {
+        console.error(`[ZKTeco Line Parse Error]:`, lineError, `Line: ${line}`);
+        // Continue processing other lines
+        continue;
       }
     }
 
