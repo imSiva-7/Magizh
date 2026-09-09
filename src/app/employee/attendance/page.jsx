@@ -150,7 +150,7 @@ function AttendanceContent() {
     }
 
     try {
-      const res = await fetch(`/api/attendance?id=${advanceId}`, {
+      const res = await fetch(`/api/attendance?id=${advanceId}&empID=${selectedEmpID}&month=${month}`, {
         method: "DELETE",
       });
 

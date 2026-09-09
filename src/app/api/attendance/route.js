@@ -10,12 +10,10 @@ const METHOD_NAMES = {
 };
 
 /**
- * GET: Fetch attendance records for an employee with salary calculations
+ * GET: Fetch attendance records for an employee from nested structure
  * Query params:
  * - empID: Employee ID (4-digit)
- * - startDate: Start date filter (YYYY-MM-DD)
- * - endDate: End date filter (YYYY-MM-DD)
- * - month: Get data for specific month (YYYY-MM)
+ * - month: Get data for specific month (YYYY-MM) - REQUIRED
  */
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
@@ -23,8 +21,6 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const empID = searchParams.get("empID");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
     const month = searchParams.get("month");
 
     const db = await getDatabase();
@@ -36,7 +32,14 @@ export async function GET(request) {
       );
     }
 
-    // Fetch employee details
+    if (!month) {
+      return NextResponse.json(
+        { error: "month is required (format: YYYY-MM)" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch employee with nested attendance data - SINGLE QUERY!
     const employee = await db.collection("employee").findOne({ empID });
 
     if (!employee) {
@@ -46,120 +49,40 @@ export async function GET(request) {
       );
     }
 
-    // Build date filter - use employeeId (from device) to match with empID (from employees)
-    let dateFilter = { employeeId: empID };
+    // Get attendance data for the requested month - INSTANT ACCESS!
+    const monthData = employee.attendance?.[month] || { 
+      days: {}, 
+      totalHours: 0, 
+      regularHours: 0, 
+      overtimeHours: 0, 
+      daysWorked: 0 
+    };
+    
+    // Get advances for the month - INSTANT ACCESS!
+    const advances = employee.advances?.[month] || [];
 
-    if (month) {
-      // If month provided (YYYY-MM), get records for that month
-      const [year, monthNum] = month.split("-");
-      const startOfMonth = `${year}-${monthNum}-01`;
-      const lastDay = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
-      const endOfMonth = `${year}-${monthNum}-${String(lastDay).padStart(2, "0")}`;
-      
-      dateFilter.date = {
-        $gte: startOfMonth,
-        $lte: endOfMonth,
-      };
-    } else if (startDate && endDate) {
-      dateFilter.date = {
-        $gte: startDate,
-        $lte: endDate,
-      };
-    } else if (startDate) {
-      dateFilter.date = { $gte: startDate };
-    } else if (endDate) {
-      dateFilter.date = { $lte: endDate };
-    }
+    // Convert days object to array for frontend
+    const attendanceArray = Object.keys(monthData.days || {})
+      .sort()
+      .map(dayKey => ({
+        date: monthData.days[dayKey].date,
+        checkIn: monthData.days[dayKey].checkIn,
+        checkOut: monthData.days[dayKey].checkOut,
+        hoursWorked: monthData.days[dayKey].hoursWorked || 0,
+        regularHours: monthData.days[dayKey].regularHours || 0,
+        overtimeHours: monthData.days[dayKey].overtimeHours || 0,
+        punches: monthData.days[dayKey].punches || []
+      }));
 
-    // Fetch attendance records
-    const attendanceRecords = await db
-      .collection("attendance")
-      .find(dateFilter)
-      .sort({ date: 1, time: 1 })
-      .toArray();
+    // Calculate totals from daily data
+    const totalHoursWorked = attendanceArray.reduce((sum, day) => sum + day.hoursWorked, 0);
+    const totalRegularHours = attendanceArray.reduce((sum, day) => sum + day.regularHours, 0);
+    const totalOvertimeHours = attendanceArray.reduce((sum, day) => sum + day.overtimeHours, 0);
 
-    // Calculate work hours per day
-    // Since there's only one machine, first punch = check-in, last punch = check-out
-    const dailyRecords = {};
-
-    attendanceRecords.forEach((record) => {
-      const date = record.date;
-      if (!dailyRecords[date]) {
-        dailyRecords[date] = {
-          date,
-          checkIn: null,
-          checkOut: null,
-          records: [],
-        };
-      }
-      dailyRecords[date].records.push(record);
-    });
-
-    // Process each day to determine first and last punch
-    Object.keys(dailyRecords).forEach((date) => {
-      const dayRecords = dailyRecords[date].records;
-      
-      if (dayRecords.length > 0) {
-        // Sort records by time to get first and last
-        dayRecords.sort((a, b) => {
-          const timeA = a.time || "00:00:00";
-          const timeB = b.time || "00:00:00";
-          return timeA.localeCompare(timeB);
-        });
-
-        // First punch = check-in
-        dailyRecords[date].checkIn = dayRecords[0].time;
-        
-        // Last punch = check-out (if there's more than one punch)
-        if (dayRecords.length > 1) {
-          dailyRecords[date].checkOut = dayRecords[dayRecords.length - 1].time;
-        }
-      }
-    });
-
-    // Calculate hours worked per day
-    const processedDays = Object.values(dailyRecords).map((day) => {
-      let hoursWorked = 0;
-      let regularHours = 0;
-      let overtimeHours = 0;
-
-      if (day.checkIn && day.checkOut) {
-        const checkInTime = new Date(`${day.date}T${day.checkIn}`);
-        const checkOutTime = new Date(`${day.date}T${day.checkOut}`);
-        
-        const diffMs = checkOutTime - checkInTime;
-        hoursWorked = Math.max(0, diffMs / (1000 * 60 * 60)); // Convert to hours
-
-        // Standard is 10 hours per day
-        regularHours = Math.min(hoursWorked, 10);
-        overtimeHours = Math.max(0, hoursWorked - 10);
-      }
-
-      return {
-        ...day,
-        hoursWorked: parseFloat(hoursWorked.toFixed(2)),
-        regularHours: parseFloat(regularHours.toFixed(2)),
-        overtimeHours: parseFloat(overtimeHours.toFixed(2)),
-      };
-    });
-
-    // Calculate totals
-    const totalRegularHours = processedDays.reduce((sum, day) => sum + day.regularHours, 0);
-    const totalOvertimeHours = processedDays.reduce((sum, day) => sum + day.overtimeHours, 0);
-    const totalHoursWorked = processedDays.reduce((sum, day) => sum + day.hoursWorked, 0);
-
-    // Calculate days in the period
-    let daysInPeriod = 0;
-    if (month) {
-      const [year, monthNum] = month.split("-");
-      daysInPeriod = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
-    } else if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      daysInPeriod = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    } else {
-      daysInPeriod = processedDays.length;
-    }
+    // Calculate days in the month
+    const [year, monthNum] = month.split("-");
+    const daysInPeriod = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
+    const daysWorked = attendanceArray.length;
 
     // Salary calculations
     const standardHours = daysInPeriod * 10; // 10 hours per day
@@ -170,25 +93,13 @@ export async function GET(request) {
     const overtimePay = totalOvertimeHours * overtimeRate;
     const grossSalary = regularPay + overtimePay;
 
-    // Fetch advances for this period
-    const advanceFilter = { empID };
-    if (month) {
-      advanceFilter.month = month;
-    } else if (startDate && endDate) {
-      advanceFilter.date = {
-        $gte: startDate,
-        $lte: endDate,
-      };
-    }
-
-    const advances = await db
-      .collection("advances")
-      .find(advanceFilter)
-      .sort({ date: -1 })
-      .toArray();
-
-    const totalAdvances = advances.reduce((sum, adv) => sum + adv.amount, 0);
+    // Calculate total advances
+    const totalAdvances = advances.reduce((sum, adv) => sum + (adv.amount || 0), 0);
     const netSalary = grossSalary - totalAdvances;
+
+    // Get start and end dates
+    const startDate = attendanceArray.length > 0 ? attendanceArray[0].date : `${month}-01`;
+    const endDate = attendanceArray.length > 0 ? attendanceArray[attendanceArray.length - 1].date : `${month}-${String(daysInPeriod).padStart(2, '0')}`;
 
     return NextResponse.json({
       employee: {
@@ -198,13 +109,13 @@ export async function GET(request) {
         mobile: employee.mobile,
       },
       period: {
-        startDate: startDate || processedDays[0]?.date,
-        endDate: endDate || processedDays[processedDays.length - 1]?.date,
+        startDate,
+        endDate,
         daysInPeriod,
-        daysWorked: processedDays.length,
+        daysWorked,
         month,
       },
-      attendance: processedDays,
+      attendance: attendanceArray,
       summary: {
         totalHoursWorked: parseFloat(totalHoursWorked.toFixed(2)),
         totalRegularHours: parseFloat(totalRegularHours.toFixed(2)),
@@ -230,7 +141,7 @@ export async function GET(request) {
 }
 
 /**
- * POST: Add an advance payment for an employee
+ * POST: Add an advance payment for an employee (nested in employee.advances)
  */
 export async function POST(request) {
   const METHOD = METHOD_NAMES.POST;
@@ -263,21 +174,34 @@ export async function POST(request) {
       );
     }
 
+    const month = data.month || new Date().toISOString().slice(0, 7); // YYYY-MM
     const advanceData = {
-      empID: data.empID,
+      _id: new ObjectId().toString(),
       amount: parseFloat(data.amount),
       date: data.date || new Date().toISOString().split("T")[0],
-      month: data.month || new Date().toISOString().slice(0, 7), // YYYY-MM
       reason: data.reason?.trim() || "",
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
 
-    const result = await db.collection("advances").insertOne(advanceData);
+    // Initialize advances object if it doesn't exist
+    if (!employee.advances) {
+      await db.collection("employee").updateOne(
+        { empID: data.empID },
+        { $set: { advances: {} } }
+      );
+    }
+
+    // Add advance to the month's array
+    await db.collection("employee").updateOne(
+      { empID: data.empID },
+      { 
+        $push: { [`advances.${month}`]: advanceData },
+        $set: { updatedAt: new Date() }
+      }
+    );
 
     return NextResponse.json(
       {
-        _id: result.insertedId,
         ...advanceData,
         message: "Advance payment recorded successfully",
       },
@@ -293,7 +217,7 @@ export async function POST(request) {
 }
 
 /**
- * PUT: Update an advance payment
+ * PUT: Update an advance payment (nested in employee.advances)
  */
 export async function PUT(request) {
   const METHOD = METHOD_NAMES.PUT;
@@ -301,27 +225,46 @@ export async function PUT(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const empID = searchParams.get("empID");
+    const month = searchParams.get("month");
 
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Valid ID required" }, { status: 400 });
+    if (!id || !empID || !month) {
+      return NextResponse.json(
+        { error: "id, empID, and month are required" },
+        { status: 400 }
+      );
     }
 
     const db = await getDatabase();
     const data = await request.json();
 
-    const updateData = { updatedAt: new Date() };
-    if (data.amount !== undefined) updateData.amount = parseFloat(data.amount);
-    if (data.date !== undefined) updateData.date = data.date;
-    if (data.month !== undefined) updateData.month = data.month;
-    if (data.reason !== undefined) updateData.reason = data.reason.trim();
-
-    const result = await db
-      .collection("advances")
-      .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
-
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: "Advance payment not found" }, { status: 404 });
+    // Find the employee and update the specific advance
+    const employee = await db.collection("employee").findOne({ empID });
+    if (!employee) {
+      return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
+
+    const advances = employee.advances?.[month] || [];
+    const advanceIndex = advances.findIndex(adv => adv._id === id);
+
+    if (advanceIndex === -1) {
+      return NextResponse.json({ error: "Advance not found" }, { status: 404 });
+    }
+
+    // Update the advance
+    if (data.amount !== undefined) advances[advanceIndex].amount = parseFloat(data.amount);
+    if (data.date !== undefined) advances[advanceIndex].date = data.date;
+    if (data.reason !== undefined) advances[advanceIndex].reason = data.reason.trim();
+
+    await db.collection("employee").updateOne(
+      { empID },
+      { 
+        $set: { 
+          [`advances.${month}`]: advances,
+          updatedAt: new Date()
+        } 
+      }
+    );
 
     return NextResponse.json({ message: "Advance payment updated successfully" });
   } catch (error) {
@@ -331,7 +274,7 @@ export async function PUT(request) {
 }
 
 /**
- * DELETE: Delete an advance payment
+ * DELETE: Delete an advance payment (nested in employee.advances)
  */
 export async function DELETE(request) {
   const METHOD = METHOD_NAMES.DELETE;
@@ -339,19 +282,32 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const empID = searchParams.get("empID");
+    const month = searchParams.get("month");
 
-    if (!id || !ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Valid ID required" }, { status: 400 });
+    if (!id || !empID || !month) {
+      return NextResponse.json(
+        { error: "id, empID, and month are required" },
+        { status: 400 }
+      );
     }
 
     const db = await getDatabase();
 
-    const result = await db
-      .collection("advances")
-      .deleteOne({ _id: new ObjectId(id) });
+    // Remove the advance from the month's array
+    const result = await db.collection("employee").updateOne(
+      { empID },
+      { 
+        $pull: { [`advances.${month}`]: { _id: id } },
+        $set: { updatedAt: new Date() }
+      }
+    );
 
-    if (result.deletedCount === 0) {
-      return NextResponse.json({ error: "Advance payment not found" }, { status: 404 });
+    if (result.modifiedCount === 0) {
+      return NextResponse.json(
+        { error: "Advance not found or already deleted" },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json({

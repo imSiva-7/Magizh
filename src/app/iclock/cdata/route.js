@@ -77,13 +77,13 @@ export async function POST(request) {
           const employeeId = fields[0].replace(/^OPLOG\s+/, "").trim(); // strip header prefix if present
           const timestampStr = fields[1].trim();
           
-          // Parse timestamp correctly
-          const localDate = new Date(timestampStr.replace(" ", "T") + "+05:30");
+          // Parse timestamp correctly - device sends local time, don't add offset
+          const parsedTimestamp = new Date(timestampStr.replace(" ", "T"));
           const attendanceState = parseInt(fields[2] || "0", 10);
           const verifyType = parseInt(fields[3] || "1", 10);
 
           // Validate timestamp validity
-          if (!isNaN(localDate.getTime())) {
+          if (!isNaN(parsedTimestamp.getTime())) {
             const type = attendanceState === 0 ? "check-in" : "check-out";
             const method = verifyTypeMap[verifyType] || "unknown";
             const date = timestampStr.split(" ")[0];
@@ -93,13 +93,13 @@ export async function POST(request) {
               employeeId,
               employeeName: "",
               department: "",
-              timestamp: localDate,
+              timestamp: parsedTimestamp,
               date,
               time,
-              // type,
+              type,
               method,
               deviceId,
-              // status: "on-time",
+              status: "on-time",
               rawLine: line,
               createdAt: new Date(),
             });

@@ -145,6 +145,8 @@ export async function POST(request) {
       salary: parseFloat(data.salary),
       mobile: data.mobile?.trim() || "",
       gender: data.gender.trim(),
+      attendance: {}, // Initialize empty attendance object
+      advances: {}, // Initialize empty advances object
       createdAt: new Date(),
       updatedAt: new Date(),
     };
