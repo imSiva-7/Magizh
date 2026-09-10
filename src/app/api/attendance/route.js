@@ -67,7 +67,7 @@ export async function GET(request) {
       .map(dayKey => ({
         date: monthData.days[dayKey].date,
         checkIn: monthData.days[dayKey].checkIn,
-        checkOut: monthData.days[dayKey].checkOut,
+        checkOut: monthData.days[dayKey].checkOut || "", // null becomes empty string for UI
         hoursWorked: monthData.days[dayKey].hoursWorked || 0,
         regularHours: monthData.days[dayKey].regularHours || 0,
         overtimeHours: monthData.days[dayKey].overtimeHours || 0,
