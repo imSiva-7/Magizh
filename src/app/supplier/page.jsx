@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
-import { useSession } from "next-auth/react"; 
+import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/supplier.module.css";
 
@@ -69,7 +69,7 @@ FormInput.displayName = "FormInput";
 
 export default function Supplier() {
   const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "admin"; // <-- added
+  const isAdmin = session?.user?.role === "admin";
 
   const [createSupplier, setCreateSupplier] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -87,6 +87,9 @@ export default function Supplier() {
       supplierId: null,
       supplierName: "",
       supplierType: "",
+      headSupplier: "",
+      supplierTSRCut: "",
+      childSuppliersIDs: [],
       supplierTSRate: "",
       supplierCustomRate: "",
       supplierNumber: "",
@@ -442,7 +445,6 @@ export default function Supplier() {
     return parsed.toFixed(2);
   };
 
-
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -473,7 +475,7 @@ export default function Supplier() {
                 aria-label="Create new supplier"
               >
                 <span className={styles.plusIcon}>+</span>
-               New Supplier
+                New Supplier
               </button>
             </div>
           )}
@@ -502,6 +504,18 @@ export default function Supplier() {
               required
               disabled={isSubmitting}
             />
+            {/* <input
+              type="checkbox"
+              value={formData.headSupplier}
+              checked={formData.headSupplier === "yes"}
+            />
+
+            {formData.headSupplier &&
+              entries.map((id) => (
+                <div key={id}>
+                  <input type="radioButoon" />
+                </div>
+              ))} */}
 
             <div className={styles.inputGroup}>
               <label htmlFor="f-type">
@@ -640,7 +654,7 @@ export default function Supplier() {
             )}
           </div>
         </div>
-        
+
         <div className={styles.searchStats}>
           {loading ? (
             <span className={styles.loadingText}>Searching...</span>

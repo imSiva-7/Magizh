@@ -38,7 +38,8 @@ export async function POST(request) {
     const table = searchParams.get("table"); // e.g., 'ATTLOG' or 'OPLOG'
 
     const rawText = await request.text();
-    console.log(`[ZKTeco Raw Data Received - Table: ${table}]:\n`, rawText);
+    console.log(`[ZKTeco POST Request] DeviceID: ${deviceId}, Table: ${table}`);
+    console.log(`[ZKTeco Raw Data]:\n${rawText}`);
 
     if (!rawText || rawText.trim() === "") {
       return new Response("OK", {
