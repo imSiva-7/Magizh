@@ -498,8 +498,8 @@ function AttendanceContent() {
                       <th>Check In</th>
                       <th>Check Out</th>
                       <th>Hours Worked</th>
-                      <th>Regular</th>
-                      <th>Overtime</th>
+                      {/* <th>Regular</th>
+                      <th>Overtime</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -513,12 +513,12 @@ function AttendanceContent() {
                           {formatTime(day.checkOut)}
                         </td>
                         <td className={styles.hoursCell}>{day.hoursWorked}h</td>
-                        <td className={styles.regularCell}>
+                        {/* <td className={styles.regularCell}>
                           {day.regularHours}h
                         </td>
                         <td className={styles.overtimeCell}>
                           {day.overtimeHours > 0 ? `${day.overtimeHours}h` : "-"}
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>
