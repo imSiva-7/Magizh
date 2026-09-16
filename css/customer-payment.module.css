@@ -1182,3 +1182,154 @@
     width: 100%;
   }
 }
+
+/* ========== PAYMENT LEDGER MODAL ========== */
+.modal_content_large {
+  background: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+.modal_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.modal_header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close_btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.2s;
+  border-radius: 0.25rem;
+}
+
+.close_btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.ledger_table_wrapper {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ledger_table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.ledger_table thead {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 1;
+}
+
+.ledger_table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.ledger_table td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.ledger_table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.ledger_table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ledger_btn {
+  background: #3b82f6 !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.ledger_btn:hover:not(:disabled) {
+  background: #2563eb !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.ledger_btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal_content_large {
+    width: 95%;
+    padding: 1.5rem;
+    max-height: 85vh;
+  }
+
+  .modal_header h3 {
+    font-size: 1.25rem;
+  }
+
+  .ledger_table {
+    font-size: 0.875rem;
+  }
+
+  .ledger_table th,
+  .ledger_table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal_content_large {
+    width: 98%;
+    padding: 1rem;
+  }
+
+  .ledger_table th,
+  .ledger_table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.813rem;
+  }
+
+  .modal_header h3 {
+    font-size: 1.1rem;
+  }
+}

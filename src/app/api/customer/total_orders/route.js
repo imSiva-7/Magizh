@@ -18,7 +18,9 @@ export async function GET(request) {
       const customerTotals = await db
         .collection("total_orders")
         .findOne({ _id: new ObjectId(customerId) });
-      return NextResponse.json(customerTotals || null);
+
+        const customerTotalsLedger = await db.collection(totalOrdersLedger).find();
+      return NextResponse.json(customerTotals, customerTotalsLedger || null);
     }
 
     if (global) {
@@ -67,10 +69,27 @@ export async function PUT(request) {
       return NextResponse.json({ error: "Paid amount cannot exceed total amount" }, { status: 400 });
     }
 
+    const ledgerEntry = {
+      date: new Date(),
+      amount: newPaid,
+      previousBalance: doc.paidAmount,
+      newBalance: doc.paidAmount + newPaid,
+    };
+
+    // Update the total_orders balance
     await db.collection("total_orders").updateOne(
       { _id: targetId },
       { $set: { paidAmount: doc.paidAmount + newPaid, dueAmount: newDue, updatedAt: new Date() } }
     );
+
+    // Add payment entry to ledger (only for customer payments, not global)
+    if (customerId) {
+      await db.collection("totalOrdersLedger").updateOne(
+        { _id: new ObjectId(customerId) },
+        { $push: { payments: ledgerEntry } },
+        { upsert: true }
+      );
+    }
 
     return NextResponse.json({ message: "Balance updated" });
   } catch (error) {

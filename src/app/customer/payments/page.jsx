@@ -150,6 +150,91 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   );
 };
 
+// Payment Ledger Modal - shows payment history
+const PaymentLedgerModal = ({ isOpen, customerId, customerName, onClose }) => {
+  const [ledgerData, setLedgerData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && customerId) {
+      fetchLedger();
+    }
+  }, [isOpen, customerId]);
+
+  const fetchLedger = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/customer/ledger?customerId=${customerId}`);
+      if (!res.ok) throw new Error("Failed to fetch ledger");
+      
+      const data = await res.json();
+      setLedgerData(data.payments || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load payment history");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.modal_overlay}>
+      <div className={styles.modal_content_large}>
+        <div className={styles.modal_header}>
+          <h3>Payment History - {customerName}</h3>
+          <button onClick={onClose} className={styles.close_btn}>✕</button>
+        </div>
+        
+        {loading ? (
+          <div className={styles.loading_container}>
+            <div className={styles.spinner}></div>
+            <span>Loading payment history...</span>
+          </div>
+        ) : ledgerData.length === 0 ? (
+          <div className={styles.empty_state}>
+            <p>No payment history found</p>
+          </div>
+        ) : (
+          <div className={styles.ledger_table_wrapper}>
+            <table className={styles.ledger_table}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount Paid</th>
+                  <th>Previous Balance</th>
+                  <th>New Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledgerData.map((entry, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      {new Date(entry.date).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className={styles.text_green}>
+                      ₹{formatNumberWithCommas(entry.amount)}
+                    </td>
+                    <td>₹{formatNumberWithCommas(entry.previousBalance || 0)}</td>
+                    <td>₹{formatNumberWithCommas(entry.newBalance || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Payment popup component
 const PaymentPopup = ({
   isOpen,
@@ -162,6 +247,7 @@ const PaymentPopup = ({
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -205,45 +291,62 @@ const PaymentPopup = ({
   };
 
   return (
-    <div className={styles.modal_overlay}>
-      <div className={styles.modal_content}>
-        <h3>Record Payment - {customerName}</h3>
-        <div className={styles.payment_info}>
-          <p>
-            Current Paid:{" "}
-            <span className={styles.text_green}>
-              ₹{formatNumberWithCommas(currentPaid)}
-            </span>
-          </p>
-          <p>
-            Current Due:{" "}
-            <span className={styles.text_red}>
-              ₹{formatNumberWithCommas(currentDue)}
-            </span>
-          </p>
-        </div>
-        <label>
-          Payment Amount:
-          <input
-            type="number"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            autoFocus
-            step="1"
-            placeholder="Enter positive or negative amount"
-            disabled={submitting}
-          />
-        </label>
-        <div className={styles.modal_actions}>
-          <button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Processing..." : "Submit"}
-          </button>
-          <button onClick={onClose} disabled={submitting}>
-            Cancel
-          </button>
+    <>
+      <div className={styles.modal_overlay}>
+        <div className={styles.modal_content}>
+          <h3>Record Payment - {customerName}</h3>
+          <div className={styles.payment_info}>
+            <p>
+              Current Paid:{" "}
+              <span className={styles.text_green}>
+                ₹{formatNumberWithCommas(currentPaid)}
+              </span>
+            </p>
+            <p>
+              Current Due:{" "}
+              <span className={styles.text_red}>
+                ₹{formatNumberWithCommas(currentDue)}
+              </span>
+            </p>
+          </div>
+          <label>
+            Payment Amount:
+            <input
+              type="number"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              autoFocus
+              step="1"
+              placeholder="Enter positive or negative amount"
+              disabled={submitting}
+            />
+          </label>
+          <div className={styles.modal_actions}>
+            <button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Processing..." : "Submit"}
+            </button>
+            <button 
+              onClick={() => setShowLedger(true)} 
+              disabled={submitting}
+              className={styles.ledger_btn}
+            >
+              View History
+            </button>
+            <button onClick={onClose} disabled={submitting}>
+              Cancel
+            </button>
+          </div>
+             <PaymentLedgerModal
+        isOpen={showLedger}
+        customerId={customerId}
+        customerName={customerName}
+        onClose={() => setShowLedger(false)}
+      />
         </div>
       </div>
-    </div>
+      
+   
+    </>
   );
 };
 
@@ -735,42 +838,6 @@ export default function CustomerPayments() {
           <h2>Filter by Date Range</h2>
           <span>(Does not have an effect on summary & stats)</span>
         </div>
-
-        {/* <div className={styles.radio_group}>
-          <label className={styles.radio_label}>
-            <input
-              type="radio"
-              name="statusFilter"
-              value=""
-              checked={statusFilter === ""}
-              onChange={() => handleStatusChange("")}
-              disabled={isLoading}
-            />
-            <span>All Orders</span>
-          </label>
-          <label className={styles.radio_label}>
-            <input
-              type="radio"
-              name="statusFilter"
-              value="Paid"
-              checked={statusFilter === "Paid"}
-              onChange={() => handleStatusChange("Paid")}
-              disabled={isLoading}
-            />
-            <span className={styles.text_green}>Paid</span>
-          </label>
-          <label className={styles.radio_label}>
-            <input
-              type="radio"
-              name="statusFilter"
-              value="Not Paid"
-              checked={statusFilter === "Not Paid"}
-              onChange={() => handleStatusChange("Not Paid")}
-              disabled={isLoading}
-            />
-            <span className={styles.text_red}>Due</span>
-          </label>
-        </div> */}
 
         <div className={styles.date_input_group}>
           <div className={styles.date_field}>
