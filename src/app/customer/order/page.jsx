@@ -105,7 +105,14 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
   </div>
 );
 
-const AmountStatItem = ({ label, value, unit, prefix = "", colorClass = "", onEdit }) => (
+const AmountStatItem = ({
+  label,
+  value,
+  unit,
+  prefix = "",
+  colorClass = "",
+  onEdit,
+}) => (
   <div className={styles.stat_item}>
     <span className={styles.stat_label}>{label}</span>
     <span className={`${styles.stat_value} ${colorClass}`}>
@@ -149,7 +156,7 @@ const AmountReceivedPopup = ({ isOpen, currentValue, onClose, onSubmit }) => {
       <div className={styles.modal_content}>
         <h3>Modify Received Amount</h3>
         <label>
-           Received amount:
+          Received amount:
           <input
             type="number"
             value={inputValue}
@@ -158,8 +165,6 @@ const AmountReceivedPopup = ({ isOpen, currentValue, onClose, onSubmit }) => {
             autoFocus
             step="1"
             placeholder="postive or negative number"
-
-
           />
         </label>
         <div className={styles.modal_actions}>
@@ -206,7 +211,7 @@ const SummaryStats = ({ summary, filters, onEditPaid }) => {
         />
         <AmountStatItem
           label="Amount Received"
-          value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
+          value={formatNumberWithCommasNoDecimal(summary.gheeTotalQuantity)}
           prefix="₹"
           colorClass={styles.text_green}
           onEdit={onEditPaid}
@@ -258,7 +263,9 @@ function OrdersContent() {
   const fetchCustomerBalance = useCallback(async () => {
     if (!customerId) return;
     try {
-      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`);
+      const res = await fetch(
+        `/api/customer/total_orders?customerId=${customerId}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setCustomerBalance(data);
@@ -307,7 +314,10 @@ function OrdersContent() {
   // Click outside for action menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openActionMenuId && !event.target.closest(`.${styles.actionMenuWrapper}`)) {
+      if (
+        openActionMenuId &&
+        !event.target.closest(`.${styles.actionMenuWrapper}`)
+      ) {
         setOpenActionMenuId(null);
       }
     };
@@ -325,14 +335,16 @@ function OrdersContent() {
     setOrderForm((prev) => ({
       ...prev,
       gstType: order.gstType || "inclusive",
-      affectStockValue: order.affectStockValue !== undefined ? order.affectStockValue : true,
+      affectStockValue:
+        order.affectStockValue !== undefined ? order.affectStockValue : true,
     }));
   }, []);
 
   const handleQuantityChange = (productName, value) => {
     const sanitized = sanitizeNumericInput(value);
     setQuantities((prev) => ({ ...prev, [productName]: sanitized }));
-    if (errors[productName]) setErrors((prev) => ({ ...prev, [productName]: null }));
+    if (errors[productName])
+      setErrors((prev) => ({ ...prev, [productName]: null }));
   };
 
   const orderTotal = useMemo(() => {
@@ -374,7 +386,7 @@ function OrdersContent() {
         orderCount: customerBalance.totalOrders || 0,
         totalAmount: customerBalance.totalAmount || 0,
         paidAmount: customerBalance.paidAmount || 0,
-        dueAmount: customerBalance.dueAmount || 0,
+        dueAmount: customerBalance.gheeTotalQuantity || 0,
         avgOrderValue: customerBalance.totalOrders
           ? customerBalance.totalAmount / customerBalance.totalOrders
           : 0,
@@ -382,16 +394,25 @@ function OrdersContent() {
     }
     // Fallback to order-based summary if balance not loaded
     if (!filteredOrders.length)
-      return { orderCount: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0, avgOrderValue: 0 };
+      return {
+        orderCount: 0,
+        totalAmount: 0,
+        paidAmount: 0,
+        dueAmount: 0,
+        avgOrderValue: 0,
+      };
     const orderCount = filteredOrders.length;
-    const totalAmount = filteredOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+    const totalAmount = filteredOrders.reduce(
+      (sum, o) => sum + (o.totalAmount || 0),
+      0,
+    );
     const paidAmount = filteredOrders.reduce(
       (sum, o) => sum + (o.paymentStatus === "Paid" ? o.totalAmount : 0),
-      0
+      0,
     );
     const dueAmount = filteredOrders.reduce(
       (sum, o) => sum + (o.paymentStatus === "Not Paid" ? o.totalAmount : 0),
-      0
+      0,
     );
     return {
       orderCount,
@@ -405,17 +426,20 @@ function OrdersContent() {
   const handlePaidSubmit = async (newPaidAmount) => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/customer/total_orders?customerId=${customerId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paidAmount: newPaidAmount }),
-      });
+      const res = await fetch(
+        `/api/customer/total_orders?customerId=${customerId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paidAmount: newPaidAmount }),
+        },
+      );
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to update balance");
       }
       toast.success("Balance updated");
-      fetchCustomerBalance(); 
+      fetchCustomerBalance();
       setShowPaidPopup(false);
     } catch (error) {
       toast.error(error.message);
@@ -445,13 +469,16 @@ function OrdersContent() {
 
   const handleCheck = (orderId) => {
     setCheckedIds((prev) =>
-      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId],
     );
   };
 
   const handleBulkUpdateStatus = async (status) => {
     if (!checkedIds.length) return;
-    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`)) return;
+    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`))
+      return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/customer/order", {
@@ -511,7 +538,8 @@ function OrdersContent() {
       if (qty < 0) newErrors[product.name] = "Quantity must be ≥ 0";
       else if (qty > 0) hasQuantity = true;
     });
-    if (!hasQuantity) newErrors.general = "At least one product must have a positive quantity";
+    if (!hasQuantity)
+      newErrors.general = "At least one product must have a positive quantity";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -576,7 +604,9 @@ function OrdersContent() {
     if (!window.confirm("Delete this order?")) return;
     setDeleteLoading(id);
     try {
-      const res = await fetch(`/api/customer/order?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/customer/order?id=${id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Delete failed");
       toast.success("Order deleted");
       await fetchAllData();
@@ -602,7 +632,8 @@ function OrdersContent() {
       paymentStatus: order.paymentStatus || "Not Paid",
       comment: order.comment || "",
       gstType: order.gstType || "inclusive",
-      affectStockValue: order.affectStockValue !== undefined ? order.affectStockValue : true,
+      affectStockValue:
+        order.affectStockValue !== undefined ? order.affectStockValue : true,
     });
     populateQuantitiesFromOrder(order);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -623,7 +654,10 @@ function OrdersContent() {
     return (
       <div className={styles.error_state}>
         <h2>Customer Not Found</h2>
-        <button onClick={() => router.push("/customer")} className={styles.error_state_primary_btn}>
+        <button
+          onClick={() => router.push("/customer")}
+          className={styles.error_state_primary_btn}
+        >
           Back to Customers
         </button>
       </div>
@@ -642,11 +676,15 @@ function OrdersContent() {
           <div className={styles.header_title}>
             <h1>{data.customer?.customerName}</h1>
             <div className={styles.customer_info_badges}>
-              <span className={getCustomerTypeClass(data.customer?.customerType)}>
+              <span
+                className={getCustomerTypeClass(data.customer?.customerType)}
+              >
                 {data.customer?.customerType}
               </span>
               {data.customer?.customerGST && (
-                <span className={styles.gst_tag}>GST: {data.customer.customerGST}</span>
+                <span className={styles.gst_tag}>
+                  GST: {data.customer.customerGST}
+                </span>
               )}
             </div>
           </div>
@@ -678,7 +716,9 @@ function OrdersContent() {
                 type="text"
                 inputMode="numeric"
                 value={quantities[product.name] || ""}
-                onChange={(e) => handleQuantityChange(product.name, e.target.value)}
+                onChange={(e) =>
+                  handleQuantityChange(product.name, e.target.value)
+                }
                 placeholder={`Enter ${product.name} quantity`}
                 error={errors[product.name]}
                 disabled={submitting}
@@ -738,14 +778,28 @@ function OrdersContent() {
             </div>
           </div>
 
-          {errors.general && <div className={styles.error_text}>{errors.general}</div>}
+          {errors.general && (
+            <div className={styles.error_text}>{errors.general}</div>
+          )}
 
           <div className={styles.form_actions}>
-            <button type="submit" disabled={submitting} className={styles.primary_btn}>
-              {submitting ? "Processing..." : editingId._id ? "Update Order" : "Create Order"}
+            <button
+              type="submit"
+              disabled={submitting}
+              className={styles.primary_btn}
+            >
+              {submitting
+                ? "Processing..."
+                : editingId._id
+                  ? "Update Order"
+                  : "Create Order"}
             </button>
             {editingId._id && (
-              <button type="button" onClick={resetForm} className={styles.secondary_btn}>
+              <button
+                type="button"
+                onClick={resetForm}
+                className={styles.secondary_btn}
+              >
                 Cancel Edit
               </button>
             )}
@@ -753,7 +807,6 @@ function OrdersContent() {
         </form>
       </div>
 
-      
       {summary.orderCount > 0 && (
         <SummaryStats
           summary={summary}
@@ -793,20 +846,31 @@ function OrdersContent() {
               </div>
             </div>
             <div className={styles.filter_actions}>
-              <button type="button" onClick={resetFilterForm} className={styles.btn_secondary}>
+              <button
+                type="button"
+                onClick={resetFilterForm}
+                className={styles.btn_secondary}
+              >
                 Reset
               </button>
-              <button type="button" onClick={clearFilters} className={styles.btn_secondary_2}>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className={styles.btn_secondary_2}
+              >
                 Clear
               </button>
-              <button type="button" onClick={todayFilter} className={styles.btn_primary}>
+              <button
+                type="button"
+                onClick={todayFilter}
+                className={styles.btn_primary}
+              >
                 Today
               </button>
             </div>
           </div>
         </div>
       )}
-
 
       {/* Export & Bulk Actions */}
       {filteredOrders.length > 0 && (
@@ -815,7 +879,10 @@ function OrdersContent() {
             {filteredOrders.length} order(s) found
           </div>
           <div className={styles.export_buttons}>
-            <button onClick={() => handleExport("pdf", filteredOrders)} className={styles.export_btn}>
+            <button
+              onClick={() => handleExport("pdf", filteredOrders)}
+              className={styles.export_btn}
+            >
               DOWNLOAD INVOICE
             </button>
           </div>
@@ -848,19 +915,33 @@ function OrdersContent() {
               <tbody>
                 {filteredOrders.map((order) => {
                   const quantityMap = {};
-                  order.items.forEach((item) => (quantityMap[item.product] = item.quantity));
+                  order.items.forEach(
+                    (item) => (quantityMap[item.product] = item.quantity),
+                  );
                   return (
-                    <tr key={order._id} className={editingId._id === order._id ? styles.active_row : ""}>
-                      <td className={styles.date_cell}>{formatDate(order.date)}</td>
+                    <tr
+                      key={order._id}
+                      className={
+                        editingId._id === order._id ? styles.active_row : ""
+                      }
+                    >
+                      <td className={styles.date_cell}>
+                        {formatDate(order.date)}
+                      </td>
                       {PRODUCT_FIELDS.map((p) => (
                         <td key={p.name} className={styles.quantity_cell}>
                           {quantityMap[p.name] || "-"}
                         </td>
                       ))}
-                      <td className={styles.total_cell}>₹{formatNumberWithCommasNoDecimal(order.totalAmount)}</td>
+                      <td className={styles.total_cell}>
+                        ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
+                      </td>
                       <td className={styles.comment_cell}>
                         {order.comment ? (
-                          <span className={styles.comment} data-text={order.comment}>
+                          <span
+                            className={styles.comment}
+                            data-text={order.comment}
+                          >
                             i
                           </span>
                         ) : (
@@ -869,11 +950,22 @@ function OrdersContent() {
                       </td>
                       <td className={styles.invoice_cell}>
                         <button
-                          onClick={() => handleExport("pdf", [order], formatDateForDisplay(order.date))}
+                          onClick={() =>
+                            handleExport(
+                              "pdf",
+                              [order],
+                              formatDateForDisplay(order.date),
+                            )
+                          }
                           className={styles.export_btn_table}
                           disabled={!filteredOrders.length}
                         >
-                          <Image alt="Download" src="/invoice-download.png" width={20} height={20} />
+                          <Image
+                            alt="Download"
+                            src="/invoice-download.png"
+                            width={20}
+                            height={20}
+                          />
                         </button>
                       </td>
                       {isAdmin && (
@@ -882,9 +974,17 @@ function OrdersContent() {
                             <button
                               className={styles.actionMenuButton}
                               onClick={() =>
-                                setOpenActionMenuId(openActionMenuId === order._id ? null : order._id)
+                                setOpenActionMenuId(
+                                  openActionMenuId === order._id
+                                    ? null
+                                    : order._id,
+                                )
                               }
-                              disabled={loading || deleteLoading === order._id || !!editingId._id}
+                              disabled={
+                                loading ||
+                                deleteLoading === order._id ||
+                                !!editingId._id
+                              }
                             >
                               ⋮
                             </button>
@@ -893,14 +993,18 @@ function OrdersContent() {
                                 <button
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
-                                  disabled={loading || deleteLoading === order._id}
+                                  disabled={
+                                    loading || deleteLoading === order._id
+                                  }
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleDelete(order._id)}
                                   className={styles.actionDeleteButton}
-                                  disabled={loading || deleteLoading === order._id}
+                                  disabled={
+                                    loading || deleteLoading === order._id
+                                  }
                                 >
                                   Delete
                                 </button>
