@@ -19,8 +19,8 @@ export async function GET(request) {
         .collection("total_orders")
         .findOne({ _id: new ObjectId(customerId) });
 
-        const customerTotalsLedger = await db.collection(totalOrdersLedger).find();
-      return NextResponse.json(customerTotals, customerTotalsLedger || null);
+        // const customerTotalsLedger = await db.collection(totalOrdersLedger).find();
+      return NextResponse.json(customerTotals || null);
     }
 
     if (global) {
@@ -50,7 +50,14 @@ export async function PUT(request) {
     const data = await request.json();
     const { paidAmount } = data;
 
-    if (paidAmount === undefined || isNaN(parseFloat(paidAmount)) ) {
+    // Check if paidAmount is provided and is a valid number
+    if (paidAmount === undefined || paidAmount === null || paidAmount === "") {
+      return NextResponse.json({ error: "Valid paidAmount required" }, { status: 400 });
+    }
+
+    const newPaid = parseFloat(paidAmount);
+    
+    if (isNaN(newPaid)) {
       return NextResponse.json({ error: "Valid paidAmount required" }, { status: 400 });
     }
 
@@ -62,11 +69,12 @@ export async function PUT(request) {
       return NextResponse.json({ error: "Totals not found" }, { status: 404 });
     }
 
-    const newPaid = parseFloat(paidAmount);
     const newDue = doc.totalAmount - (doc.paidAmount + newPaid);
 
-    if (newDue < 0) {
-      return NextResponse.json({ error: "Paid amount cannot exceed total amount" }, { status: 400 });
+    // Allow negative due (customer credit/overpayment)
+    // Only prevent total paid amount from going negative
+    if ((doc.paidAmount + newPaid) < 0) {
+      return NextResponse.json({ error: "Total paid amount cannot be negative" }, { status: 400 });
     }
 
     const ledgerEntry = {

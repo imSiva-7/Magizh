@@ -296,7 +296,7 @@ function OrderHistoryContent() {
       </div>
 
       {/* Summary Cards */}
-      {/* {!loading && data.summary?.orderCount > 0 && (
+      {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.stats_card}>
           <h3 className={styles.stats_header}>
             Summary
@@ -308,18 +308,18 @@ function OrderHistoryContent() {
           </h3>
           <div className={styles.stats_grid}>
             <div className={styles.stat_item}>
-              <span className={styles.stat_label}>No. Of. Orders</span>
+              <span className={styles.stat_label}>Total Orders</span>
               <span className={styles.stat_value}>
                 {data.summary.orderCount}
               </span>
             </div>
             <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Total Amount</span>
+              <span className={styles.stat_label}>Total Sales</span>
               <span className={styles.stat_value}>
                 ₹{formatNumberWithCommasNoDecimal(data.summary.totalAmount)}
               </span>
             </div>
-            <div className={styles.stat_item}>
+            {/* <div className={styles.stat_item}>
               <span className={styles.stat_label}> Amount Recevied</span>
               <span className={`${styles.stat_value} ${styles.text_green}`}>
                 ₹{formatNumberWithCommasNoDecimal(data.summary.paidAmount)}
@@ -330,10 +330,10 @@ function OrderHistoryContent() {
               <span className={`${styles.stat_value} ${styles.text_red}`}>
                 ₹{formatNumberWithCommasNoDecimal(data.summary.dueAmount)}
               </span>
-            </div>
+            </div> */}
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Export Section */}
       {!loading && data.summary?.orderCount > 0 && (

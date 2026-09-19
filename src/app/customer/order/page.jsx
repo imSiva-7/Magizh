@@ -105,116 +105,227 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
   </div>
 );
 
-const AmountStatItem = ({
-  label,
-  value,
-  unit,
-  prefix = "",
-  colorClass = "",
-  onEdit,
-}) => (
-  <div className={styles.stat_item}>
-    <span className={styles.stat_label}>{label}</span>
-    <span className={`${styles.stat_value} ${colorClass}`}>
-      {prefix}
-      {value}
-      <span className={styles.stat_unit}>{unit}</span>
-    </span>
-    {/* {onEdit && (
-      <button onClick={onEdit} className={styles.edit_btn}>Add Amount</button>
-    )} */}
-  </div>
-);
-
-const AmountReceivedPopup = ({ isOpen, currentValue, onClose, onSubmit }) => {
+const AmountReceivedPopup = ({
+  isOpen,
+  currentPaid,
+  currentDue,
+  customerName,
+  customerId,
+  onClose,
+  onSubmit,
+  submitting,
+}) => {
   const [inputValue, setInputValue] = useState("");
+  const [showLedger, setShowLedger] = useState(false);
 
-  // Update input value when popup opens with new currentValue
-  useEffect(() => {
-    if (isOpen) {
-      // Use a small delay to avoid synchronous state update
-      const timer = setTimeout(() => {
-        setInputValue("");
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [currentValue, isOpen]);
+  // Reset states when modal closes
+  const handleClose = () => {
+    setInputValue("");
+    setShowLedger(false);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   const handleSubmit = () => {
     const amount = parseFloat(inputValue);
-    if (isNaN(amount)) {
-      toast.error("Please enter a valid amount");
+    if (isNaN(amount) || amount === 0) {
+      toast.error("Please enter a valid non-zero amount");
       return;
     }
     onSubmit(amount);
+    setInputValue("");
   };
 
   return (
-    <div className={styles.modal_overlay}>
-      <div className={styles.modal_content}>
-        <h3>Modify Received Amount</h3>
-        <label>
-          Received amount:
-          <input
-            type="number"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            // min="0"
-            autoFocus
-            step="1"
-            placeholder="postive or negative number"
-          />
-        </label>
-        <div className={styles.modal_actions}>
-          <button onClick={handleSubmit}>Submit</button>
-          <button onClick={onClose}>Cancel</button>
+    <>
+      <div className={styles.modal_overlay} onClick={handleClose}>
+        <div
+          className={styles.modal_content}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3>Record Payment - {customerName}</h3>
+          <div className={styles.payment_info}>
+            <p>
+              Current Paid:{" "}
+              <span className={styles.text_green}>
+                ₹{formatNumberWithCommas(currentPaid)}
+              </span>
+            </p>
+            <p>
+              Current Due:{" "}
+              <span className={styles.text_red}>
+                ₹{formatNumberWithCommas(currentDue)}
+              </span>
+            </p>
+          </div>
+          <label>
+            Payment Amount:
+            <input
+              type="number"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              autoFocus
+              step="1"
+              placeholder="Enter positive or negative amount"
+              disabled={submitting}
+            />
+          </label>
+          <div className={styles.modal_actions}>
+            <button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Processing..." : "Submit"}
+            </button>
+            <button
+              onClick={() => setShowLedger(true)}
+              disabled={submitting}
+              className={styles.ledger_btn}
+            >
+              View History
+            </button>
+            <button onClick={handleClose} disabled={submitting}>
+              Cancel
+            </button>
+          </div>
         </div>
+      </div>
+
+      <PaymentLedgerModal
+        isOpen={showLedger}
+        customerId={customerId}
+        customerName={customerName}
+        onClose={() => setShowLedger(false)}
+      />
+    </>
+  );
+};
+
+// Payment Ledger Modal - shows payment history
+const PaymentLedgerModal = ({ isOpen, customerId, customerName, onClose }) => {
+  const [ledgerData, setLedgerData] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchLedger = useCallback(async () => {
+    if (!customerId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/customer/ledger?customerId=${customerId}`);
+      if (!res.ok) throw new Error("Failed to fetch ledger");
+
+      const data = await res.json();
+      setLedgerData(data.payments || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load payment history");
+    } finally {
+      setLoading(false);
+    }
+  }, [customerId]);
+
+  useEffect(() => {
+    if (isOpen && customerId) {
+      fetchLedger();
+    }
+  }, [isOpen, customerId, fetchLedger]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.modal_overlay} onClick={onClose}>
+      <div
+        className={styles.modal_content_large}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.modal_header}>
+          <h3>Payment History - {customerName}</h3>
+          <button onClick={onClose} className={styles.close_btn}>
+            ✕
+          </button>
+        </div>
+
+        {loading ? (
+          <div className={styles.loading_container}>
+            <div className={styles.spinner}></div>
+            <span>Loading payment history...</span>
+          </div>
+        ) : ledgerData.length === 0 ? (
+          <div className={styles.empty_state}>
+            <p>No payment history found</p>
+          </div>
+        ) : (
+          <div className={styles.ledger_table_wrapper}>
+            <table className={styles.ledger_table}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount Paid</th>
+                  <th>Previous Balance</th>
+                  <th>New Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledgerData.map((entry, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      {new Date(entry.date).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+                    <td className={styles.text_green}>
+                      ₹{formatNumberWithCommas(entry.amount)}
+                    </td>
+                    <td>
+                      ₹{formatNumberWithCommas(entry.previousBalance || 0)}
+                    </td>
+                    <td>₹{formatNumberWithCommas(entry.newBalance || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const SummaryStats = ({ summary, filters, onEditPaid }) => {
-  const getDateRangeLabel = (startDate, endDate) => {
-    // if (startDate && endDate) {
-    //   return startDate === endDate
-    //     ? startDate
-    //     : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(endDate).toLocaleDateString("en-IN")}`;
-    // }
-    // if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-    // if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-    return "All Time";
-    // return "";
-  };
+const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
+  const dateRangeLabel = "All Time";
 
   return (
     <div className={styles.summary_box}>
-      <h3>
-        Summary{" "}
-        <span className={styles.date_range_badge}>
-          {getDateRangeLabel(filters.startDate, filters.endDate)}
-        </span>
-      </h3>
+      <div className={styles.summary_header}>
+        <h3>
+          Summary{" "}
+          <span className={styles.date_range_badge}>{dateRangeLabel}</span>
+        </h3>
+        {customerBalance && (
+          <div className={styles.header_actions}>
+            <button
+              onClick={onEditPaid}
+              className={styles.header_payment_btn}
+              title="Record Payment"
+            >
+              <span>Add Paid Amount</span>
+            </button>
+          </div>
+        )}
+      </div>
       <div className={styles.stats_grid}>
-        <StatItem label="No. Of. Orders" value={summary.orderCount} unit="" />
+        <StatItem label="No. of Orders" value={summary.orderCount} unit="" />
         <StatItem
           label="Total Amount"
           value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
           prefix="₹"
         />
         <StatItem
-          label="Avg Order Value"
-          value={formatNumberWithCommasNoDecimal(summary.avgOrderValue)}
-          prefix="₹"
-        />
-        <AmountStatItem
           label="Amount Received"
-          value={formatNumberWithCommasNoDecimal(summary.gheeTotalQuantity)}
+          value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
           prefix="₹"
           colorClass={styles.text_green}
-          onEdit={onEditPaid}
         />
         <StatItem
           label="Amount Due"
@@ -234,7 +345,6 @@ function OrdersContent() {
   const customerId = searchParams.get("customerId");
 
   const [loading, setLoading] = useState(true);
-  const [checkedIds, setCheckedIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
@@ -327,9 +437,10 @@ function OrdersContent() {
 
   const populateQuantitiesFromOrder = useCallback((order) => {
     const newQuantities = {};
+    const items = Array.isArray(order.items) ? order.items : [];
     PRODUCT_FIELDS.forEach((product) => {
-      const item = order.items.find((i) => i.product === product.name);
-      newQuantities[product.name] = item ? item.quantity.toString() : "";
+      const item = items.find((i) => i.product === product.name);
+      newQuantities[product.name] = item ? String(item.quantity) : "";
     });
     setQuantities(newQuantities);
     setOrderForm((prev) => ({
@@ -381,49 +492,18 @@ function OrdersContent() {
 
   // Summary now uses total_orders balance if available
   const summary = useMemo(() => {
-    if (customerBalance) {
-      return {
-        orderCount: customerBalance.totalOrders || 0,
-        totalAmount: customerBalance.totalAmount || 0,
-        paidAmount: customerBalance.paidAmount || 0,
-        dueAmount: customerBalance.gheeTotalQuantity || 0,
-        avgOrderValue: customerBalance.totalOrders
-          ? customerBalance.totalAmount / customerBalance.totalOrders
-          : 0,
-      };
-    }
-    // Fallback to order-based summary if balance not loaded
-    if (!filteredOrders.length)
-      return {
-        orderCount: 0,
-        totalAmount: 0,
-        paidAmount: 0,
-        dueAmount: 0,
-        avgOrderValue: 0,
-      };
-    const orderCount = filteredOrders.length;
-    const totalAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.totalAmount || 0),
-      0,
-    );
-    const paidAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.paymentStatus === "Paid" ? o.totalAmount : 0),
-      0,
-    );
-    const dueAmount = filteredOrders.reduce(
-      (sum, o) => sum + (o.paymentStatus === "Not Paid" ? o.totalAmount : 0),
-      0,
-    );
     return {
-      orderCount,
-      totalAmount,
-      paidAmount,
-      dueAmount,
-      avgOrderValue: orderCount ? totalAmount / orderCount : 0,
+      orderCount: customerBalance?.totalOrders || 0,
+      totalAmount: customerBalance?.totalAmount || 0,
+      paidAmount: customerBalance?.paidAmount || 0,
+      dueAmount: customerBalance?.dueAmount || 0,
+      avgOrderValue: customerBalance?.totalOrders
+        ? customerBalance.totalAmount / customerBalance.totalOrders
+        : 0,
     };
-  }, [filteredOrders, customerBalance]);
+  }, [customerBalance]);
 
-  const handlePaidSubmit = async (newPaidAmount) => {
+  const handlePaidSubmit = async (paymentAmount) => {
     setSubmitting(true);
     try {
       const res = await fetch(
@@ -431,15 +511,17 @@ function OrdersContent() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paidAmount: newPaidAmount }),
+          // Send the delta; adjust key name if your API expects a different shape.
+          body: JSON.stringify({ paidAmount: paymentAmount }),
         },
       );
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to update balance");
       }
       toast.success("Balance updated");
-      fetchCustomerBalance();
+      await fetchCustomerBalance();
+
       setShowPaidPopup(false);
     } catch (error) {
       toast.error(error.message);
@@ -448,9 +530,6 @@ function OrdersContent() {
     }
   };
 
-  // ... other handlers (filter, export, validate, submit, delete, edit) remain the same ...
-
-  // We'll include them unchanged for completeness
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -461,44 +540,6 @@ function OrdersContent() {
   const todayFilter = () => {
     const today = getTodayDate();
     setFilters({ startDate: today, endDate: today });
-  };
-
-  const handleSelectAll = (e) => {
-    setCheckedIds(e.target.checked ? filteredOrders.map((o) => o._id) : []);
-  };
-
-  const handleCheck = (orderId) => {
-    setCheckedIds((prev) =>
-      prev.includes(orderId)
-        ? prev.filter((id) => id !== orderId)
-        : [...prev, orderId],
-    );
-  };
-
-  const handleBulkUpdateStatus = async (status) => {
-    if (!checkedIds.length) return;
-    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`))
-      return;
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/customer/order", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderIds: checkedIds,
-          status,
-          actionDoneBy: session?.user?.email,
-        }),
-      });
-      if (!res.ok) throw new Error("Bulk update failed");
-      toast.success(`Marked ${checkedIds.length} order(s) as ${status}`);
-      setCheckedIds([]);
-      await fetchAllData();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const handleExport = async (format, orders, date) => {
@@ -625,7 +666,6 @@ function OrdersContent() {
       setOpenActionMenuId(null);
       return;
     }
-    setCheckedIds([]);
     setEditingId(order);
     setOrderForm({
       date: order.date.split("T")[0],
@@ -646,9 +686,6 @@ function OrdersContent() {
     setErrors({});
     initializeQuantities();
   };
-
-  const isSelectAllChecked =
-    filteredOrders.length > 0 && checkedIds.length === filteredOrders.length;
 
   if (!data.customer && !loading) {
     return (
@@ -807,10 +844,10 @@ function OrdersContent() {
         </form>
       </div>
 
-      {summary.orderCount > 0 && (
+      {customerBalance && (
         <SummaryStats
           summary={summary}
-          filters={filters}
+          customerBalance={customerBalance}
           onEditPaid={() => setShowPaidPopup(true)}
         />
       )}
@@ -915,7 +952,7 @@ function OrdersContent() {
               <tbody>
                 {filteredOrders.map((order) => {
                   const quantityMap = {};
-                  order.items.forEach(
+                  (order.items || []).forEach(
                     (item) => (quantityMap[item.product] = item.quantity),
                   );
                   return (
@@ -1025,9 +1062,13 @@ function OrdersContent() {
       {/* Edit Paid Amount Modal */}
       <AmountReceivedPopup
         isOpen={showPaidPopup}
-        currentValue={customerBalance?.paidAmount?.toString() || "0"}
+        currentPaid={customerBalance?.paidAmount || 0}
+        currentDue={customerBalance?.dueAmount || 0}
+        customerName={data.customer?.customerName || "Customer"}
+        customerId={customerId}
         onClose={() => setShowPaidPopup(false)}
         onSubmit={handlePaidSubmit}
+        submitting={submitting}
       />
     </div>
   );

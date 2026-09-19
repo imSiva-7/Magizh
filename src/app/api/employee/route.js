@@ -260,6 +260,22 @@ export async function DELETE(request) {
 
     const db = await getDatabase();
 
+    const checkEntry = await db.collection("employee").findOne({ _id: new ObjectId(id) });
+
+    // Check if employee exists
+    if (!checkEntry) {
+      return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    // Check if employee has attendance records
+    // attendance is an object with month keys, not an array
+    if (checkEntry.attendance && Object.keys(checkEntry.attendance).length > 0) {
+      return NextResponse.json(
+        { error: "Cannot delete employee with existing attendance records" }, 
+        { status: 400 }
+      );
+    }
+
     // Delete employee
     const result = await db
       .collection("employee")

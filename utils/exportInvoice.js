@@ -281,12 +281,6 @@ export const exportInvoiceToPDF = async (
 
   let finalY = doc.lastAutoTable.finalY + 10;
 
-  // Check if we need a new page
-  if (finalY + 80 > pageHeight) {
-    doc.addPage();
-    finalY = 20;
-  }
-
   // ========== PRODUCT SUMMARY & TOTAL SECTION (Side by Side) ==========
   const summaryWidth = 80;
   const summaryX = pageWidth - margin - summaryWidth;
@@ -357,8 +351,17 @@ export const exportInvoiceToPDF = async (
     { align: "right" }
   );
 
+  // ========== CHECK IF PAYMENT SECTION FITS ON CURRENT PAGE ==========
+  const paymentSectionHeight = 65; // Payment box (45) + signature (15) + margins
+  let paymentY = finalY + 50;
+
+  // If payment section would overflow, start on new page
+  if (paymentY + paymentSectionHeight > pageHeight - 20) {
+    doc.addPage();
+    paymentY = 20;
+  }
+
    // ========== PAYMENT SECTION (UPI/QR) - VERTICAL LAYOUT ==========
-  const paymentY = finalY + 50;
   const paymentBoxX = margin;
   const paymentBoxW = 35;      // narrow box
   const paymentBoxH = 45;      // slightly taller to accommodate button

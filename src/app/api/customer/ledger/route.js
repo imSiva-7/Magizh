@@ -18,11 +18,26 @@ export async function GET(request) {
 
     const db = await getDatabase();
     
-    const ledger = await db
+    // Use aggregation to sort the payments array in MongoDB itself
+    const result = await db
       .collection("totalOrdersLedger")
-      .findOne({ _id: new ObjectId(customerId) });
+      .aggregate([
+        { $match: { _id: new ObjectId(customerId) } },
+        {
+          $project: {
+            _id: 1,
+            payments: {
+              $sortArray: {
+                input: "$payments",
+                sortBy: { date: -1 }  // -1 for descending (newest first)
+              }
+            }
+          }
+        }
+      ])
+      .toArray();
 
-    if (!ledger) {
+    if (!result || result.length === 0) {
       return NextResponse.json({ 
         customerId,
         payments: [] 
@@ -30,8 +45,8 @@ export async function GET(request) {
     }
 
     return NextResponse.json({
-      customerId: ledger._id,
-      payments: ledger.payments || []
+      customerId: result[0]._id,
+      payments: result[0].payments || []
     });
   } catch (error) {
     console.error("GET customer ledger error:", error);
