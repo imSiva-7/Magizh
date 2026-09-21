@@ -80,7 +80,7 @@ export const config = {
     "/customer/:path*",
     "/admin/:path*",
     "/api/admin/:path*",
-    "/employee"
+    "/employee/:path",
     
   ],
 };

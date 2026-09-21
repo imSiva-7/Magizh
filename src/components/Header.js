@@ -34,6 +34,14 @@ const desktopNavItems = [
       { name: "Order Payments", path: "/customer/payments" },
     ],
   },
+  {
+    name: "Employees",
+    path: "/employee",
+    children: [
+      { name: "Attendance", path: "/employee/attendance" },
+      // { name: "Attendance Hsitory", path: "/customer/payments" },
+    ],
+  },
 
 ];
 

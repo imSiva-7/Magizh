@@ -377,6 +377,13 @@
   border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
   color: #334155;
+  text-align: left;
+}
+
+/* Align salary and phone columns to center/right */
+/* .employeeTable td:nth-child(4), */
+.employeeTable td:nth-child(6) {
+  text-align: center !important;
 }
 
 .employeeTable tbody tr:hover {
@@ -434,9 +441,11 @@
 
 .genderBadge {
   display: inline-block;
-  padding: 0.5rem 0.75rem;
+  text-align: center;
+  padding: 0.2rem 0.5rem;
+  min-width: 40px;
   border-radius: 0.5rem;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: capitalize;
 }

@@ -676,7 +676,7 @@ export default function Employee() {
                 <th scope="col">Emp ID</th>
                 <th scope="col">Gender</th>
                 <th scope="col">Salary</th>
-                <th scope="col">Mobile</th>
+                {/* <th scope="col">Mobile</th> */}
                 {isAdmin && <th scope="col">Actions</th>}
               </tr>
             </thead>
@@ -743,7 +743,7 @@ export default function Employee() {
                     <td className={styles.salaryCell}>
                       {formatSalary(item.salary)}
                     </td>
-                    <td className={styles.phoneCell}>
+                    {/* <td className={styles.phoneCell}>
                       {item.mobile ? (
                         <span
                           className={styles.phone}
@@ -754,7 +754,7 @@ export default function Employee() {
                       ) : (
                         "-"
                       )}
-                    </td>
+                    </td> */}
                     {isAdmin && (
                       <td className={styles.actionsCell}>
                         <div className={styles.actionMenuWrapper}>
