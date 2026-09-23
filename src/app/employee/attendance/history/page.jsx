@@ -12,7 +12,7 @@ export default function AttendanceHistory() {
   const fetchAttendanceRecords = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch("");
+      const response = await fetch("yooo loo");
       if (!response.ok) throw new Error("Failed to Fetch Attendance Data");
       const data = await response.json();
       setAttendanceData(Array.isArray(data) ? data : []);
