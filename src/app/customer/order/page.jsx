@@ -309,7 +309,7 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
               className={styles.header_payment_btn}
               title="Record Payment"
             >
-              <span>Add Paid Amount</span>
+              <span>Add Amount</span>
             </button>
           </div>
         )}
