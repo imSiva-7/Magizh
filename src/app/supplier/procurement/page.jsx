@@ -733,7 +733,8 @@ function ProcurementContent() {
           <span className={styles.loading_text}> Loading supplier info...</span>
         ) : (
           <div className={styles.header_title}>
-            <h1> {data.supplier?.supplierName}</h1>
+            <h1> {data.supplier?.supplierName} {data.supplier?.headSupplierName}</h1>
+
             <div className={styles.supplier_info}>
               <span
                 className={getSupplierTypeClass(data.supplier?.supplierType)}

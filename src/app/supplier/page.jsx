@@ -21,8 +21,6 @@ const MAX_TS_RATE = 500;
 const DEFAULT_TS_RATE = 300;
 
 // --- Sub-Components ---
-
-// Moved outside to prevent re-creation on every render
 const FormInput = memo(
   ({
     label,
@@ -62,11 +60,9 @@ const FormInput = memo(
     </div>
   ),
 );
-
 FormInput.displayName = "FormInput";
 
 // --- Main Component ---
-
 export default function Supplier() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
@@ -79,17 +75,14 @@ export default function Supplier() {
   const searchInputRef = useRef(null);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
   const [searchDebounced, setSearchDebounced] = useState("");
-  const [sortBy, setSortBy] = useState("createdAt");
-  const [sortOrder, setSortOrder] = useState("desc");
 
   const initialFormState = useMemo(
     () => ({
       supplierId: null,
       supplierName: "",
       supplierType: "",
-      headSupplier: "",
-      supplierTSRCut: "",
-      childSuppliersIDs: [],
+      isHeadSupplier: false,
+      childSuppliers: [], // [{ supplierId, supplierName, tsCut }]
       supplierTSRate: "",
       supplierCustomRate: "",
       supplierNumber: "",
@@ -116,22 +109,19 @@ export default function Supplier() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [openActionMenuId]);
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchDebounced(searchByName);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [searchByName]);
 
-  // Validation Logic
+  // --- Validation ---
   const validateField = useCallback((field, value) => {
     switch (field) {
       case "supplierName":
         if (!value?.trim()) return "Name is required";
-        if (value.trim().length < 2)
-          return "Name must be at least 2 characters";
+        if (value.trim().length < 2) return "Name must be at least 2 characters";
         if (value.trim().length > 100) return "Name is too long";
         return "";
 
@@ -142,20 +132,17 @@ export default function Supplier() {
         }
         return "";
 
-      case "supplierTSRate":
+      case "supplierTSRate": {
         if (!value?.toString().trim()) return "Total Solids Rate is required";
-
         const tsRate = parseFloat(value);
         if (isNaN(tsRate)) return "Please enter a valid number";
-        if (tsRate < MIN_TS_RATE)
-          return `TS Rate must be at least ${MIN_TS_RATE}`;
+        if (tsRate < MIN_TS_RATE) return `TS Rate must be at least ${MIN_TS_RATE}`;
         if (tsRate > MAX_TS_RATE) return `TS Rate cannot exceed ${MAX_TS_RATE}`;
-        // Regex to ensure max 2 decimal places
-        if (!/^\d+(\.\d{0,2})?$/.test(value))
-          return "Enter up to 2 decimal places";
+        if (!/^\d+(\.\d{0,2})?$/.test(value)) return "Enter up to 2 decimal places";
         return "";
+      }
 
-      case "supplierCustomRate":
+      case "supplierCustomRate": {
         const customRate = parseFloat(value);
         if (!customRate) return "";
         if (isNaN(customRate)) return "Please enter a valid number";
@@ -163,24 +150,20 @@ export default function Supplier() {
         if (customRate > 40) return `Custom Rate cannot exceed 40`;
         if (!/^\d+$/.test(value)) return "Enter up to 2 decimal places";
         return "";
+      }
 
       case "supplierNumber":
         if (value && value.trim()) {
           const trimmedValue = value.trim();
-          if (!/^\d+$/.test(trimmedValue))
-            return "Phone number must contain only digits";
-          if (trimmedValue.length !== 10)
-            return "Phone number must be exactly 10 digits";
-          // Validate Indian mobile numbers (starts with 6-9)
-          if (!/^[6-9]/.test(trimmedValue))
-            return "Phone number must start with 6-9";
+          if (!/^\d+$/.test(trimmedValue)) return "Phone number must contain only digits";
+          if (trimmedValue.length !== 10) return "Phone number must be exactly 10 digits";
+          if (!/^[6-9]/.test(trimmedValue)) return "Phone number must start with 6-9";
         }
         return "";
 
       case "supplierAddress":
         if (value?.trim()) {
-          if (value.trim().length < 5)
-            return "Address must be at least 5 characters";
+          if (value.trim().length < 5) return "Address must be at least 5 characters";
           if (value.trim().length > 500) return "Address is too long";
         }
         return "";
@@ -190,11 +173,8 @@ export default function Supplier() {
     }
   }, []);
 
-  // Form Validation
   const validateFullForm = useCallback(() => {
     const errors = {};
-
-    // Iterate over keys to validate all
     const fieldsToValidate = [
       "supplierName",
       "supplierType",
@@ -209,10 +189,14 @@ export default function Supplier() {
       if (error) errors[field] = error;
     });
 
+    if (formData.isHeadSupplier && formData.childSuppliers.length === 0) {
+      errors.childSuppliers = "Head supplier must have at least one child supplier";
+    }
+
     return errors;
   }, [formData, validateField]);
 
-  // Search/Filter Logic
+  // --- Search ---
   const filteredEntries = useMemo(() => {
     if (!searchDebounced.trim()) return entries;
 
@@ -234,16 +218,14 @@ export default function Supplier() {
     });
   }, [entries, searchDebounced]);
 
-  // API Fetch
+  // --- API ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/supplier`);
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(
-          `Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`,
-        );
+        throw new Error(`Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`);
       }
       const data = await res.json();
       setEntries(Array.isArray(data) ? data : []);
@@ -260,46 +242,87 @@ export default function Supplier() {
     fetchData();
   }, [fetchData]);
 
+  // --- Handlers ---
   const handleInputChange = useCallback(
     (field, value) => {
       let processedValue = value;
 
-      // Handle TS Rate: Allow digits and one dot
       if (field === "supplierTSRate") {
-        // Prevent multiple dots
-        if ((value.match(/\./g) || []).length > 1) {
-          return;
-        }
-        // Allow numeric and dot only
+        if ((value.match(/\./g) || []).length > 1) return;
         processedValue = value.replace(/[^0-9.]/g, "");
-
-        // Split to check decimals
         const parts = processedValue.split(".");
         if (parts[1] && parts[1].length > 2) {
-          // Cap at 2 decimal places
           processedValue = `${parts[0]}.${parts[1].substring(0, 2)}`;
         }
       }
 
-      // Handle Phone Number: Digits only
       if (field === "supplierNumber") {
         processedValue = value.replace(/\D/g, "").substring(0, 10);
       }
 
-      setFormData((prev) => ({
-        ...prev,
-        [field]: processedValue,
-      }));
+      setFormData((prev) => ({ ...prev, [field]: processedValue }));
 
-      // Real-time validation
       const error = validateField(field, processedValue);
-      setFormErrors((prev) => ({
-        ...prev,
-        [field]: error || undefined,
-      }));
+      setFormErrors((prev) => ({ ...prev, [field]: error || undefined }));
     },
     [validateField],
   );
+
+  const handleHeadSupplierToggle = useCallback((e) => {
+    const checked = e.target.checked;
+    setFormData((prev) => ({
+      ...prev,
+      isHeadSupplier: checked,
+      // Clear children when unchecking so we never submit orphaned data
+      childSuppliers: checked ? prev.childSuppliers : [],
+    }));
+  }, []);
+
+  const handleChildSupplierToggle = useCallback((supplier) => {
+    setFormData((prev) => {
+      const exists = prev.childSuppliers.some(
+        (c) => String(c.supplierId) === String(supplier._id),
+      );
+
+      if (exists) {
+        return {
+          ...prev,
+          childSuppliers: prev.childSuppliers.filter(
+            (c) => String(c.supplierId) !== String(supplier._id),
+          ),
+        };
+      }
+
+      return {
+        ...prev,
+        childSuppliers: [
+          ...prev.childSuppliers,
+          {
+            supplierId: supplier._id,
+            supplierName: supplier.supplierName,
+            tsCut: "",
+          },
+        ],
+      };
+    });
+  }, []);
+
+  const handleTsCutChange = useCallback((supplierId, value) => {
+    // Allow digits and one dot, cap at 2 decimals
+    let processed = value.replace(/[^0-9.]/g, "");
+    const parts = processed.split(".");
+    if (parts.length > 2) return;
+    if (parts[1] && parts[1].length > 2) {
+      processed = `${parts[0]}.${parts[1].substring(0, 2)}`;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      childSuppliers: prev.childSuppliers.map((c) =>
+        String(c.supplierId) === String(supplierId) ? { ...c, tsCut: processed } : c,
+      ),
+    }));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -316,8 +339,18 @@ export default function Supplier() {
     const payload = {
       supplierName: formData.supplierName.trim(),
       supplierType: formData.supplierType.trim(),
+      isHeadSupplier: formData.isHeadSupplier,
+      childSuppliers: formData.isHeadSupplier
+        ? formData.childSuppliers.map((c) => ({
+            supplierId: c.supplierId,
+            supplierName: c.supplierName,
+            tsCut: c.tsCut === "" ? 0 : Number(c.tsCut),
+          }))
+        : [],
       supplierTSRate: parseFloat(formData.supplierTSRate),
-      supplierCustomRate: parseFloat(formData.supplierCustomRate),
+      supplierCustomRate: formData.supplierCustomRate
+        ? parseFloat(formData.supplierCustomRate)
+        : undefined,
       supplierNumber: formData.supplierNumber.trim(),
       supplierAddress: formData.supplierAddress.trim(),
     };
@@ -326,11 +359,10 @@ export default function Supplier() {
       const url = isEditing
         ? `/api/supplier?id=${formData.supplierId}`
         : "/api/supplier";
-
       const method = isEditing ? "PUT" : "POST";
 
       const res = await fetch(url, {
-        method: method,
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -339,24 +371,16 @@ export default function Supplier() {
 
       if (!res.ok) {
         throw new Error(
-          data.error ||
-            data.message ||
-            `Submission failed (HTTP ${res.status})`,
+          data.error || data.message || `Submission failed (HTTP ${res.status})`,
         );
       }
 
-      toast.success(
-        isEditing
-          ? "Supplier updated successfully"
-          : "Supplier added successfully",
-      );
+      toast.success(isEditing ? "Supplier updated successfully" : "Supplier added successfully");
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error(
-        error.message || "Failed to save supplier. Please try again.",
-      );
+      toast.error(error.message || "Failed to save supplier. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -378,10 +402,19 @@ export default function Supplier() {
 
       setCreateSupplier(true);
       setIsEditing(true);
+
       setFormData({
         supplierId: supplier._id,
         supplierName: supplier.supplierName || "",
         supplierType: supplier.supplierType || "",
+        isHeadSupplier: supplier.isHeadSupplier || false,
+        childSuppliers: Array.isArray(supplier.childSuppliers)
+          ? supplier.childSuppliers.map((c) => ({
+              supplierId: c.supplierId,
+              supplierName: c.supplierName || "",
+              tsCut: c.tsCut != null ? String(c.tsCut) : "",
+            }))
+          : [],
         supplierTSRate: supplier.supplierTSRate?.toString() || "",
         supplierCustomRate: supplier.supplierCustomRate?.toString() || "",
         supplierNumber: supplier.supplierNumber || "",
@@ -410,7 +443,6 @@ export default function Supplier() {
     }
 
     setDeleteLoading(id);
-
     try {
       const res = await fetch(`/api/supplier?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -420,11 +452,7 @@ export default function Supplier() {
       }
 
       toast.success("Supplier deleted successfully");
-
-      if (formData.supplierId === id) {
-        resetForm();
-      }
-
+      if (formData.supplierId === id) resetForm();
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
@@ -445,6 +473,12 @@ export default function Supplier() {
     return parsed.toFixed(2);
   };
 
+  // Available suppliers to pick as children (exclude self)
+  const childCandidateEntries = useMemo(
+    () => entries.filter((s) => s._id !== formData.supplierId),
+    [entries, formData.supplierId],
+  );
+
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -460,7 +494,6 @@ export default function Supplier() {
         <div className={styles.headerContent}>
           <h1>Suppliers</h1>
 
-          {/* Only admins can see the Create button */}
           {!createSupplier && (
             <div className={styles.createSection}>
               <button
@@ -482,7 +515,6 @@ export default function Supplier() {
         </div>
       </div>
 
-      {/* Create/Edit Form */}
       {createSupplier && (
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formHeader}>
@@ -493,6 +525,7 @@ export default function Supplier() {
               </div>
             )}
           </div>
+
           <div className={styles.formGrid}>
             <FormInput
               id="f-name"
@@ -504,18 +537,78 @@ export default function Supplier() {
               required
               disabled={isSubmitting}
             />
-            {/* <input
-              type="checkbox"
-              value={formData.headSupplier}
-              checked={formData.headSupplier === "yes"}
-            />
 
-            {formData.headSupplier &&
-              entries.map((id) => (
-                <div key={id}>
-                  <input type="radioButoon" />
-                </div>
-              ))} */}
+            {/* Head supplier toggle */}
+            <div className={styles.inputGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={formData.isHeadSupplier}
+                  onChange={handleHeadSupplierToggle}
+                  disabled={isSubmitting}
+                />
+                <span>Head Supplier</span>
+              </label>
+              {formErrors.childSuppliers && (
+                <span className={styles.errorText}>{formErrors.childSuppliers}</span>
+              )}
+            </div>
+
+            {/* Child supplier picker */}
+            {formData.isHeadSupplier && (
+              <div className={styles.childSupplierSection}>
+                <h4>Select Child Suppliers</h4>
+                {childCandidateEntries.length === 0 ? (
+                  <p className={styles.emptyText}>No other suppliers available</p>
+                ) : (
+                  childCandidateEntries.map((candidate) => {
+                    const isChecked = formData.childSuppliers.some(
+                      (c) => String(c.supplierId) === String(candidate._id),
+                    );
+                    return (
+                      <div key={candidate._id} className={styles.childSupplierRow}>
+                        <input
+                          type="checkbox"
+                          id={`child-${candidate._id}`}
+                          checked={isChecked}
+                          onChange={() => handleChildSupplierToggle(candidate)}
+                          disabled={isSubmitting}
+                        />
+                        <label htmlFor={`child-${candidate._id}`}>
+                          {candidate.supplierName}
+                        </label>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* TS cut inputs for each selected child */}
+            {formData.isHeadSupplier && formData.childSuppliers.length > 0 && (
+              <div className={styles.tsCutSection}>
+                <h4>TS Cut for Child Suppliers</h4>
+                {formData.childSuppliers.map((child) => (
+                  <div key={child.supplierId} className={styles.tsCutRow}>
+                    <label htmlFor={`tscut-${child.supplierId}`}>
+                      {child.supplierName}
+                    </label>
+                    <input
+                      id={`tscut-${child.supplierId}`}
+                      type="text"
+                      inputMode="numeric"
+                      value={child.tsCut}
+                      onChange={(e) =>
+                        handleTsCutChange(child.supplierId, e.target.value)
+                      }
+                      placeholder="Enter TS cut"
+                      disabled={isSubmitting}
+                      className={styles.input}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className={styles.inputGroup}>
               <label htmlFor="f-type">
@@ -525,9 +618,7 @@ export default function Supplier() {
               <select
                 id="f-type"
                 value={formData.supplierType}
-                onChange={(e) =>
-                  handleInputChange("supplierType", e.target.value)
-                }
+                onChange={(e) => handleInputChange("supplierType", e.target.value)}
                 className={`${styles.selectInput} ${
                   formErrors.supplierType ? styles.inputError : ""
                 }`}
@@ -541,9 +632,7 @@ export default function Supplier() {
                 ))}
               </select>
               {formErrors.supplierType && (
-                <span className={styles.errorText}>
-                  {formErrors.supplierType}
-                </span>
+                <span className={styles.errorText}>{formErrors.supplierType}</span>
               )}
             </div>
 
@@ -564,14 +653,13 @@ export default function Supplier() {
               label="Custom Rate (Rs: 39)"
               type="number"
               value={formData.supplierCustomRate}
-              onChange={(value) =>
-                handleInputChange("supplierCustomRate", value)
-              }
+              onChange={(value) => handleInputChange("supplierCustomRate", value)}
               placeholder="Enter Rate"
               error={formErrors.supplierCustomRate}
               disabled={isSubmitting}
               inputMode="numeric"
             />
+
             <FormInput
               id="f-phone"
               label="Phone Number"
@@ -659,17 +747,14 @@ export default function Supplier() {
           {loading ? (
             <span className={styles.loadingText}>Searching...</span>
           ) : (
-            <>
-              <span className={styles.resultCount}>
-                Showing {filteredEntries.length} of {entries.length} supplier
-                {entries.length !== 1 ? "s" : ""}
-              </span>
-            </>
+            <span className={styles.resultCount}>
+              Showing {filteredEntries.length} of {entries.length} supplier
+              {entries.length !== 1 ? "s" : ""}
+            </span>
           )}
         </div>
       </div>
 
-      {/* Suppliers Table */}
       <div className={styles.tableContainer}>
         <div className={styles.tableWrapper}>
           <table className={styles.supplierTable}>
@@ -679,14 +764,13 @@ export default function Supplier() {
                 <th scope="col">Type</th>
                 <th scope="col">TS Rate</th>
                 <th scope="col">Phone</th>
-                {/* Only show Actions column if user is admin */}
                 {isAdmin && <th scope="col">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {loading && entries.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 6 : 5} className={styles.loadingCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.loadingCell}>
                     <div className={styles.loadingContent}>
                       <div className={styles.tableSpinner}></div>
                       <span>Loading suppliers...</span>
@@ -695,7 +779,7 @@ export default function Supplier() {
                 </tr>
               ) : filteredEntries.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 6 : 5} className={styles.noDataCell}>
+                  <td colSpan={isAdmin ? 5 : 4} className={styles.noDataCell}>
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
@@ -732,9 +816,7 @@ export default function Supplier() {
                     <td className={styles.typeCell}>
                       <span
                         className={`${styles.typeBadge} ${
-                          styles[
-                            `type-${item.supplierType?.toLowerCase() || "other"}`
-                          ]
+                          styles[`type-${item.supplierType?.toLowerCase() || "other"}`]
                         }`}
                       >
                         {item.supplierType || "-"}
@@ -745,15 +827,9 @@ export default function Supplier() {
                         ? `Rs: ${item.supplierCustomRate}`
                         : formatTSRate(item.supplierTSRate)}
                     </td>
-                    <td
-                      className={styles.phoneCell}
-                      title={item.supplierrNumber || "-"}
-                    >
+                    <td className={styles.phoneCell} title={item.supplierNumber || "-"}>
                       {item.supplierNumber ? (
-                        <span
-                          className={styles.phone}
-                          data-number={item.supplierNumber}
-                        >
+                        <span className={styles.phone} data-number={item.supplierNumber}>
                           i
                         </span>
                       ) : (
@@ -770,9 +846,7 @@ export default function Supplier() {
                                 openActionMenuId === item._id ? null : item._id,
                               )
                             }
-                            disabled={
-                              loading || deleteLoading === item._id || isEditing
-                            }
+                            disabled={loading || deleteLoading === item._id || isEditing}
                             title="Actions"
                           >
                             ⋮
@@ -803,9 +877,7 @@ export default function Supplier() {
                                 }}
                                 className={styles.actionDeleteButton}
                                 disabled={
-                                  deleteLoading === item._id ||
-                                  loading ||
-                                  isEditing
+                                  deleteLoading === item._id || loading || isEditing
                                 }
                                 title={isEditing ? "Delete disabled" : "Delete"}
                               >
