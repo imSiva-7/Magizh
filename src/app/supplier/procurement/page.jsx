@@ -201,13 +201,31 @@ function ProcurementContent() {
   const [formData, setFormData] = useState(initialForm);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
+  // ---- Effective TSR (subtract cut % for child suppliers) ----
+  // This mirrors exactly what the backend does when saving a procurement,
+  // so the UI shown here matches what will be stored.
+  const effectiveTSRate = useMemo(() => {
+    const s = data.supplier;
+    if (!s) return 0;
+    if (s.supplierCustomRate) return 0; // custom rate overrides — TS not used
+    const base = Number(s.supplierTSRate) || 0;
+    const cut =
+      s.isChildSupplier && s.cutPercentage ? Number(s.cutPercentage) : 0;
+    return cut > 0 ? base - cut : base;
+  }, [data.supplier]);
+
+  const hasCut =
+    !!data.supplier?.isChildSupplier &&
+    !data.supplier?.supplierCustomRate &&
+    Number(data.supplier?.cutPercentage) > 0;
+
   const calculateTotals = useCallback(
-    (quantity, fat, snf, supplierRate, supplierCustomRate) => {
+    (quantity, fat, snf, effectiveRate, customRate) => {
       const q = parseFloat(quantity) || 0;
       const f = parseFloat(fat) || 0;
       const s = parseFloat(snf) || 0;
-      const tsRate = parseFloat(supplierRate) || 0;
-      const customRate = parseFloat(supplierCustomRate) || 0;
+      const tsRate = parseFloat(effectiveRate) || 0;
+      const custom = parseFloat(customRate) || 0;
 
       let calculatedRate = 0;
       let calculatedTotal = 0;
@@ -218,9 +236,9 @@ function ProcurementContent() {
         if (editingId && editingId.customRate) {
           calculatedRate = editingId.rate;
           calculatedTotal = calculatedRate * q;
-        } else if (customRate) {
-          calculatedRate = customRate;
-          calculatedTotal = customRate * q;
+        } else if (custom) {
+          calculatedRate = custom;
+          calculatedTotal = custom * q;
         } else {
           calculatedRate = (totalSolids * tsRate) / 100;
           calculatedTotal = calculatedRate * q;
@@ -298,7 +316,7 @@ function ProcurementContent() {
         formData.milkQuantity,
         formData.fatPercentage,
         formData.snfPercentage,
-        data.supplier?.supplierTSRate,
+        effectiveTSRate,
         data.supplier?.supplierCustomRate,
       );
     }
@@ -307,7 +325,7 @@ function ProcurementContent() {
     formData.milkQuantity,
     formData.fatPercentage,
     formData.snfPercentage,
-    data.supplier?.supplierTSRate,
+    effectiveTSRate,
     data.supplier?.supplierCustomRate,
     calculateTotals,
   ]);
@@ -346,7 +364,6 @@ function ProcurementContent() {
     }
   };
 
-  // Bulk update function that accepts a status
   const handleBulkUpdateStatus = async (status) => {
     if (checkedIds.length === 0) {
       toast.warn("No records selected");
@@ -430,7 +447,6 @@ function ProcurementContent() {
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
     toast.info("Loaded today's records.");
   };
-  // ---------------------------------------
 
   const validateForm = () => {
     const newErrors = {};
@@ -482,6 +498,9 @@ function ProcurementContent() {
 
       const isCustomRate = !!data.supplier?.supplierCustomRate;
 
+      // NOTE: The server recomputes rate/totalAmount authoritatively,
+      // including the child-supplier cut. We send the same shape as before
+      // for backwards compatibility; extra cut fields are ignored server-side.
       const payload = {
         supplierId,
         supplierName: data.supplier.supplierName,
@@ -561,16 +580,16 @@ function ProcurementContent() {
       fatPercentage: item.fatPercentage.toString(),
       snfPercentage: item.snfPercentage.toString(),
       paymentStatus: item.paymentStatus || "Not Paid",
-      comment: item.comment || "", 
+      comment: item.comment || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const resetForm = (Pdate) => {
-    setFormData({ 
-      ...initialForm, 
-      time: getCurrentTimePeriod(), 
-      ...(Pdate && { date: Pdate })
+    setFormData({
+      ...initialForm,
+      time: getCurrentTimePeriod(),
+      ...(Pdate && { date: Pdate }),
     });
     setEditingId({});
     setErrors({});
@@ -646,7 +665,7 @@ function ProcurementContent() {
     return {
       ...totals,
       avgRate: totals.milk ? (totals.amount / totals.milk).toFixed(2) : "0.00",
-      avgRateDaily: (totals.amount / uniqueDates.size).toFixed(0) || "issue",
+      avgRateDaily: (totals.amount / uniqueDates.size).toFixed(0) || "0",
       avgFat,
       avgSnf,
       daysWithData: uniqueDates.size,
@@ -733,7 +752,7 @@ function ProcurementContent() {
           <span className={styles.loading_text}> Loading supplier info...</span>
         ) : (
           <div className={styles.header_title}>
-            <h1> {data.supplier?.supplierName} {data.supplier?.headSupplierName}</h1>
+            <h1>{data.supplier?.supplierName}</h1>
 
             <div className={styles.supplier_info}>
               <span
@@ -741,17 +760,36 @@ function ProcurementContent() {
               >
                 {data.supplier?.supplierType}
               </span>
+
               {data.supplier?.supplierCustomRate ? (
                 <span className={styles.ts_rate_tag}>
                   Custom Rate: ₹
-                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
-                    0,
-                  )}
+                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(0)}
                 </span>
               ) : (
                 <span className={styles.ts_rate_tag}>
-                  TSR:{" "}
-                  {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+                  TSR: {effectiveTSRate.toFixed(0)}
+                  {hasCut && (
+                    <span className={styles.ts_rate_original}>
+                      {" "}
+                      (was {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)})
+                    </span>
+                  )}
+                </span>
+              )}
+
+              {data.supplier?.isHeadSupplier && (
+                <span className={styles.head_supplier_tag}>
+                  Head Supplier
+                </span>
+              )}
+
+              {hasCut && (
+                <span className={styles.head_link_tag}>
+                  Linked to:{" "}
+                  <strong>{data.supplier?.headSupplierName || "Head"}</strong>
+                  {" · "}
+                  Cut: {parseFloat(data.supplier?.cutPercentage).toFixed(1)}%
                 </span>
               )}
             </div>
@@ -844,7 +882,9 @@ function ProcurementContent() {
               placeholder={
                 data.supplier?.supplierCustomRate
                   ? `Custom Rate Rs: ${data.supplier?.supplierCustomRate}`
-                  : "Auto-calculated based on 'Total Solids' rate"
+                  : hasCut
+                    ? `Based on reduced TSR (${effectiveTSRate.toFixed(0)})`
+                    : "Auto-calculated based on 'Total Solids' rate"
               }
               error={errors.rate}
             />
@@ -860,6 +900,18 @@ function ProcurementContent() {
               placeholder="Auto-calculated"
             />
           </div>
+
+          {/* Info banner for head's cut */}
+          {hasCut && currentPricing.totalAmount && (
+            <div className={styles.cut_info_banner}>
+              <span className={styles.cut_info_icon}>ℹ️</span>
+              <span>
+                {parseFloat(data.supplier.cutPercentage).toFixed(1)}% of this
+                procurement will be credited to{" "}
+                <strong>{data.supplier.headSupplierName}</strong>
+              </span>
+            </div>
+          )}
 
           {editingId && editingId._id && (
             <div className={styles.edit_payment_wrapper}>
@@ -1009,7 +1061,7 @@ function ProcurementContent() {
         </div>
       )}
 
-      {/* BULK ACTIONS BANNER - visible to all users */}
+      {/* BULK ACTIONS BANNER */}
       {checkedIds.length > 0 && (
         <div className={styles.bulk_actions_banner}>
           <span className={styles.bulk_actions_text}>

@@ -82,7 +82,7 @@ export default function Supplier() {
       supplierName: "",
       supplierType: "",
       isHeadSupplier: false,
-      childSuppliers: [], // [{ supplierId, supplierName, tsCut }]
+      childSuppliers: [],
       supplierTSRate: "",
       supplierCustomRate: "",
       supplierNumber: "",
@@ -110,9 +110,7 @@ export default function Supplier() {
   }, [openActionMenuId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchDebounced(searchByName);
-    }, 300);
+    const timer = setTimeout(() => setSearchDebounced(searchByName), 300);
     return () => clearTimeout(timer);
   }, [searchByName]);
 
@@ -121,7 +119,8 @@ export default function Supplier() {
     switch (field) {
       case "supplierName":
         if (!value?.trim()) return "Name is required";
-        if (value.trim().length < 2) return "Name must be at least 2 characters";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters";
         if (value.trim().length > 100) return "Name is too long";
         return "";
 
@@ -136,9 +135,11 @@ export default function Supplier() {
         if (!value?.toString().trim()) return "Total Solids Rate is required";
         const tsRate = parseFloat(value);
         if (isNaN(tsRate)) return "Please enter a valid number";
-        if (tsRate < MIN_TS_RATE) return `TS Rate must be at least ${MIN_TS_RATE}`;
+        if (tsRate < MIN_TS_RATE)
+          return `TS Rate must be at least ${MIN_TS_RATE}`;
         if (tsRate > MAX_TS_RATE) return `TS Rate cannot exceed ${MAX_TS_RATE}`;
-        if (!/^\d+(\.\d{0,2})?$/.test(value)) return "Enter up to 2 decimal places";
+        if (!/^\d+(\.\d{0,2})?$/.test(value))
+          return "Enter up to 2 decimal places";
         return "";
       }
 
@@ -155,15 +156,19 @@ export default function Supplier() {
       case "supplierNumber":
         if (value && value.trim()) {
           const trimmedValue = value.trim();
-          if (!/^\d+$/.test(trimmedValue)) return "Phone number must contain only digits";
-          if (trimmedValue.length !== 10) return "Phone number must be exactly 10 digits";
-          if (!/^[6-9]/.test(trimmedValue)) return "Phone number must start with 6-9";
+          if (!/^\d+$/.test(trimmedValue))
+            return "Phone number must contain only digits";
+          if (trimmedValue.length !== 10)
+            return "Phone number must be exactly 10 digits";
+          if (!/^[6-9]/.test(trimmedValue))
+            return "Phone number must start with 6-9";
         }
         return "";
 
       case "supplierAddress":
         if (value?.trim()) {
-          if (value.trim().length < 5) return "Address must be at least 5 characters";
+          if (value.trim().length < 5)
+            return "Address must be at least 5 characters";
           if (value.trim().length > 500) return "Address is too long";
         }
         return "";
@@ -189,8 +194,21 @@ export default function Supplier() {
       if (error) errors[field] = error;
     });
 
-    if (formData.isHeadSupplier && formData.childSuppliers.length === 0) {
-      errors.childSuppliers = "Head supplier must have at least one child supplier";
+    if (formData.isHeadSupplier) {
+      if (formData.childSuppliers.length === 0) {
+        errors.childSuppliers =
+          "Head supplier must have at least one child supplier";
+      } else {
+        // Every selected child must have a valid cut percentage
+        const invalidChild = formData.childSuppliers.find((c) => {
+          if (c.cutPercentage === "" || c.cutPercentage == null) return true;
+          const n = Number(c.cutPercentage);
+          return !Number.isFinite(n) || n < 0 || n > 100;
+        });
+        if (invalidChild) {
+          errors.childSuppliers = `Enter a cut % (0–100) for ${invalidChild.supplierName}`;
+        }
+      }
     }
 
     return errors;
@@ -218,14 +236,15 @@ export default function Supplier() {
     });
   }, [entries, searchDebounced]);
 
-  // --- API ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/supplier`);
       if (!res.ok) {
         const errorText = await res.text();
-        throw new Error(`Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`);
+        throw new Error(
+          `Failed to fetch suppliers: ${errorText || `HTTP ${res.status}`}`,
+        );
       }
       const data = await res.json();
       setEntries(Array.isArray(data) ? data : []);
@@ -242,7 +261,6 @@ export default function Supplier() {
     fetchData();
   }, [fetchData]);
 
-  // --- Handlers ---
   const handleInputChange = useCallback(
     (field, value) => {
       let processedValue = value;
@@ -273,22 +291,23 @@ export default function Supplier() {
     setFormData((prev) => ({
       ...prev,
       isHeadSupplier: checked,
-      // Clear children when unchecking so we never submit orphaned data
       childSuppliers: checked ? prev.childSuppliers : [],
     }));
+
+    setFormErrors((prev) => ({ ...prev, childSuppliers: undefined }));
   }, []);
 
-  const handleChildSupplierToggle = useCallback((supplier) => {
+  const handleChildSupplierToggle = useCallback((candidate) => {
     setFormData((prev) => {
       const exists = prev.childSuppliers.some(
-        (c) => String(c.supplierId) === String(supplier._id),
+        (c) => String(c.supplierId) === String(candidate._id),
       );
 
       if (exists) {
         return {
           ...prev,
           childSuppliers: prev.childSuppliers.filter(
-            (c) => String(c.supplierId) !== String(supplier._id),
+            (c) => String(c.supplierId) !== String(candidate._id),
           ),
         };
       }
@@ -298,16 +317,16 @@ export default function Supplier() {
         childSuppliers: [
           ...prev.childSuppliers,
           {
-            supplierId: supplier._id,
-            supplierName: supplier.supplierName,
-            tsCut: "",
+            supplierId: candidate._id,
+            supplierName: candidate.supplierName,
+            cutPercentage: "",
           },
         ],
       };
     });
   }, []);
 
-  const handleTsCutChange = useCallback((supplierId, value) => {
+  const handleCutPercentageChange = useCallback((supplierId, value) => {
     // Allow digits and one dot, cap at 2 decimals
     let processed = value.replace(/[^0-9.]/g, "");
     const parts = processed.split(".");
@@ -319,10 +338,17 @@ export default function Supplier() {
     setFormData((prev) => ({
       ...prev,
       childSuppliers: prev.childSuppliers.map((c) =>
-        String(c.supplierId) === String(supplierId) ? { ...c, tsCut: processed } : c,
+        String(c.supplierId) === String(supplierId)
+          ? { ...c, cutPercentage: processed }
+          : c,
       ),
     }));
   }, []);
+
+  const handleClearAllChildren = useCallback(() => {
+    if (formData.childSuppliers.length === 0) return;
+    setFormData((prev) => ({ ...prev, childSuppliers: [] }));
+  }, [formData.childSuppliers.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -344,7 +370,7 @@ export default function Supplier() {
         ? formData.childSuppliers.map((c) => ({
             supplierId: c.supplierId,
             supplierName: c.supplierName,
-            tsCut: c.tsCut === "" ? 0 : Number(c.tsCut),
+            cutPercentage: c.cutPercentage === "" ? 0 : Number(c.cutPercentage),
           }))
         : [],
       supplierTSRate: parseFloat(formData.supplierTSRate),
@@ -371,16 +397,24 @@ export default function Supplier() {
 
       if (!res.ok) {
         throw new Error(
-          data.error || data.message || `Submission failed (HTTP ${res.status})`,
+          data.error ||
+            data.message ||
+            `Submission failed (HTTP ${res.status})`,
         );
       }
 
-      toast.success(isEditing ? "Supplier updated successfully" : "Supplier added successfully");
+      toast.success(
+        isEditing
+          ? "Supplier updated successfully"
+          : "Supplier added successfully",
+      );
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error(error.message || "Failed to save supplier. Please try again.");
+      toast.error(
+        error.message || "Failed to save supplier. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -412,7 +446,8 @@ export default function Supplier() {
           ? supplier.childSuppliers.map((c) => ({
               supplierId: c.supplierId,
               supplierName: c.supplierName || "",
-              tsCut: c.tsCut != null ? String(c.tsCut) : "",
+              cutPercentage:
+                c.cutPercentage != null ? String(c.cutPercentage) : "",
             }))
           : [],
         supplierTSRate: supplier.supplierTSRate?.toString() || "",
@@ -473,11 +508,67 @@ export default function Supplier() {
     return parsed.toFixed(2);
   };
 
-  // Available suppliers to pick as children (exclude self)
+  // --- Derived data for the child picker ---
+
+  // All suppliers except self
   const childCandidateEntries = useMemo(
     () => entries.filter((s) => s._id !== formData.supplierId),
     [entries, formData.supplierId],
   );
+
+  // Selected supplier ids (as strings) for quick lookup
+  const selectedChildIds = useMemo(
+    () => new Set(formData.childSuppliers.map((c) => String(c.supplierId))),
+    [formData.childSuppliers],
+  );
+
+  /**
+   * Decide if a candidate is disabled and why.
+   * Returns null if allowed, otherwise a short human-readable reason.
+   */
+  const getBlockedReason = useCallback(
+    (candidate) => {
+      const candidateId = String(candidate._id);
+      const selfId = formData.supplierId ? String(formData.supplierId) : null;
+
+      // Already selected → allowed (we need to be able to uncheck)
+      if (selectedChildIds.has(candidateId)) return null;
+
+      // Can't pick yourself
+      if (selfId && candidateId === selfId)
+        return "This is the supplier itself";
+
+      // Can't pick another head supplier
+      if (candidate.isHeadSupplier) return "Already a head supplier";
+
+      // Can't pick someone who is a child of a DIFFERENT head
+      const candidateParentId = candidate.headSupplierId
+        ? String(candidate.headSupplierId)
+        : null;
+      if (
+        candidate.isChildSupplier &&
+        candidateParentId &&
+        candidateParentId !== selfId
+      ) {
+        return `Already a child of ${
+          candidate.headSupplierName || "another supplier"
+        }`;
+      }
+
+      // Cycle check: candidate already has this supplier as one of *its* children
+      if (selfId && Array.isArray(candidate.childSuppliers)) {
+        const cyclic = candidate.childSuppliers.some(
+          (c) => String(c.supplierId) === selfId,
+        );
+        if (cyclic) return "Would create a circular link";
+      }
+
+      return null;
+    },
+    [formData.supplierId, selectedChildIds],
+  );
+
+  const selectedChildCount = formData.childSuppliers.length;
 
   return (
     <div className={styles.container}>
@@ -538,7 +629,7 @@ export default function Supplier() {
               disabled={isSubmitting}
             />
 
-            {/* Head supplier toggle */}
+            {/* ---------- Head supplier toggle ---------- */}
             <div className={styles.inputGroup}>
               <label className={styles.checkboxLabel}>
                 <input
@@ -549,33 +640,94 @@ export default function Supplier() {
                 />
                 <span>Head Supplier</span>
               </label>
+              {formData.isHeadSupplier && selectedChildCount === 0 && (
+                <span className={styles.warningText}>
+                  Select at least one child supplier
+                </span>
+              )}
               {formErrors.childSuppliers && (
-                <span className={styles.errorText}>{formErrors.childSuppliers}</span>
+                <span className={styles.errorText}>
+                  {formErrors.childSuppliers}
+                </span>
               )}
             </div>
 
-            {/* Child supplier picker */}
+            {/* ---------- Child supplier picker ---------- */}
             {formData.isHeadSupplier && (
               <div className={styles.childSupplierSection}>
-                <h4>Select Child Suppliers</h4>
+                <div className={styles.childSectionHeader}>
+                  <h4>
+                    Select Child Suppliers{" "}
+                    <span className={styles.countBadge}>
+                      {selectedChildCount} selected
+                    </span>
+                  </h4>
+                  {selectedChildCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAllChildren}
+                      className={styles.clearChildrenBtn}
+                      disabled={isSubmitting}
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+
                 {childCandidateEntries.length === 0 ? (
-                  <p className={styles.emptyText}>No other suppliers available</p>
+                  <p className={styles.emptyText}>
+                    No other suppliers available
+                  </p>
                 ) : (
                   childCandidateEntries.map((candidate) => {
-                    const isChecked = formData.childSuppliers.some(
-                      (c) => String(c.supplierId) === String(candidate._id),
+                    const isSelected = selectedChildIds.has(
+                      String(candidate._id),
                     );
+                    const blockedReason = getBlockedReason(candidate);
+                    const isDisabled = isSubmitting || blockedReason !== null;
+
+                    // Text badges shown next to the name
+                    const badges = [];
+                    if (isSelected && candidate.isChildSupplier) {
+                      // This is the head's own existing child (edit mode)
+                      badges.push("Current child");
+                    } else if (candidate.isHeadSupplier) {
+                      badges.push("Head supplier");
+                    } else if (candidate.isChildSupplier) {
+                      badges.push("Child supplier");
+                    }
+
                     return (
-                      <div key={candidate._id} className={styles.childSupplierRow}>
+                      <div
+                        key={candidate._id}
+                        className={`${styles.childSupplierRow} ${
+                          isDisabled && !isSelected ? styles.rowDisabled : ""
+                        }`}
+                      >
                         <input
                           type="checkbox"
                           id={`child-${candidate._id}`}
-                          checked={isChecked}
+                          checked={isSelected}
                           onChange={() => handleChildSupplierToggle(candidate)}
-                          disabled={isSubmitting}
+                          disabled={isDisabled}
                         />
-                        <label htmlFor={`child-${candidate._id}`}>
-                          {candidate.supplierName}
+                        <label
+                          htmlFor={`child-${candidate._id}`}
+                          className={isDisabled ? styles.labelDisabled : ""}
+                        >
+                          <span className={styles.childName}>
+                            {candidate.supplierName}
+                          </span>
+                          {badges.map((b) => (
+                            <span key={b} className={styles.childBadge}>
+                              {b}
+                            </span>
+                          ))}
+                          {blockedReason && !isSelected && (
+                            <span className={styles.blockedReason}>
+                              — {blockedReason}
+                            </span>
+                          )}
                         </label>
                       </div>
                     );
@@ -584,32 +736,60 @@ export default function Supplier() {
               </div>
             )}
 
-            {/* TS cut inputs for each selected child */}
-            {formData.isHeadSupplier && formData.childSuppliers.length > 0 && (
+            {/* ---------- Cut % inputs for selected children ---------- */}
+            {formData.isHeadSupplier && selectedChildCount > 0 && (
               <div className={styles.tsCutSection}>
-                <h4>TS Cut for Child Suppliers</h4>
-                {formData.childSuppliers.map((child) => (
-                  <div key={child.supplierId} className={styles.tsCutRow}>
-                    <label htmlFor={`tscut-${child.supplierId}`}>
-                      {child.supplierName}
-                    </label>
-                    <input
-                      id={`tscut-${child.supplierId}`}
-                      type="text"
-                      inputMode="numeric"
-                      value={child.tsCut}
-                      onChange={(e) =>
-                        handleTsCutChange(child.supplierId, e.target.value)
-                      }
-                      placeholder="Enter TS cut"
-                      disabled={isSubmitting}
-                      className={styles.input}
-                    />
-                  </div>
-                ))}
+                <h4>Cut TSR for Child Suppliers</h4>
+                <div className={styles.tsCutGrid}>
+                  {formData.childSuppliers.map((child) => {
+                    const isEmpty =
+                      child.cutPercentage === "" || child.cutPercentage == null;
+                    const num = Number(child.cutPercentage);
+                    const outOfRange =
+                      !isEmpty &&
+                      (!Number.isFinite(num) || num < 0 || num > 100);
+
+                    return (
+                      <div key={child.supplierId} className={styles.tsCutRow}>
+                        <label
+                          htmlFor={`cut-${child.supplierId}`}
+                          className={styles.tsCutLabel}
+                        >
+                          {child.supplierName}
+                        </label>
+                        <div className={styles.tsCutInputWrapper}>
+                          <input
+                            id={`cut-${child.supplierId}`}
+                            type="text"
+                            inputMode="decimal"
+                            value={child.cutPercentage}
+                            onChange={(e) =>
+                              handleCutPercentageChange(
+                                child.supplierId,
+                                e.target.value,
+                              )
+                            }
+                            placeholder="0"
+                            disabled={isSubmitting}
+                            className={`${styles.input} ${
+                              outOfRange ? styles.inputError : ""
+                            }`}
+                          />
+                          <span className={styles.percentSuffix}>TSR</span>
+                        </div>
+                        {outOfRange && (
+                          <span className={styles.errorText}>
+                            Must be 0–100
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
+            {/* ---------- Rest of the form ---------- */}
             <div className={styles.inputGroup}>
               <label htmlFor="f-type">
                 Supplier Type
@@ -618,7 +798,9 @@ export default function Supplier() {
               <select
                 id="f-type"
                 value={formData.supplierType}
-                onChange={(e) => handleInputChange("supplierType", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("supplierType", e.target.value)
+                }
                 className={`${styles.selectInput} ${
                   formErrors.supplierType ? styles.inputError : ""
                 }`}
@@ -632,7 +814,9 @@ export default function Supplier() {
                 ))}
               </select>
               {formErrors.supplierType && (
-                <span className={styles.errorText}>{formErrors.supplierType}</span>
+                <span className={styles.errorText}>
+                  {formErrors.supplierType}
+                </span>
               )}
             </div>
 
@@ -653,7 +837,9 @@ export default function Supplier() {
               label="Custom Rate (Rs: 39)"
               type="number"
               value={formData.supplierCustomRate}
-              onChange={(value) => handleInputChange("supplierCustomRate", value)}
+              onChange={(value) =>
+                handleInputChange("supplierCustomRate", value)
+              }
               placeholder="Enter Rate"
               error={formErrors.supplierCustomRate}
               disabled={isSubmitting}
@@ -713,6 +899,7 @@ export default function Supplier() {
         </form>
       )}
 
+      {/* ---------- Search ---------- */}
       <div className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
@@ -755,6 +942,7 @@ export default function Supplier() {
         </div>
       </div>
 
+      {/* ---------- Table ---------- */}
       <div className={styles.tableContainer}>
         <div className={styles.tableWrapper}>
           <table className={styles.supplierTable}>
@@ -812,11 +1000,19 @@ export default function Supplier() {
                       >
                         {item.supplierName || "-"}
                       </Link>
+                      {item.isHeadSupplier && (
+                        <span className={styles.headTag}>Head</span>
+                      )}
+                      {item.isChildSupplier && !item.isHeadSupplier && (
+                        <span className={styles.childTag}>Child</span>
+                      )}
                     </td>
                     <td className={styles.typeCell}>
                       <span
                         className={`${styles.typeBadge} ${
-                          styles[`type-${item.supplierType?.toLowerCase() || "other"}`]
+                          styles[
+                            `type-${item.supplierType?.toLowerCase() || "other"}`
+                          ]
                         }`}
                       >
                         {item.supplierType || "-"}
@@ -827,9 +1023,15 @@ export default function Supplier() {
                         ? `Rs: ${item.supplierCustomRate}`
                         : formatTSRate(item.supplierTSRate)}
                     </td>
-                    <td className={styles.phoneCell} title={item.supplierNumber || "-"}>
+                    <td
+                      className={styles.phoneCell}
+                      title={item.supplierNumber || "-"}
+                    >
                       {item.supplierNumber ? (
-                        <span className={styles.phone} data-number={item.supplierNumber}>
+                        <span
+                          className={styles.phone}
+                          data-number={item.supplierNumber}
+                        >
                           i
                         </span>
                       ) : (
@@ -846,7 +1048,9 @@ export default function Supplier() {
                                 openActionMenuId === item._id ? null : item._id,
                               )
                             }
-                            disabled={loading || deleteLoading === item._id || isEditing}
+                            disabled={
+                              loading || deleteLoading === item._id || isEditing
+                            }
                             title="Actions"
                           >
                             ⋮
@@ -877,7 +1081,9 @@ export default function Supplier() {
                                 }}
                                 className={styles.actionDeleteButton}
                                 disabled={
-                                  deleteLoading === item._id || loading || isEditing
+                                  deleteLoading === item._id ||
+                                  loading ||
+                                  isEditing
                                 }
                                 title={isEditing ? "Delete disabled" : "Delete"}
                               >

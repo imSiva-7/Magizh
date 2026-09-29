@@ -8,6 +8,122 @@
   min-height: 100vh;
 }
 
+.table_container::after {
+  content: "← scroll →";
+  display: none;
+  position: sticky;
+  left: 0;
+  padding: 0.25rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .table_container::after {
+    display: block;
+    background: linear-gradient(to right, transparent, #f8fafc 30%, #f8fafc 70%, transparent);
+    width: 100%;
+  }
+}
+/* ========== 9. CHILD-SUPPLIER / HEAD-LINK INDICATORS ========== */
+
+/* Grey "was 300" text inside the TSR tag */
+.ts_rate_original {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: 0.15rem;
+}
+
+/* Blue "Head Supplier" badge shown next to the type badge */
+.head_supplier_tag {
+  display: inline-block;
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid #93c5fd;
+}
+
+/* Amber "Linked to: Ravi · Cut: 15%" badge */
+.head_link_tag {
+  display: inline-block;
+  background-color: #fef3c7;
+  color: #92400e;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #fcd34d;
+  line-height: 1.4;
+}
+
+.head_link_tag strong {
+  font-weight: 700;
+}
+
+/* Yellow info banner above the form actions */
+.cut_info_banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: #fef3c7;
+  border-left: 4px solid #d97706;
+  color: #78350f;
+  padding: 0.85rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  margin-bottom: 1.25rem;
+}
+
+.cut_info_banner strong {
+  font-weight: 700;
+}
+
+.cut_info_icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ========== 10. MOBILE ADJUSTMENTS FOR NEW CLASSES ========== */
+@media (max-width: 768px) {
+  .head_supplier_tag,
+  .head_link_tag {
+    font-size: 0.7rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .cut_info_banner {
+    font-size: 0.8125rem;
+    padding: 0.7rem 0.85rem;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .head_supplier_tag,
+  .head_link_tag {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .ts_rate_original {
+    font-size: 0.7rem;
+  }
+
+  .cut_info_banner {
+    font-size: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border-left-width: 3px;
+  }
+}
 .header {
   display: flex;
   align-items: center;
@@ -729,8 +845,9 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .table thead {
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  position: relative;
-  z-index: 1;
+  position: sticky;
+  top: 0;
+  z-index: 10;  /* High enough for sticky, but lower than popup */
 }
 .table th {
   padding: 1rem;
@@ -880,7 +997,7 @@ input[type="date"]::-webkit-date-and-time-value {
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border: 1px solid #e2e8f0;
-  z-index: 1000;
+  z-index: 1100;  /* Much higher than sticky header */
   min-width: 100px;
   overflow: hidden;
   animation: fadeIn 0.15s ease;
