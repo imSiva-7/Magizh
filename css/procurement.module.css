@@ -8,6 +8,174 @@
   min-height: 100vh;
 }
 
+/* ========== HEAD SUPPLIER EARNINGS ========== */
+
+.head_earnings_section {
+  background: linear-gradient(135deg, #ffffff 0%, #fef9f3 100%);
+  border: 2px solid #fcd34d;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.head_earnings_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #fde68a;
+  flex-wrap: wrap;
+}
+
+.head_earnings_header h2 {
+  color: #92400e;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.head_earnings_subtitle {
+  color: #a16207;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.refresh_btn {
+  padding: 0.5rem 1rem;
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.refresh_btn:hover:not(:disabled) {
+  background-color: #fde68a;
+  transform: translateY(-1px);
+}
+
+.refresh_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Totals cards */
+.head_totals_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.head_total_card {
+  background: #ffffff;
+  border: 1px solid #fde68a;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+}
+
+.head_total_card:hover {
+  border-color: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(217, 119, 6, 0.15);
+}
+
+.head_total_label {
+  font-size: 0.75rem;
+  color: #a16207;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.head_total_value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #78350f;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+}
+
+.head_total_unit {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #a16207;
+  margin-left: 0.15rem;
+}
+
+.text_paid {
+  color: #166534 !important;
+}
+
+.text_due {
+  color: #991b1b !important;
+}
+
+/* Table cells for head entries */
+.child_name_cell {
+  font-weight: 600;
+  color: #92400e;
+  white-space: nowrap;
+}
+
+.cut_cell {
+  color: #d97706;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .head_earnings_section {
+    padding: 1rem;
+  }
+
+  .head_earnings_header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .head_earnings_header h2 {
+    font-size: 1.15rem;
+  }
+
+  .refresh_btn {
+    width: 100%;
+  }
+
+  .head_totals_grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .head_total_value {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .head_totals_grid {
+    grid-template-columns: 1fr;
+  }
+
+  .head_total_card {
+    padding: 0.75rem;
+  }
+}
+
 .table_container::after {
   content: "← scroll →";
   display: none;

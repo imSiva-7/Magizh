@@ -8,6 +8,471 @@
   min-height: 100vh;
 }
 
+/* ========== 9. ADD PROCUREMENT ========== */
+
+/* "+ Add Procurement" button in header */
+.add_procurement_btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 4px 6px rgba(39, 121, 93, 0.2);
+}
+
+.add_procurement_btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(39, 121, 93, 0.3);
+}
+
+.plus {
+  font-size: 1.15rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Section panel */
+.add_section {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  border: 2px solid #bbf7d0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.add_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #bbf7d0;
+}
+
+.add_header h2 {
+  color: #166534;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.close_add_btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background 0.15s ease, color 0.15s ease;
+  line-height: 1;
+}
+
+.close_add_btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ========== 10. SUPPLIER PICKER ========== */
+
+.supplier_picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form_label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.required_asterisk {
+  color: #dc2626;
+  margin-left: 0.2rem;
+}
+
+.supplier_search_input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #334155;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.supplier_search_input:hover {
+  border-color: #cbd5e1;
+}
+
+.supplier_search_input:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.supplier_hint {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 0.5rem 0.25rem;
+}
+
+.supplier_results {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  max-height: 320px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.supplier_result_item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s ease;
+}
+
+.supplier_result_item:last-child {
+  border-bottom: none;
+}
+
+.supplier_result_item:hover {
+  background: #f0fdf4;
+}
+
+.supplier_result_main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.supplier_result_name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.supplier_result_meta {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.tag_head,
+.tag_child {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tag_head {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.tag_child {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* ========== 11. SELECTED SUPPLIER BAR ========== */
+
+.selected_supplier_bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: white;
+  border: 2px solid rgb(39, 121, 93);
+  border-radius: 0.5rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.selected_supplier_info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.selected_supplier_name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.selected_supplier_meta {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.selected_supplier_cut {
+  font-size: 0.75rem;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+  font-weight: 600;
+}
+
+.change_supplier_btn {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.change_supplier_btn:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.change_supplier_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== 12. ADD FORM ========== */
+
+.add_form {
+  display: block;
+}
+
+.add_form_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.form_input_group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form_input,
+.form_select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #334155;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form_input:hover:not(:disabled),
+.form_select:hover:not(:disabled) {
+  border-color: #cbd5e1;
+}
+
+.form_input:focus,
+.form_select:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.form_input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.readonly_input {
+  background: #f0fdf4 !important;
+  color: rgb(39, 121, 93) !important;
+  font-weight: 600;
+  cursor: default;
+}
+
+.input_error {
+  border-color: #dc2626 !important;
+}
+
+.input_error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.error_text {
+  font-size: 0.75rem;
+  color: #dc2626;
+}
+
+.add_form_actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #bbf7d0;
+}
+
+.submit_btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-width: 140px;
+}
+
+.submit_btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 121, 93, 0.3);
+}
+
+.submit_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cancel_btn {
+  padding: 0.75rem 1.25rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.cancel_btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.cancel_btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== 13. NEW CLASSES MOBILE ========== */
+@media (max-width: 768px) {
+  .add_section {
+    padding: 1.25rem;
+  }
+
+  .add_header h2 {
+    font-size: 1.2rem;
+  }
+
+  .add_form_grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .supplier_results {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .add_procurement_btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .add_section {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .add_header h2 {
+    font-size: 1.1rem;
+  }
+
+  .add_form_actions {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+
+  .submit_btn,
+  .cancel_btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .selected_supplier_bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .change_supplier_btn {
+    width: 100%;
+  }
+
+  .supplier_results {
+    max-height: 220px;
+  }
+
+  .supplier_result_item {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .supplier_result_name {
+    font-size: 0.9rem;
+  }
+
+  .supplier_result_meta {
+    font-size: 0.75rem;
+  }
+}
 .page_header {
   display: flex;
   align-items: center;
@@ -17,6 +482,98 @@
   border-bottom: 2px solid #e2e8f0;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+/* Search section */
+.search_section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.search_input_wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search_input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: white;
+  color: #334155;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.search_input:hover {
+  border-color: #cbd5e1;
+}
+
+.search_input:focus {
+  outline: none;
+  border-color: rgb(39, 121, 93);
+  box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
+}
+
+.search_input:disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.clear_search_btn {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  line-height: 1;
+  border-radius: 0.25rem;
+}
+
+.clear_search_btn:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.search_hint {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 0.2rem;
+}
+
+/* Header subtitle (small text under the h1) */
+.header_subtitle {
+  display: block;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .search_input {
+    padding: 0.7rem 2.25rem 0.7rem 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .search_hint {
+    font-size: 0.75rem;
+  }
 }
 
 .page_title {

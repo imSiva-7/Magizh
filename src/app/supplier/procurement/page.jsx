@@ -113,7 +113,6 @@ const SummaryStats = ({ summary, filters }) => (
         }
         unit="L/day"
       />
-
       <StatItem
         label="Avg Fat/SNF"
         value={`${summary.avgFat} / ${summary.avgSnf}`}
@@ -124,9 +123,7 @@ const SummaryStats = ({ summary, filters }) => (
         value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
         prefix="₹"
       />
-
       <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
-
       <StatItem
         label="Total Milk"
         value={formatNumberWithCommas(summary.milk.toFixed(2))}
@@ -201,13 +198,15 @@ function ProcurementContent() {
   const [formData, setFormData] = useState(initialForm);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
 
+  // NEW: head supplier entries
+  const [headData, setHeadData] = useState(null);
+  const [headLoading, setHeadLoading] = useState(false);
+
   // ---- Effective TSR (subtract cut % for child suppliers) ----
-  // This mirrors exactly what the backend does when saving a procurement,
-  // so the UI shown here matches what will be stored.
   const effectiveTSRate = useMemo(() => {
     const s = data.supplier;
     if (!s) return 0;
-    if (s.supplierCustomRate) return 0; // custom rate overrides — TS not used
+    if (s.supplierCustomRate) return 0;
     const base = Number(s.supplierTSRate) || 0;
     const cut =
       s.isChildSupplier && s.cutPercentage ? Number(s.cutPercentage) : 0;
@@ -268,6 +267,28 @@ function ProcurementContent() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [openActionMenuId]);
 
+  // ---- Fetch head entries ----
+  const fetchHeadEntries = useCallback(async () => {
+    if (!supplierId) return;
+    setHeadLoading(true);
+    try {
+      const res = await fetch(
+        `/api/supplier/head-entries?headSupplierId=${supplierId}`,
+      );
+      if (!res.ok) {
+        throw new Error("Failed to load head entries");
+      }
+      const headRes = await res.json();
+      setHeadData(headRes);
+    } catch (error) {
+      console.error("Head entries load error:", error);
+      toast.error(error.message || "Failed to load head entries");
+      setHeadData(null);
+    } finally {
+      setHeadLoading(false);
+    }
+  }, [supplierId]);
+
   const fetchAllData = useCallback(async () => {
     if (!supplierId) return;
 
@@ -290,13 +311,20 @@ function ProcurementContent() {
         supplier: supplierData,
         allProcurements: Array.isArray(procurementData) ? procurementData : [],
       });
+
+      // If head supplier → also fetch head entries
+      if (supplierData?.isHeadSupplier) {
+        await fetchHeadEntries();
+      } else {
+        setHeadData(null);
+      }
     } catch (error) {
       console.error("Load error:", error);
       toast.error(error.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [supplierId]);
+  }, [supplierId, fetchHeadEntries]);
 
   useEffect(() => {
     if (!supplierId) {
@@ -498,9 +526,6 @@ function ProcurementContent() {
 
       const isCustomRate = !!data.supplier?.supplierCustomRate;
 
-      // NOTE: The server recomputes rate/totalAmount authoritatively,
-      // including the child-supplier cut. We send the same shape as before
-      // for backwards compatibility; extra cut fields are ignored server-side.
       const payload = {
         supplierId,
         supplierName: data.supplier.supplierName,
@@ -772,7 +797,9 @@ function ProcurementContent() {
                   {hasCut && (
                     <span className={styles.ts_rate_original}>
                       {" "}
-                      (was {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)})
+                      (was{" "}
+                      {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+                      )
                     </span>
                   )}
                 </span>
@@ -789,7 +816,7 @@ function ProcurementContent() {
                   Linked to:{" "}
                   <strong>{data.supplier?.headSupplierName || "Head"}</strong>
                   {" · "}
-                  Cut: {parseFloat(data.supplier?.cutPercentage).toFixed(1)}%
+                  Cut: {parseFloat(data.supplier?.cutPercentage).toFixed(0)}
                 </span>
               )}
             </div>
@@ -860,7 +887,6 @@ function ProcurementContent() {
               error={errors.snfPercentage}
               required
             />
-
             <InputGroup
               label="Comment"
               name="comment"
@@ -901,7 +927,6 @@ function ProcurementContent() {
             />
           </div>
 
-          {/* Info banner for head's cut */}
           {hasCut && currentPricing.totalAmount && (
             <div className={styles.cut_info_banner}>
               <span className={styles.cut_info_icon}>ℹ️</span>
@@ -1090,6 +1115,173 @@ function ProcurementContent() {
               Cancel
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ==================== HEAD SUPPLIER EARNINGS ==================== */}
+      {data.supplier?.isHeadSupplier && (
+        <div className={styles.head_earnings_section}>
+          <div className={styles.head_earnings_header}>
+            <div>
+              <h2>Head Supplier Earnings</h2>
+              <span className={styles.head_earnings_subtitle}>
+                TSR cuts received from child suppliers
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={fetchHeadEntries}
+              className={styles.refresh_btn}
+              disabled={headLoading}
+              title="Refresh earnings"
+            >
+              {headLoading ? "..." : "↻ Refresh"}
+            </button>
+          </div>
+
+          {headLoading && !headData ? (
+            <div className={styles.loading_container}>
+              <div className={styles.spinner}></div>
+              <span className={styles.loading_text}>
+                Loading earnings...
+              </span>
+            </div>
+          ) : !headData || headData.entries.length === 0 ? (
+            <div className={styles.empty_state}>
+              <span className={styles.empty_icon}>📭</span>
+              <p>
+                No cuts received yet. Child procurements will appear here
+                automatically.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Totals cards */}
+              <div className={styles.head_totals_grid}>
+                <div className={styles.head_total_card}>
+                  <span className={styles.head_total_label}>Entries</span>
+                  <span className={styles.head_total_value}>
+                    {headData.totals.entries}
+                  </span>
+                </div>
+                <div className={styles.head_total_card}>
+                  <span className={styles.head_total_label}>Total Milk</span>
+                  <span className={styles.head_total_value}>
+                    {formatNumberWithCommas(
+                      Number(headData.totals.milk || 0).toFixed(2),
+                    )}
+                    <span className={styles.head_total_unit}>L</span>
+                  </span>
+                </div>
+                <div className={styles.head_total_card}>
+                  <span className={styles.head_total_label}>Earned</span>
+                  <span className={styles.head_total_value}>
+                    ₹
+                    {formatNumberWithCommasNoDecimal(
+                      headData.totals.earned || 0,
+                    )}
+                  </span>
+                </div>
+                <div className={styles.head_total_card}>
+                  <span className={styles.head_total_label}>Paid</span>
+                  <span
+                    className={`${styles.head_total_value} ${styles.text_paid}`}
+                  >
+                    ₹
+                    {formatNumberWithCommasNoDecimal(headData.totals.paid || 0)}
+                  </span>
+                </div>
+                <div className={styles.head_total_card}>
+                  <span className={styles.head_total_label}>Due</span>
+                  <span
+                    className={`${styles.head_total_value} ${styles.text_due}`}
+                  >
+                    ₹
+                    {formatNumberWithCommasNoDecimal(headData.totals.due || 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Entries table */}
+              <div className={styles.table_container}>
+                <table
+                  className={styles.table}
+                  aria-label="Head supplier earnings"
+                >
+                  <thead>
+                    <tr>
+                      <th scope="col">Date</th>
+                      <th scope="col">AM/PM</th>
+                      <th scope="col">From Child</th>
+                      <th scope="col">Milk (L)</th>
+                      <th scope="col">Fat %</th>
+                      <th scope="col">SNF %</th>
+                      <th scope="col">Parent TSR</th>
+                      <th scope="col">Cut</th>
+                      <th scope="col">Child TSR</th>
+                      <th scope="col">Rate/L (₹)</th>
+                      <th scope="col">Earned (₹)</th>
+                      <th scope="col">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {headData.entries.map((row, idx) => (
+                      <tr key={`${row.procurementId}-${idx}`}>
+                        <td className={styles.date_cell}>
+                          {new Date(row.date).toLocaleDateString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "2-digit",
+                          })}
+                        </td>
+                        <td className={styles.time_cell}>
+                          <span
+                            className={
+                              row.time === "AM"
+                                ? styles.am_badge
+                                : styles.pm_badge
+                            }
+                          >
+                            {row.time}
+                          </span>
+                        </td>
+                        <td className={styles.child_name_cell}>
+                          {row.childSupplierName || "-"}
+                        </td>
+                        <td className={styles.quantity_cell}>
+                          {parseFloat(row.milkQuantity).toFixed(2)}
+                        </td>
+                        <td className={styles.fat_cell}>
+                          {parseFloat(row.fatPercentage).toFixed(1)}
+                        </td>
+                        <td className={styles.snf_cell}>
+                          {parseFloat(row.snfPercentage).toFixed(1)}
+                        </td>
+                        <td className={styles.rate_cell}>{row.parentTsr}</td>
+                        <td className={styles.cut_cell}>
+                          −{row.cutPercentage}
+                        </td>
+                        <td className={styles.rate_cell}>{row.childTsr}</td>
+                        <td className={styles.rate_cell}>
+                          ₹{parseFloat(row.ratePerLiter).toFixed(2)}
+                        </td>
+                        <td className={styles.total_cell}>
+                          ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}
+                        </td>
+                        <td className={styles.payment_cell}>
+                          {row.paymentStatus === "Paid" ? (
+                            <span className={styles.status_paid}>Paid</span>
+                          ) : (
+                            <span className={styles.status_due}>Due</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
