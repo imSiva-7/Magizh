@@ -592,3 +592,315 @@
     font-size: 1.25rem;
   }
 }
+
+/* ========== ATTENDANCE HISTORY IMPROVEMENTS ========== */
+
+/* Filter Actions */
+.filterActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e2e8f0;
+}
+
+.primaryButton,
+.secondaryButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  color: white;
+  box-shadow: 0 4px 6px rgba(39, 121, 93, 0.2);
+}
+
+.primaryButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(39, 121, 93, 0.3);
+}
+
+.primaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondaryButton {
+  background: white;
+  color: rgb(39, 121, 93);
+  border: 2px solid rgb(39, 121, 93);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgb(39, 121, 93);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Month Badge */
+.monthBadge {
+  display: inline-block;
+  margin-left: 1rem;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid #93c5fd;
+}
+
+/* History Groups Container */
+.historyGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Individual History Group (One Date) */
+.historyGroup {
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.historyGroup:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Group Header */
+.historyGroupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.historyGroupDate {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: rgb(39, 121, 93);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.historyGroupDate::before {
+  content: "📅";
+  font-size: 1.25rem;
+}
+
+.historyGroupStats {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.historyGroupStat {
+  font-size: 0.875rem;
+  color: #475569;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  background: white;
+  border-radius: 0.375rem;
+  border: 1px solid #cbd5e1;
+}
+
+.historyGroupStatWarn {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+/* Table within group */
+.historyGroup .tableWrapper {
+  padding: 0;
+}
+
+.historyGroup .attendanceTable {
+  margin: 0;
+  border-radius: 0;
+}
+
+.historyGroup .attendanceTable thead {
+  background: #f8fafc;
+}
+
+.historyGroup .attendanceTable th {
+  padding: 0.875rem 1rem;
+  font-size: 0.813rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.historyGroup .attendanceTable td {
+  padding: 1rem;
+}
+
+/* Employee ID Cell */
+.empIdCell {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: #1e293b;
+  background: #f8fafc;
+  text-align: center !important;
+}
+
+/* Name Cell */
+.nameCell {
+  font-weight: 600;
+  color: #1e293b;
+  text-align: left !important;
+}
+
+/* Status Badges */
+.statusCell {
+  text-align: center !important;
+}
+
+.statusComplete {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-radius: 0.5rem;
+  font-size: 0.813rem;
+  font-weight: 600;
+  border: 1px solid #6ee7b7;
+}
+
+.statusIncomplete {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #991b1b;
+  border-radius: 0.5rem;
+  font-size: 0.813rem;
+  font-weight: 600;
+  border: 1px solid #fca5a5;
+}
+
+/* Missing Badge */
+.missingBadge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: #fff7ed;
+  color: #ea580c;
+  border-radius: 0.5rem;
+  font-size: 0.813rem;
+  font-weight: 600;
+  border: 1px solid #fed7aa;
+}
+
+/* Incomplete Row Highlight */
+.incompleteRow {
+  background: #fffbeb !important;
+}
+
+.incompleteRow:hover {
+  background: #fef3c7 !important;
+}
+
+/* Actions Cell */
+.actionsCell {
+  text-align: center !important;
+}
+
+.viewLink {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  font-size: 0.813rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.viewLink:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive for History Groups */
+@media (max-width: 768px) {
+  .filterActions {
+    flex-direction: column;
+  }
+
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .historyGroupHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .historyGroupStats {
+    gap: 0.75rem;
+  }
+
+  .historyGroupStat {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .historyGroup .attendanceTable th,
+  .historyGroup .attendanceTable td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.813rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .historyGroupDate {
+    font-size: 1rem;
+  }
+
+  .monthBadge {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .historyGroupStats {
+    width: 100%;
+  }
+
+  .historyGroupStat {
+    flex: 1;
+    text-align: center;
+  }
+}

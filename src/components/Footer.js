@@ -66,7 +66,7 @@ export default function Footer() {
               </li>
               {isAdmin && (
                 <li>
-                  <Link href="/employee" className={styles.footerLink}>
+                  <Link href="/employee/attendance/history" className={styles.footerLink}>
                     Employees
                   </Link>
                 </li>
