@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import styles from "./page.module.css";
-import { getTodayDate, getPreviousMonthDate } from "@/utils/dateUtils";
+import { getTodayDate, getPreviousMonthDate, getCurrentMonthStartDate } from "@/utils/dateUtils";
 import {
   formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
@@ -22,7 +22,7 @@ export default function Home() {
   const { data: session, status } = useSession();
 
   const [filters, setFilters] = useState({
-    startDate: getPreviousMonthDate(),
+    startDate: "2026-09-01",
     endDate: getTodayDate(),
   });
 
@@ -45,11 +45,16 @@ export default function Home() {
       setLoading(true);
       setError(null);
       try {
+        // Build query params for date filtering
+        const queryParams = new URLSearchParams();
+        if (filters.startDate) queryParams.append("startDate", filters.startDate);
+        if (filters.endDate) queryParams.append("endDate", filters.endDate);
+
         const [customerRes, supplierRes, productionRes, stockRes] =
           await Promise.all([
-            fetch(`/api/customer/order/history`),
-            fetch(`/api/supplier/procurement/history`),
-            fetch(`/api/production/history`),
+            fetch(`/api/customer/order/history?${queryParams}`),
+            fetch(`/api/supplier/procurement/history?${queryParams}`),
+            fetch(`/api/production/history?${queryParams}`),
             fetch(`/api/stock/balance`),
           ]);
 
@@ -233,6 +238,75 @@ export default function Home() {
         </div>
       </header>
 
+      {/* Date Filters */}
+      {/* <div className={styles.filterSection}>
+        <div className={styles.filterHeader}>
+          <h3>Filter by Date Range</h3>
+        </div>
+        <div className={styles.filterControls}>
+          <div className={styles.dateInputGroup}>
+            <label>From:</label>
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+              }
+              max={filters.endDate || getTodayDate()}
+              className={styles.dateInput}
+            />
+          </div>
+          <div className={styles.dateInputGroup}>
+            <label>To:</label>
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+              }
+              min={filters.startDate}
+              max={getTodayDate()}
+              className={styles.dateInput}
+            />
+          </div>
+          <div className={styles.filterButtons}>
+            <button
+              onClick={() =>
+                setFilters({
+                  startDate: getCurrentMonthStartDate(),
+                  endDate: getTodayDate(),
+                })
+              }
+              className={styles.filterBtn}
+            >
+              This Month
+            </button>
+            <button
+              onClick={() =>
+                setFilters({
+                  startDate: getTodayDate(),
+                  endDate: getTodayDate(),
+                })
+              }
+              className={styles.filterBtn}
+            >
+              Today
+            </button>
+            <button
+              onClick={() =>
+                setFilters({
+                  startDate: "",
+                  endDate: "",
+                })
+              }
+              className={styles.filterBtnClear}
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      </div> */}
+
       {/* Production Summary with its own stat item class */}
       {/* {productionSummary && (
         <div className={styles.global_summary_card}>
@@ -275,7 +349,9 @@ export default function Home() {
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
-              As of {getTodayDate()}
+              {filters.startDate && filters.endDate
+                ? `${filters.startDate} to ${filters.endDate}`
+                : "All Time"}
             </span>
           </div>
           <div className={styles.global_stats_grid}>
@@ -340,7 +416,9 @@ export default function Home() {
             <div className={styles.global_header}>
               <h2 className={styles.global_title}>Customers Summary</h2>
               <span className={styles.date_range_badge}>
-                As of {getTodayDate()}
+                {filters.startDate && filters.endDate
+                  ? `${filters.startDate} to ${filters.endDate}`
+                  : "All Time"}
               </span>
             </div>
             <div className={styles.global_stats_grid}>
