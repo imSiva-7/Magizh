@@ -23,7 +23,7 @@ export default function Home() {
 
   const [filters, setFilters] = useState({
     startDate: "2026-09-01",
-    endDate: getTodayDate(),
+    endDate: "2026-09-30",
   });
 
   const [customerData, setCustomerData] = useState({
@@ -427,7 +427,7 @@ export default function Home() {
                 value={customerData.summary.orderCount}
               />
               <StatItem
-                label="Total Amount"
+                label="Total Sales"
                 value={`₹${formatNumberWithCommas(customerData.summary.totalAmount.toFixed(2))}`}
               />
               <StatItem

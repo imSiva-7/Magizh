@@ -28,6 +28,70 @@
   font-weight: 700;
 }
 
+/* Export Section */
+.exportSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.entryCount {
+  color: #64748b;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: #f1f5f9;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.exportButtons {
+  display: flex;
+  gap: 1rem;
+}
+
+.exportBtn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 140px;
+  background: linear-gradient(
+    135deg,
+    rgb(39, 121, 93) 0%,
+    rgb(30, 100, 80) 100%
+  );
+  color: white;
+}
+
+.exportBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.exportBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Filter Section */
 .filterSection {
   background-color: #ffffff;
@@ -523,6 +587,27 @@
     grid-template-columns: 1fr;
   }
 
+  .exportSection {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .exportButtons {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .exportBtn {
+    flex: 1;
+    min-width: 0;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+
   .infoGrid {
     grid-template-columns: 1fr;
   }
@@ -571,6 +656,15 @@
 @media (max-width: 480px) {
   .headerContent h1 {
     font-size: 1.25rem;
+  }
+
+  .exportSection {
+    padding: 0.75rem;
+  }
+
+  .exportBtn {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
   }
 
   .infoCard,

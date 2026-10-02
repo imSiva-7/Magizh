@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/attendance.module.css";
+import { exportAttendanceToPDF } from "@/utils/exportAttendance";
 
 function AttendanceContent() {
   const router = useRouter();
@@ -49,7 +50,7 @@ function AttendanceContent() {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/attendance?empID=${empID}&month=${selectedMonth}`
+        `/api/attendance?empID=${empID}&month=${selectedMonth}`,
       );
       if (!res.ok) {
         const error = await res.json();
@@ -145,14 +146,19 @@ function AttendanceContent() {
   };
 
   const handleDeleteAdvance = async (advanceId) => {
-    if (!window.confirm("Are you sure you want to delete this advance payment?")) {
+    if (
+      !window.confirm("Are you sure you want to delete this advance payment?")
+    ) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/attendance?id=${advanceId}&empID=${selectedEmpID}&month=${month}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `/api/attendance?id=${advanceId}&empID=${selectedEmpID}&month=${month}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await res.json();
 
@@ -186,6 +192,17 @@ function AttendanceContent() {
     } catch {
       return time;
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!attendanceData) {
+      toast.error("No attendance data to export");
+      return;
+    }
+
+    const fileName = `${attendanceData.employee.name}-${attendanceData.employee.empID}-attendance-${month}`;
+    exportAttendanceToPDF(attendanceData, month, fileName);
+    toast.success("PDF exported successfully");
   };
 
   return (
@@ -241,6 +258,7 @@ function AttendanceContent() {
         </div>
       </div>
 
+
       {/* Loading State */}
       {loading && (
         <div className={styles.loadingContainer}>
@@ -274,7 +292,6 @@ function AttendanceContent() {
                   {formatCurrency(attendanceData.employee.salary)}
                 </span>
               </div>
-         
             </div>
           </div>
 
@@ -324,7 +341,7 @@ function AttendanceContent() {
                   {formatCurrency(attendanceData.summary.hourlyRate)}/h
                 </span>
               </div>
-             
+
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Regular Pay:</span>
                 <span className={styles.summaryValue}>
@@ -373,7 +390,10 @@ function AttendanceContent() {
             </div>
 
             {showAdvanceForm && (
-              <form onSubmit={handleAdvanceSubmit} className={styles.advanceForm}>
+              <form
+                onSubmit={handleAdvanceSubmit}
+                className={styles.advanceForm}
+              >
                 <div className={styles.formGrid}>
                   <div className={styles.inputGroup}>
                     <label htmlFor="amount">Amount *</label>
@@ -383,7 +403,10 @@ function AttendanceContent() {
                       step="0.01"
                       value={advanceForm.amount}
                       onChange={(e) =>
-                        setAdvanceForm({ ...advanceForm, amount: e.target.value })
+                        setAdvanceForm({
+                          ...advanceForm,
+                          amount: e.target.value,
+                        })
                       }
                       className={styles.input}
                       placeholder="Enter amount"
@@ -412,7 +435,10 @@ function AttendanceContent() {
                       type="text"
                       value={advanceForm.reason}
                       onChange={(e) =>
-                        setAdvanceForm({ ...advanceForm, reason: e.target.value })
+                        setAdvanceForm({
+                          ...advanceForm,
+                          reason: e.target.value,
+                        })
                       }
                       className={styles.input}
                       placeholder="Enter reason (optional)"
@@ -482,10 +508,29 @@ function AttendanceContent() {
                 </table>
               </div>
             ) : (
-              <p className={styles.emptyMessage}>No advance payments recorded</p>
+              <p className={styles.emptyMessage}>
+                No advance payments recorded
+              </p>
             )}
           </div>
 
+      {/* Export Section */}
+      {attendanceData && (
+        <div className={styles.exportSection}>
+          <span className={styles.entryCount}>
+            Attendance data for {attendanceData.employee.name} ({month})
+          </span>
+          <div className={styles.exportButtons}>
+            <button
+              onClick={handleExportPDF}
+              className={styles.exportBtn}
+              aria-label="Export attendance as PDF"
+            >
+              Export as PDF
+            </button>
+          </div>
+        </div>
+      )}
           {/* Attendance Records Table */}
           <div className={styles.attendanceSection}>
             <h2>Daily Attendance Records</h2>
@@ -553,12 +598,14 @@ function AttendanceContent() {
 
 export default function EmployeeAttendance() {
   return (
-    <Suspense fallback={
-      <div className={styles.loadingContainer}>
-        <div className={styles.spinner}></div>
-        <p>Loading...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className={styles.loadingContainer}>
+          <div className={styles.spinner}></div>
+          <p>Loading...</p>
+        </div>
+      }
+    >
       <AttendanceContent />
     </Suspense>
   );

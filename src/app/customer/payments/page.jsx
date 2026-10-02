@@ -912,7 +912,7 @@ export default function CustomerPayments() {
               )}
             />
             <StatItem
-              label="Total Amount"
+              label="Total Sales"
               value={`₹${formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}`}
             />
             <StatItem
@@ -999,7 +999,7 @@ export default function CustomerPayments() {
                     value={customerTotals[customer._id]?.totalOrders || 0}
                   />
                   <StatItem
-                    label="Total Amount"
+                    label="Total Sales"
                     value={`₹${formatNumberWithCommasNoDecimal(
                       customerTotals[customer._id]?.totalAmount || 0,
                     )}`}

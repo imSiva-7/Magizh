@@ -39,7 +39,7 @@ const desktopNavItems = [
     path: "/employee",
     children: [
       { name: "Attendance", path: "/employee/attendance" },
-      // { name: "Attendance Hsitory", path: "/customer/payments" },
+      { name: "Attendance Hsitory", path: "/employee/attendance/history" },
     ],
   },
 
@@ -49,8 +49,8 @@ const desktopNavItems = [
 const mobileNavItems = [
   { name: "Home", path: "/" },
   { name: "Productions", path: "/productions" },
-  { name: "Production History", path: "/productions/history" },
-  { name: "Stock", path: "/stock" },
+  // { name: "Production History", path: "/productions/history" },
+  // { name: "Stock", path: "/stock" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },

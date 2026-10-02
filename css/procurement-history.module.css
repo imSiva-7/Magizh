@@ -8,6 +8,17 @@
   min-height: 100vh;
 }
 
+.header_title {
+  flex: 1;
+}
+
+.header_title h1 {
+  color: rgb(39, 121, 93);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
 /* ========== 9. ADD PROCUREMENT ========== */
 
 /* "+ Add Procurement" button in header */

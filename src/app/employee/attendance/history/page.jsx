@@ -157,7 +157,7 @@ function AttendanceHistoryContent() {
             />
           </div>
 
-          <div className={styles.inputGroup}>
+          {/* <div className={styles.inputGroup}> 
             <label htmlFor="startDate">From Date</label>
             <input
               id="startDate"
@@ -181,7 +181,7 @@ function AttendanceHistoryContent() {
               min={startDate || monthStart}
               max={monthEnd}
             />
-          </div>
+          </div> */}
 
           <div className={styles.inputGroup}>
             <label htmlFor="search">Search Employee</label>

@@ -549,7 +549,7 @@ function ProcurementHistoryContent() {
 
       {/* HEADER */}
       <div className={styles.page_header}>
-        <div>
+        <div className={styles.header_title}>
           <h1>Procurement History</h1>
           <span className={styles.header_subtitle}>
             All suppliers ·{" "}
