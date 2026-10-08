@@ -11,6 +11,9 @@
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "monitor": "node scripts/monitor-memory.js"
   },
   "dependencies": {
@@ -33,6 +36,7 @@
     "recharts": "^3.8.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",

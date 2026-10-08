@@ -23,7 +23,7 @@ const FireworksOnce = () => {
       });
       confetti({
         particleCount: 5,
-        angle: 120,
+        angle: 125,
         spread: 55,
         origin: { x: 1, y: 0.7 },
         colors: ["#ff0", "#f00", "#0ff", "#0f0", "#ff8800"],
