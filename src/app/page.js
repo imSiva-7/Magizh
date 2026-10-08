@@ -239,37 +239,41 @@ export default function Home() {
       </header>
 
       {/* Date Filters */}
-      {/* <div className={styles.filterSection}>
-        <div className={styles.filterHeader}>
-          <h3>Filter by Date Range</h3>
+      <div className={styles.filter_form}>
+        <div className={styles.filter_header}>
+          <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.filterControls}>
-          <div className={styles.dateInputGroup}>
-            <label>From:</label>
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
-              }
-              max={filters.endDate || getTodayDate()}
-              className={styles.dateInput}
-            />
+        <div className={styles.date_filter_section}>
+          <div className={styles.date_input_group}>
+            <div className={styles.date_field}>
+              <label htmlFor="start-date">From</label>
+              <input
+                id="start-date"
+                type="date"
+                value={filters.startDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+                }
+                max={filters.endDate || getTodayDate()}
+                className={styles.filter_input}
+              />
+            </div>
+            <div className={styles.date_field}>
+              <label htmlFor="end-date">To</label>
+              <input
+                id="end-date"
+                type="date"
+                value={filters.endDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+                }
+                min={filters.startDate}
+                max={getTodayDate()}
+                className={styles.filter_input}
+              />
+            </div>
           </div>
-          <div className={styles.dateInputGroup}>
-            <label>To:</label>
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
-              }
-              min={filters.startDate}
-              max={getTodayDate()}
-              className={styles.dateInput}
-            />
-          </div>
-          <div className={styles.filterButtons}>
+          <div className={styles.filter_actions}>
             <button
               onClick={() =>
                 setFilters({
@@ -277,7 +281,7 @@ export default function Home() {
                   endDate: getTodayDate(),
                 })
               }
-              className={styles.filterBtn}
+              className={styles.btn_today}
             >
               This Month
             </button>
@@ -288,7 +292,7 @@ export default function Home() {
                   endDate: getTodayDate(),
                 })
               }
-              className={styles.filterBtn}
+              className={styles.btn_today}
             >
               Today
             </button>
@@ -299,13 +303,13 @@ export default function Home() {
                   endDate: "",
                 })
               }
-              className={styles.filterBtnClear}
+              className={styles.btn_clear}
             >
               Clear
             </button>
           </div>
         </div>
-      </div> */}
+      </div>
 
       {/* Production Summary with its own stat item class */}
       {/* {productionSummary && (
