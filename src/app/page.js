@@ -22,8 +22,8 @@ export default function Home() {
   const { data: session, status } = useSession();
 
   const [filters, setFilters] = useState({
-    startDate: "2026-09-01",
-    endDate: "2026-09-30",
+    startDate: getCurrentMonthStartDate(),
+    endDate: getTodayDate(),
   });
 
   const [customerData, setCustomerData] = useState({
