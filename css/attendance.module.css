@@ -518,7 +518,47 @@
   background-color: #f8fafc;
 }
 
+.absentRow {
+  background-color: #fef2f2 !important;
+}
+
+.absentRow:hover {
+  background-color: #fee2e2 !important;
+}
+
 .dateCell {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.statusCell {
+  text-align: center;
+}
+
+.presentBadge,
+.absentBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.presentBadge {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.absentBadge {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.timeCell {
   text-align: left !important;
   font-weight: 600;
   color: #1e293b;

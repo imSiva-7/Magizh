@@ -281,7 +281,7 @@ export default function Home() {
                   endDate: getTodayDate(),
                 })
               }
-              className={styles.btn_today}
+              className={styles.btn_month}
             >
               This Month
             </button>

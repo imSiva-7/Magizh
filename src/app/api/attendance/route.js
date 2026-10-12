@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
+import { getTodayDate } from "@/utils/dateUtils";
 
 const METHOD_NAMES = {
   GET: "GET /api/attendance",
@@ -61,28 +62,67 @@ export async function GET(request) {
     // Get advances for the month - INSTANT ACCESS!
     const advances = employee.advances?.[month] || [];
 
-    // Convert days object to array for frontend
-    const attendanceArray = Object.keys(monthData.days || {})
-      .sort()
-      .map(dayKey => ({
-        date: monthData.days[dayKey].date,
-        checkIn: monthData.days[dayKey].checkIn,
-        checkOut: monthData.days[dayKey].checkOut || "", // null becomes empty string for UI
-        hoursWorked: monthData.days[dayKey].hoursWorked || 0,
-        regularHours: monthData.days[dayKey].regularHours || 0,
-        overtimeHours: monthData.days[dayKey].overtimeHours || 0,
-        punches: monthData.days[dayKey].punches || []
-      }));
-
-    // Calculate totals from daily data
-    const totalHoursWorked = attendanceArray.reduce((sum, day) => sum + day.hoursWorked, 0);
-    const totalRegularHours = attendanceArray.reduce((sum, day) => sum + day.regularHours, 0);
-    const totalOvertimeHours = attendanceArray.reduce((sum, day) => sum + day.overtimeHours, 0);
-
     // Calculate days in the month
     const [year, monthNum] = month.split("-");
     const daysInPeriod = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
-    const daysWorked = attendanceArray.length;
+
+    // Create a map of existing attendance records
+    const attendanceMap = new Map();
+    Object.keys(monthData.days || {}).forEach(dayKey => {
+      const day = monthData.days[dayKey];
+      attendanceMap.set(day.date, {
+        date: day.date,
+        checkIn: day.checkIn,
+        checkOut: day.checkOut || "",
+        hoursWorked: day.hoursWorked || 0,
+        regularHours: day.regularHours || 0,
+        overtimeHours: day.overtimeHours || 0,
+        punches: day.punches || [],
+        status: "present"
+      });
+    });
+
+    // Generate all dates in the month and mark absent days (only up to today)
+    const attendanceArray = [];
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1; // 0-indexed
+    const currentDay = today.getDate();
+    
+    // Determine the last day to show (either end of month or today, whichever is earlier)
+    let lastDayToShow = daysInPeriod;
+    if (parseInt(year) === currentYear && parseInt(monthNum) === currentMonth) {
+      lastDayToShow = currentDay; // Only show up to today for current month
+    }
+    
+    for (let day = 1; day <= lastDayToShow; day++) {
+      const dateStr = `${year}-${monthNum}-${String(day).padStart(2, '0')}`;
+      
+      if (attendanceMap.has(dateStr)) {
+        // Employee was present
+        attendanceArray.push(attendanceMap.get(dateStr));
+      } else {
+        // Employee was absent
+        attendanceArray.push({
+          date: dateStr,
+          checkIn: "-",
+          checkOut: "-",
+          hoursWorked: 0,
+          regularHours: 0,
+          overtimeHours: 0,
+          punches: [],
+          status: "absent"
+        });
+      }
+    }
+
+    // Calculate totals from daily data (only present days)
+    const presentDays = attendanceArray.filter(day => day.status === "present");
+    const totalHoursWorked = presentDays.reduce((sum, day) => sum + day.hoursWorked, 0);
+    const totalRegularHours = presentDays.reduce((sum, day) => sum + day.regularHours, 0);
+    const totalOvertimeHours = presentDays.reduce((sum, day) => sum + day.overtimeHours, 0);
+
+    const daysWorked = presentDays.length;
 
     // Salary calculations
     const standardHours = daysInPeriod * 10; // 10 hours per day

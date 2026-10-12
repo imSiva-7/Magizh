@@ -258,7 +258,6 @@ function AttendanceContent() {
         </div>
       </div>
 
-
       {/* Loading State */}
       {loading && (
         <div className={styles.loadingContainer}>
@@ -514,23 +513,23 @@ function AttendanceContent() {
             )}
           </div>
 
-      {/* Export Section */}
-      {attendanceData && (
-        <div className={styles.exportSection}>
-          <span className={styles.entryCount}>
-            Attendance data for {attendanceData.employee.name} ({month})
-          </span>
-          <div className={styles.exportButtons}>
-            <button
-              onClick={handleExportPDF}
-              className={styles.exportBtn}
-              aria-label="Export attendance as PDF"
-            >
-              Export as PDF
-            </button>
-          </div>
-        </div>
-      )}
+          {/* Export Section */}
+          {attendanceData && (
+            <div className={styles.exportSection}>
+              <span className={styles.entryCount}>
+                Attendance data for {attendanceData.employee.name} ({month})
+              </span>
+              <div className={styles.exportButtons}>
+                <button
+                  onClick={handleExportPDF}
+                  className={styles.exportBtn}
+                  aria-label="Export attendance as PDF"
+                >
+                  Export as PDF
+                </button>
+              </div>
+            </div>
+          )}
           {/* Attendance Records Table */}
           <div className={styles.attendanceSection}>
             <h2>Daily Attendance Records</h2>
@@ -540,30 +539,41 @@ function AttendanceContent() {
                   <thead>
                     <tr>
                       <th>Date</th>
+                      <th>Status</th>
                       <th>Check In</th>
                       <th>Check Out</th>
                       <th>Hours Worked</th>
-                      {/* <th>Regular</th>
-                      <th>Overtime</th> */}
                     </tr>
                   </thead>
                   <tbody>
                     {attendanceData.attendance.map((day) => (
-                      <tr key={day.date}>
+                      <tr
+                        key={day.date}
+                        className={
+                          day.status === "absent" ? styles.absentRow : ""
+                        }
+                      >
                         <td className={styles.dateCell}>{day.date}</td>
-                        <td className={styles.timeCell}>
-                          {formatTime(day.checkIn)}
+                        <td className={styles.statusCell}>
+                          {day.status === "absent" ? (
+                            <span className={styles.absentBadge}>Absent</span>
+                          ) : (
+                            <span className={styles.presentBadge}>Present</span>
+                          )}
                         </td>
                         <td className={styles.timeCell}>
-                          {formatTime(day.checkOut)}
+                          {day.status === "absent"
+                            ? "-"
+                            : formatTime(day.checkIn)}
                         </td>
-                        <td className={styles.hoursCell}>{day.hoursWorked}h</td>
-                        {/* <td className={styles.regularCell}>
-                          {day.regularHours}h
+                        <td className={styles.timeCell}>
+                          {day.status === "absent"
+                            ? "-"
+                            : formatTime(day.checkOut)}
                         </td>
-                        <td className={styles.overtimeCell}>
-                          {day.overtimeHours > 0 ? `${day.overtimeHours}h` : "-"}
-                        </td> */}
+                        <td className={styles.hoursCell}>
+                          {day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-"}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -15,7 +15,11 @@ const formatCurrency = (amount) => {
   return `Rs. ${formatNumberWithCommas(amount, 2)}`;
 };
 
-const formatTime = (time) => {
+const formatTime = (isPresent, time) => {
+
+  if(isPresent === "Absent") {
+    return "-";
+  }
   if (!time) return "-";
   try {
     const [hours, minutes] = time.split(":");
@@ -60,8 +64,12 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_PRIMARY);
     doc.setFont("helvetica", "normal");
-    doc.text("GSTIN: 33ACBFM9128J1Z4", pageWidth - margin, 15, { align: "right" });
-    doc.text("Gudiyatham, Tamil Nadu", pageWidth - margin, 20, { align: "right" });
+    doc.text("GSTIN: 33ACBFM9128J1Z4", pageWidth - margin, 15, {
+      align: "right",
+    });
+    doc.text("Gudiyatham, Tamil Nadu", pageWidth - margin, 20, {
+      align: "right",
+    });
     doc.text("+91 93636 46314", pageWidth - margin, 25, { align: "right" });
 
     // Report title banner
@@ -96,11 +104,15 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text(`Employee ID: ${attendanceData.employee.empID}`, margin + 5, startY + 22);
+    doc.text(
+      `Employee ID: ${attendanceData.employee.empID}`,
+      margin + 5,
+      startY + 22,
+    );
     doc.text(
       `Monthly Salary: ${formatCurrency(attendanceData.employee.salary)}`,
       margin + 5,
-      startY + 28
+      startY + 28,
     );
 
     // Right box - Period Details
@@ -123,12 +135,20 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     doc.setFont("helvetica", "normal");
     doc.text("Generated:", rightBoxX + 5, startY + 22);
     doc.setFont("helvetica", "bold");
-    doc.text(new Date().toLocaleDateString("en-IN"), rightBoxX + 35, startY + 22);
+    doc.text(
+      new Date().toLocaleDateString("en-IN"),
+      rightBoxX + 35,
+      startY + 22,
+    );
 
     doc.setFont("helvetica", "normal");
     doc.text("Days in Period:", rightBoxX + 5, startY + 28);
     doc.setFont("helvetica", "bold");
-    doc.text(`${attendanceData.period.daysInPeriod}`, rightBoxX + 35, startY + 28);
+    doc.text(
+      `${attendanceData.period.daysInPeriod}`,
+      rightBoxX + 35,
+      startY + 28,
+    );
   };
 
   // ========== RENDER DOCUMENT ==========
@@ -151,11 +171,17 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     ["Regular Hours", `${attendanceData.summary.totalRegularHours} hours`],
     ["Overtime Hours", `${attendanceData.summary.totalOvertimeHours} hours`],
     ["Total Hours Worked", `${attendanceData.summary.totalHoursWorked} hours`],
-    ["Hourly Rate", `${formatCurrency(attendanceData.summary.hourlyRate)}/hour`],
+    [
+      "Hourly Rate",
+      `${formatCurrency(attendanceData.summary.hourlyRate)}/hour`,
+    ],
     ["Regular Pay", formatCurrency(attendanceData.summary.regularPay)],
     ["Overtime Pay", formatCurrency(attendanceData.summary.overtimePay)],
     ["Gross Salary", formatCurrency(attendanceData.summary.grossSalary)],
-    ["Total Advances", `- ${formatCurrency(attendanceData.summary.totalAdvances)}`],
+    [
+      "Total Advances",
+      `- ${formatCurrency(attendanceData.summary.totalAdvances)}`,
+    ],
   ];
 
   autoTable(doc, {
@@ -204,7 +230,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     formatCurrency(attendanceData.summary.netSalary),
     pageWidth - margin - 5,
     currentY + 8,
-    { align: "right" }
+    { align: "right" },
   );
 
   currentY += 18;
@@ -276,16 +302,20 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
   currentY += 8;
 
   if (attendanceData.attendance && attendanceData.attendance.length > 0) {
-    const attendanceRows = attendanceData.attendance.map((day) => [
-      day.date,
-      formatTime(day.checkIn),
-      formatTime(day.checkOut),
-      `${day.hoursWorked}h`,
-    ]);
+    const attendanceRows = attendanceData.attendance.map((day) => {
+      const status = day.status === "absent" ? "Absent" : "Present";
+      return [
+        day.date,
+        status,
+        formatTime(status, day.checkIn),
+        formatTime(status, day.checkOut),
+        day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-",
+      ];
+    });
 
     autoTable(doc, {
       startY: currentY,
-      head: [["Date", "Check In", "Check Out", "Hours Worked"]],
+      head: [["Date", "Status", "Check In", "Check Out", "Hours Worked"]],
       body: attendanceRows,
       theme: "plain",
       headStyles: {
@@ -306,20 +336,37 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
       },
       columnStyles: {
         0: { cellWidth: 35, halign: "left" },
-        1: { cellWidth: 35, halign: "center" },
+        1: { cellWidth: 30, halign: "center", fontStyle: "bold" },
         2: { cellWidth: 35, halign: "center" },
-        3: { cellWidth: "auto", halign: "center", fontStyle: "bold" },
+        3: { cellWidth: 35, halign: "center" },
+        4: { cellWidth: "auto", halign: "center", fontStyle: "bold" },
       },
       styles: {
         lineColor: DIVIDER,
         lineWidth: 0.3,
+      },
+      didParseCell: function (data) {
+        // Color the "Absent" status cells in red
+        if (data.column.index === 1 && data.cell.text[0] === "Absent") {
+          data.cell.styles.textColor = [220, 38, 38]; // Red color
+          data.cell.styles.fillColor = [254, 242, 242]; // Light red background
+        }
+        // Color the "Present" status cells in green
+        if (data.column.index === 1 && data.cell.text[0] === "Present") {
+          data.cell.styles.textColor = [22, 101, 52]; // Green color
+          data.cell.styles.fillColor = [220, 252, 231]; // Light green background
+        }
       },
     });
   } else {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text("No attendance records found for this period", margin + 5, currentY);
+    doc.text(
+      "No attendance records found for this period",
+      margin + 5,
+      currentY,
+    );
   }
 
   // ========== SIGNATURE SECTION ==========
@@ -344,7 +391,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     "This is a computer-generated attendance report",
     pageWidth / 2,
     footerY + 7,
-    { align: "center" }
+    { align: "center" },
   );
 
   // Save PDF
