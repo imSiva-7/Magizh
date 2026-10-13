@@ -6,11 +6,11 @@ test.describe("Home and Public Navigation", () => {
     await expect(page).toHaveTitle(/Magizh Dairy/i);
 
     // Header brand verification
-    const header = page.locator("header");
+    const header = page.locator("header").first();
     await expect(header).toBeVisible();
 
     // Check dashboard heading or login link
-    const dashboardHeading = page.getByRole("heading", { name: "Dashboard" });
+    const dashboardHeading = page.getByRole("heading", { name: "Every day, made simpler." });
     await expect(dashboardHeading).toBeVisible();
 
     // Check login link is present for unauthenticated visitor
