@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
 import styles from "./page.module.css";
@@ -177,50 +177,14 @@ export default function Home() {
     return Array.from(dueMap.values()).sort((a, b) => b.due - a.due);
   }, [supplierData.procurements]);
 
-  if (loading) {
-    return (
-      <div className={styles.dashboard}>
-        <header className={styles.header}>
-          <div className={styles.logo}>
-            <h1>Dashboard</h1>
-          </div>
-        </header>
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className={styles.dashboard}>
-        <header className={styles.header}>
-          <div className={styles.logo}>
-            <h1>Dashboard</h1>
-          </div>
-          <div className={styles.userInfo}>Error</div>
-        </header>
-        <div className={styles.errorContainer}>
-          <p>⚠️ {error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className={styles.retryBtn}
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.dashboard}>
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.logo}>
-          <h1>Dashboard</h1>
+          <span className={styles.eyebrow}>MAGIZH DAIRY / OPERATIONS</span>
+          <h1>Every day, made simpler.</h1>
+          <p className={styles.intro}>From fresh milk to final payments. Your dairy operations, all in one place.</p>
         </div>
         <div className={styles.userInfo}>
           {status === "authenticated" ? (
@@ -230,14 +194,110 @@ export default function Home() {
                 <span className={styles.adminBadge}>Admin</span>
               )}
             </>
-          ) : (
+          ) : status === "unauthenticated" ? (
             <Link href="/login" className={styles.loginLink}>
               Log in
             </Link>
-          )}
+          ) : <span className={styles.sessionStatus}>Connecting…</span>}
         </div>
       </header>
 
+      <div className={styles.sectionHeading}>
+        <div><span className={styles.eyebrow}>EXPLORE THE PLATFORM</span><h2>Your workspace</h2></div>
+        <span className={styles.sectionHint}>Choose a module to get started</span>
+      </div>
+      <nav className={styles.navGrid} aria-label="Dashboard modules">
+        <Link href="/productions" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/industrial-park.png"
+              alt="Production"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Production</h2>
+          <p>Record daily milk production and by‑products</p>
+        </Link>
+        <Link href="/supplier" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
+          </div>
+          <h2>Suppliers</h2>
+          <p>Manage supplier information and rates</p>
+        </Link>
+        <Link href="/customer" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image src="/customer.png" alt="Customer" width={30} height={30} />
+          </div>
+          <h2>Customers</h2>
+          <p>View and manage customer details</p>
+        </Link>
+        <Link href="/supplier/payments" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/pay.png"
+              alt="Supplier payments"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Supplier Payments</h2>
+          <p>Track and settle payments to suppliers</p>
+        </Link>
+        <Link href="/customer/payments" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/payment.png"
+              alt="Customer payments"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Customer Payments</h2>
+          <p>Track payments and outstanding balances</p>
+        </Link>
+        <Link href="/productions/analytics" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/bar-chart.png"
+              alt="Production analytics"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Production Analytics</h2>
+          <p>View production insights and reports</p>
+        </Link>
+        <Link href="/supplier/analytics" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/data-report.png"
+              alt="Supplier analytics"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Supplier Analytics</h2>
+          <p>View procurement insights and reports</p>
+        </Link>
+        <Link href="/customer/analytics" className={styles.navCard}>
+          <div className={styles.navIcon}>
+            <Image
+              src="/business-website.png"
+              alt="Customer analytics"
+              width={30}
+              height={30}
+            />
+          </div>
+          <h2>Customer Analytics</h2>
+          <p>View customer insights and reports</p>
+        </Link>
+      </nav>
+
+      <div className={styles.sectionHeading}>
+        <div><span className={styles.eyebrow}>AT A GLANCE</span><h2>Business overview</h2></div>
+      </div>
       {/* Date Filters */}
       <div className={styles.filter_form}>
         <div className={styles.filter_header}>
@@ -311,6 +371,21 @@ export default function Home() {
         </div>
       </div>
 
+      {loading ? (
+        <div className={styles.dataStatus} role="status">
+          <div className={styles.spinner} aria-hidden="true" />
+          <div><h3>Preparing your overview</h3><p>Loading the latest records. You can explore any module above.</p></div>
+        </div>
+      ) : error ? (
+        <div className={styles.dataStatus} role="alert">
+          <div><h3>Overview unavailable</h3><p>{error}. You can still use the workspace links above.</p></div>
+          <button onClick={() => setFilters((prev) => ({ ...prev }))} className={styles.retryBtn}>Try again</button>
+        </div>
+      ) : (
+      <>
+      {!(supplierData.summary.totalAmount > 0) && !(customerData.summary.totalAmount > 0) && (
+        <div className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
+      )}
       {/* Production Summary with its own stat item class */}
       {/* {productionSummary && (
         <div className={styles.global_summary_card}>
@@ -347,7 +422,7 @@ export default function Home() {
           </div>
         </div>
       )}  */}
- <div className={styles.global_summary_card}>
+ <div className={styles.global_summary_card} hidden={!(supplierData.summary.totalAmount > 0)}>
       {supplierData.summary.totalAmount > 0 && (
         <div>
           <div className={styles.global_header}>
@@ -414,7 +489,7 @@ export default function Home() {
       )}
 
       </div>
-      <div className={styles.global_summary_card}>
+      <div className={styles.global_summary_card} hidden={!(customerData.summary.totalAmount > 0) && customerDueList.length === 0}>
         {customerData.summary.totalAmount > 0 && (
           <div>
             <div className={styles.global_header}>
@@ -479,95 +554,9 @@ export default function Home() {
           </div>
         )}
       </div>
-      {/* Navigation Cards (OLD LINKS RESTORED) */}
-      <div className={styles.navGrid}>
-        <Link href="/productions" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/industrial-park.png"
-              alt="Production"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Production</h2>
-          <p>Record daily milk production and by‑products</p>
-        </Link>
-        <Link href="/supplier" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
-          </div>
-          <h2>Suppliers</h2>
-          <p>Manage supplier information and rates</p>
-        </Link>
-        <Link href="/customer" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image src="/customer.png" alt="Customer" width={30} height={30} />
-          </div>
-          <h2>Customers</h2>
-          <p>View and manage customer details</p>
-        </Link>
-        <Link href="/supplier/payments" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/pay.png"
-              alt="Supplier payments"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Supplier Payments</h2>
-          <p>Track and settle payments to suppliers</p>
-        </Link>
-        <Link href="/customer/payments" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/payment.png"
-              alt="Customer payments"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Customers Payments</h2>
-          <p>Track and mark payments to Customers</p>
-        </Link>
-        <Link href="/productions/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/bar-chart.png"
-              alt="Production analytics"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Productions Analytics</h2>
-          <p>View production insights and reports</p>
-        </Link>
-        <Link href="/supplier/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/data-report.png"
-              alt="Supplier analytics"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Suppliers Analytics</h2>
-          <p>View suppliers insights and reports</p>
-        </Link>
-        <Link href="/customer/analytics" className={styles.navCard}>
-          <div className={styles.navIcon}>
-            <Image
-              src="/business-website.png"
-              alt="Customer analytics"
-              width={30}
-              height={30}
-            />
-          </div>
-          <h2>Customers Analytics</h2>
-          <p>View customer insights and reports</p>
-        </Link>
+      </>
+      )}
       </div>
-    </div>
+
   );
 }

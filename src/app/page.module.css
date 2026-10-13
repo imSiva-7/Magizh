@@ -12,7 +12,7 @@
     Helvetica,
     Arial,
     sans-serif;
-  background: #f8fafc;
+  background: #f6f8f5;
   min-height: 100vh;
 }
 
@@ -24,12 +24,13 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  padding: 2.75rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(115deg, #163e32, #27795d);
 }
 
 .logo h1 {
-  font-size: 1.8rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
   font-weight: 700;
   background: linear-gradient(
     135deg,
@@ -38,7 +39,9 @@
   );
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
   margin: 0;
 }
 
@@ -82,7 +85,8 @@
 }
 
 .loginLink {
-  color: rgb(39, 121, 93);
+  color: #163e32;
+  background: #fff;
   font-weight: 600;
   text-decoration: none;
   padding: 0.5rem 1rem;
@@ -91,8 +95,31 @@
   transition: all 0.2s;
 }
 .loginLink:hover {
-  background: rgba(39, 121, 93, 0.1);
+  background: #e2f3e9;
 }
+
+.eyebrow {
+  display: block;
+  color: #27795d;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  margin-bottom: 0.75rem;
+}
+.header .eyebrow { color: #c3e7d5; }
+.intro { color: #d7e9df; max-width: 32rem; line-height: 1.65; margin: 1rem 0 0; }
+.sessionStatus { color: #d7e9df; font-size: 0.875rem; }
+.sectionHeading { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin: 0 0 1.25rem; }
+.sectionHeading h2 { margin: 0; color: #163e32; font-size: 1.5rem; letter-spacing: -0.03em; }
+.sectionHint { color: #64748b; font-size: 0.875rem; }
+.navCard::after { content: "↗"; position: absolute; top: 1.5rem; right: 1.5rem; color: #64748b; font-size: 1.25rem; }
+.navCard:focus-visible, .dashboard button:focus-visible, .loginLink:focus-visible { outline: 3px solid #69b495; outline-offset: 4px; }
+.dataStatus { display: flex; align-items: center; gap: 1.25rem; padding: 2rem; background: #fff; border: 1px solid #dce6df; border-radius: 1rem; margin-bottom: 2rem; }
+.dataStatus h3 { color: #163e32; margin: 0 0 0.5rem; font-size: 1.1rem; }
+.dataStatus p { color: #64748b; margin: 0; line-height: 1.6; }
+.dataStatus .spinner { flex-shrink: 0; }
+.dataStatus .retryBtn { margin: 0 0 0 auto; white-space: nowrap; }
+.userEmail { overflow-wrap: anywhere; }
 
 /* ========== GLOBAL SUMMARY CARDS (reused from other pages) ========== */
 .global_summary_card {
@@ -369,10 +396,12 @@
 /* ========== NAVIGATION GRID ========== */
 .navGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 3rem;
 }
 .navCard {
+  position: relative;
   background: white;
   border-radius: 1rem;
   padding: 1.5rem;
@@ -391,7 +420,7 @@
   box-shadow:
     0 10px 25px -5px rgba(0, 0, 0, 0.1),
     0 8px 10px -6px rgba(0, 0, 0, 0.02);
-  border-color: #cbd5e1;
+  border-color: #27795d;
 }
 .navIcon {
   font-size: 2rem;
@@ -808,4 +837,25 @@ input[type="date"]::-webkit-date-and-time-value {
   .filterBtnClear {
     width: 100%;
   }
+}
+
+@media (max-width: 1050px) {
+  .navGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .header { padding: 2rem; }
+}
+@media (max-width: 600px) {
+  .header { text-align: left; padding: 1.5rem; }
+  .userInfo { justify-content: flex-start; flex-wrap: wrap; }
+  .navGrid { grid-template-columns: 1fr; gap: 0.75rem; margin-bottom: 2rem; }
+  .navCard { padding: 1.25rem; }
+  .sectionHint { display: none; }
+  .dataStatus { flex-wrap: wrap; padding: 1.5rem; }
+  .dataStatus .retryBtn { margin-left: 0; }
+  .date_input_group { grid-template-columns: minmax(0, 1fr); }
+  .filter_form { padding: 1rem; }
+  .date_filter_section { padding: 0.75rem; }
+  .date_range_badge { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard *, .dashboard *::after { animation: none !important; transition: none !important; transform: none !important; }
 }
