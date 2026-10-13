@@ -16,7 +16,7 @@ test("home links remain visible during loading and errors on desktop and mobile"
   await expect(modules.getByRole("link")).toHaveCount(8);
   await expect(modules.getByRole("link").first()).toBeVisible();
   releaseResponse();
-  await expect(page.getByRole("alert")).toContainText("Overview unavailable");
+  await expect(page.getByRole("alert").filter({ hasText: "Overview unavailable" })).toBeVisible();
   await expect(modules.getByRole("link").first()).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(modules).toBeVisible();

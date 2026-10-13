@@ -10,6 +10,7 @@ import {
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
+import HomeCharts from "@/components/HomeCharts";
 
 const StatItem = ({ label, value, colorClass = "", className = "" }) => (
   <div className={`${styles.global_stat_item} ${className}`}>
@@ -41,6 +42,7 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -52,13 +54,14 @@ export default function Home() {
 
         const [customerRes, supplierRes, productionRes, stockRes] =
           await Promise.all([
-            fetch(`/api/customer/order/history?${queryParams}`),
-            fetch(`/api/supplier/procurement/history?${queryParams}`),
-            fetch(`/api/production/history?${queryParams}`),
-            fetch(`/api/stock/balance`),
+            fetch(`/api/customer/order/history?${queryParams}`, { signal: controller.signal }),
+            fetch(`/api/supplier/procurement/history?${queryParams}`, { signal: controller.signal }),
+            fetch(`/api/production/history?${queryParams}`, { signal: controller.signal }),
+            fetch(`/api/stock/balance`, { signal: controller.signal }),
           ]);
 
         if (!customerRes.ok) throw new Error("Failed to fetch customer data");
+        if (!supplierRes.ok) throw new Error("Failed to fetch supplier data");
         const customerJson = await customerRes.json();
         setCustomerData({
           orders: customerJson.orders || [],
@@ -136,13 +139,15 @@ export default function Home() {
           setStockBalance(stockData || {});
         }
       } catch (err) {
+        if (controller.signal.aborted) return;
         console.error(err);
         setError(err.message);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
     fetchData();
+    return () => controller.abort();
   }, [filters]);
 
   const customerDueList = useMemo(() => {
@@ -383,6 +388,13 @@ export default function Home() {
         </div>
       ) : (
       <>
+      <HomeCharts
+        orders={customerData.orders}
+        procurements={supplierData.procurements}
+        customerSummary={customerData.summary}
+        supplierSummary={supplierData.summary}
+        filters={filters}
+      />
       {!(supplierData.summary.totalAmount > 0) && !(customerData.summary.totalAmount > 0) && (
         <div className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
       )}

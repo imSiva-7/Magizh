@@ -120,6 +120,22 @@
 .dataStatus .spinner { flex-shrink: 0; }
 .dataStatus .retryBtn { margin: 0 0 0 auto; white-space: nowrap; }
 .userEmail { overflow-wrap: anywhere; }
+.chartGrid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
+.chartCard { min-width: 0; background: #fff; border: 1px solid #dce6df; border-radius: 1rem; padding: 1.5rem; }
+.chartHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.chartHeader h3 { margin: 0; color: #163e32; font-size: 1.2rem; letter-spacing: -0.02em; }
+.chartHeader a { color: #27795d; font-size: 0.8rem; text-decoration: none; padding: 0.25rem 0; }
+.chartHeader a:hover { text-decoration: underline; }
+.chartDescription { font-size: 0.85rem; line-height: 1.6; color: #64748b; margin: 1rem 0; }
+.chartCanvas { height: 280px; min-width: 0; }
+.chartEmpty { min-height: 200px; display: grid; place-items: center; text-align: center; color: #64748b; font-size: 0.9rem; padding: 1rem; }
+.chartDetails { border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 1rem; font-size: 0.8rem; color: #475569; }
+.chartDetails summary { cursor: pointer; width: fit-content; }
+.chartTable { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
+.chartTable th, .chartTable td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+.chartTable caption { padding: 0.75rem; text-align: left; }
+@media (max-width: 1050px) { .chartGrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .chartCard { padding: 1rem; } .chartCanvas { height: 250px; } }
 
 /* ========== GLOBAL SUMMARY CARDS (reused from other pages) ========== */
 .global_summary_card {
