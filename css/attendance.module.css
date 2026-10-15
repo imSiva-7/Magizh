@@ -1,9 +1,9 @@
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f8fafc;
+  padding: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-sans);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
@@ -17,12 +17,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
   padding-bottom: 1rem;
 }
 
 .headerContent h1 {
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   margin: 0;
   font-size: 2rem;
   font-weight: 700;
@@ -37,21 +37,21 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 1rem;
 }
 
 .entryCount {
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
   font-size: 0.875rem;
   font-weight: 600;
-  background: #f1f5f9;
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .exportButtons {
@@ -74,8 +74,8 @@
   min-width: 140px;
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 }
@@ -98,8 +98,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .filterGrid {
@@ -117,19 +117,19 @@
 .inputGroup label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .input,
 .selectInput {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background-color: #ffffff;
-  color: #1e293b;
+  color: var(--text);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: border-color 0.2s ease;
   box-sizing: border-box;
 }
@@ -141,7 +141,7 @@
 .input:focus,
 .selectInput:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -163,8 +163,8 @@
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #e2e8f0;
-  border-top-color: rgb(39, 121, 93);
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -181,16 +181,16 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .infoCard h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
@@ -208,32 +208,32 @@
 
 .infoLabel {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .infoValue {
   font-size: 1rem;
-  color: #1e293b;
+  color: var(--text);
   font-weight: 600;
 }
 
 /* Summary Card */
 .summaryCard {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, #ffffff 0%, var(--surface-muted) 100%);
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid rgb(39, 121, 93);
+  box-shadow: var(--shadow-card);
+  border: 2px solid var(--brand);
 }
 
 .summaryCard h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: rgb(39, 121, 93);
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--brand);
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
@@ -250,18 +250,18 @@
   padding: 0.75rem;
   background: white;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .summaryLabel {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .summaryValue {
   font-size: 1.125rem;
-  color: #1e293b;
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -285,7 +285,7 @@
 
 .summaryItem.netSalary {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   /* grid-column: span 2; */
 }
 
@@ -295,7 +295,7 @@
 
 .summaryItem.netSalary .summaryValue {
   font-size: 1.5rem;
-  color: rgb(30, 100, 80);
+  color: var(--brand-hover);
 }
 
 /* Advances Section */
@@ -304,8 +304,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .advancesHeader {
@@ -313,7 +313,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
@@ -321,12 +321,12 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
 }
 
 .addButton {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -343,10 +343,10 @@
 }
 
 .advanceForm {
-  background: #f8fafc;
+  background: var(--surface-muted);
   padding: 1.5rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   margin-bottom: 1.5rem;
 }
 
@@ -375,7 +375,7 @@
 }
 
 .submitButton {
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
 }
 
@@ -414,7 +414,7 @@
 }
 
 .advancesTable thead {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 
 .advancesTable th {
@@ -422,19 +422,19 @@
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
 }
 
 .advancesTable td {
   padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .advancesTable tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
 }
 
 .amountCell {
@@ -469,16 +469,16 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .attendanceSection h2 {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
@@ -493,7 +493,7 @@
 }
 
 .attendanceTable thead {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 
 .attendanceTable th {
@@ -501,21 +501,21 @@
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 .attendanceTable td {
   padding: 1rem;
   text-align: center;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .attendanceTable tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
 }
 
 .absentRow {
@@ -528,7 +528,7 @@
 
 .dateCell {
   font-weight: 500;
-  color: #1e293b;
+  color: var(--text);
 }
 
 .statusCell {
@@ -561,11 +561,11 @@
 .timeCell {
   text-align: left !important;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
 }
 
 .timeCell {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
 }
 
@@ -576,7 +576,7 @@
 
 .regularCell {
   font-weight: 600;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
 }
 
 .overtimeCell {
@@ -601,14 +601,14 @@
 }
 
 .emptyState p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 1.125rem;
   margin: 0;
 }
 
 .emptyMessage {
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
   padding: 2rem;
   font-size: 1rem;
 }
@@ -736,7 +736,7 @@
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid var(--border);
 }
 
 .primaryButton,
@@ -754,7 +754,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   box-shadow: 0 4px 6px rgba(39, 121, 93, 0.2);
 }
@@ -772,12 +772,12 @@
 
 .secondaryButton {
   background: white;
-  color: rgb(39, 121, 93);
-  border: 2px solid rgb(39, 121, 93);
+  color: var(--brand);
+  border: 2px solid var(--brand);
 }
 
 .secondaryButton:hover:not(:disabled) {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
   transform: translateY(-2px);
 }
@@ -814,7 +814,7 @@
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   transition: all 0.3s ease;
 }
 
@@ -829,14 +829,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
   border-bottom: 2px solid #cbd5e1;
 }
 
 .historyGroupDate {
   font-size: 1.125rem;
   font-weight: 700;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -856,7 +856,7 @@
 
 .historyGroupStat {
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   background: white;
@@ -881,7 +881,7 @@
 }
 
 .historyGroup .attendanceTable thead {
-  background: #f8fafc;
+  background: var(--surface-muted);
 }
 
 .historyGroup .attendanceTable th {
@@ -897,17 +897,17 @@
 
 /* Employee ID Cell */
 .empIdCell {
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-sans);
   font-weight: 700;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--text);
+  background: var(--surface-muted);
   text-align: center !important;
 }
 
 /* Name Cell */
 .nameCell {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
   text-align: left !important;
 }
 

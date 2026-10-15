@@ -4,9 +4,9 @@
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f8fafc;
+  padding: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-sans);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
@@ -21,23 +21,23 @@
   padding: 1.5rem;
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .header h1 {
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
 }
 
 .user_info {
-  background: #f1f5f9;
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  color: #475569;
+  color: var(--text-secondary);
   display: flex;
   gap: 0.5rem;
   align-items: center;
@@ -45,7 +45,7 @@
 
 .user_role {
   font-weight: 600;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   text-transform: capitalize;
 }
 
@@ -60,7 +60,7 @@
   background: white;
   padding: 1rem 1.5rem;
   border-radius: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -74,17 +74,17 @@
   width: 100%;
   padding: 0.75rem 1rem;
   padding-right: 2.5rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background-color: white;
-  color: #1e293b;
+  color: var(--text);
   font-size: 0.9rem;
   transition: border-color 0.2s;
 }
 
 .search_input:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -107,13 +107,13 @@
 }
 
 .refresh_btn {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: var(--brand-soft);
+  border: 1px solid var(--border);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -122,7 +122,7 @@
 }
 
 .refresh_btn:hover:not(:disabled) {
-  background: #e2e8f0;
+  background: var(--border);
   transform: translateY(-1px);
 }
 
@@ -139,7 +139,7 @@
   border-radius: 1rem;
  
   padding: 1.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
@@ -147,14 +147,14 @@
 .stat_card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-   border-color: rgb(39, 121, 93);
+   border-color: var(--brand);
 }
 
 .stat_title {
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 0.75rem;
 }
 
@@ -162,7 +162,7 @@
    text-align: center;
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   margin-bottom: 0.25rem;
 }
 
@@ -175,14 +175,14 @@
 .table_section {
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
 .section_header {
   padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
   background: #fafcff;
   display: flex;
   justify-content: space-between;
@@ -193,15 +193,15 @@
 
 .section_header h2 {
   margin: 0;
-  color: #1e293b;
+  color: var(--text);
   font-size: 1.25rem;
   font-weight: 600;
 }
 
 .entry_count {
   font-size: 0.875rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--brand-soft);
   padding: 0.25rem 0.75rem;
   border-radius: 2rem;
 }
@@ -218,7 +218,7 @@
 }
 
 .table thead {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 
 .table th {
@@ -226,20 +226,20 @@
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
 }
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
   font-size: 0.9rem;
-  color: #334155;
+  color: var(--text-secondary);
   vertical-align: middle;
 }
 
 .table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
 }
 
 /* Role Badge */
@@ -273,12 +273,12 @@
 /* Role Select & Actions */
 .role_select {
   padding: 0.5rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background: white;
   font-size: 0.875rem;
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.2s;
   width: auto;
   min-width: 110px;
@@ -286,7 +286,7 @@
 
 .role_select:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -316,7 +316,7 @@
 }
 
 .save_btn {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -328,7 +328,7 @@
 }
 
 .save_btn:hover:not(:disabled) {
-  background: rgb(30, 100, 80);
+  background: var(--brand-hover);
   transform: translateY(-1px);
 }
 
@@ -364,15 +364,15 @@
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #e2e8f0;
-  border-top-color: rgb(39, 121, 93);
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;

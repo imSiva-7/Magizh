@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect } from "react";
 import {
@@ -79,7 +80,7 @@ export default function CustomerAnalyticsPage() {
     <div className={styles.page_container}>
       {/* Header */}
       <div className={styles.header}>
-        <h1 className={styles.page_title}>Customer Analytics</h1>
+        <PageHeading title="Customer Analytics" section="BUSINESS INSIGHTS" description="Understand sales trends, product demand, and customer payment patterns." />
       </div>
 
       {/* Filter Section */}

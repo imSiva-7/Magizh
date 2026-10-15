@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -583,7 +584,7 @@ export default function Supplier() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <h1>Suppliers</h1>
+          <PageHeading title="Suppliers" section="RELATIONSHIPS" description="Manage your supplier network, milk rates, and procurement details." />
 
           {!createSupplier && (
             <div className={styles.createSection}>

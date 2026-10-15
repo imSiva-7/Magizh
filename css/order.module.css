@@ -2,9 +2,9 @@
 .page_container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f8fafc;
+  padding: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-sans);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
@@ -51,7 +51,7 @@
   max-width: 480px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
               0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   animation: slideUpModal 0.3s ease;
 }
 
@@ -68,16 +68,16 @@
 
 .modal_content h3 {
   margin: 0 0 1.5rem 0;
-  color: #1e293b;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .modal_content label {
   display: block;
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.875rem;
   margin-bottom: 0.5rem;
@@ -87,12 +87,12 @@
   width: 100%;
   padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background: white;
-  color: #334155;
+  color: var(--text-secondary);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -103,7 +103,7 @@
 
 .modal_content input:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -118,7 +118,7 @@
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid var(--border);
 }
 
 .modal_actions button {
@@ -130,14 +130,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .modal_actions button:first-child {
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 }
@@ -148,14 +148,14 @@
 }
 
 .modal_actions button:last-child {
-  background-color: #e2e8f0;
-  color: #1e293b;
+  background-color: var(--border);
+  color: var(--text);
 }
 
 .modal_actions button:last-child:hover {
   background-color: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .modal_actions button:disabled {
@@ -193,8 +193,8 @@
   padding: 1.5rem;
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   flex-wrap: wrap;
 }
 
@@ -203,7 +203,7 @@
 }
 
 .header_title h1 {
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
@@ -220,7 +220,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -293,14 +293,14 @@
   border: 1px solid #bae6fd;
 }
 .default_customer {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: var(--brand-soft);
+  color: var(--text-secondary);
   border: 1px solid #cbd5e1;
 }
 
 .gst_tag {
   background: rgba(39, 121, 93, 0.1);
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -314,20 +314,20 @@
   background: white;
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
 .form_header {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  /* border-bottom: 2px solid #e2e8f0; */
+  /* border-bottom: 2px solid var(--border); */
 }
 
 .form_header h2 {
-  color: #1e293b;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
@@ -368,7 +368,7 @@
 .input_group label,
 .required_label,
 .date_field label {
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.875rem;
   display: flex;
@@ -387,12 +387,12 @@
 .filter_input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background: white;
-  color: #334155;
+  color: var(--text-secondary);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -416,14 +416,14 @@
 .select_input:focus,
 .filter_input:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
 .read_only_input {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
   cursor: not-allowed;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .input_error {
@@ -457,7 +457,7 @@ input[type="date"]::-webkit-date-and-time-value {
 .filter_actions {
   display: flex;
   padding-top: 1.5rem;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid var(--border);
 }
 
 .form_actions {
@@ -481,7 +481,7 @@ input[type="date"]::-webkit-date-and-time-value {
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .btn_secondary {
@@ -489,14 +489,14 @@ input[type="date"]::-webkit-date-and-time-value {
   color: white;
 }
 .btn_secondary_2 {
-   background-color: #e2e8f0;
-  color: #1e293b;
+   background-color: var(--border);
+  color: var(--text);
 }
 .btn_primary {
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 }
@@ -509,7 +509,7 @@ input[type="date"]::-webkit-date-and-time-value {
 .btn_secondary_2:hover:not(:disabled) {
   background-color: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 button:disabled {
   opacity: 0.5;
@@ -535,8 +535,8 @@ button:disabled {
   min-width: 140px;
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 }
@@ -576,7 +576,7 @@ button:disabled {
 .clear_filter_link {
   background: none;
   border: none;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -584,7 +584,7 @@ button:disabled {
   padding: 0;
 }
 .clear_filter_link:hover {
-  color: rgb(30, 100, 80);
+  color: var(--brand-hover);
 }
 
 .export_btn_table {
@@ -607,16 +607,16 @@ button:disabled {
 
 /* ========== 5. STATS & SUMMARY ========== */
 .summary_box {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, #ffffff 0%, var(--surface-muted) 100%);
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .summary_box h3 {
-  color: #1e293b;
+  color: var(--text);
   margin: 0 0 1.25rem 0;
   font-size: 1.25rem;
   font-weight: 600;
@@ -628,12 +628,12 @@ button:disabled {
 
 .date_range_badge {
   font-size: 0.875rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 500;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .stats_grid {
@@ -643,10 +643,10 @@ button:disabled {
 }
 
 .stat_item {
-  background: #f8fafc;
+  background: var(--surface-muted);
   padding: 1.25rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -654,14 +654,14 @@ button:disabled {
 }
 
 .stat_item:hover {
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .stat_label {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -669,14 +669,14 @@ button:disabled {
 .stat_value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
 }
 .stat_unit {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
   margin-left: 0.25rem;
 }
@@ -701,15 +701,15 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #e2e8f0;
-  border-top-color: rgb(39, 121, 93);
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -735,10 +735,10 @@ button:disabled {
 .error_state {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   margin: 2rem auto;
   max-width: 600px;
 }
@@ -765,8 +765,8 @@ button:disabled {
   min-width: 140px;
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 
@@ -781,20 +781,20 @@ button:disabled {
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 1rem;
 }
 .entry_count {
-  color: #64748b;
+  color: var(--text-muted);
   text-align: center;
   font-size: 0.875rem;
   font-weight: 600;
-  background: #f1f5f9;
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 .export_buttons {
   display: flex;
@@ -817,8 +817,8 @@ button:disabled {
 
 .bulk_actions_text {
   font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--brand-soft);
   padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -834,14 +834,14 @@ button:disabled {
 .table_wrapper {
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .table_container {
   overflow-x: auto;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .table {
@@ -851,15 +851,15 @@ button:disabled {
 }
 
 .table thead {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 .table th {
   padding: 1rem;
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 .table th:first-child {
@@ -868,19 +868,19 @@ button:disabled {
 .table td {
   padding: 1rem;
   text-align: center;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text-secondary);
 }
 .table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
 }
 .table tbody tr:last-child td {
   border-bottom: none;
 }
 .active_row {
   background-color: #f0f9ff !important;
-  border-left: 4px solid rgb(39, 121, 93);
+  border-left: 4px solid var(--brand);
 }
 
 .date_cell {
@@ -894,7 +894,7 @@ button:disabled {
 }
 .total_cell {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
 }
 .comment_cell {
   text-align: center;
@@ -908,7 +908,7 @@ button:disabled {
   line-height: 24px;
   text-align: center;
   font-weight: 500;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   cursor: pointer;
   font-size: 14px;
   font-style: normal;
@@ -920,7 +920,7 @@ button:disabled {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #1e293b;
+  background-color: var(--text);
   color: white;
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
@@ -938,7 +938,7 @@ button:disabled {
   transform: translateX(-50%);
   border-width: 0.25rem;
   border-style: solid;
-  border-color: #1e293b transparent transparent transparent;
+  border-color: var(--text) transparent transparent transparent;
   margin-bottom: 0.25rem;
   z-index: 10;
 }
@@ -959,13 +959,13 @@ button:disabled {
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   line-height: 1;
-  color: #64748b;
+  color: var(--text-muted);
   transition: color 0.2s;
   border-radius: 0.25rem;
 }
 .actionMenuButton:hover:not(:disabled) {
-  background-color: #f1f5f9;
-  color: #334155;
+  background-color: var(--brand-soft);
+  color: var(--text-secondary);
 }
 .actionMenuButton:disabled {
   opacity: 0.5;
@@ -979,7 +979,7 @@ button:disabled {
   background: white;
   border-radius: 0.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   z-index: 1000;
   min-width: 100px;
   overflow: hidden;
@@ -1005,10 +1005,10 @@ button:disabled {
   transition: background 0.2s;
   font-size: 0.875rem;
   width: 100%;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 .actionEditButton:hover:not(:disabled) {
-  background: #f1f5f9;
+  background: var(--brand-soft);
   color: #1e40af;
 }
 .actionDeleteButton:hover:not(:disabled) {
@@ -1035,7 +1035,7 @@ button:disabled {
   cursor: pointer;
   width: 1.125rem;
   height: 1.125rem;
-  accent-color: rgb(39, 121, 93);
+  accent-color: var(--brand);
   margin: 0;
 }
 .payment_toggle {
@@ -1047,7 +1047,7 @@ button:disabled {
   cursor: pointer;
   width: 1.125rem;
   height: 1.125rem;
-  accent-color: rgb(39, 121, 93);
+  accent-color: var(--brand);
 }
 .status_due {
   background-color: #fee2e2;
@@ -1076,13 +1076,13 @@ button:disabled {
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background: #f8fafc;
+  background: var(--surface-muted);
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 .edit_payment_label {
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .invoice_cell button {
@@ -1181,16 +1181,16 @@ button:disabled {
 .products_summary {
   margin-top: 1.5rem;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--surface-muted) 0%, var(--brand-soft) 100%);
   border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .products_title {
   margin: 0 0 1rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1208,25 +1208,25 @@ button:disabled {
   padding: 0.75rem 1rem;
   background: white;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   transition: all 0.2s;
 }
 
 .product_item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
 }
 
 .product_label {
   font-weight: 500;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .product_value {
   font-weight: 700;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   font-size: 1rem;
 }
 
@@ -1271,13 +1271,13 @@ button:disabled {
   margin: 1.5rem 0 1rem 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .text_primary {
-  color: rgb(39, 121, 93) !important;
+  color: var(--brand) !important;
   font-weight: 600;
 }
 
@@ -1289,8 +1289,8 @@ button:disabled {
   padding: 0.35rem 0.6rem;
   margin-top: 0.5rem;
   background: white;
-  color: rgb(39, 121, 93);
-  border: 1px solid rgb(39, 121, 93);
+  color: var(--brand);
+  border: 1px solid var(--brand);
   border-radius: 0.375rem;
   font-size: 0.75rem;
   font-weight: 600;
@@ -1311,17 +1311,17 @@ button:disabled {
 
 /* Payment info section in modal */
 .payment_info {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: linear-gradient(135deg, var(--surface-muted) 0%, var(--brand-soft) 100%);
   padding: 1rem;
   border-radius: 0.5rem;
   margin-bottom: 1.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .payment_info p {
   margin: 0.5rem 0;
   font-size: 0.95rem;
-  color: #475569;
+  color: var(--text-secondary);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1357,12 +1357,12 @@ button:disabled {
   align-items: center;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .modal_header h3 {
   margin: 0;
-  color: #1e293b;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -1372,15 +1372,15 @@ button:disabled {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #64748b;
+  color: var(--text-muted);
   padding: 0.25rem 0.5rem;
   transition: all 0.2s;
   border-radius: 0.25rem;
 }
 
 .close_btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--brand-soft);
+  color: var(--text);
 }
 
 .ledger_table_wrapper {
@@ -1397,7 +1397,7 @@ button:disabled {
 .ledger_table thead {
   position: sticky;
   top: 0;
-  background: #f8fafc;
+  background: var(--surface-muted);
   z-index: 1;
 }
 
@@ -1405,19 +1405,19 @@ button:disabled {
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 .ledger_table td {
   padding: 1rem;
-  border-bottom: 1px solid #e2e8f0;
-  color: #334155;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
 }
 
 .ledger_table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--surface-muted);
 }
 
 .ledger_table tbody tr:last-child td {
@@ -1450,7 +1450,7 @@ button:disabled {
 .empty_state {
   text-align: center;
   padding: 3rem 1rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 

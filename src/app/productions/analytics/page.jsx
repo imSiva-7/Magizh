@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect } from "react";
 import {
@@ -86,7 +87,7 @@ export default function ProductionAnalyticsPage() {
     <div className={styles.page_container}>
       {/* Header */}
       <div className={styles.header}>
-        <h1 className={styles.page_title}>Production Analytics</h1>
+        <PageHeading title="Production Analytics" section="BUSINESS INSIGHTS" description="Follow daily production, milk quality, and the products you make." />
       </div>
 
       {/* Filter Section */}

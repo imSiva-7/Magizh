@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -226,7 +227,7 @@ export default function StockPage() {
 
       {/* ====== Header ====== */}
       <div className={styles.header_content}>
-        <h1 className={styles.page_title}>Stock Management</h1>
+        <PageHeading title="Stock Management" section="INVENTORY" description="Monitor product balances, manage thresholds, and review stock movements." />
         <div className={styles.headerActions}>
           <button
             onClick={() => {

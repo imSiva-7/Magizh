@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Home and Public Navigation", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/api/auth/session", (route) => route.fulfill({ json: {} }));
+  });
   test("should load the home page with dashboard title and header", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/Magizh Dairy/i);

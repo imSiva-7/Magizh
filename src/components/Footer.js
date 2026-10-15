@@ -4,7 +4,6 @@ import styles from "@/css/footer.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { getTodayDate } from "@/utils/dateUtils";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -29,6 +28,7 @@ export default function Footer() {
                 priority
               />
             </div>
+            <p className={styles.footerDescription}>Fresh thinking for everyday dairy operations. Production, people, and payments in one place.</p>
           </div>
 
           {/* Quick Links Section */}
@@ -129,12 +129,6 @@ export default function Footer() {
         <div className={styles.footerBottom}>
           <div className={styles.copyright}>
             {" "}
-            <span className={styles.copyrightText}>
-              {`Enjoy the rest of your 
-              ${new Date(getTodayDate()).toLocaleDateString("en-IN", {
-                weekday: "long",
-              })}`}
-            </span>
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>

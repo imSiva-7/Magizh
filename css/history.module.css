@@ -1,9 +1,9 @@
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
-  font-family: "Segoe UI", sans-serif;
-  background-color: #f8fafc;
+  padding: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-sans);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
@@ -13,7 +13,7 @@
   justify-content: space-between;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -22,17 +22,17 @@
   font-size: 2rem;
   font-weight: 700;
   margin: 0;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
 }
 
 .lastUpdated {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
-  background: #f1f5f9;
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .filterForm {
@@ -40,20 +40,20 @@
   border-radius: 1rem;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .filterHeader {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .filterHeader h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
   margin: 0;
 }
 
@@ -68,9 +68,9 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.25rem;
-  background: #f8fafc;
+  background: var(--surface-muted);
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .dateInputGroup {
@@ -88,18 +88,18 @@
 .dateField label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .dateInput {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background-color: #ffffff;
-  color: #1e293b;
+  color: var(--text);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: border-color 0.2s ease;
   box-sizing: border-box;
   cursor: pointer;
@@ -107,7 +107,7 @@
 
 .dateInput:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -120,7 +120,7 @@
   flex-direction: column;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid var(--border);
 }
 
 .buttonGroup {
@@ -163,7 +163,7 @@
 }
 
 .secondaryBtn {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
 }
 
@@ -224,14 +224,14 @@
   border-radius: 1rem;
   padding: 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .statsCard h3 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
   margin: 0 0 1.5rem 0;
   display: flex;
   align-items: center;
@@ -241,12 +241,12 @@
 
 .dateRange {
   font-size: 0.875rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--brand-soft);
   padding: 0.5rem 0.5rem;
   border-radius: 0.5rem;
   font-weight: 500;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .statsGrid {
@@ -256,10 +256,10 @@
 }
 
 .statItem {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
   padding: 1.25rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -267,15 +267,15 @@
 }
 
 .statItem:hover {
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .statLabel {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -283,7 +283,7 @@
 .statValue {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
@@ -291,7 +291,7 @@
 
 .statUnit {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
   margin-left: 0.25rem;
 }
@@ -304,8 +304,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -314,19 +314,19 @@
   font-size: 0.875rem;
   text-align: center;
   font-weight: 600;
-  color: #475569;
-  background: #f1f5f9;
+  color: var(--text-secondary);
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .exportBtn {
   padding: 0.75rem 1.5rem;
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
   border: none;
@@ -355,8 +355,8 @@
 .tableWrapper {
   background-color: #ffffff;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .loading {
@@ -365,14 +365,14 @@
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #e2e8f0;
-  border-top-color: rgb(39, 121, 93);
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
@@ -392,7 +392,7 @@
 .emptyState {
   text-align: center;
   padding: 3rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .emptyIcon {
@@ -405,7 +405,7 @@
 .emptyState h3 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
-  color: #1e293b;
+  color: var(--text);
 }
 
 .emptyState p {
@@ -417,7 +417,7 @@
 .clearFilterLink {
   background: none;
   border: none;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -426,13 +426,13 @@
 }
 
 .clearFilterLink:hover {
-  color: rgb(30, 100, 80);
+  color: var(--brand-hover);
 }
 
 .tableContainer {
   overflow-x: auto;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .table {
@@ -442,7 +442,7 @@
 }
 
 .table thead {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 
 .table th {
@@ -450,20 +450,20 @@
   text-align: left;
   font-weight: 600;
   font-size: 0.875rem;
-  color: #475569;
-  border-bottom: 2px solid #e2e8f0;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
   white-space: nowrap;
 }
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
   font-size: 0.95rem;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: var(--surface-muted);
 }
 
 .table tbody tr:last-child td {
@@ -473,7 +473,7 @@
 .batchCell {
   font-weight: 600;
   /* background-color: #f0f9ff !important; */
-  color: rgb(39, 121, 93) !important;
+  color: var(--brand) !important;
 }
 
 .dateCell {
@@ -491,7 +491,7 @@
 }
 
 .tableRow {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--brand-soft);
 }
 
 @media (max-width: 768px) {

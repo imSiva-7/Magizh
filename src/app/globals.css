@@ -1,0 +1,36 @@
+:root {
+  color-scheme: light;
+  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --brand: #27795d;
+  --brand-dark: #163e32;
+  --brand-hover: #1e644f;
+  --brand-soft: #eaf3ed;
+  --page-bg: #f6f8f5;
+  --surface: #ffffff;
+  --surface-muted: #f3f6f3;
+  --border: #dce5df;
+  --text: #203c32;
+  --text-secondary: #465e54;
+  --text-muted: #61756b;
+  --shadow-card: 0 3px 16px rgba(22, 62, 50, 0.045);
+  --shadow-raised: 0 16px 48px rgba(22, 62, 50, 0.1);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--page-bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body > main { min-height: 65vh; }
+button, input, select, textarea { font-family: inherit; }
+button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
+button:not(:disabled), summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+input, select, textarea { max-width: 100%; }
+input[type="date"], input[type="number"] { font-variant-numeric: tabular-nums; }
+table { font-variant-numeric: tabular-nums; }
+h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; }
+:where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #70ad91; outline-offset: 3px; }
+::selection { background: #cee5d5; color: #163e32; }
+.skip-link { position: fixed; left: 1rem; top: -5rem; z-index: 3000; padding: 0.75rem 1rem; background: var(--brand-dark); color: white; border-radius: 0.5rem; }
+.skip-link:focus { top: 0.75rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

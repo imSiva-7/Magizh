@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -470,7 +471,7 @@ export default function Employee() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <h1>Employees</h1>
+          <PageHeading title="Employees" section="YOUR TEAM" description="Keep employee profiles and contact details in one place." />
 
           {!createEmployee && (
             <div className={styles.createSection}>

@@ -9,6 +9,7 @@ import styles from "@/css/header.module.css";
 
 // Desktop navigation items
 const desktopNavItems = [
+  { name: "Overview", path: "/" },
   {
     name: "Productions",
     path: "/productions",
@@ -39,7 +40,7 @@ const desktopNavItems = [
     path: "/employee",
     children: [
       { name: "Attendance", path: "/employee/attendance" },
-      { name: "Attendance Hsitory", path: "/employee/attendance/history" },
+      { name: "Attendance History", path: "/employee/attendance/history" },
     ],
   },
 
@@ -49,8 +50,8 @@ const desktopNavItems = [
 const mobileNavItems = [
   { name: "Home", path: "/" },
   { name: "Productions", path: "/productions" },
-  // { name: "Production History", path: "/productions/history" },
-  // { name: "Stock", path: "/stock" },
+  { name: "Production History", path: "/productions/history" },
+  { name: "Stock", path: "/stock" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
@@ -58,7 +59,11 @@ const mobileNavItems = [
   { name: "Order History", path: "/customer/order/history" },
   { name: "Order Payments", path: "/customer/payments" },
   { name: "Employees", path: "/employee" },
-  { name: "Attendance", path: "/employee/attendance/history" },
+  { name: "Attendance", path: "/employee/attendance" },
+  { name: "Attendance History", path: "/employee/attendance/history" },
+  { name: "Production Analytics", path: "/productions/analytics" },
+  { name: "Supplier Analytics", path: "/supplier/analytics" },
+  { name: "Customer Analytics", path: "/customer/analytics" },
 ];
 
 export default function Header() {
@@ -66,8 +71,6 @@ export default function Header() {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
-   const isAdmin =
-    session?.user?.role === "admin";
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -102,37 +105,48 @@ export default function Header() {
 
   // Prevent body scroll when mobile menu open
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
     if (mobileMenuOpen) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
+      const panel = mobileMenuRef.current;
+      const menuButton = menuButtonRef.current;
+      panel?.querySelector("button")?.focus();
+      const trapFocus = (event) => {
+        if (event.key !== "Tab") return;
+        const items = panel?.querySelectorAll('a[href], button:not(:disabled)');
+        if (!items?.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      };
+      document.addEventListener("keydown", trapFocus);
+      return () => {
+        document.body.style.overflow = previousOverflow;
+        document.removeEventListener("keydown", trapFocus);
+        menuButton?.focus();
+      };
     }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
   }, [mobileMenuOpen]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
   }, []);
 
-  if (status === "loading") return null;
-
   return (
     <header className={styles.header}>
-      <>
-</>
       <div className={styles.headerContainer}>
         {/* Logo */}
-        <div className={styles.logoSection} onClick={() => router.push("/")}>
+        <Link href="/" className={styles.logoSection} aria-label="Magizh Dairy home">
           <Image
             src="/favicon.ico"
             alt="Company Logo"
-            width={130}
-            height={60}
+            width={48}
+            height={48}
             priority
           />
-        </div>
+          <span className={styles.brandText}>Magizh Dairy<small>OPERATIONS WORKSPACE</small></span>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className={styles.desktopNav} aria-label="Main navigation">
@@ -141,36 +155,34 @@ export default function Header() {
               <li key={item.path} className={styles.navItem}>
                 <Link
                   href={item.path}
-                  className={`${styles.navButton} ${pathname.startsWith(item.path) ? styles.active : ""
+                  className={`${styles.navButton} ${(item.path === "/" ? pathname === "/" : pathname.startsWith(item.path)) ? styles.active : ""
                     }`}
                   aria-current={
-                    pathname.startsWith(item.path) ? "page" : undefined
+                    (item.path === "/" ? pathname === "/" : pathname.startsWith(item.path)) ? "page" : undefined
                   }
                 >
                   {item.name}
                 </Link>
                 {item.children && (
-                  <ul className={styles.dropdown} role="menu">
+                  <ul className={styles.dropdown}>
                     {Array.isArray(item.children) ? (
                       item.children.map((child) => (
-                        <li key={child.path} role="none">
+                        <li key={child.path}>
                           <Link
                             href={child.path}
                             className={styles.dropdownItem}
-                            role="menuitem"
                           >
-                            <span className={styles.arrow}>↳ </span> {child.name}
+                            <span className={styles.arrow} aria-hidden="true">↳ </span> {child.name}
                           </Link>
                         </li>
                       ))
                     ) : (
-                      <li key={item.children.path} role="none">
+                      <li key={item.children.path}>
                         <Link
                           href={item.children.path}
                           className={styles.dropdownItem}
-                          role="menuitem"
                         >
-                          <span className={styles.arrow}>↳ </span> {item.children.name}
+                          <span className={styles.arrow} aria-hidden="true">↳ </span> {item.children.name}
                         </Link>
                       </li>
                     )}
@@ -202,7 +214,7 @@ export default function Header() {
                 />
               </button>
             </div>
-          ) : (
+          ) : status === "loading" ? <span className={styles.sessionLoading}>Connecting…</span> : (
             <button
               onClick={() => router.push("/login")}
               className={styles.loginButton}
@@ -215,6 +227,7 @@ export default function Header() {
                 height={20}
                 aria-hidden
               />
+              <span>Sign in</span>
             </button>
           )}
 
@@ -223,6 +236,7 @@ export default function Header() {
             className={styles.mobileMenuButton}
             onClick={toggleMobileMenu}
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
             {mobileMenuOpen ? "✕" : "☰"}
@@ -239,13 +253,14 @@ export default function Header() {
             />
             <div
               ref={mobileMenuRef}
+              id="mobile-navigation"
               className={styles.mobileNavOverlay}
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation menu"
             >
               <div className={styles.mobileNavHeader}>
-                <span className={styles.mobileNavTitle}>Menu</span>
+                <span className={styles.mobileNavTitle}>Your workspace</span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className={styles.mobileCloseBtn}

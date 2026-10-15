@@ -13,8 +13,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <AuthProvider>
+          <a className="skip-link" href="#main-content">Skip to content</a>
           <Header />
-          <main>{children}</main>
+          <main id="main-content" tabIndex={-1}>{children}</main>
           <Footer />
         </AuthProvider>
       </body>

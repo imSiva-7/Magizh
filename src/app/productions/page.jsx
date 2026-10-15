@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -253,11 +254,11 @@ export default function ProductionPage() {
 
       {/* Header */}
       <header className={styles.pageHeader}>
-        <h1 className={styles.pageTitle}>Production Entry</h1>
+        <PageHeading title="Production Entry" section="DAILY OPERATIONS" description="Record each batch, track milk quality, and capture finished products." />
       </header>
 
       {/* Main Form */}
-      <main className={styles.mainContent}>
+      <div className={styles.mainContent}>
         <form onSubmit={handleSubmit} className={styles.productionForm}>
           {/* Date & Batch */}
           <section className={styles.formSection}>
@@ -463,7 +464,7 @@ export default function ProductionPage() {
             </div>
           </>
         )}
-      </main>
+      </div>
     </div>
   );
 }

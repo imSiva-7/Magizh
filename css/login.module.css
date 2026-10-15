@@ -16,7 +16,7 @@
   background: white;
   border-radius: 1rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   overflow: hidden;
   animation: fadeInUp 0.4s ease;
 }
@@ -33,7 +33,7 @@
 }
 
 .header {
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   padding: 2rem;
   text-align: center;
 }
@@ -63,26 +63,26 @@
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.2s ease;
   background: white;
-  color: #1e293b;
+  color: var(--text);
   box-sizing: border-box;
 }
 
 .input:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -99,7 +99,7 @@
 .btn {
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -107,7 +107,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: inherit;
+  font-family: var(--font-sans);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -143,20 +143,20 @@
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
-  color: #64748b;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
 .footer a {
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .footer a:hover {
-  color: rgb(30, 100, 80);
+  color: var(--brand-hover);
   text-decoration: underline;
 }
 
@@ -175,3 +175,25 @@
     padding: 0.875rem;
   }
 }
+/* Workspace sign-in layout */
+.container { min-height: 70vh; max-width: 1200px; margin: 0 auto; padding: clamp(2rem, 5vw, 5rem) 2rem; gap: clamp(2rem, 7vw, 7rem); background: transparent; }
+.welcome { flex: 1; max-width: 520px; }
+.eyebrow { display: block; font-size: 0.68rem; font-weight: 750; letter-spacing: 0.14em; color: var(--brand); margin-bottom: 1.25rem; }
+.welcome h2 { margin: 0; font-size: clamp(2rem, 3.8vw, 3.25rem); color: var(--brand-dark); line-height: 1.15; letter-spacing: -0.045em; }
+.welcome p { color: var(--text-muted); line-height: 1.8; font-size: 1rem; max-width: 410px; margin: 1.5rem 0; }
+.workflow { display: grid; gap: 0.8rem; margin: 2rem 0; }
+.workflow span { display: flex; align-items: center; gap: 0.8rem; font-size: 0.9rem; color: var(--text-secondary); }
+.workflow b { display: inline-grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 50%; color: var(--brand); font-size: 0.7rem; background: #fff; }
+.exploreLink { color: var(--brand); font-size: 0.9rem; font-weight: 650; text-decoration: none; }
+.exploreLink:hover { text-decoration: underline; }
+.exploreLink span { margin-left: 0.75rem; }
+.card { flex: 1; max-width: 430px; border-radius: 1.25rem; box-shadow: var(--shadow-raised); animation: none; }
+.header { text-align: left; background: transparent; padding: 2.25rem 2.25rem 0; }
+.header h1 { color: var(--brand-dark); font-size: 1.75rem; }
+.header p { color: var(--text-muted); line-height: 1.6; }
+.form { padding: 2rem 2.25rem 2.25rem; }
+.input { border-width: 1px; border-radius: 0.65rem; min-height: 48px; }
+.btn { background: var(--brand); border-radius: 0.65rem; min-height: 48px; }
+.btn:hover:not(:disabled) { background: var(--brand-hover); transform: none; box-shadow: none; }
+@media (max-width: 800px) { .container { flex-direction: column; align-items: stretch; padding: 2rem 1.25rem; gap: 2rem; } .welcome { max-width: 100%; } .welcome h2 { font-size: 2rem; } .welcome p { margin: 1rem 0; } .workflow { display: none; } .card { max-width: 100%; flex: auto; } }
+@media (max-width: 480px) { .header { padding: 1.5rem 1.5rem 0; } .form { padding: 1.5rem; } }

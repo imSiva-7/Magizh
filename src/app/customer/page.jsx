@@ -1,4 +1,5 @@
 "use client";
+import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -453,7 +454,7 @@ export default function Customer() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <h1>Customers</h1>
+          <PageHeading title="Customers" section="RELATIONSHIPS" description="Keep customer details, orders, and contacts connected." />
 
           {!createCustomer && (
             <div className={styles.createSection}>
@@ -892,5 +893,3 @@ export default function Customer() {
     </div>
   );
 }
-
-  

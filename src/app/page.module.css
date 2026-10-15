@@ -3,15 +3,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem 1rem;
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  font-family: var(--font-sans);
   background: #f6f8f5;
   min-height: 100vh;
 }
@@ -34,8 +26,8 @@
   font-weight: 700;
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -53,15 +45,15 @@
 
 .userEmail {
   font-size: 0.9rem;
-  color: #475569;
-  background: #f1f5f9;
+  color: var(--text-secondary);
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .adminBadge {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
   padding: 0.25rem 0.75rem;
   border-radius: 2rem;
@@ -71,7 +63,7 @@
 
 .logoutBtn {
   background: none;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -80,7 +72,7 @@
   background: white;
 }
 .logoutBtn:hover {
-  background: #f1f5f9;
+  background: var(--brand-soft);
   border-color: #cbd5e1;
 }
 
@@ -90,7 +82,7 @@
   font-weight: 600;
   text-decoration: none;
   padding: 0.5rem 1rem;
-  border: 1px solid rgb(39, 121, 93);
+  border: 1px solid var(--brand);
   border-radius: 0.5rem;
   transition: all 0.2s;
 }
@@ -111,12 +103,12 @@
 .sessionStatus { color: #d7e9df; font-size: 0.875rem; }
 .sectionHeading { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin: 0 0 1.25rem; }
 .sectionHeading h2 { margin: 0; color: #163e32; font-size: 1.5rem; letter-spacing: -0.03em; }
-.sectionHint { color: #64748b; font-size: 0.875rem; }
-.navCard::after { content: "↗"; position: absolute; top: 1.5rem; right: 1.5rem; color: #64748b; font-size: 1.25rem; }
+.sectionHint { color: var(--text-muted); font-size: 0.875rem; }
+.navCard::after { content: "↗"; position: absolute; top: 1.5rem; right: 1.5rem; color: var(--text-muted); font-size: 1.25rem; }
 .navCard:focus-visible, .dashboard button:focus-visible, .loginLink:focus-visible { outline: 3px solid #69b495; outline-offset: 4px; }
 .dataStatus { display: flex; align-items: center; gap: 1.25rem; padding: 2rem; background: #fff; border: 1px solid #dce6df; border-radius: 1rem; margin-bottom: 2rem; }
 .dataStatus h3 { color: #163e32; margin: 0 0 0.5rem; font-size: 1.1rem; }
-.dataStatus p { color: #64748b; margin: 0; line-height: 1.6; }
+.dataStatus p { color: var(--text-muted); margin: 0; line-height: 1.6; }
 .dataStatus .spinner { flex-shrink: 0; }
 .dataStatus .retryBtn { margin: 0 0 0 auto; white-space: nowrap; }
 .userEmail { overflow-wrap: anywhere; }
@@ -126,13 +118,13 @@
 .chartHeader h3 { margin: 0; color: #163e32; font-size: 1.2rem; letter-spacing: -0.02em; }
 .chartHeader a { color: #27795d; font-size: 0.8rem; text-decoration: none; padding: 0.25rem 0; }
 .chartHeader a:hover { text-decoration: underline; }
-.chartDescription { font-size: 0.85rem; line-height: 1.6; color: #64748b; margin: 1rem 0; }
+.chartDescription { font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); margin: 1rem 0; }
 .chartCanvas { height: 280px; min-width: 0; }
-.chartEmpty { min-height: 200px; display: grid; place-items: center; text-align: center; color: #64748b; font-size: 0.9rem; padding: 1rem; }
-.chartDetails { border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-top: 1rem; font-size: 0.8rem; color: #475569; }
+.chartEmpty { min-height: 200px; display: grid; place-items: center; text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 1rem; }
+.chartDetails { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; font-size: 0.8rem; color: var(--text-secondary); }
 .chartDetails summary { cursor: pointer; width: fit-content; }
 .chartTable { width: 100%; border-collapse: collapse; font-size: 0.8rem; text-align: left; }
-.chartTable th, .chartTable td { padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+.chartTable th, .chartTable td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
 .chartTable caption { padding: 0.75rem; text-align: left; }
 @media (max-width: 1050px) { .chartGrid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 600px) { .chartCard { padding: 1rem; } .chartCanvas { height: 250px; } }
@@ -143,8 +135,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
 }
 
 .global_header {
@@ -154,24 +146,24 @@
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .global_title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   margin: 0;
 }
 
 .date_range_badge {
   font-size: 0.875rem;
-  color: #64748b;
-  background: #f1f5f9;
+  color: var(--text-muted);
+  background: var(--brand-soft);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   font-weight: 500;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   white-space: nowrap;
 }
 
@@ -187,22 +179,22 @@
   gap: 1rem; /* same as global_stats_grid */
 }
 .global_stat_item {
-  background: #f8fafc;
+  background: var(--surface-muted);
   padding: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   transition: all 0.2s ease;
 }
 .global_stat_item:hover {
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .global_stat_label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.25rem;
@@ -211,7 +203,7 @@
 .global_stat_value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
@@ -230,7 +222,7 @@
   overflow-x: auto;
   margin-top: 1rem;
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   background: white;
 }
 
@@ -244,7 +236,7 @@
 /* Supplier & Customer name links in dashboard due tables */
 .supplierName,
 .customerName {
-  color: rgb(39, 121, 93);
+  color: var(--brand);
   text-decoration: none;
   font-weight: 600;
   font-size: 0.95rem;
@@ -279,23 +271,23 @@
   padding: 0.75rem;
   font-size: large;
   text-align: center;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .dueTable th {
-  background: #f1f5f9;
+  background: var(--brand-soft);
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
 }
 .dueTable tbody tr:hover {
-  background: #f8fafc;
+  background: var(--surface-muted);
 }
 .dueTable tbody tr:last-child td {
   border-bottom: none;
 }
 
 .viewLink {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 0.5rem;
@@ -306,7 +298,7 @@
   display: inline-block;
 }
 .viewLink:hover {
-  background: rgb(30, 100, 80);
+  background: var(--brand-hover);
 }
 
 /* ========== LOADING & ERROR STATES ========== */
@@ -324,8 +316,8 @@
 .spinner {
   width: 48px;
   height: 48px;
-  border: 3px solid #e2e8f0;
-  border-top-color: rgb(39, 121, 93);
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -344,7 +336,7 @@
   border: 1px solid #fee2e2;
 }
 .retryBtn {
-  background: rgb(39, 121, 93);
+  background: var(--brand);
   color: white;
   border: none;
   padding: 0.5rem 1.5rem;
@@ -355,7 +347,7 @@
   transition: background 0.2s;
 }
 .retryBtn:hover {
-  background: rgb(30, 100, 80);
+  background: var(--brand-hover);
 }
 
 /* ========== STATS GRID (quick stats, if used) ========== */
@@ -373,18 +365,18 @@
   align-items: center;
   gap: 1rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   transition:
     transform 0.2s,
     box-shadow 0.2s;
 }
 .statCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 .statIcon {
   font-size: 2.5rem;
-  background: #f1f5f9;
+  background: var(--brand-soft);
   width: 4rem;
   height: 4rem;
   display: flex;
@@ -397,7 +389,7 @@
 }
 .statLabel {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0.25rem;
@@ -405,7 +397,7 @@
 .statValue {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text);
   line-height: 1.2;
 }
 
@@ -426,7 +418,7 @@
   transition:
     transform 0.2s,
     box-shadow 0.2s;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -440,7 +432,7 @@
 }
 .navIcon {
   font-size: 2rem;
-  background: #f1f5f9;
+  background: var(--brand-soft);
   width: 3rem;
   height: 3rem;
   display: flex;
@@ -453,11 +445,11 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: rgb(39, 121, 93);
+  color: var(--brand);
 }
 .navCard p {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.4;
 }
@@ -574,20 +566,20 @@
   background: white;
   padding: 2rem;
   border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   margin-bottom: 2rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
 .filter_header {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid var(--border);
 }
 
 .filter_header h2 {
-  color: #1e293b;
+  color: var(--text);
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
@@ -598,9 +590,9 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.25rem;
-  background: #f8fafc;
+  background: var(--surface-muted);
   border-radius: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .date_input_group {
@@ -616,7 +608,7 @@
 }
 
 .date_field label {
-  color: #475569;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.875rem;
   display: flex;
@@ -627,12 +619,12 @@
 .filter_input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   background: white;
-  color: #334155;
+  color: var(--text-secondary);
   font-size: 1rem;
-  font-family: inherit;
+  font-family: var(--font-sans);
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
@@ -643,7 +635,7 @@
 
 .filter_input:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -671,7 +663,7 @@ input[type="date"]::-webkit-date-and-time-value {
   gap: 1rem;
   justify-content: flex-end;
   padding-top: 1.5rem;
-  border-top: 2px solid #e2e8f0;
+  border-top: 2px solid var(--border);
 }
 
 .btn_today,
@@ -685,14 +677,14 @@ input[type="date"]::-webkit-date-and-time-value {
   cursor: pointer;
   transition: all 0.2s ease;
   min-width: 100px;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .btn_today {
   background: linear-gradient(
     135deg,
-    rgb(39, 121, 93) 0%,
-    rgb(30, 100, 80) 100%
+    var(--brand) 0%,
+    var(--brand-hover) 100%
   );
   color: white;
 }
@@ -702,8 +694,8 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .btn_clear {
-  background-color: #e2e8f0;
-  color: #1e293b;
+  background-color: var(--border);
+  color: var(--text);
 }
 
 .btn_today:hover:not(:disabled) {
@@ -718,7 +710,7 @@ input[type="date"]::-webkit-date-and-time-value {
 .btn_clear:hover:not(:disabled) {
   background-color: #cbd5e1;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
 }
 
 .btn_today:disabled,
@@ -736,8 +728,8 @@ input[type="date"]::-webkit-date-and-time-value {
   border-radius: 1rem;
   padding: 1.5rem 2rem;
   margin-bottom: 2rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
 }
 
 .filterHeader {
@@ -748,7 +740,7 @@ input[type="date"]::-webkit-date-and-time-value {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text);
 }
 
 .filterControls {
@@ -768,22 +760,22 @@ input[type="date"]::-webkit-date-and-time-value {
 .dateInputGroup label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .dateInput {
   padding: 0.75rem 1rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--border);
   border-radius: 0.5rem;
   font-size: 0.95rem;
-  color: #1e293b;
+  color: var(--text);
   transition: border-color 0.2s;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .dateInput:focus {
   outline: none;
-  border-color: rgb(39, 121, 93);
+  border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(39, 121, 93, 0.1);
 }
 
@@ -799,7 +791,7 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .filterBtn {
   padding: 0.75rem 1.25rem;
-  background: linear-gradient(135deg, rgb(39, 121, 93) 0%, rgb(30, 100, 80) 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-hover) 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
