@@ -1,0 +1,11 @@
+.grid { min-width:0; }
+.grid :global(.recharts-responsive-container) { overflow:hidden; }
+.controls { display:flex; flex-wrap:wrap; gap:.25rem; padding:.2rem; border:1px solid #dce6df; border-radius:.6rem; background:#f5f8f5; }
+.controls button { border:0; background:transparent; color:#52675b; border-radius:.4rem; padding:.4rem .65rem; font:inherit; font-size:.75rem; cursor:pointer; }
+.controls button[aria-pressed="true"] { color:#fff; background:#27795d; }
+.controls button:focus-visible, .retry:focus-visible { outline:3px solid #caa466; outline-offset:2px; }
+.retry { border:1px solid #dce6df; border-radius:.5rem; padding:.5rem .75rem; background:#fff; color:#27795d; cursor:pointer; font:inherit; }
+.data { max-height:280px; overflow:auto; }
+.overviewHeader { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:.5rem; margin:1.5rem 0 1rem; }
+.overviewHeader h2 { margin:0; color:var(--brand); font-size:1.2rem; }
+.overviewHeader a { color:#27795d; font-size:.85rem; }

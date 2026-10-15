@@ -151,7 +151,7 @@ export default function Payments() {
         body: JSON.stringify({
           procurementIds: checkedIds,
           status,
-          actioDoneBy: session?.user?.email,
+            actionDoneBy: session?.user?.email,
         }),
       });
 

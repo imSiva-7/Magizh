@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
+import { getProcurementStore } from "@/lib/supplier-procurements.mjs";
 
 export async function GET(request) {
   try {
@@ -7,7 +8,7 @@ export async function GET(request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const db = await getDatabase();
-    const collection = db.collection("procurements");
+    const collection = getProcurementStore(db);
 
     // Build query
     const query = {};
@@ -31,7 +32,7 @@ export async function GET(request) {
   
     const headers = {
       "Content-Type": "application/json",
-      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+      "Cache-Control": "no-store",
     };
 
     return NextResponse.json(serializedProcurements, { status: 200, headers });

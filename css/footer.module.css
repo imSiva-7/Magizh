@@ -1,5 +1,5 @@
 .footer { background: var(--brand-dark); color: #dcebe1; margin-top: 3rem; }
-.footerContainer { max-width: 1400px; margin: 0 auto; padding: 3rem 2rem 1.5rem; }
+.footerContainer { max-width: 1400px; margin: 0 auto; padding: 3rem var(--page-gutter) 1.5rem; }
 .footerMain { display: grid; grid-template-columns: 1.8fr repeat(3, 1fr); gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #35594a; }
 .footerSection { min-width: 0; }
 .footerLogo { display: inline-flex; padding: 0.35rem 0.7rem; border-radius: 0.75rem; background: #fff; margin-bottom: 1rem; }
@@ -14,4 +14,4 @@
 .copyrightText { font-size: 0.75rem; color: #b8cec0; }
 .version { font-size: 0.7rem; padding: 0.25rem 0.6rem; border: 1px solid #476b59; border-radius: 2rem; color: #dcebe1; }
 @media (max-width: 800px) { .footerMain { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; } .footerSection:first-child { grid-column: 1 / -1; } .footerDescription { max-width: 100%; } }
-@media (max-width: 480px) { .footerContainer { padding: 2rem 1.25rem 1.5rem; } .footerMain { grid-template-columns: repeat(2, minmax(0, 1fr)); } .copyright { align-items: flex-start; flex-direction: column; gap: 0.65rem; } }
+@media (max-width: 480px) { .footerContainer { padding: 2rem var(--page-gutter) 1.5rem; } .footerMain { grid-template-columns: repeat(2, minmax(0, 1fr)); } .copyright { align-items: flex-start; flex-direction: column; gap: 0.65rem; } }

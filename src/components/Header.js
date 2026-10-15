@@ -50,7 +50,7 @@ const desktopNavItems = [
 const mobileNavItems = [
   { name: "Home", path: "/" },
   { name: "Productions", path: "/productions" },
-  { name: "Production History", path: "/productions/history" },
+  // { name: "Production History", path: "/productions/history" },
   { name: "Stock", path: "/stock" },
   { name: "Suppliers", path: "/supplier" },
   { name: "Procurement History", path: "/supplier/procurement/history" },
@@ -59,11 +59,11 @@ const mobileNavItems = [
   { name: "Order History", path: "/customer/order/history" },
   { name: "Order Payments", path: "/customer/payments" },
   { name: "Employees", path: "/employee" },
-  { name: "Attendance", path: "/employee/attendance" },
+  // { name: "Attendance", path: "/employee/attendance" },
   { name: "Attendance History", path: "/employee/attendance/history" },
-  { name: "Production Analytics", path: "/productions/analytics" },
-  { name: "Supplier Analytics", path: "/supplier/analytics" },
-  { name: "Customer Analytics", path: "/customer/analytics" },
+  // { name: "Production Analytics", path: "/productions/analytics" },
+  // { name: "Supplier Analytics", path: "/supplier/analytics" },
+  // { name: "Customer Analytics", path: "/customer/analytics" },
 ];
 
 export default function Header() {
@@ -141,12 +141,12 @@ export default function Header() {
         <Link href="/" className={styles.logoSection} aria-label="Magizh Dairy home">
           <Image
             src="/favicon.ico"
-            alt="Company Logo"
-            width={48}
+            alt="Magizh Dairy"
+            width={120}
             height={48}
             priority
           />
-          <span className={styles.brandText}>Magizh Dairy<small>OPERATIONS WORKSPACE</small></span>
+          <span className={styles.brandText}>OPERATIONS WORKSPACE</span>
         </Link>
 
         {/* Desktop Navigation */}

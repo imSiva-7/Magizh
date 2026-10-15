@@ -12,6 +12,8 @@ import {
 } from "@/utils/formatNumberWithComma";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
+import { getProcurementSummary } from "@/utils/procurementSummary";
+import SupplierCharts from "@/components/SupplierCharts";
 
 // ========== CONSTANTS & UTILITIES ==========
 
@@ -48,15 +50,26 @@ const initialFilters = {
 
 const InputGroup = ({ label, error, required, readOnly, ...props }) => (
   <div className={styles.input_group}>
-    <label className={required ? styles.required_label : ""}>
+    <label
+      htmlFor={`procurement-${props.name}`}
+      className={required ? styles.required_label : ""}
+    >
       {label}
-      {required && <span className={styles.required_asterisk}>*</span>}
+      {required && (
+        <span aria-hidden="true" className={styles.required_asterisk}>
+          *
+        </span>
+      )}
     </label>
     <input
       className={`${styles.input} ${error ? styles.input_error : ""} ${
         readOnly ? styles.read_only_input : ""
       }`}
       autoComplete="off"
+      id={`procurement-${props.name}`}
+      aria-label={label}
+      aria-required={Boolean(required)}
+      aria-invalid={Boolean(error)}
       readOnly={readOnly}
       {...props}
     />
@@ -66,12 +79,15 @@ const InputGroup = ({ label, error, required, readOnly, ...props }) => (
 
 const TimePeriodSelect = ({ value, onChange, error }) => (
   <div className={styles.input_group}>
-    <label className={styles.required_label}>
+    <label htmlFor="procurement-time" className={styles.required_label}>
       Time Period
-      <span className={styles.required_asterisk}>*</span>
+      <span aria-hidden="true" className={styles.required_asterisk}>
+        *
+      </span>
     </label>
     <select
       name="time"
+      id="procurement-time"
       value={value}
       onChange={onChange}
       className={styles.select_input}
@@ -105,16 +121,12 @@ const SummaryStats = ({ summary, filters }) => (
     </h3>
     <div className={styles.stats_grid}>
       <StatItem
-        label="Daily Avg"
-        value={
-          summary.daysWithData
-            ? (summary.milk / summary.daysWithData).toFixed(2)
-            : "0.00"
-        }
+        label="Avg Milk / Day"
+        value={summary.avgMilkDaily}
         unit="L/day"
       />
       <StatItem
-        label="Avg Fat/SNF"
+        label="Weighted Fat/SNF"
         value={`${summary.avgFat} / ${summary.avgSnf}`}
         unit="%"
       />
@@ -272,9 +284,10 @@ function ProcurementContent() {
     if (!supplierId) return;
     setHeadLoading(true);
     try {
-      const res = await fetch(
-        `/api/supplier/head-entries?headSupplierId=${supplierId}`,
-      );
+      const query = new URLSearchParams({ headSupplierId: supplierId });
+      if (filters.startDate) query.set("startDate", filters.startDate);
+      if (filters.endDate) query.set("endDate", filters.endDate);
+      const res = await fetch(`/api/supplier/head-entries?${query}`);
       if (!res.ok) {
         throw new Error("Failed to load head entries");
       }
@@ -287,7 +300,7 @@ function ProcurementContent() {
     } finally {
       setHeadLoading(false);
     }
-  }, [supplierId]);
+  }, [supplierId, filters.startDate, filters.endDate]);
 
   const fetchAllData = useCallback(async () => {
     if (!supplierId) return;
@@ -312,10 +325,7 @@ function ProcurementContent() {
         allProcurements: Array.isArray(procurementData) ? procurementData : [],
       });
 
-      // If head supplier → also fetch head entries
-      if (supplierData?.isHeadSupplier) {
-        await fetchHeadEntries();
-      } else {
+      if (!supplierData?.isHeadSupplier) {
         setHeadData(null);
       }
     } catch (error) {
@@ -324,11 +334,16 @@ function ProcurementContent() {
     } finally {
       setLoading(false);
     }
-  }, [supplierId, fetchHeadEntries]);
+  }, [supplierId]);
+
+  useEffect(() => {
+    if (data.supplier?.isHeadSupplier) fetchHeadEntries();
+  }, [data.supplier, fetchHeadEntries]);
 
   useEffect(() => {
     if (!supplierId) {
       toast.error("No supplier ID provided");
+      setLoading(false);
       return;
     }
     fetchAllData();
@@ -344,8 +359,18 @@ function ProcurementContent() {
         formData.milkQuantity,
         formData.fatPercentage,
         formData.snfPercentage,
-        effectiveTSRate,
-        data.supplier?.supplierCustomRate,
+        editingId._id
+          ? Number(
+              editingId.supplierTSRate ??
+                Number(editingId.parentTsr) -
+                  Number(editingId.cutPercentage || 0),
+            )
+          : effectiveTSRate,
+        editingId._id
+          ? editingId.customRate
+            ? editingId.rate
+            : undefined
+          : data.supplier?.supplierCustomRate,
       );
     }
     return { rate: "", totalAmount: "" };
@@ -354,6 +379,7 @@ function ProcurementContent() {
     formData.fatPercentage,
     formData.snfPercentage,
     effectiveTSRate,
+    editingId,
     data.supplier?.supplierCustomRate,
     calculateTotals,
   ]);
@@ -649,53 +675,10 @@ function ProcurementContent() {
     });
   }, [filteredProcurements]);
 
-  const summary = useMemo(() => {
-    if (!filteredProcurements.length) {
-      return {
-        milk: 0,
-        amount: 0,
-        count: 0,
-        avgRate: "0.00",
-        avgFat: "0.0",
-        avgSnf: "0.0",
-        daysWithData: 0,
-      };
-    }
-
-    const uniqueDates = new Set(
-      filteredProcurements.map((record) => record.date.split("T")[0]),
-    );
-    const totals = filteredProcurements.reduce(
-      (acc, curr) => ({
-        milk: acc.milk + (parseFloat(curr.milkQuantity) || 0),
-        amount: acc.amount + (parseFloat(curr.totalAmount) || 0),
-        count: acc.count + 1,
-      }),
-      { milk: 0, amount: 0, count: 0 },
-    );
-
-    const avgFat = (
-      filteredProcurements.reduce(
-        (sum, curr) => sum + parseFloat(curr.fatPercentage),
-        0,
-      ) / filteredProcurements.length
-    ).toFixed(1);
-    const avgSnf = (
-      filteredProcurements.reduce(
-        (sum, curr) => sum + parseFloat(curr.snfPercentage),
-        0,
-      ) / filteredProcurements.length
-    ).toFixed(1);
-
-    return {
-      ...totals,
-      avgRate: totals.milk ? (totals.amount / totals.milk).toFixed(2) : "0.00",
-      avgRateDaily: (totals.amount / uniqueDates.size).toFixed(0) || "0",
-      avgFat,
-      avgSnf,
-      daysWithData: uniqueDates.size,
-    };
-  }, [filteredProcurements]);
+  const summary = useMemo(
+    () => getProcurementSummary(filteredProcurements),
+    [filteredProcurements],
+  );
 
   const handleExport = (format) => {
     if (!filteredProcurements.length) {
@@ -789,7 +772,9 @@ function ProcurementContent() {
               {data.supplier?.supplierCustomRate ? (
                 <span className={styles.ts_rate_tag}>
                   Custom Rate: ₹
-                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(0)}
+                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
+                    0,
+                  )}
                 </span>
               ) : (
                 <span className={styles.ts_rate_tag}>
@@ -798,7 +783,9 @@ function ProcurementContent() {
                     <span className={styles.ts_rate_original}>
                       {" "}
                       (was{" "}
-                      {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(0)}
+                      {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(
+                        0,
+                      )}
                       )
                     </span>
                   )}
@@ -806,9 +793,7 @@ function ProcurementContent() {
               )}
 
               {data.supplier?.isHeadSupplier && (
-                <span className={styles.head_supplier_tag}>
-                  Head Supplier
-                </span>
+                <span className={styles.head_supplier_tag}>Head Supplier</span>
               )}
 
               {hasCut && (
@@ -858,6 +843,7 @@ function ProcurementContent() {
               label="Milk Quantity (L)"
               name="milkQuantity"
               type="number"
+              step="0.01"
               inputMode="decimal"
               placeholder="20.5"
               value={formData.milkQuantity}
@@ -869,6 +855,7 @@ function ProcurementContent() {
               label="Fat %"
               name="fatPercentage"
               type="number"
+              step="0.1"
               inputMode="decimal"
               placeholder="3.5"
               value={formData.fatPercentage}
@@ -880,6 +867,7 @@ function ProcurementContent() {
               label="SNF %"
               name="snfPercentage"
               type="number"
+              step="0.1"
               inputMode="decimal"
               placeholder="8.5"
               value={formData.snfPercentage}
@@ -931,9 +919,12 @@ function ProcurementContent() {
             <div className={styles.cut_info_banner}>
               <span className={styles.cut_info_icon}>ℹ️</span>
               <span>
-                {parseFloat(data.supplier.cutPercentage).toFixed(1)}% of this
-                procurement will be credited to{" "}
-                <strong>{data.supplier.headSupplierName}</strong>
+                TSR includes a cut of{" "}
+                {parseFloat(data.supplier.cutPercentage).toFixed(1)} for{" "}
+                <strong>
+                  {data.supplier.headSupplierName || "the head supplier"}
+                </strong>
+                .
               </span>
             </div>
           )}
@@ -968,9 +959,19 @@ function ProcurementContent() {
           )}
 
           <div className={styles.form_actions}>
+            {editingId._id && (
+              <button
+                type="button"
+                disabled={submitting}
+                className={styles.secondary_btn}
+                onClick={() => resetForm()}
+              >
+                Cancel edit
+              </button>
+            )}
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || loading || !data.supplier}
               className={styles.primary_btn}
               aria-label={editingId._id ? "Update record" : "Add new record"}
             >
@@ -1060,6 +1061,7 @@ function ProcurementContent() {
       )}
 
       {/* EXPORT SECTION */}
+      <SupplierCharts records={filteredProcurements} filters={filters} loading={loading} />
       {summary.count > 0 && (
         <div className={styles.export_section}>
           <span className={styles.entry_count}>
@@ -1139,12 +1141,19 @@ function ProcurementContent() {
             </button>
           </div>
 
+          {headData?.reviewCount > 0 && (
+            <p className={styles.cut_info_banner} role="status">
+              {headData.reviewCount} recovered commission
+              {headData.reviewCount === 1 ? " needs" : "s need"} payment review.
+              Confirm their payment status before treating the outstanding total
+              as final.
+            </p>
+          )}
+
           {headLoading && !headData ? (
             <div className={styles.loading_container}>
               <div className={styles.spinner}></div>
-              <span className={styles.loading_text}>
-                Loading earnings...
-              </span>
+              <span className={styles.loading_text}>Loading earnings...</span>
             </div>
           ) : !headData || headData.entries.length === 0 ? (
             <div className={styles.empty_state}>
@@ -1196,8 +1205,7 @@ function ProcurementContent() {
                   <span
                     className={`${styles.head_total_value} ${styles.text_due}`}
                   >
-                    ₹
-                    {formatNumberWithCommasNoDecimal(headData.totals.due || 0)}
+                    ₹{formatNumberWithCommasNoDecimal(headData.totals.due || 0)}
                   </span>
                 </div>
               </div>
@@ -1269,7 +1277,11 @@ function ProcurementContent() {
                           ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}
                         </td>
                         <td className={styles.payment_cell}>
-                          {row.paymentStatus === "Paid" ? (
+                          {row.paymentReviewRequired ? (
+                            <span className={styles.status_due}>
+                              Review payment
+                            </span>
+                          ) : row.paymentStatus === "Paid" ? (
                             <span className={styles.status_paid}>Paid</span>
                           ) : (
                             <span className={styles.status_due}>Due</span>
@@ -1448,6 +1460,8 @@ function ProcurementContent() {
                             }
                             disabled={submitting || !!editingId._id}
                             title="Actions"
+                            aria-label={`Actions for ${row.date.split("T")[0]} ${row.time || "AM"} record`}
+                            aria-expanded={openActionMenuId === row._id}
                           >
                             ⋮
                           </button>

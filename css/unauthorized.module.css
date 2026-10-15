@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, var(--surface-muted) 0%, var(--border) 100%);
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: 2rem var(--page-gutter);
 }
 
 .card {

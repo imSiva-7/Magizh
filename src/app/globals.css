@@ -1,6 +1,7 @@
 :root {
   color-scheme: light;
   --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --page-gutter: clamp(1.25rem, 3.5vw, 2.5rem);
   --brand: #27795d;
   --brand-dark: #163e32;
   --brand-hover: #1e644f;

@@ -2,7 +2,7 @@
 .page_container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: 2rem var(--page-gutter);
   font-family: var(--font-sans);
   background: var(--page-bg);
   min-height: 100vh;

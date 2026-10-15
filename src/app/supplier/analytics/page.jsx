@@ -1,223 +1,48 @@
 "use client";
 import PageHeading from "@/components/PageHeading";
-
+import SupplierCharts from "@/components/SupplierCharts";
 import { useState, useEffect } from "react";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
-const getFormattedDateRange = (startDate, endDate) => {
-  if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
-    return from === to ? from : `${from} – ${to}`;
-  }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
-  return "All Records";
-};
+const initialRange = () => ({ startDate: getCurrentMonthStartDate(), endDate: getTodayDate() });
+const periodLabel = ({ startDate, endDate }) => startDate && endDate ? `${startDate} to ${endDate}` : startDate ? `From ${startDate}` : endDate ? `Through ${endDate}` : "All records";
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState({
-    startDate: getCurrentMonthStartDate(),
-    endDate: getTodayDate(),
-  });
+  const [dateRange, setDateRange] = useState(initialRange);
   const [data, setData] = useState({ daily: [], overall: {} });
   const [loading, setLoading] = useState(true);
-
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchData() {
-      setLoading(true);
+      setLoading(true); setError("");
       try {
-        const params = new URLSearchParams(dateRange);
-        const res = await fetch(`/api/analytics/procurements?${params}`);
-        if (!res.ok) throw new Error("Failed to fetch");
-        const json = await res.json();
-        setData(json);
+        if (dateRange.startDate && dateRange.endDate && dateRange.startDate > dateRange.endDate) throw new Error("From date must be before the to date.");
+        const response = await fetch(`/api/analytics/procurements?${new URLSearchParams(dateRange)}`, { signal: controller.signal, cache: "no-store" });
+        if (!response.ok) throw new Error("Supplier analytics could not be loaded. Please retry.");
+        const json = await response.json();
+        if (!Array.isArray(json.daily)) throw new Error("Supplier analytics returned an invalid response.");
+        if (!controller.signal.aborted) setData(json);
       } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
+        if (!controller.signal.aborted) { setError(error.message); setData({ daily: [], overall: {} }); }
+      } finally { if (!controller.signal.aborted) setLoading(false); }
     }
-    fetchData();
-  }, [dateRange]);
-
-  const handleDateChange = (e) => {
-    setDateRange((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const resetDateRange = () => {
-    setDateRange({
-      startDate: getCurrentMonthStartDate(),
-      endDate: getTodayDate(),
-    });
-  };
-
-  return (
-    <div className={styles.page_container}>
-      {/* Header */}
-      <div className={styles.header}>
-        <PageHeading title="Supplier Analytics" section="BUSINESS INSIGHTS" description="Explore milk procurement, quality trends, and supplier performance." />
+    fetchData(); return () => controller.abort();
+  }, [dateRange, reload]);
+  return <div className={styles.page_container}>
+    <div className={styles.header}><PageHeading title="Supplier Analytics" section="BUSINESS INSIGHTS" description="Explore milk procurement, quality trends, and supplier performance." /></div>
+    <div className={styles.filter_section}>
+      <div className={styles.filter_title}><h2>Filter by Date Range</h2></div>
+      <div className={styles.date_input_group}>
+        <div className={styles.date_field}><label htmlFor="startDate">From Date</label><input type="date" id="startDate" name="startDate" value={dateRange.startDate} onChange={(event) => setDateRange((previous) => ({ ...previous, startDate: event.target.value }))} max={dateRange.endDate || getTodayDate()} className={styles.date_input} /></div>
+        <div className={styles.date_field}><label htmlFor="endDate">To Date</label><input type="date" id="endDate" name="endDate" value={dateRange.endDate} onChange={(event) => setDateRange((previous) => ({ ...previous, endDate: event.target.value }))} min={dateRange.startDate} max={getTodayDate()} className={styles.date_input} /></div>
       </div>
-
-      {/* Filter Section */}
-      <div className={styles.filter_section}>
-        <div className={styles.filter_title}>
-          <h2>Filter by Date Range</h2>
-        </div>
-        <div className={styles.date_input_group}>
-          <div className={styles.date_field}>
-            <label htmlFor="startDate">From Date</label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={dateRange.startDate}
-              onChange={handleDateChange}
-              max={dateRange.endDate || getTodayDate()}
-              className={styles.date_input}
-            />
-          </div>
-          <div className={styles.date_field}>
-            <label htmlFor="endDate">To Date</label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={dateRange.endDate}
-              onChange={handleDateChange}
-              min={dateRange.startDate}
-              max={getTodayDate()}
-              className={styles.date_input}
-            />
-          </div>
-        </div>
-        <div className={styles.filter_actions}>
-          <button
-            type="button"
-            onClick={resetDateRange}
-            className={`${styles.btn} ${styles.btn_primary}`}
-          >
-            Reset
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      {!loading && data.overall && (
-        <div className={styles.summary_card}>
-          <div className={styles.summary_header}>
-            <h2>Summary</h2>
-            <span className={styles.date_range_badge}>
-              {getFormattedDateRange(dateRange.startDate, dateRange.endDate)}
-            </span>
-          </div>
-          <div className={styles.stats_grid}>
-            <div className={styles.stat_item}>
-              <div className={styles.stat_label}>Total Milk</div>
-              <div className={styles.stat_value}>
-                {formatNumberWithCommas(data.overall.totalMilk || 0)} <span className={styles.stat_unit}>L</span>
-              </div>
-            </div>
-            <div className={styles.stat_item}>
-              <div className={styles.stat_label}>Total Amount</div>
-              <div className={styles.stat_value}>
-                ₹{formatNumberWithCommas(data.overall.totalAmount || 0)}
-              </div>
-            </div>
-            <div className={styles.stat_item}>
-              <div className={styles.stat_label}>Total Records</div>
-              <div className={styles.stat_value}>
-                {formatNumberWithCommas(data.overall.totalRecords || 0)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Charts */}
-      {loading ? (
-        <div className={styles.loading_container}>
-          <div className={styles.spinner}></div>
-          <span className={styles.loading_text}>Loading charts...</span>
-        </div>
-      ) : (
-        <>
-          {/* Daily Milk Quantity Line Chart */}
-          <div className={styles.chart_card}>
-            <h3>Daily Milk Quantity</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="milk"
-                  stroke="#8884d8"
-                  name="Milk (L)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Fat & SNF Line Chart */}
-          <div className={styles.chart_card}>
-            <h3>Fat & SNF</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis domain={[0, "dataMax"]} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="avgFat"
-                  stroke="#ff7300"
-                  name="Avg Fat %"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="avgSnf"
-                  stroke="#387908"
-                  name="Avg SNF %"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Daily Total Amount Bar Chart */}
-          <div className={styles.chart_card}>
-            <h3>Daily Total Amount</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="amount" fill="#82ca9d" name="Amount (₹)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      )}
+      <div className={styles.filter_actions}><button type="button" onClick={() => setDateRange(initialRange())} className={`${styles.btn} ${styles.btn_primary}`}>Reset</button></div>
     </div>
-  );
+    {!loading && !error && <div className={styles.summary_card}><div className={styles.summary_header}><h2>Summary</h2><span className={styles.date_range_badge}>{periodLabel(dateRange)}</span></div><div className={styles.stats_grid}>{[["Total Milk", `${formatNumberWithCommas(data.overall?.totalMilk || 0)} L`], ["Total Amount", `₹${formatNumberWithCommas(data.overall?.totalAmount || 0)}`], ["Total Records", formatNumberWithCommas(data.overall?.totalRecords || 0)], ["Paid", `₹${formatNumberWithCommas(data.overall?.paidAmount || 0)}`], ["Due", `₹${formatNumberWithCommas(data.overall?.dueAmount || 0)}`]].map(([name, value]) => <div className={styles.stat_item} key={name}><div className={styles.stat_label}>{name}</div><div className={styles.stat_value}>{value}</div></div>)}</div></div>}
+    <SupplierCharts daily={data.daily} filters={dateRange} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} />
+  </div>;
 }

@@ -2,7 +2,7 @@
 .dashboard {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem var(--page-gutter);
   font-family: var(--font-sans);
   background: #f6f8f5;
   min-height: 100vh;
@@ -457,7 +457,7 @@
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   .dashboard {
-    padding: 1rem;
+    padding: 1rem var(--page-gutter);
   }
   .header {
     flex-direction: column;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
+import { getProcurementStore } from "@/lib/supplier-procurements.mjs";
 import { ObjectId } from "mongodb";
 
 const METHOD_NAMES = {
@@ -410,8 +411,7 @@ export async function DELETE(request) {
     const _id = new ObjectId(id);
 
     // 1. Procurements
-    const procurementCount = await db
-      .collection("procurements")
+    const procurementCount = await getProcurementStore(db)
       .countDocuments({ supplierId: _id });
 
     if (procurementCount > 0) {
@@ -422,6 +422,11 @@ export async function DELETE(request) {
         },
         { status: 409 },
       );
+    }
+
+    const commissions = await db.collection("head_supplier_entries").findOne({ _id });
+    if (commissions && ((commissions.entryIds?.length || 0) > 0 || Object.keys(commissions.entries || {}).length > 0 || Object.keys(commissions.legacyReferences || {}).length > 0 || Object.keys(commissions.byProcurement || {}).length > 0)) {
+      return NextResponse.json({ error: "Cannot delete supplier with head commission history" }, { status: 409 });
     }
 
     // 2. Referenced as a child by another head supplier (via array field)

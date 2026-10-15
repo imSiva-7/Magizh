@@ -316,24 +316,26 @@ function AttendanceContent() {
                   {attendanceData.summary.standardHours}h
                 </span>
               </div>
-              <div className={styles.summaryItem}>
+              {/* <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Regular Hours:</span>
                 <span className={styles.summaryValue}>
                   {attendanceData.summary.totalRegularHours}h
                 </span>
               </div>
+
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Overtime Hours:</span>
                 <span className={styles.summaryValue}>
                   {attendanceData.summary.totalOvertimeHours}h
                 </span>
-              </div>
+              </div> */}
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Total Hours:</span>
                 <span className={styles.summaryValue}>
                   {attendanceData.summary.totalHoursWorked}h
                 </span>
               </div>
+
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Hourly Rate:</span>
                 <span className={styles.summaryValue}>

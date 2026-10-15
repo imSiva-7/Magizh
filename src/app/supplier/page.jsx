@@ -1,5 +1,6 @@
 "use client";
 import PageHeading from "@/components/PageHeading";
+import { SupplierOverviewCharts } from "@/components/SupplierCharts";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -55,9 +56,12 @@ const FormInput = memo(
         disabled={disabled}
         inputMode={inputMode}
         autoComplete="off"
+        required={required}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         className={`${styles.input} ${error ? styles.inputError : ""}`}
       />
-      {error && <span className={styles.errorText}>{error}</span>}
+      {error && <span id={`${id}-error`} className={styles.errorText}>{error}</span>}
     </div>
   ),
 );
@@ -69,7 +73,8 @@ export default function Supplier() {
   const isAdmin = session?.user?.role === "admin";
 
   const [createSupplier, setCreateSupplier] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [entries, setEntries] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -145,12 +150,12 @@ export default function Supplier() {
       }
 
       case "supplierCustomRate": {
-        const customRate = parseFloat(value);
-        if (!customRate) return "";
-        if (isNaN(customRate)) return "Please enter a valid number";
+        if (!value?.toString().trim()) return "";
+        const customRate = Number(value);
+        if (!Number.isFinite(customRate)) return "Please enter a valid number";
         if (customRate < 30) return `Custom Rate must be at least 30`;
         if (customRate > 40) return `Custom Rate cannot exceed 40`;
-        if (!/^\d+$/.test(value)) return "Enter up to 2 decimal places";
+        if (!/^\d+(\.\d{0,2})?$/.test(value)) return "Enter up to 2 decimal places";
         return "";
       }
 
@@ -239,6 +244,7 @@ export default function Supplier() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
       const res = await fetch(`/api/supplier`);
       if (!res.ok) {
@@ -251,8 +257,7 @@ export default function Supplier() {
       setEntries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Fetch error:", error);
-      toast.error(error.message || "Failed to load suppliers");
-      setEntries([]);
+      setLoadError("Could not load suppliers. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -837,6 +842,9 @@ export default function Supplier() {
               id="f-Customrate"
               label="Custom Rate (Rs: 39)"
               type="number"
+              min={30}
+              max={40}
+              step="0.01"
               value={formData.supplierCustomRate}
               onChange={(value) =>
                 handleInputChange("supplierCustomRate", value)
@@ -943,6 +951,12 @@ export default function Supplier() {
         </div>
       </div>
 
+      {loadError && (
+        <div className={styles.searchSection} role="alert">
+          <p className={styles.emptyText}>{loadError}{entries.length ? " Previously loaded suppliers are shown below." : ""}</p>
+          <button type="button" className={styles.createEmptyButton} onClick={fetchData} disabled={loading}>Try again</button>
+        </div>
+      )}
       {/* ---------- Table ---------- */}
       <div className={styles.tableContainer}>
         <div className={styles.tableWrapper}>
@@ -966,7 +980,7 @@ export default function Supplier() {
                     </div>
                   </td>
                 </tr>
-              ) : filteredEntries.length === 0 ? (
+              ) : loadError && !entries.length ? null : filteredEntries.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 5 : 4} className={styles.noDataCell}>
                     <div className={styles.emptyState}>
@@ -1106,6 +1120,7 @@ export default function Supplier() {
           </table>
         </div>
       </div>
+      <SupplierOverviewCharts />
     </div>
   );
 }

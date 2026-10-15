@@ -1,791 +1,229 @@
 "use client";
-import PageHeading from "@/components/PageHeading";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PageHeading from "@/components/PageHeading";
+import StockCharts from "@/components/StockCharts";
+import { STOCK_PRODUCTS, buildInventory, stockNumber, stockMoney, stockQuantity } from "@/lib/stock";
 import styles from "@/css/stock.module.css";
-import {
-  formatNumberWithCommasNoDecimal,
-  formatNumberWithCommas,
-} from "@/utils/formatNumberWithComma";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 
-// --------------------------------------------------------------------
-// Constants
-// --------------------------------------------------------------------
-const STOCK_PRODUCTS = [
-  { name: "Butter", field: "butter", unit: "kg" },
-  { name: "Fresh Cream", field: "cream", unit: "kg" },
-  { name: "Curd", field: "curd", unit: "kg" },
-  { name: "Ghee", field: "ghee", unit: "L" },
-  { name: "Soft Paneer", field: "soft_paneer", unit: "kg" },
-  { name: "Premium Paneer", field: "premium_paneer", unit: "kg" },
-];
+const emptyAdjustment = (product = "butter") => ({ product, direction: "add", quantity: "", comment: "" });
+const PRODUCT_NAMES = Object.fromEntries(STOCK_PRODUCTS.map((item) => [item.field, item.name]));
+const PRODUCT_UNITS = Object.fromEntries(STOCK_PRODUCTS.map((item) => [item.field, item.unit]));
+const MOVEMENT_NAMES = { production: "Production", order: "Customer order", adjustment: "Adjustment", reversal: "Reversal" };
 
-const productPriceMap = {
-  butter: "butterPrice",
-  cream: "freshCreamPrice",
-  curd: "curdPrice",
-  ghee: "gheePrice",
-  soft_paneer: "softPaneerPrice",
-  premium_paneer: "premiumPaneerPrice",
-};
+async function readResponse(response) {
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.error || "Request failed. Please try again.");
+  if (data === null) throw new Error("The server returned an invalid response.");
+  return data;
+}
 
-const INITIAL_ADJUSTMENT = () => {
-  const quantities = {};
-  STOCK_PRODUCTS.forEach((p) => (quantities[p.field] = ""));
-  return { quantities, comment: "" };
-};
+async function loadStockPart(url, signal) {
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  signal.addEventListener("abort", cancel, { once: true });
+  const timeout = setTimeout(cancel, 15000);
+  try {
+    return await readResponse(await fetch(url, { signal: controller.signal, cache: "no-store" }));
+  } finally {
+    clearTimeout(timeout);
+    signal.removeEventListener("abort", cancel);
+  }
+}
 
-// --------------------------------------------------------------------
-// Main Component
-// --------------------------------------------------------------------
 export default function StockPage() {
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(null);
-  const [thresholds, setThresholds] = useState({});
-  const [customers, setCustomers] = useState([]);
-  const [ledger, setLedger] = useState([]);
-
-  const [showAdjustment, setShowAdjustment] = useState(false);
-  const [showThresholds, setShowThresholds] = useState(false);
-
-  // Refs for scrolling
-  const adjustmentFormRef = useRef(null);
-  const thresholdsFormRef = useRef(null);
-
-  const [adjustment, setAdjustment] = useState(INITIAL_ADJUSTMENT());
-  const [submitting, setSubmitting] = useState(false);
-  const [savingThresholds, setSavingThresholds] = useState(false);
+  const [error, setError] = useState("");
+  const [panel, setPanel] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [adjustment, setAdjustment] = useState(emptyAdjustment);
+  const [thresholdDraft, setThresholdDraft] = useState({});
+  const [saving, setSaving] = useState(false);
+  const requestRef = useRef(null);
+  const formRef = useRef(null);
+  const busyRef = useRef(false);
 
   const fetchStockData = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-      const [balRes, threshRes, ledgerRes, custRes] = await Promise.all([
-        fetch("/api/stock/balance"),
-        fetch("/api/stock/thresholds"),
-        fetch("/api/stock/ledger?limit=30"),
-        fetch("/api/customer"),
-      ]);
-      if (!balRes.ok) throw new Error("Failed to load stock balance");
-      const balData = await balRes.json();
-      setBalance(balData);
-      if (threshRes.ok) {
-        const threshData = await threshRes.json();
-        setThresholds(threshData.thresholds || {});
-      }
-      if (ledgerRes.ok) {
-        const ledgerData = await ledgerRes.json();
-        setLedger(Array.isArray(ledgerData) ? ledgerData : []);
-      } else {
-        console.warn("Ledger fetch failed, status:", ledgerRes.status);
-      }
-      if (custRes.ok) {
-        const custData = await custRes.json();
-        setCustomers(Array.isArray(custData) ? custData : []);
-      }
-    } catch (error) {
-      toast.error(error.message);
+      const endpoints = ["/api/stock/balance", "/api/stock/thresholds", "/api/stock/ledger?limit=30", "/api/customer"];
+      const results = await Promise.allSettled(endpoints.map((url) => loadStockPart(url, controller.signal)));
+      if (controller.signal.aborted) return;
+      if (results[0].status === "rejected") throw new Error("Could not load stock balances. Please try again.");
+      const balance = results[0].value;
+      if (!balance || Array.isArray(balance) || typeof balance !== "object") throw new Error("Stock balances are unavailable. Please try again.");
+      const optional = (index) => results[index].status === "fulfilled" ? results[index].value : null;
+      const settings = optional(1);
+      const ledger = optional(2);
+      const customers = optional(3);
+      setData({
+        balance,
+        thresholds: settings?.thresholds && typeof settings.thresholds === "object" && !Array.isArray(settings.thresholds) ? settings.thresholds : settings && !Array.isArray(settings) ? {} : null,
+        ledger: Array.isArray(ledger) ? ledger : null,
+        customers: Array.isArray(customers) ? customers : null,
+      });
+    } catch (cause) {
+      if (!controller.signal.aborted) setError(cause.message);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchStockData();
+    return () => requestRef.current?.abort();
   }, [fetchStockData]);
 
-  // ------------------------------------------------------------------
-  // Average prices & total value
-  // ------------------------------------------------------------------
-  const averagePrices = {};
-  for (const product of STOCK_PRODUCTS) {
-    const priceField = productPriceMap[product.field];
-    const prices = customers
-      .map((c) => c[priceField])
-      .filter((p) => p !== null && p !== undefined && !isNaN(p));
-    const avg =
-      prices.length > 0
-        ? prices.reduce((sum, p) => sum + p, 0) / prices.length
-        : 0;
-    averagePrices[product.field] = avg;
-  }
+  useEffect(() => {
+    if (panel) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [panel]);
 
-  const totalStockValue = STOCK_PRODUCTS.reduce((sum, product) => {
-    const qty = balance ? balance[product.field] || 0 : 0;
-    const avgPrice = averagePrices[product.field] || 0;
-    return sum + qty * avgPrice;
-  }, 0);
+  const items = useMemo(() => buildInventory(data?.balance, data?.thresholds ?? null, data?.customers ?? null), [data]);
+  const attention = items.filter((item) => item.needsAttention);
+  const priced = items.filter((item) => item.estimatedValue !== null);
+  const totalValue = priced.length ? priced.reduce((sum, item) => sum + item.estimatedValue, 0) : null;
+  const selected = items.find((item) => item.field === adjustment.product);
+  const adjustmentAmount = stockNumber(adjustment.quantity);
+  const delta = adjustmentAmount === null ? 0 : adjustmentAmount * (adjustment.direction === "remove" ? -1 : 1);
+  const nextQuantity = selected?.quantity === null ? null : selected?.quantity + delta;
 
-  const statCards = STOCK_PRODUCTS.map((product) => ({
-    label: product.name,
-    value: balance
-      ? `${(balance[product.field] || 0).toFixed(2)} ${product.unit}`
-      : `0.00 ${product.unit}`,
-  }));
-
-  
-  const handleAdjustmentChange = (field, value) => {
-    setAdjustment((prev) => ({
-      ...prev,
-      quantities: { ...prev.quantities, [field]: value },
-    }));
+  const openAdjustment = (product = "butter") => {
+    setAdjustment(emptyAdjustment(product));
+    setPanel("adjustment");
+  };
+  const openThresholds = () => {
+    setThresholdDraft(Object.fromEntries(STOCK_PRODUCTS.map((item) => [item.field, data?.thresholds?.[item.field] ?? ""])));
+    setPanel("thresholds");
   };
 
-  const handleAdjustmentCommentChange = (value) => {
-    setAdjustment((prev) => ({ ...prev, comment: value }));
+  const submitAdjustment = async (event) => {
+    event.preventDefault();
+    if (busyRef.current) return;
+    if (adjustmentAmount === null || adjustmentAmount <= 0) return toast.error("Enter a quantity greater than zero.");
+    busyRef.current = true;
+    setSaving(true);
+    try {
+      await readResponse(await fetch("/api/stock/adjust", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product: adjustment.product, quantity: delta, comment: adjustment.comment.trim() }),
+      }));
+      toast.success("Stock adjustment saved");
+      setPanel(null);
+      setAdjustment(emptyAdjustment());
+      await fetchStockData();
+    } catch (cause) {
+      toast.error(cause.message);
+    } finally {
+      busyRef.current = false;
+      setSaving(false);
+    }
   };
 
-  const submitAdjustment = async (e) => {
-    e.preventDefault();
-    const adjustments = [];
+  const saveThresholds = async (event) => {
+    event.preventDefault();
+    if (busyRef.current) return;
+    const thresholds = { ...data.thresholds };
     for (const product of STOCK_PRODUCTS) {
-      const qty = parseFloat(adjustment.quantities[product.field]);
-      if (!isNaN(qty) && qty !== 0) {
-        adjustments.push({ product: product.field, quantity: qty });
-      }
+      const raw = thresholdDraft[product.field];
+      const value = String(raw ?? "").trim() === "" ? 0 : stockNumber(raw);
+      if (value === null || value < 0) return toast.error("Minimum stock must be zero or greater.");
+      thresholds[product.field] = value;
     }
-    if (adjustments.length === 0) {
-      return toast.error("Enter at least one non‑zero quantity");
-    }
-    setSubmitting(true);
+    busyRef.current = true;
+    setSaving(true);
     try {
-      for (const adj of adjustments) {
-        const res = await fetch("/api/stock/adjust", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            product: adj.product,
-            quantity: adj.quantity,
-            comment: adjustment.comment,
-          }),
-        });
-        if (!res.ok) throw new Error(await res.text());
-      }
-      toast.success("Stock adjusted successfully");
-      setAdjustment(INITIAL_ADJUSTMENT());
-      setShowAdjustment(false);
-      fetchStockData();
-    } catch (error) {
-      toast.error(error.message);
+      await readResponse(await fetch("/api/stock/thresholds", {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ thresholds }),
+      }));
+      setData((previous) => ({ ...previous, thresholds }));
+      setPanel(null);
+      toast.success("Minimum stock levels saved");
+    } catch (cause) {
+      toast.error(cause.message);
     } finally {
-      setSubmitting(false);
+      busyRef.current = false;
+      setSaving(false);
     }
   };
-
-  
-  const handleThresholdChange = (field, value) => {
-    setThresholds((prev) => ({ ...prev, [field]: parseFloat(value) || 0 }));
-  };
-
-  const saveThresholds = async () => {
-    setSavingThresholds(true);
-    try {
-      const res = await fetch("/api/stock/thresholds", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ thresholds }),
-      });
-      if (!res.ok) throw new Error("Failed to save thresholds");
-      toast.success("Minimum thresholds saved");
-      setShowThresholds(false);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setSavingThresholds(false);
-    }
-  };
-
- 
-  if (loading) {
-    return (
-      <div className={styles.page_container}>
-        <div className={styles.loading_container}>
-          <div className={styles.spinner}></div>
-          <span className={styles.loading_text}>Loading stock data...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={styles.page_container}>
       <ToastContainer position="top-right" autoClose={3000} />
-
-      {/* ====== Header ====== */}
       <div className={styles.header_content}>
-        <PageHeading title="Stock Management" section="INVENTORY" description="Monitor product balances, manage thresholds, and review stock movements." />
+        <PageHeading title="Stock Management" section="INVENTORY" description="See what is available, spot low stock, and keep every movement accounted for." />
         <div className={styles.headerActions}>
-          <button
-            onClick={() => {
-              if (showAdjustment) {
-                // Close the form
-                setShowAdjustment(false);
-              } else {
-                // Open the form and close thresholds
-                setShowAdjustment(true);
-                setShowThresholds(false);
-                // Scroll to adjustment form after state update
-                setTimeout(() => {
-                  adjustmentFormRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }, 100);
-              }
-            }}
-            className={styles.primary_btn}
-          >
-            <span className={styles.plusIcon}>
-              {showAdjustment ? "−" : "+"}
-            </span>
-            {showAdjustment ? "Close Adjustment" : "New Adjustment"}
-          </button>
-          <button
-            onClick={() => {
-              if (showThresholds) {
-                // Close the form
-                setShowThresholds(false);
-              } else {
-                // Open the form and close adjustment
-                setShowThresholds(true);
-                setShowAdjustment(false);
-                // Scroll to thresholds form after state update
-                setTimeout(() => {
-                  thresholdsFormRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }, 100);
-              }
-            }}
-            className={styles.primary_btn}
-          >
-            {showThresholds ? "Close Thresholds" : "Manage Thresholds"}
-          </button>
+          <button type="button" className={styles.secondary_btn} onClick={fetchStockData} disabled={loading || saving}>{loading ? "Refreshing…" : "Refresh"}</button>
+          <button type="button" className={styles.secondary_btn} onClick={() => panel === "thresholds" ? setPanel(null) : openThresholds()} disabled={!data || data.thresholds === null || loading || saving} aria-expanded={panel === "thresholds"} aria-controls="stock-editor">Minimum levels</button>
+          <button type="button" className={styles.primary_btn} onClick={() => panel === "adjustment" ? setPanel(null) : openAdjustment()} disabled={!data || loading || saving} aria-expanded={panel === "adjustment"} aria-controls="stock-editor">+ Adjust stock</button>
         </div>
       </div>
 
-      {/* ====== Available Stock Card ====== */}
-      <div className={styles.global_summary_card}>
-        <div className={styles.global_header}>
-          <h2 className={styles.global_title}>Available Stock</h2>
-        </div>
-        <div className={styles.global_stats_grid}>
-          {statCards.map((stat, index) => (
-            <div key={index} className={styles.stat_card}>
-              <div className={styles.stat_card_label}>{stat.label}</div>
-              <div className={styles.stat_card_value}>{stat.value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      {error && <div className={styles.errorBanner} role="alert"><span>{error}{data ? " Showing previously loaded data." : ""}</span><button type="button" onClick={fetchStockData} disabled={loading || saving}>Try again</button></div>}
+      {loading && !data ? <div className={styles.loadingState} role="status"><span className={styles.spinner} aria-hidden="true" /><p>Loading inventory…</p></div> : data && <>
+        {loading && <p className={styles.helper} role="status">Updating inventory…</p>}
+        {(data.thresholds === null || data.customers === null || data.ledger === null) && <div className={styles.notice} role="status">Some information could not be loaded: {[data.thresholds === null && "minimum levels", data.customers === null && "customer prices", data.ledger === null && "recent movements"].filter(Boolean).join(", ")}. Refresh to retry.</div>}
 
-      {/* ====== Average Supplier Price Card ====== */}
-      <div className={styles.global_summary_card}>
-        <div className={styles.global_header}>
-          <h2 className={styles.global_title}>Average Price</h2>
+        <div className={styles.summaryGrid}>
+          <div className={`${styles.summaryCard} ${styles.valueSummary}`}><span>Estimated selling value</span><strong>{stockMoney(totalValue)}</strong><small>{priced.length ? `${priced.length} of ${items.length} products priced` : "Customer prices not available"}</small></div>
+          <div className={styles.summaryCard}><span>Products in stock</span><strong>{items.filter((item) => item.quantity > 0).length}<small> / {items.length}</small></strong><small>Products with a positive balance</small></div>
+          <div className={styles.summaryCard}><span>Needs attention</span><strong className={attention.length ? styles.warningText : ""}>{attention.length}</strong><small>Low, empty, or negative balances</small></div>
         </div>
-        <div className={styles.global_stats_grid}>
-          {STOCK_PRODUCTS.map((product) => (
-            <div key={product.field} className={styles.stat_card}>
-              <div className={styles.stat_card_label}>{product.name}</div>
-              <div className={styles.stat_card_value}>
-                ₹{averagePrices[product.field]?.toFixed(1) || "0.00"}
+
+        {panel && <section ref={formRef} id="stock-editor" className={styles.panel} aria-labelledby="stock-editor-title">
+          <div className={styles.sectionHeading}><h2 id="stock-editor-title">{panel === "adjustment" ? "Adjust a product" : "Minimum stock levels"}</h2><button type="button" className={styles.textButton} onClick={() => setPanel(null)} disabled={saving}>Cancel</button></div>
+          {panel === "adjustment" ? <form onSubmit={submitAdjustment}>
+            <p className={styles.helper}>Record a correction, opening balance, or stock loss. Add one product at a time.</p>
+            <fieldset className={styles.formFields} disabled={saving}>
+              <div className={styles.formGrid}>
+                <div className={styles.inputGroup}><label htmlFor="adjust-product">Product</label><select id="adjust-product" value={adjustment.product} onChange={(event) => setAdjustment((previous) => ({ ...previous, product: event.target.value }))}>{STOCK_PRODUCTS.map((item) => <option key={item.field} value={item.field}>{item.name} ({item.unit})</option>)}</select></div>
+                <div className={styles.inputGroup}><label htmlFor="adjust-direction">Action</label><select id="adjust-direction" value={adjustment.direction} onChange={(event) => setAdjustment((previous) => ({ ...previous, direction: event.target.value }))}><option value="add">Add to stock</option><option value="remove">Remove from stock</option></select></div>
+                <div className={styles.inputGroup}><label htmlFor="adjust-quantity">Quantity ({selected.unit})</label><input id="adjust-quantity" type="number" min="0.01" step="0.01" required value={adjustment.quantity} onChange={(event) => setAdjustment((previous) => ({ ...previous, quantity: event.target.value }))} placeholder="0.00" /></div>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
+              <div className={styles.inputGroup}><label htmlFor="adjust-reason">Reason (optional)</label><input id="adjust-reason" value={adjustment.comment} onChange={(event) => setAdjustment((previous) => ({ ...previous, comment: event.target.value }))} placeholder="For example, damaged stock or opening balance" maxLength={500} /></div>
+              <div className={styles.adjustmentPreview} aria-live="polite"><span>Current <strong>{stockQuantity(selected.quantity)} {selected.unit}</strong></span><span aria-hidden="true">→</span><span>After adjustment <strong className={nextQuantity < 0 ? styles.warningText : ""}>{stockQuantity(nextQuantity)} {selected.unit}</strong></span></div>
+              {nextQuantity < 0 && <p className={styles.warningText}>This adjustment would leave a negative balance. Check the quantity before saving.</p>}
+              <div className={styles.formActions}><button type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save adjustment"}</button></div>
+            </fieldset>
+          </form> : <form onSubmit={saveThresholds}>
+            <p className={styles.helper}>Products below these levels are marked as low stock. Use zero or leave blank to unset a minimum.</p>
+            <fieldset className={styles.formFields} disabled={saving}>
+              <div className={styles.thresholdGrid}>{STOCK_PRODUCTS.map((item) => <div key={item.field} className={styles.inputGroup}><label htmlFor={`minimum-${item.field}`}>{item.name} ({item.unit})</label><input id={`minimum-${item.field}`} type="number" min="0" step="0.01" value={thresholdDraft[item.field] ?? ""} onChange={(event) => setThresholdDraft((previous) => ({ ...previous, [item.field]: event.target.value }))} placeholder="Not set" /></div>)}</div>
+              <div className={styles.formActions}><button type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save minimum levels"}</button></div>
+            </fieldset>
+          </form>}
+        </section>}
 
-      {/* ====== Adjustment Form (collapsible) ====== */}
-      {showAdjustment && (
-        <form
-          ref={adjustmentFormRef}
-          onSubmit={submitAdjustment}
-          className={styles.filter_section}
-        >
-          <div className={styles.filter_title}>
-            <h2>Manual Stock Adjustment</h2>
-          </div>
-          <div className={styles.formGrid}>
-            {STOCK_PRODUCTS.map((product) => (
-              <div key={product.field} className={styles.inputGroup}>
-                <label>
-                  {product.name} ({product.unit})
-                </label>
-                <input
-                  type="number"
-                  value={adjustment.quantities[product.field]}
-                  onChange={(e) =>
-                    handleAdjustmentChange(product.field, e.target.value)
-                  }
-                  className={styles.input}
-                  placeholder="0.00"
-                  step="1"
-                />
-              </div>
-            ))}
-            <div className={styles.inputGroup} style={{ gridColumn: "1 / -1" }}>
-              <label>Comment (applies to all adjustments)</label>
-              <input
-                type="text"
-                value={adjustment.comment}
-                onChange={(e) => handleAdjustmentCommentChange(e.target.value)}
-                className={styles.input}
-                placeholder="Reason for adjustment"
-              />
-            </div>
-          </div>
-          <div className={styles.filter_actions}>
-            <button
-              type="submit"
-              disabled={submitting}
-              className={styles.primary_btn}
-            >
-              {submitting ? "Processing..." : "Adjust Stock"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setAdjustment(INITIAL_ADJUSTMENT())}
-              className={styles.secondary_btn}
-            >
-              Reset
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAdjustment(false)}
-              className={styles.clear_filter_link}
-            >
-              Close
-            </button>
-          </div>
-        </form>
-      )}
+        <section aria-labelledby="inventory-title" className={styles.inventorySection}>
+          <div className={styles.sectionHeading}><h2 id="inventory-title">Product inventory</h2><div className={styles.segmented} role="group" aria-label="Inventory filter"><button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All products</button><button type="button" aria-pressed={filter === "attention"} onClick={() => setFilter("attention")}>Needs attention ({attention.length})</button></div></div>
+          <div className={styles.productGrid}>{items.filter((item) => filter === "all" || item.needsAttention).map((item) => <article key={item.field} className={`${styles.productCard} ${item.needsAttention ? styles.attentionCard : ""}`} aria-label={`${item.name} inventory`}>
+            <div className={styles.productHeading}><h3>{item.name}</h3><span className={`${styles.badge} ${item.needsAttention ? styles.warningBadge : item.status === "Healthy" ? styles.healthyBadge : ""}`}>{item.status}</span></div>
+            <div className={styles.productQuantity}>{stockQuantity(item.quantity)} <span>{item.unit}</span></div>
+            <p className={styles.minimum}>{item.minimum === null ? "Minimum unavailable" : item.minimum > 0 ? `Minimum ${stockQuantity(item.minimum)} ${item.unit}` : "No minimum set"}</p>
+            <dl className={styles.productDetails}><div><dt>Avg. selling price / {item.unit}</dt><dd>{item.averagePrice === null ? "Not priced" : stockMoney(item.averagePrice)}</dd></div><div><dt>Estimated value</dt><dd>{stockMoney(item.estimatedValue)}</dd></div></dl>
+            <button type="button" className={styles.textButton} onClick={() => openAdjustment(item.field)} disabled={saving || loading} aria-label={`Adjust ${item.name}`}>Adjust stock <span aria-hidden="true">↗</span></button>
+          </article>)}</div>
+          {filter === "attention" && !attention.length && <div className={styles.emptyState}>No products need attention.</div>}
+        </section>
 
-      {/* ====== Threshold Form (collapsible) ====== */}
-      {showThresholds && (
-        <form
-          // ref={thresholdsFormRef}
-          onSubmit={(e) => e.preventDefault()}
-          className={styles.filter_section}
-        >
-          <div className={styles.filter_title} ref={thresholdsFormRef}>
-            <h2>Minimum Stock Thresholds</h2>
-          </div>
-          <div className={styles.formGrid}>
-            {STOCK_PRODUCTS.map((product) => (
-              <div key={product.field} className={styles.inputGroup}>
-                <label>
-                  {product.name} ({product.unit})
-                </label>
-                <input
-                  type="number"
-                  value={thresholds[product.field] || ""}
-                  onChange={(e) =>
-                    handleThresholdChange(product.field, e.target.value)
-                  }
-                  className={styles.input}
-                  placeholder="Min"
-                  min="0"
-                  step="1"
-                />
-              </div>
-            ))}
-          </div>
-          <div className={styles.filter_actions}>
-            <button
-              type="button"
-              onClick={saveThresholds}
-              disabled={savingThresholds}
-              className={styles.primary_btn}
-            >
-              {savingThresholds ? "Saving..." : "Save Thresholds"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowThresholds(false)}
-              className={styles.clear_filter_link}
-            >
-              Close
-            </button>
-          </div>
-        </form>
-      )}
+        <StockCharts items={items} />
 
-      {/* ====== Stock Valuation Charts ====== */}
-      <div className={styles.tableContainer}>
-        <div className={styles.global_summary_card}>
-          <div className={styles.global_header}>
-            <h2 className={styles.global_title}>Stock Valuation</h2>
-          </div>
-          <div className={styles.table_wrapper}>
-            <table className={styles.procurement_table}>
-              <thead>
-                <tr className={styles.table_head_row}>
-                  <th className={styles.table_header_cell}>Product</th>
-                  <th className={styles.table_header_cell}>Min Stock</th>
-                  <th className={styles.table_header_cell}>In Stock</th>
-                  <th className={styles.table_header_cell}>Stock Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {STOCK_PRODUCTS.map((product) => {
-                  const qty = balance ? balance[product.field] || 0 : 0;
-                  const threshold = thresholds[product.field] || 0;
-                  const avgPrice = averagePrices[product.field] || 0;
-                  const value = qty * avgPrice;
-                  const isLow = threshold > 0 && qty < threshold;
-                  return (
-                    <tr key={product.field} className={styles.table_row}>
-                      <td className={styles.table_cell}>{product.name}</td>
-                      <td className={styles.table_cell}>{threshold || "-"}</td>
-                      <td
-                        className={`${styles.table_cell} ${isLow ? styles.text_red : ""}`}
-                      >
-                        <span className={styles.quantityDisplay}>
-                          {qty.toFixed(2)} {product.unit}
-                        </span>
-                      </td>
-                      <td
-                        className={`${styles.table_cell} ${styles.cell_total}`}
-                      >
-                        ₹{formatNumberWithCommasNoDecimal(value.toFixed(2))}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className={styles.table_row}>
-                  <td
-                    className={styles.table_cell}
-                    colSpan={3}
-                    style={{ textAlign: "right", fontWeight: 600 }}
-                  >
-                    Total Stock Value
-                  </td>
-                  <td className={`${styles.table_cell} ${styles.cell_total}`}>
-                    ₹
-                    {formatNumberWithCommasNoDecimal(
-                      totalStockValue.toFixed(2),
-                    )}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
-
-        <div className={styles.global_summary_card}>
-          <div className={styles.global_header}>
-            <h2 className={styles.global_title}>Stock Analytics</h2>
-          </div>
-
-          <div className={styles.charts_container}>
-            <div className={styles.charts_grid}>
-              <div className={styles.chart_card}>
-                <h3>Stock Value Distribution</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={STOCK_PRODUCTS.map((product) => ({
-                        name: product.name,
-                        value: balance
-                          ? (balance[product.field] || 0) *
-                            (averagePrices[product.field] || 0)
-                          : 0,
-                      })).filter((item) => item.value > 0)}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {STOCK_PRODUCTS.map((_, index) => {
-                        const COLORS = [
-                          "#27795d",
-                          "#34a853",
-                          "#fbbc04",
-                          "#ea4335",
-                          "#4285f4",
-                          "#9c27b0",
-                        ];
-                        return (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        );
-                      })}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) =>
-                        `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`
-                      }
-                      contentStyle={{
-                        background: "white",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "0.5rem",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className={styles.chart_card}>
-                <h3>Stock Quantity Distribution</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={STOCK_PRODUCTS.map((product) => ({
-                        name: product.name,
-                        value: balance ? balance[product.field] || 0 : 0,
-                      })).filter((item) => item.value > 0)}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) =>
-                        `${name}: ${(percent * 100).toFixed(0)}%`
-                      }
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {STOCK_PRODUCTS.map((_, index) => {
-                        const COLORS = [
-                          "#1e40af",
-                          "#7c3aed",
-                          "#db2777",
-                          "#ea580c",
-                          "#65a30d",
-                          "#0891b2",
-                        ];
-                        return (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        );
-                      })}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => `${value.toFixed(2)}`}
-                      contentStyle={{
-                        background: "white",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "0.5rem",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            <div className={styles.full_width_chart}>
-              <h3>Stock Value by Product</h3>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart
-                  data={STOCK_PRODUCTS.map((product) => ({
-                    name: product.name,
-                    quantity: balance ? balance[product.field] || 0 : 0,
-                    value: balance
-                      ? (balance[product.field] || 0) *
-                        (averagePrices[product.field] || 0)
-                      : 0,
-                    avgPrice: averagePrices[product.field] || 0,
-                  }))}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                    tick={{ fontSize: 12, fill: "#64748b" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "#64748b" }}
-                    label={{
-                      value: "Value (₹)",
-                      angle: -90,
-                      position: "insideLeft",
-                      style: { fontSize: 12, fill: "#64748b" },
-                    }}
-                  />
-                  <Tooltip
-                    formatter={(value, name) => {
-                      if (name === "value")
-                        return [
-                          `₹${formatNumberWithCommasNoDecimal(value.toFixed(2))}`,
-                          "Stock Value",
-                        ];
-                      if (name === "quantity")
-                        return [value.toFixed(2), "Quantity"];
-                      if (name === "avgPrice")
-                        return [`₹${value.toFixed(2)}`, "Avg Price"];
-                      return value;
-                    }}
-                    contentStyle={{
-                      background: "white",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "0.5rem",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ paddingTop: "20px" }}
-                    iconType="circle"
-                  />
-                  <Bar
-                    dataKey="value"
-                    fill="rgb(39, 121, 93)"
-                    radius={[8, 8, 0, 0]}
-                    name="Stock Value (₹)"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className={styles.full_width_chart}>
-              <h3>Current Stock vs Minimum Threshold</h3>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart
-                  data={STOCK_PRODUCTS.map((product) => {
-                    const qty = balance ? balance[product.field] || 0 : 0;
-                    const threshold = thresholds[product.field] || 0;
-                    return {
-                      name: product.name,
-                      current: qty,
-                      threshold: threshold,
-                      status: threshold > 0 && qty < threshold ? "Low" : "OK",
-                    };
-                  })}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="name"
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                    tick={{ fontSize: 12, fill: "#64748b" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "#64748b" }}
-                    label={{
-                      value: "Quantity",
-                      angle: -90,
-                      position: "insideLeft",
-                      style: { fontSize: 12, fill: "#64748b" },
-                    }}
-                  />
-                  <Tooltip
-                    formatter={(value) => value.toFixed(2)}
-                    contentStyle={{
-                      background: "white",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "0.5rem",
-                    }}
-                  />
-                  <Legend
-                    wrapperStyle={{ paddingTop: "20px" }}
-                    iconType="circle"
-                  />
-                  <Bar
-                    dataKey="current"
-                    fill="#10b981"
-                    radius={[8, 8, 0, 0]}
-                    name="Current Stock"
-                  />
-                  <Bar
-                    dataKey="threshold"
-                    fill="#f59e0b"
-                    radius={[8, 8, 0, 0]}
-                    name="Minimum Threshold"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ====== Recent Movements (Last 30) ====== */}
-      <div className={styles.global_summary_card} style={{ marginTop: "2rem" }}>
-        <div className={styles.global_header}>
-          <h2 className={styles.global_title}>
-            Recent Stock Movements (Last {ledger.length})
-          </h2>
-        </div>
-        <div className={styles.table_wrapper}>
-          {ledger.length > 0 ? (
-            <table className={styles.procurement_table}>
-              <thead>
-                <tr className={styles.table_head_row}>
-                  <th className={styles.table_header_cell}>Date</th>
-                  <th className={styles.table_header_cell}>Product</th>
-                  <th className={styles.table_header_cell}>Type</th>
-                  <th className={styles.table_header_cell}>Quantity</th>
-                  {/* <th className={styles.table_header_cell}>Batch / Ref</th> */}
-                  <th className={styles.table_header_cell}>Comment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledger.map((entry) => (
-                  <tr key={entry._id} className={styles.table_row}>
-                    <td className={styles.table_cell}>
-                      {new Date(
-                        entry.date || entry.createdAt,
-                      ).toLocaleDateString("en-IN")}
-                    </td>
-                    <td className={styles.table_cell}>{entry.product}</td>
-                    <td className={styles.table_cell}>{entry.type}</td>
-                    <td
-                      className={`${styles.table_cell} ${
-                        entry.quantity > 0 ? styles.text_green : styles.text_red
-                      }`}
-                    >
-                      {entry.quantity > 0 ? "+" : ""}
-                      {entry.quantity?.toFixed(2)}
-                    </td>
-                    {/* <td className={styles.table_cell}>
-                      {entry.batch ||
-                        (entry.referenceId &&
-                          entry.referenceId.toString()) ||
-                        "-"}
-                    </td> */}
-                    <td className={styles.table_cell}>
-                      {entry.comment || "-"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className={styles.empty_state}>
-              <p>No recent stock movements found.</p>
-            </div>
-          )}
-        </div>
-      </div>
+        <section className={styles.panel} aria-labelledby="movement-title">
+          <div className={styles.sectionHeading}><h2 id="movement-title">Recent movements</h2><span className={styles.helper}>Latest {data.ledger?.length ?? 0} entries</span></div>
+          {data.ledger === null ? <p className={styles.emptyState}>Recent movements could not be loaded. Refresh to retry.</p> : data.ledger.length === 0 ? <p className={styles.emptyState}>No stock movements yet. New production, orders, and adjustments will appear here.</p> : <div className={styles.tableWrapper}><table className={styles.movementTable}><thead><tr><th scope="col">Date</th><th scope="col">Product</th><th scope="col">Movement</th><th scope="col">Quantity</th><th scope="col">Reason</th></tr></thead><tbody>{data.ledger.map((entry, index) => {
+            const quantity = stockNumber(entry.quantity);
+            const rawDate = entry.date || entry.createdAt;
+            const date = rawDate ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? `${rawDate}T00:00:00` : rawDate) : null;
+            return <tr key={entry._id || index}><td>{date && Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td><td>{PRODUCT_NAMES[entry.product] || entry.product}</td><td><span className={styles.movementType}>{MOVEMENT_NAMES[entry.type] || entry.type}</span></td><td className={quantity < 0 ? styles.warningText : styles.positiveText}>{quantity > 0 ? "+" : ""}{stockQuantity(quantity)} {PRODUCT_UNITS[entry.product] || ""}</td><td className={styles.reasonCell}>{entry.comment || "—"}</td></tr>;
+          })}</tbody></table></div>}
+        </section>
+      </>}
     </div>
   );
 }

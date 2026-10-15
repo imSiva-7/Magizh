@@ -17,6 +17,7 @@ import {
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
+import { getProcurementSummary } from "@/utils/procurementSummary";
 import Link from "next/link";
 
 const INITIAL_FILTERS = {
@@ -98,15 +99,19 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
 // ========== FORM SUBCOMPONENTS ==========
 const FormInput = ({ label, error, required, readOnly, ...props }) => (
   <div className={styles.form_input_group}>
-    <label className={styles.form_label}>
+    <label htmlFor={`history-entry-${props.name}`} className={styles.form_label}>
       {label}
-      {required && <span className={styles.required_asterisk}>*</span>}
+      {required && <span aria-hidden="true" className={styles.required_asterisk}>*</span>}
     </label>
     <input
       className={`${styles.form_input} ${error ? styles.input_error : ""} ${
         readOnly ? styles.readonly_input : ""
       }`}
       autoComplete="off"
+      id={`history-entry-${props.name}`}
+      aria-label={label}
+      aria-required={Boolean(required)}
+      aria-invalid={Boolean(error)}
       readOnly={readOnly}
       {...props}
     />
@@ -120,11 +125,13 @@ function ProcurementHistoryContent() {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [procurementData, setProcurementData] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   // ---------- Add Procurement state ----------
   const [showAddForm, setShowAddForm] = useState(false);
   const [suppliers, setSuppliers] = useState([]);
   const [suppliersLoading, setSuppliersLoading] = useState(false);
+  const [suppliersFetched, setSuppliersFetched] = useState(false);
   const [supplierSearch, setSupplierSearch] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [formData, setFormData] = useState(makeInitialForm);
@@ -149,6 +156,7 @@ function ProcurementHistoryContent() {
 
     try {
       setLoading(true);
+      setLoadError("");
       const queryParams = new URLSearchParams();
       if (filters.startDate) queryParams.append("startDate", filters.startDate);
       if (filters.endDate) queryParams.append("endDate", filters.endDate);
@@ -177,6 +185,7 @@ function ProcurementHistoryContent() {
     } catch (error) {
       console.error("Load error:", error);
       toast.error(error.message || "Failed to load procurement history");
+      setLoadError(error.message || "Failed to load procurement history");
       setProcurementData([]);
     } finally {
       setLoading(false);
@@ -200,15 +209,16 @@ function ProcurementHistoryContent() {
       setSuppliers([]);
     } finally {
       setSuppliersLoading(false);
+      setSuppliersFetched(true);
     }
   }, []);
 
   // Load suppliers the first time the form is opened
   useEffect(() => {
-    if (showAddForm && suppliers.length === 0 && !suppliersLoading) {
+    if (showAddForm && !suppliersFetched && !suppliersLoading) {
       fetchSuppliers();
     }
-  }, [showAddForm, suppliers.length, suppliersLoading, fetchSuppliers]);
+  }, [showAddForm, suppliersFetched, suppliersLoading, fetchSuppliers]);
 
   // Focus the search input when form opens
   useEffect(() => {
@@ -223,10 +233,8 @@ function ProcurementHistoryContent() {
     const term = supplierSearchDebounced.toLowerCase().trim();
     return suppliers
       .filter((s) => {
-        const name = (s.supplierName || "").toLowerCase();
-        return (
-          name.includes(term)
-        );
+        return [s.supplierName, s.supplierType, s.supplierPhone, s.supplierPhoneNumber, s.supplierContact]
+          .some((value) => String(value || "").toLowerCase().includes(term));
       }).slice(0, 8);
      
   }, [suppliers, supplierSearchDebounced]);
@@ -455,51 +463,7 @@ function ProcurementHistoryContent() {
     });
   }, [procurementData]);
 
-  const summary = useMemo(() => {
-    if (procurementData.length === 0) {
-      return {
-        milk: 0,
-        amount: 0,
-        count: 0,
-        avgRate: "0.00",
-        avgFat: "0.0",
-        avgSnf: "0.0",
-        daysWithData: 0,
-      };
-    }
-
-    const uniqueDates = new Set();
-    let totalMilk = 0,
-      totalAmount = 0,
-      totalFat = 0,
-      totalSnf = 0;
-
-    procurementData.forEach((record) => {
-      const milkQty = parseFloat(record.milkQuantity) || 0;
-      const amount = parseFloat(record.totalAmount) || 0;
-      const fat = parseFloat(record.fatPercentage) || 0;
-      const snf = parseFloat(record.snfPercentage) || 0;
-      const date = record.date?.split("T")[0];
-
-      if (date) uniqueDates.add(date);
-
-      totalMilk += milkQty;
-      totalAmount += amount;
-      totalFat += fat;
-      totalSnf += snf;
-    });
-
-    const count = procurementData.length;
-    return {
-      milk: totalMilk,
-      amount: totalAmount,
-      count,
-      avgRate: totalMilk > 0 ? (totalAmount / totalMilk).toFixed(2) : "0.00",
-      avgFat: count > 0 ? (totalFat / count).toFixed(1) : "0.0",
-      avgSnf: count > 0 ? (totalSnf / count).toFixed(1) : "0.0",
-      daysWithData: uniqueDates.size,
-    };
-  }, [procurementData]);
+  const summary = useMemo(() => getProcurementSummary(procurementData), [procurementData]);
 
   const handleExport = (format) => {
     if (!procurementData.length) {
@@ -585,8 +549,9 @@ function ProcurementHistoryContent() {
           {/* Step 1 — supplier search */}
           {!selectedSupplier && (
             <div className={styles.supplier_picker}>
-              <label className={styles.form_label}>Search Supplier</label>
+              <label htmlFor="history-supplier-search" className={styles.form_label}>Search Supplier</label>
               <input
+                id="history-supplier-search"
                 ref={searchInputRef}
                 type="text"
                 className={styles.supplier_search_input}
@@ -611,6 +576,9 @@ function ProcurementHistoryContent() {
                       key={s._id}
                       className={styles.supplier_result_item}
                       onClick={() => handlePickSupplier(s)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handlePickSupplier(s); } }}
                     >
                       <div className={styles.supplier_result_main}>
                         <span className={styles.supplier_result_name}>
@@ -687,11 +655,12 @@ function ProcurementHistoryContent() {
                   />
 
                   <div className={styles.form_input_group}>
-                    <label className={styles.form_label}>
+                    <label htmlFor="history-entry-time" className={styles.form_label}>
                       Time Period
-                      <span className={styles.required_asterisk}>*</span>
+                      <span aria-hidden="true" className={styles.required_asterisk}>*</span>
                     </label>
                     <select
+                      id="history-entry-time"
                       name="time"
                       value={formData.time}
                       onChange={handleFormInputChange}
@@ -706,6 +675,7 @@ function ProcurementHistoryContent() {
                     label="Milk Quantity (L)"
                     name="milkQuantity"
                     type="number"
+                    step="0.01"
                     inputMode="decimal"
                     placeholder="20.5"
                     value={formData.milkQuantity}
@@ -718,6 +688,7 @@ function ProcurementHistoryContent() {
                     label="Fat %"
                     name="fatPercentage"
                     type="number"
+                    step="0.1"
                     inputMode="decimal"
                     placeholder="3.5"
                     value={formData.fatPercentage}
@@ -730,6 +701,7 @@ function ProcurementHistoryContent() {
                     label="SNF %"
                     name="snfPercentage"
                     type="number"
+                    step="0.1"
                     inputMode="decimal"
                     placeholder="8.5"
                     value={formData.snfPercentage}
@@ -750,6 +722,7 @@ function ProcurementHistoryContent() {
 
                   <FormInput
                     label="Rate per Liter (₹)"
+                    name="rate"
                     value={
                       currentPricing.rate
                         ? formatNumberWithCommas(currentPricing.rate)
@@ -762,6 +735,7 @@ function ProcurementHistoryContent() {
 
                   <FormInput
                     label="Total Amount (₹)"
+                    name="totalAmount"
                     value={
                       currentPricing.totalAmount
                         ? formatNumberWithCommas(currentPricing.totalAmount)
@@ -885,21 +859,19 @@ function ProcurementHistoryContent() {
             </h3>
             <div className={styles.stats_grid}>
               <StatItem
-                label={"Avg Milk"}
-                value={(summary.milk / (summary.daysWithData || 1)).toFixed(2)}
-                unit={"L"}
+                label="Avg Milk / Day"
+                value={summary.avgMilkDaily}
+                unit="L/day"
               />
               <StatItem
-                label="Avg Fat/SNF"
+                label="Weighted Fat/SNF"
                 value={`${summary.avgFat} / ${summary.avgSnf}`}
                 unit="%"
               />
               <StatItem
                 label="Daily Avg Amount"
-                value={formatNumberWithCommasNoDecimal(
-                  summary.amount / (summary.daysWithData || 1),
-                )}
-                unit="/L"
+                value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
+                unit="/day"
                 prefix="₹"
               />
               <StatItem
@@ -950,8 +922,9 @@ function ProcurementHistoryContent() {
       )}
 
       {/* TABLE */}
+      {loadError && <div className={styles.error_alert} role="alert"><span>{loadError}</span><button type="button" onClick={fetchAllData} className={styles.clear_filter_btn}>Try again</button></div>}
       <div className={styles.table_wrapper}>
-        {!loading && summary.count === 0 ? (
+        {!loading && !loadError && summary.count === 0 ? (
           <div className={styles.empty_state}>
             <span className={styles.empty_icon}>🔍</span>
             <h3 className={styles.empty_title}>No Records Found</h3>
