@@ -2,12 +2,16 @@
 const nextConfig = {
   reactStrictMode: false,
   
-  // Intercept ZKTeco hardware requests and route them to your API folder
+  // Keep legacy device URLs pointed at the actual hardware route.
   async rewrites() {
     return [
       {
-        source: '/iclock/:path*',
-        destination: '/api/attendance/iclock/:path*',
+        source: '/api/attendance/iclock/cdata',
+        destination: '/iclock/cdata',
+      },
+      {
+        source: '/iclock/cdata.aspx',
+        destination: '/iclock/cdata',
       },
     ];
   },

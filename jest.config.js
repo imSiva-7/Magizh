@@ -1,4 +1,6 @@
-module.exports = {
+const createJestConfig = require('next/jest')({ dir: './' });
+
+module.exports = createJestConfig({
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -9,4 +11,4 @@ module.exports = {
     '!src/**/*.test.{js,jsx}',
     '!src/**/node_modules/**',
   ],
-};
+});

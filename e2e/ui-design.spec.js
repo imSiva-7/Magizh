@@ -2,6 +2,32 @@ import { test, expect } from "@playwright/test";
 import { loadEnvConfig } from "@next/env";
 import { encode } from "next-auth/jwt";
 
+test("desktop dropdown closes after a click, pointer exit, and Escape", async ({ page }) => {
+  await page.route("**/api/auth/session", (route) => route.fulfill({ json: {} }));
+  await page.goto("/login");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const production = nav.getByRole("link", { name: "Productions", exact: true });
+  const history = nav.getByRole("link", { name: "Production History", exact: true });
+  await production.hover();
+  await expect(history).toBeVisible();
+  await page.mouse.move(0, 200);
+  await expect(history).toBeHidden();
+  await production.focus();
+  await page.keyboard.press("Tab");
+  await expect(history).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(history).toBeHidden();
+  await expect(production).toBeFocused();
+  await production.hover();
+  await history.click();
+  await expect(history).toBeHidden();
+  await page.mouse.move(0, 200);
+  await production.hover();
+  await expect(history).toBeVisible();
+  await production.click();
+  await expect(history).toBeHidden();
+});
+
 test("workspace navigation supports keyboard and mobile focus", async ({ page }) => {
   await page.route("**/api/auth/session", (route) => route.fulfill({ json: {} }));
   await page.goto("/login");

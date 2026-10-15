@@ -70,6 +70,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
@@ -152,7 +153,23 @@ export default function Header() {
         <nav className={styles.desktopNav} aria-label="Main navigation">
           <ul className={styles.navList}>
             {desktopNavItems.map((item) => (
-              <li key={item.path} className={styles.navItem}>
+              <li
+                key={item.path}
+                className={`${styles.navItem} ${openDropdown === item.path ? styles.dropdownOpen : ""}`}
+                onMouseEnter={() => setOpenDropdown(item.path)}
+                onMouseLeave={() => setOpenDropdown(null)}
+                onFocusCapture={() => setOpenDropdown(item.path)}
+                onBlurCapture={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) setOpenDropdown(null);
+                }}
+                onClick={() => setOpenDropdown(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.currentTarget.querySelector("a")?.focus();
+                    setOpenDropdown(null);
+                  }
+                }}
+              >
                 <Link
                   href={item.path}
                   className={`${styles.navButton} ${(item.path === "/" ? pathname === "/" : pathname.startsWith(item.path)) ? styles.active : ""

@@ -11,7 +11,7 @@
 .navButton:hover { background: var(--surface-muted); color: var(--brand-dark); }
 .navButton.active { background: var(--brand-soft); color: var(--brand); }
 .dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 235px; padding: 0.5rem; margin: 0; border: 1px solid var(--border); border-radius: 0.85rem; background: #fff; box-shadow: var(--shadow-raised); list-style: none; }
-.navItem:hover .dropdown, .navItem:focus-within .dropdown { display: block; }
+.dropdownOpen .dropdown { display: block; }
 .dropdownItem { display: block; padding: 0.7rem 0.6rem; font-size: 0.85rem; color: var(--text-secondary); text-decoration: none; border-radius: 0.5rem; }
 .dropdownItem:hover { background: var(--brand-soft); color: var(--brand); }
 .arrow { color: var(--text-muted); margin-right: 0.3rem; }
