@@ -2,21 +2,8 @@
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect } from "react";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
-} from "recharts";
+import CustomerCharts from "@/components/CustomerCharts";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
@@ -45,25 +32,30 @@ export default function CustomerAnalyticsPage() {
     payment: [],
     overall: {}
   });
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchData() {
       setLoading(true);
+      setError("");
       try {
         const params = new URLSearchParams(dateRange);
-        const res = await fetch(`/api/analytics/customers?${params}`);
+        const res = await fetch(`/api/analytics/customers?${params}`, { signal: controller.signal, cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch");
         const json = await res.json();
-        setData(json);
+        if (!controller.signal.aborted) setData(json);
       } catch (error) {
-        console.error(error);
+        if (!controller.signal.aborted) setError("Customer analytics could not be loaded.");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     fetchData();
-  }, [dateRange]);
+    return () => controller.abort();
+  }, [dateRange, reload]);
 
   const handleDateChange = (e) => {
     setDateRange(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -126,7 +118,9 @@ export default function CustomerAnalyticsPage() {
         </div>
       </div>
 
-      {loading ? (
+      <CustomerCharts daily={data.daily} filters={dateRange} loading={loading} error={error} onRetry={() => setReload(value => value + 1)} />
+
+      {error ? null : loading ? (
         <div className={styles.loading_container}>
           <div className={styles.spinner}></div>
           <span className={styles.loading_text}>Loading analytics...</span>
@@ -176,39 +170,6 @@ export default function CustomerAnalyticsPage() {
               </div>
             </div>
           )}
-
-          {/* Daily Orders Line Chart */}
-          <div className={styles.chart_card}>
-            <h3>Daily Orders</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="orders" stroke="#8884d8" name="Orders" />
-                <Line type="monotone" dataKey="items" stroke="#82ca9d" name="Items" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Daily Revenue Bar Chart */}
-          <div className={styles.chart_card}>
-            <h3>Daily Revenue</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="amount" fill="#8884d8" name="Amount (₹)" />
-                <Bar dataKey="paid" fill="#82ca9d" name="Paid (₹)" />
-                <Bar dataKey="due" fill="#ff8042" name="Due (₹)" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
 
           {/* Product Breakdown Pie Chart */}
           {data.products.length > 0 && (

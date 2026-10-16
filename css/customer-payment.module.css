@@ -1184,6 +1184,23 @@
 }
 
 /* ========== PAYMENT LEDGER MODAL ========== */
+.modal_content_large.payment_dialog {
+  display: block;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.payment_dialog .ledger_table_wrapper {
+  overflow-x: auto;
+}
+.payment_form { display: grid; gap: 1rem; }
+.payment_form label { display: grid; gap: .4rem; font-weight: 600; }
+.payment_form input, .payment_form select { width: 100%; padding: .7rem; border: 1px solid var(--border); border-radius: .5rem; font: inherit; background: white; color: var(--text); }
+.balance_preview { background: var(--brand-soft); padding: 1rem; border-radius: .5rem; }
+.account_hint { color: var(--text-secondary); margin: 0 0 1rem; line-height: 1.6; }
 .modal_content_large {
   background: white;
   padding: 2rem;

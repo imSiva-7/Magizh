@@ -1,4 +1,5 @@
 "use client";
+import SupplierCharts from "@/components/SupplierCharts";
 
 import {
   useState,
@@ -151,6 +152,8 @@ function ProcurementHistoryContent() {
     const error = validateDateRange(filters.startDate, filters.endDate);
     if (error) {
       toast.error(error);
+      setLoadError(error);
+      setLoading(false);
       return;
     }
 
@@ -844,6 +847,8 @@ function ProcurementHistoryContent() {
       </form>
 
       {/* SUMMARY */}
+      <SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} />
+
       {loading ? (
         <div className={styles.loadingSection}>
           <LoadingSpinner />

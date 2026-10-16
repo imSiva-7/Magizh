@@ -22,6 +22,7 @@ async function mockData(page, { fail = false } = {}) {
     if (url.pathname === "/api/auth/session") return route.fulfill({ json: { user: { role: "admin", name: "Chart preview" }, expires: "2099-01-01" } });
     if (url.pathname === "/api/supplier") return route.fulfill({ json: url.searchParams.has("supplierId") ? supplier : [supplier] });
     if (url.pathname === "/api/supplier/procurement") return route.fulfill({ json: records });
+    if (url.pathname === "/api/supplier/procurement/history") return route.fulfill({ json: records });
     if (url.pathname === "/api/analytics/procurements") {
       requests.push(url.searchParams);
       if (fail && requests.length === 1) return route.fulfill({ status: 503, json: { error: "Unavailable" } });
@@ -33,7 +34,7 @@ async function mockData(page, { fail = false } = {}) {
   return requests;
 }
 
-for (const [path, name] of [["/supplier/analytics", "analytics"], ["/supplier", "directory"], ["/supplier/procurement?supplierId=chart-supplier", "supplier-detail"]]) {
+for (const [path, name] of [["/supplier/analytics", "analytics"], ["/supplier", "directory"], ["/supplier/procurement?supplierId=chart-supplier", "supplier-detail"], ["/supplier/procurement/history", "history"]]) {
   test(`${name} charts match dashboard, show weighted quality, and fit mobile`, async ({ page }) => {
     await mockData(page); await page.goto(path);
     const trend = page.getByRole("region", { name: "Milk collections", exact: true });

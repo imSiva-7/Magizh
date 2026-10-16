@@ -41,7 +41,7 @@ export async function GET(request) {
                   $sum: { $cond: [{ $eq: ["$paymentStatus", "Paid"] }, "$totalAmount", 0] }
                 },
                 dueAmount: {
-                  $sum: { $cond: [{ $eq: ["$paymentStatus", "Not Paid"] }, "$totalAmount", 0] }
+                  $sum: { $cond: [{ $ne: ["$paymentStatus", "Paid"] }, "$totalAmount", 0] }
                 }
               }
             }

@@ -1,4 +1,6 @@
 "use client";
+import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
+import CustomerCharts from "@/components/CustomerCharts";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -105,193 +107,6 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
   </div>
 );
 
-const AmountReceivedPopup = ({
-  isOpen,
-  currentPaid,
-  currentDue,
-  customerName,
-  customerId,
-  onClose,
-  onSubmit,
-  submitting,
-}) => {
-  const [inputValue, setInputValue] = useState("");
-  const [showLedger, setShowLedger] = useState(false);
-
-  // Reset states when modal closes
-  const handleClose = () => {
-    setInputValue("");
-    setShowLedger(false);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  const handleSubmit = () => {
-    const amount = parseFloat(inputValue);
-    if (isNaN(amount) || amount === 0) {
-      toast.error("Please enter a valid non-zero amount");
-      return;
-    }
-    onSubmit(amount);
-    setInputValue("");
-  };
-
-  return (
-    <>
-      <div className={styles.modal_overlay} onClick={handleClose}>
-        <div
-          className={styles.modal_content}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3>Record Payment - {customerName}</h3>
-          <div className={styles.payment_info}>
-            <p>
-              Current Paid:{" "}
-              <span className={styles.text_green}>
-                ₹{formatNumberWithCommas(currentPaid)}
-              </span>
-            </p>
-            <p>
-              Current Due:{" "}
-              <span className={styles.text_red}>
-                ₹{formatNumberWithCommas(currentDue)}
-              </span>
-            </p>
-          </div>
-          <label>
-            Payment Amount:
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              autoFocus
-              step="1"
-              placeholder="Enter positive or negative amount"
-              disabled={submitting}
-            />
-          </label>
-          <div className={styles.modal_actions}>
-            <button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Processing..." : "Submit"}
-            </button>
-            <button
-              onClick={() => setShowLedger(true)}
-              disabled={submitting}
-              className={styles.ledger_btn}
-            >
-              View History
-            </button>
-            <button onClick={handleClose} disabled={submitting}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <PaymentLedgerModal
-        isOpen={showLedger}
-        customerId={customerId}
-        customerName={customerName}
-        onClose={() => setShowLedger(false)}
-      />
-    </>
-  );
-};
-
-// Payment Ledger Modal - shows payment history
-const PaymentLedgerModal = ({ isOpen, customerId, customerName, onClose }) => {
-  const [ledgerData, setLedgerData] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchLedger = useCallback(async () => {
-    if (!customerId) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/customer/ledger?customerId=${customerId}`);
-      if (!res.ok) throw new Error("Failed to fetch ledger");
-
-      const data = await res.json();
-      setLedgerData(data.payments || []);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load payment history");
-    } finally {
-      setLoading(false);
-    }
-  }, [customerId]);
-
-  useEffect(() => {
-    if (isOpen && customerId) {
-      fetchLedger();
-    }
-  }, [isOpen, customerId, fetchLedger]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div className={styles.modal_overlay} onClick={onClose}>
-      <div
-        className={styles.modal_content_large}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={styles.modal_header}>
-          <h3>Payment History - {customerName}</h3>
-          <button onClick={onClose} className={styles.close_btn}>
-            ✕
-          </button>
-        </div>
-
-        {loading ? (
-          <div className={styles.loading_container}>
-            <div className={styles.spinner}></div>
-            <span>Loading payment history...</span>
-          </div>
-        ) : ledgerData.length === 0 ? (
-          <div className={styles.empty_state}>
-            <p>No payment history found</p>
-          </div>
-        ) : (
-          <div className={styles.ledger_table_wrapper}>
-            <table className={styles.ledger_table}>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Amount Paid</th>
-                  <th>Previous Balance</th>
-                  <th>New Balance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledgerData.map((entry, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      {new Date(entry.date).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className={styles.text_green}>
-                      ₹{formatNumberWithCommas(entry.amount)}
-                    </td>
-                    <td>
-                      ₹{formatNumberWithCommas(entry.previousBalance || 0)}
-                    </td>
-                    <td>₹{formatNumberWithCommas(entry.newBalance || 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
   const dateRangeLabel = "All Time";
 
@@ -309,7 +124,7 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
               className={styles.header_payment_btn}
               title="Record Payment"
             >
-              <span>Add Amount</span>
+              <span>Record payment</span>
             </button>
           </div>
         )}
@@ -318,20 +133,20 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
         <StatItem label="No. of Orders" value={summary.orderCount} unit="" />
         <StatItem
           label="Total Amount"
-          value={formatNumberWithCommasNoDecimal(summary.totalAmount)}
+          value={formatNumberWithCommas(summary.totalAmount)}
           prefix="₹"
         />
         <StatItem
           label="Amount Received"
-          value={formatNumberWithCommasNoDecimal(summary.paidAmount)}
+          value={formatNumberWithCommas(summary.paidAmount)}
           prefix="₹"
           colorClass={styles.text_green}
         />
         <StatItem
-          label="Amount Due"
-          value={formatNumberWithCommasNoDecimal(summary.dueAmount)}
+          label={summary.dueAmount < 0 ? "Customer Credit" : "Amount Due"}
+          value={formatNumberWithCommas(Math.abs(summary.dueAmount))}
           prefix="₹"
-          colorClass={styles.text_red}
+          colorClass={summary.dueAmount < 0 ? styles.text_green : styles.text_red}
         />
       </div>
     </div>
@@ -502,33 +317,6 @@ function OrdersContent() {
         : 0,
     };
   }, [customerBalance]);
-
-  const handlePaidSubmit = async (paymentAmount) => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(
-        `/api/customer/total_orders?customerId=${customerId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          // Send the delta; adjust key name if your API expects a different shape.
-          body: JSON.stringify({ paidAmount: paymentAmount }),
-        },
-      );
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to update balance");
-      }
-      toast.success("Balance updated");
-      await fetchCustomerBalance();
-
-      setShowPaidPopup(false);
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -926,6 +714,8 @@ function OrdersContent() {
         </div>
       )}
 
+      <CustomerCharts records={filteredOrders} filters={filters} loading={loading} />
+
       {/* Orders Table */}
       <div className={styles.table_wrapper}>
         {loading ? (
@@ -1060,15 +850,14 @@ function OrdersContent() {
       </div>
 
       {/* Edit Paid Amount Modal */}
-      <AmountReceivedPopup
+      <CustomerPaymentDialog
         isOpen={showPaidPopup}
         currentPaid={customerBalance?.paidAmount || 0}
         currentDue={customerBalance?.dueAmount || 0}
         customerName={data.customer?.customerName || "Customer"}
         customerId={customerId}
         onClose={() => setShowPaidPopup(false)}
-        onSubmit={handlePaidSubmit}
-        submitting={submitting}
+        onSuccess={(result) => { setCustomerBalance(previous => ({ ...previous, paidAmount: result.paidAmount, dueAmount: result.dueAmount })); }}
       />
     </div>
   );

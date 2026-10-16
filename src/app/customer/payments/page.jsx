@@ -1,5 +1,7 @@
 "use client";
 
+import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
+import { accountStatus } from "@/lib/customer-payments.mjs";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "@/css/customer-payment.module.css";
@@ -63,32 +65,6 @@ const StatItem = ({ label, value, unit = "", colorClass = "" }) => (
     </div>
   </div>
 );
-const PaidStatItem = ({
-  label,
-  value,
-  unit = "",
-  colorClass = "",
-  onEditClick,
-}) => (
-  <div className={styles.stat_card}>
-    <div className={styles.stat_card_label}>{label}</div>
-    <div className={`${styles.stat_card_value} ${colorClass}`}>
-      {value}
-      {unit && <span className={styles.stat_unit}>{unit}</span>}
-    </div>
-    {/* {onEditClick && (
-      <button
-        onClick={onEditClick}
-        className={styles.edit_payment_btn}
-        title="Record Payment"
-      >
-        <Image src="/payment.png" alt="payment" width={16} height={16} />
-        <span>Add Amount </span>
-      </button>
-    )} */}
-  </div>
-);
-
 // Comment editor component with button toggle
 const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -150,206 +126,6 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   );
 };
 
-// Payment Ledger Modal - shows payment history
-const PaymentLedgerModal = ({ isOpen, customerId, customerName, onClose }) => {
-  const [ledgerData, setLedgerData] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && customerId) {
-      fetchLedger();
-    }
-  }, [isOpen, customerId]);
-
-  const fetchLedger = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/customer/ledger?customerId=${customerId}`);
-      if (!res.ok) throw new Error("Failed to fetch ledger");
-      
-      const data = await res.json();
-      setLedgerData(data.payments || []);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load payment history");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className={styles.modal_overlay}>
-      <div className={styles.modal_content_large}>
-        <div className={styles.modal_header}>
-          <h3>Payment History - {customerName}</h3>
-          <button onClick={onClose} className={styles.close_btn}>✕</button>
-        </div>
-        
-        {loading ? (
-          <div className={styles.loading_container}>
-            <div className={styles.spinner}></div>
-            <span>Loading payment history...</span>
-          </div>
-        ) : ledgerData.length === 0 ? (
-          <div className={styles.empty_state}>
-            <p>No payment history found</p>
-          </div>
-        ) : (
-          <div className={styles.ledger_table_wrapper}>
-            <table className={styles.ledger_table}>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Amount Paid</th>
-                  <th>Previous Balance</th>
-                  <th>New Balance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledgerData.map((entry, idx) => (
-                  <tr key={idx}>
-                    <td>
-                      {new Date(entry.date).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className={styles.text_green}>
-                      ₹{formatNumberWithCommas(entry.amount)}
-                    </td>
-                    <td>₹{formatNumberWithCommas(entry.previousBalance || 0)}</td>
-                    <td>₹{formatNumberWithCommas(entry.newBalance || 0)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Payment popup component
-const PaymentPopup = ({
-  isOpen,
-  customerId,
-  customerName,
-  currentPaid,
-  currentDue,
-  onClose,
-  onSuccess,
-}) => {
-  const [inputValue, setInputValue] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [showLedger, setShowLedger] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setInputValue("");
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = async () => {
-    const amount = parseFloat(inputValue);
-    if (isNaN(amount)) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const res = await fetch(
-        `/api/customer/total_orders?customerId=${customerId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paidAmount: amount }),
-        },
-      );
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to update payment");
-      }
-
-      toast.success("Payment updated successfully");
-      onSuccess();
-      onClose();
-    } catch (error) {
-      toast.error(error.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <>
-      <div className={styles.modal_overlay}>
-        <div className={styles.modal_content}>
-          <h3>Record Payment - {customerName}</h3>
-          <div className={styles.payment_info}>
-            <p>
-              Current Paid:{" "}
-              <span className={styles.text_green}>
-                ₹{formatNumberWithCommas(currentPaid)}
-              </span>
-            </p>
-            <p>
-              Current Due:{" "}
-              <span className={styles.text_red}>
-                ₹{formatNumberWithCommas(currentDue)}
-              </span>
-            </p>
-          </div>
-          <label>
-            Payment Amount:
-            <input
-              type="number"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              autoFocus
-              step="1"
-              placeholder="Enter positive or negative amount"
-              disabled={submitting}
-            />
-          </label>
-          <div className={styles.modal_actions}>
-            <button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? "Processing..." : "Submit"}
-            </button>
-            <button 
-              onClick={() => setShowLedger(true)} 
-              disabled={submitting}
-              className={styles.ledger_btn}
-            >
-              View History
-            </button>
-            <button onClick={onClose} disabled={submitting}>
-              Cancel
-            </button>
-          </div>
-             <PaymentLedgerModal
-        isOpen={showLedger}
-        customerId={customerId}
-        customerName={customerName}
-        onClose={() => setShowLedger(false)}
-      />
-        </div>
-      </div>
-      
-   
-    </>
-  );
-};
-
 // ========== MAIN COMPONENT ==========
 export default function CustomerPayments() {
   const [customerList, setCustomerList] = useState([]);
@@ -357,15 +133,12 @@ export default function CustomerPayments() {
   const [customerTotals, setCustomerTotals] = useState({}); // Changed to object
   const { data: session } = useSession();
 
-  const [checkedIds, setCheckedIds] = useState([]);
-  const [checkedCustomerId, setCheckedCustomerId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [statusFilter, setStatusFilter] = useState("");
   const [visibleCounts, setVisibleCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -400,7 +173,7 @@ export default function CustomerPayments() {
               totalsMap[total._id.toString()] = {
                 totalAmount: total.totalAmount || 0,
                 paidAmount: total.paidAmount || 0,
-                dueAmount: total.dueAmount || 0,
+                dueAmount: Math.round(((total.totalAmount || 0) - (total.paidAmount || 0)) * 100) / 100,
                 totalOrders: total.totalOrders || 0,
               };
             }
@@ -444,8 +217,6 @@ export default function CustomerPayments() {
           toast.error(error.message);
         }
       } finally {
-        setCheckedIds([]);
-        setCheckedCustomerId("");
         setIsLoading(false);
       }
     },
@@ -457,73 +228,6 @@ export default function CustomerPayments() {
     fetchOrders(controller.signal);
     return () => controller.abort();
   }, [fetchOrders]);
-
-  // Bulk update payment status
-  const handleBulkUpdateStatus = async (status) => {
-    if (checkedIds.length === 0) return;
-    if (!window.confirm(`Mark ${checkedIds.length} order(s) as ${status}?`))
-      return;
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/customer/order", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderIds: checkedIds,
-          status,
-          actionDoneBy: session?.user?.email,
-        }),
-      });
-      const resData = await res.json();
-      if (!res.ok) throw new Error(resData.error || "Bulk update failed");
-
-      toast.success(
-        `Successfully marked ${checkedIds.length} order(s) as ${status}`,
-      );
-
-      setOrdersData((prevOrders) =>
-        prevOrders.map((order) =>
-          checkedIds.includes(order._id)
-            ? { ...order, paymentStatus: status }
-            : order,
-        ),
-      );
-      setCheckedIds([]);
-      setCheckedCustomerId("");
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message || "Failed to process bulk payment");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Selection logic
-  const handleCheck = (id, customerId) => {
-    if (!checkedCustomerId) setCheckedCustomerId(customerId);
-    setCheckedIds((prev) => {
-      const newSelected = prev.includes(id)
-        ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id];
-      if (newSelected.length === 0) setCheckedCustomerId("");
-      return newSelected;
-    });
-  };
-
-  const handleSelectAll = (e, customerId, orders) => {
-    const eligibleIds = orders.map((order) => order._id);
-    if (e.target.checked) {
-      setCheckedCustomerId(customerId);
-      setCheckedIds((prev) => [...new Set([...prev, ...eligibleIds])]);
-    } else {
-      setCheckedIds((prev) => {
-        const newSelected = prev.filter((id) => !eligibleIds.includes(id));
-        if (newSelected.length === 0) setCheckedCustomerId("");
-        return newSelected;
-      });
-    }
-  };
 
   const handleShowMore = (customerId) => {
     setVisibleCounts((prev) => ({
@@ -574,33 +278,12 @@ export default function CustomerPayments() {
     }
   };
 
-  // Filter handlers with confirmation
-  const confirmClearChecked = () => {
-    if (checkedIds.length > 0) {
-      return window.confirm("Selected orders will be deselected. Continue?");
-    }
-    return true;
-  };
-
   const handleFilterChange = (e) => {
-    if (!confirmClearChecked()) return;
-    setCheckedIds([]);
-    setCheckedCustomerId("");
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStatusChange = (newStatus) => {
-    if (!confirmClearChecked()) return;
-    setCheckedIds([]);
-    setCheckedCustomerId("");
-    setStatusFilter(newStatus);
-  };
-
   const resetFilters = () => {
-    if (!confirmClearChecked()) return;
-    setCheckedIds([]);
-    setCheckedCustomerId("");
     setFilters({
       startDate: getCurrentMonthStartDate(),
       endDate: getTodayDate(),
@@ -610,18 +293,12 @@ export default function CustomerPayments() {
   };
 
   const clearFilters = () => {
-    if (!confirmClearChecked()) return;
-    setCheckedIds([]);
-    setCheckedCustomerId("");
     setFilters({ startDate: "", endDate: "" });
     setStatusFilter("");
     toast.info("Date filters cleared.");
   };
 
   const loadTodayData = () => {
-    if (!confirmClearChecked()) return;
-    setCheckedIds([]);
-    setCheckedCustomerId("");
     setFilters({ startDate: getTodayDate(), endDate: getTodayDate() });
     setStatusFilter("");
     toast.info("Loaded today's records.");
@@ -636,6 +313,7 @@ export default function CustomerPayments() {
         totalAmount: 0,
         paidAmount: 0,
         dueAmount: 0,
+        creditAmount: 0,
         totalOrders: 0,
         orders: [],
         uniqueDates: new Set(),
@@ -672,22 +350,10 @@ export default function CustomerPayments() {
           };
         }
 
-        const isPaid = order.paymentStatus === "Paid";
         const date = order.date;
-
         totals[custId].uniqueDates.add(date);
-
-        // Apply status filter to orders array
-        if (statusFilter === "Paid" && isPaid) {
-          totals[custId].orders.push(order);
-          totals.all.orders.push(order);
-        } else if (statusFilter === "Not Paid" && !isPaid) {
-          totals[custId].orders.push(order);
-          totals.all.orders.push(order);
-        } else if (statusFilter === "") {
-          totals[custId].orders.push(order);
-          totals.all.orders.push(order);
-        }
+        totals[custId].orders.push(order);
+        totals.all.orders.push(order);
 
         totals.all.uniqueDates.add(date);
       });
@@ -698,12 +364,13 @@ export default function CustomerPayments() {
       const apiData = customerTotals[custId];
       totals.all.totalAmount += apiData.totalAmount || 0;
       totals.all.paidAmount += apiData.paidAmount || 0;
-      totals.all.dueAmount += apiData.dueAmount || 0;
+      totals.all.dueAmount += Math.max(0, apiData.dueAmount || 0);
+      totals.all.creditAmount += Math.max(0, -(apiData.dueAmount || 0));
       totals.all.totalOrders += apiData.totalOrders || 0;
     });
 
     return totals;
-  }, [ordersData, statusFilter, customerTotals]);
+  }, [ordersData, customerTotals]);
 
   // Filter customers by search and sort by total orders (highest first)
   const filteredCustomerList = useMemo(() => {
@@ -713,13 +380,17 @@ export default function CustomerPayments() {
         )
       : customerList;
 
+    filtered = filtered.filter(customer => {
+      const totals = customerTotals[customer._id];
+      return totals && (totals.totalAmount !== 0 || totals.paidAmount !== 0) && (!statusFilter || accountStatus(totals.totalAmount, totals.paidAmount) === statusFilter);
+    });
     // Sort by total number of orders (highest first)
-    return filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       const ordersA = customerTotalsMap[a._id]?.orders?.length || 0;
       const ordersB = customerTotalsMap[b._id]?.orders?.length || 0;
       return ordersB - ordersA; // Descending order (highest first)
     });
-  }, [customerList, searchQuery, customerTotalsMap]);
+  }, [customerList, searchQuery, customerTotalsMap, customerTotals, statusFilter]);
 
   const globalStats = customerTotalsMap.all;
 
@@ -750,7 +421,8 @@ export default function CustomerPayments() {
   };
 
   // Handle successful payment - refresh data
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (result) => {
+    if (selectedCustomer && result) setCustomerTotals(previous => ({ ...previous, [selectedCustomer._id]: { ...previous[selectedCustomer._id], paidAmount: result.paidAmount, dueAmount: result.dueAmount } }));
     // Refresh customer totals
     try {
       const totalRes = await fetch("/api/customer/total_orders");
@@ -763,7 +435,7 @@ export default function CustomerPayments() {
               totalsMap[total._id.toString()] = {
                 totalAmount: total.totalAmount || 0,
                 paidAmount: total.paidAmount || 0,
-                dueAmount: total.dueAmount || 0,
+                dueAmount: Math.round(((total.totalAmount || 0) - (total.paidAmount || 0)) * 100) / 100,
                 totalOrders: total.totalOrders || 0,
               };
             }
@@ -785,6 +457,8 @@ export default function CustomerPayments() {
         <h1 className={styles.page_title}>Customer Payments</h1>
       </div>
 
+      <p className={styles.account_hint}>Record each amount received. Partial payments reduce the customer balance; extra payments become credit. Account balances cover all orders, regardless of the order date filter.</p>
+      <label className={styles.search_label}>Account status <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All accounts</option>{["Unpaid", "Part paid", "Settled", "Credit"].map(value => <option key={value}>{value}</option>)}</select></label>
       {/* Search Section */}
       <div className={styles.filter_section}>
         <div className={styles.search_wrapper}>
@@ -916,7 +590,7 @@ export default function CustomerPayments() {
               value={`₹${formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}`}
             />
             <StatItem
-              label="Total Paid"
+              label="Total Received"
               value={`₹${formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}`}
               colorClass={styles.text_green}
             />
@@ -925,12 +599,13 @@ export default function CustomerPayments() {
               value={`₹${formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}`}
               colorClass={styles.text_red}
             />
+            <StatItem label="Customer Credit" value={`₹${formatNumberWithCommas(globalStats.creditAmount)}`} colorClass={styles.text_green} />
           </div>
         </div>
       )}
 
       {/* Customer Cards Grid */}
-      {isLoading ? (
+      {isLoading || isLoadingCustomers ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
         </div>
@@ -942,7 +617,7 @@ export default function CustomerPayments() {
             const stats = customerTotalsMap[customer._id];
 
             // Only show customers that have data in total_orders API
-            if (!apiTotals || apiTotals.totalAmount === 0) return null;
+            if (!apiTotals) return null;
 
             // Get orders for this customer (filtered by date and status)
             const orders = stats?.orders || [];
@@ -950,12 +625,6 @@ export default function CustomerPayments() {
               visibleCounts[customer._id] || INITIAL_VISIBLE_COUNT;
             const displayedOrders = orders.slice(0, visibleCount);
             const hasMore = orders.length > visibleCount;
-
-            const isAllChecked =
-              displayedOrders.length > 0 &&
-              displayedOrders.every((o) => checkedIds.includes(o._id));
-            const isCustomerDisabled =
-              checkedCustomerId !== "" && checkedCustomerId !== customer._id;
 
             return (
               <div key={customer._id} className={styles.supplier_card}>
@@ -973,21 +642,22 @@ export default function CustomerPayments() {
                     >
                       {customer.customerType || "Other"}
                     </span>
+                    <span className={styles.date_range_badge}>{accountStatus(apiTotals.totalAmount, apiTotals.paidAmount)}</span>
                   </div>
                   <div className={styles.header_right}>
                     <button
                       onClick={() => handleOpenPayment(customer)}
                       className={styles.edit_payment_btn}
                       title="Record Payment"
-                      disabled={submitting}
+                      disabled={isLoadingCustomers}
                     >
                       <Image 
                         src="/payment.png" 
-                        alt="payment" 
+                        alt=""
                         width={20} 
                         height={20} 
                       />
-                      <span>Add Amount</span>
+                      <span>Record payment</span>
                     </button>
                   </div>
                 </div>
@@ -1000,62 +670,25 @@ export default function CustomerPayments() {
                   />
                   <StatItem
                     label="Total Sales"
-                    value={`₹${formatNumberWithCommasNoDecimal(
+                    value={`₹${formatNumberWithCommas(
                       customerTotals[customer._id]?.totalAmount || 0,
                     )}`}
                   />
-                  <PaidStatItem
-                    label="Paid"
-                    value={`₹${formatNumberWithCommasNoDecimal(
+                  <StatItem
+                    label="Received"
+                    value={`₹${formatNumberWithCommas(
                       customerTotals[customer._id]?.paidAmount || 0,
                     )}`}
                     colorClass={styles.text_green}
-                    onEditClick={() => handleOpenPayment(customer)}
                   />
                   <StatItem
-                    label="Due"
-                    value={`₹${formatNumberWithCommasNoDecimal(
-                      customerTotals[customer._id]?.dueAmount || 0,
+                    label={(customerTotals[customer._id]?.dueAmount || 0) < 0 ? "Credit" : "Due"}
+                    value={`₹${formatNumberWithCommas(
+                      Math.abs(customerTotals[customer._id]?.dueAmount || 0),
                     )}`}
-                    colorClass={styles.text_red}
+                    colorClass={(customerTotals[customer._id]?.dueAmount || 0) < 0 ? styles.text_green : styles.text_red}
                   />
                 </div>
-
-                {/* Bulk Action Banner */}
-                {checkedIds.length > 0 &&
-                  customer._id === checkedCustomerId && (
-                    <div className={styles.bulk_actions_banner}>
-                      <span className={styles.bulk_actions_text}>
-                        {checkedIds.length} order(s) selected
-                      </span>
-                      <div className={styles.bulk_buttons}>
-                        <button
-                          onClick={() => handleBulkUpdateStatus("Paid")}
-                          disabled={submitting}
-                          className={styles.primary_btn}
-                        >
-                          {submitting ? "Processing..." : "Mark as Paid"}
-                        </button>
-                        <button
-                          onClick={() => handleBulkUpdateStatus("Not Paid")}
-                          disabled={submitting}
-                          className={styles.secondary_btn}
-                        >
-                          {submitting ? "Processing..." : "Mark as Unpaid"}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setCheckedIds([]);
-                            setCheckedCustomerId("");
-                          }}
-                          disabled={submitting}
-                          className={styles.clear_filter_link}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
 
                 {/* Orders Table */}
                 <div className={styles.table_wrapper}>
@@ -1067,30 +700,7 @@ export default function CustomerPayments() {
                           Order Total (₹)
                         </th>
                         <th>Invoice</th>
-                        {/* <th className={styles.table_header_cell}>Status</th>
-                        <th className={styles.table_header_cell}>
-                          <div className={styles.select_all_wrapper}>
-                            <input
-                              type="checkbox"
-                              className={styles.payment_checkbox}
-                              onChange={(e) =>
-                                handleSelectAll(
-                                  e,
-                                  customer._id,
-                                  displayedOrders,
-                                )
-                              }
-                              disabled={isCustomerDisabled}
-                              checked={isAllChecked}
-                              title={
-                                isCustomerDisabled
-                                  ? "Complete active customer's payment first"
-                                  : "Select All"
-                              }
-                            />
-                            *
-                          </div>
-                        </th> */}
+
                         <th className={styles.table_header_cell}>Comment</th>
                       </tr>
                     </thead>
@@ -1140,24 +750,7 @@ export default function CustomerPayments() {
                                 />
                               </button>
                             </td>
-                            {/* <td className={styles.table_cell}>
-                              {order.paymentStatus === "Paid" ? (
-                                <span className={styles.status_paid}>Paid</span>
-                              ) : (
-                                <span className={styles.status_due}>Due</span>
-                              )}
-                            </td>
-                            <td className={styles.table_cell}>
-                              <input
-                                type="checkbox"
-                                className={styles.payment_checkbox}
-                                checked={checkedIds.includes(order._id)}
-                                onChange={() =>
-                                  handleCheck(order._id, customer._id)
-                                }
-                                disabled={isCustomerDisabled}
-                              />
-                            </td> */}
+
                             <td
                               className={`${styles.table_cell} ${styles.cell_comment}`}
                             >
@@ -1178,7 +771,7 @@ export default function CustomerPayments() {
                       <button
                         onClick={() => handleShowMore(customer._id)}
                         className={styles.show_more_btn}
-                        disabled={submitting}
+                        disabled={isLoadingCustomers}
                       >
                         Show More ({orders.length - visibleCount} more)
                       </button>
@@ -1202,7 +795,7 @@ export default function CustomerPayments() {
 
       {/* Payment Popup */}
       {selectedCustomer && (
-        <PaymentPopup
+        <CustomerPaymentDialog
           isOpen={showPaymentPopup}
           customerId={selectedCustomer._id}
           customerName={selectedCustomer.customerName}
