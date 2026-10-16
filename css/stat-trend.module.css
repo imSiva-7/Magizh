@@ -1,0 +1,24 @@
+.card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.card > :not(svg) {
+  position: relative;
+  z-index: 1;
+}
+.graphic {
+  position: absolute;
+  inset: auto 0 -1px;
+  width: 100%;
+  height: 74%;
+  display: block;
+  pointer-events: none;
+  z-index: 0;
+}
+.milk {
+  color: #27795d;
+}
+.amount {
+  color: #b68438;
+}

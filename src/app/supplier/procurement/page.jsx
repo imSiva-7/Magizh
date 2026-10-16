@@ -13,7 +13,6 @@ import {
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { exportToCSV, exportToPDF } from "@/utils/exportUtils";
 import { getProcurementSummary } from "@/utils/procurementSummary";
-import SupplierCharts from "@/components/SupplierCharts";
 
 // ========== CONSTANTS & UTILITIES ==========
 
@@ -102,6 +101,7 @@ const TimePeriodSelect = ({ value, onChange, error }) => (
 
 const StatItem = ({ label, value, unit, prefix = "" }) => (
   <div className={styles.stat_item}>
+
     <span className={styles.stat_label}>{label}</span>
     <span className={styles.stat_value}>
       {prefix}
@@ -140,12 +140,16 @@ const SummaryStats = ({ summary, filters }) => (
         label="Total Milk"
         value={formatNumberWithCommas(summary.milk.toFixed(2))}
         unit="L"
+
+
       />
       <StatItem
         label="Total Amount"
         value={formatNumberWithCommasNoDecimal(summary.amount)}
         unit=""
         prefix="₹"
+
+
       />
     </div>
   </div>
@@ -680,6 +684,7 @@ function ProcurementContent() {
     [filteredProcurements],
   );
 
+
   const handleExport = (format) => {
     if (!filteredProcurements.length) {
       toast.error("No data to export");
@@ -1061,7 +1066,7 @@ function ProcurementContent() {
       )}
 
       {/* EXPORT SECTION */}
-      <SupplierCharts records={filteredProcurements} filters={filters} loading={loading} />
+
       {summary.count > 0 && (
         <div className={styles.export_section}>
           <span className={styles.entry_count}>
@@ -1379,7 +1384,7 @@ function ProcurementContent() {
                             {new Date(row.date).toLocaleDateString("en-IN", {
                               day: "2-digit",
                               month: "short",
-                              year: "2-digit",
+
                             })}
                           </span>
                         </div>

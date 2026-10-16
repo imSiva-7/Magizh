@@ -9,21 +9,48 @@ const isAdminOrDev = (session) => {
   const role = session?.user?.role;
   return role === "admin" || role === "dev";
 };
+const isOwnAccount = (user, session) =>
+  String(user._id) === String(session.user.id) ||
+  Boolean(
+    user.email &&
+    session.user.email &&
+    user.email.toLowerCase() === session.user.email.toLowerCase(),
+  );
 
 export async function GET(request) {
   const session = await getServerSession(authOptions);
-  // if (!session || !isAdminOrDev(session)) {
-  //   return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  // }
+  if (!session || !isAdminOrDev(session)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+  }
 
   try {
     const client = await clientPromise;
     const db = client.db("production");
-    const users = await db.collection("users").find({}).toArray();
-    return NextResponse.json(users);
+    const users = await db
+      .collection("users")
+      .find(
+        {},
+        {
+          projection: {
+            name: 1,
+            email: 1,
+            role: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      )
+      .sort({ name: 1, email: 1 })
+      .toArray();
+    return NextResponse.json(users, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch users" },
+      { status: 500 },
+    );
   }
 }
 
@@ -35,8 +62,11 @@ export async function PATCH(request) {
 
   try {
     const { userId, role } = await request.json();
-    if (!userId || !role) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    if (typeof userId !== "string" || !ObjectId.isValid(userId) || !role) {
+      return NextResponse.json(
+        { error: "A valid user ID and role are required" },
+        { status: 400 },
+      );
     }
 
     const allowedRoles = ["customer", "supplier", "employee", "admin", "dev"];
@@ -46,10 +76,22 @@ export async function PATCH(request) {
 
     const client = await clientPromise;
     const db = client.db("production");
-    const result = await db.collection("users").updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: { role, updatedAt: new Date() } }
-    );
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) }, { projection: { email: 1 } });
+    if (!user)
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (isOwnAccount(user, session))
+      return NextResponse.json(
+        { error: "You cannot change your own role" },
+        { status: 400 },
+      );
+    const result = await db
+      .collection("users")
+      .updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { role, updatedAt: new Date() } },
+      );
 
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -57,8 +99,16 @@ export async function PATCH(request) {
 
     return NextResponse.json({ message: "Role updated" });
   } catch (error) {
+    if (error instanceof SyntaxError)
+      return NextResponse.json(
+        { error: "Invalid JSON request" },
+        { status: 400 },
+      );
     console.error(error);
-    return NextResponse.json({ error: "Failed to update role" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update role" },
+      { status: 500 },
+    );
   }
 }
 
@@ -73,12 +123,18 @@ export async function DELETE(request) {
     const userId = searchParams.get("id");
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 },
+      );
     }
 
     // Optional: prevent self-deletion
     if (userId === session.user.id) {
-      return NextResponse.json({ error: "Cannot delete your own account" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 },
+      );
     }
 
     if (!ObjectId.isValid(userId)) {
@@ -89,13 +145,22 @@ export async function DELETE(request) {
     const db = client.db("production");
 
     // Check if user exists before deleting
-    const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(userId) });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    if (isOwnAccount(user, session))
+      return NextResponse.json(
+        { error: "Cannot delete your own account" },
+        { status: 400 },
+      );
 
     // Delete the user
-    const result = await db.collection("users").deleteOne({ _id: new ObjectId(userId) });
+    const result = await db
+      .collection("users")
+      .deleteOne({ _id: new ObjectId(userId) });
 
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -106,6 +171,9 @@ export async function DELETE(request) {
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to delete user" },
+      { status: 500 },
+    );
   }
 }

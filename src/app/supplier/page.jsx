@@ -1,6 +1,5 @@
 "use client";
 import PageHeading from "@/components/PageHeading";
-import { SupplierOverviewCharts } from "@/components/SupplierCharts";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -1120,7 +1119,6 @@ export default function Supplier() {
           </table>
         </div>
       </div>
-      <SupplierOverviewCharts />
     </div>
   );
 }

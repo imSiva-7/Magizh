@@ -40,6 +40,13 @@ for (const path of ["/customer", "/customer/analytics", "/customer/order/history
   test(`${path} shows sales and order payments with mobile layout`, async ({ page }) => {
     await mockData(page);
     await page.goto(path);
+    if (!path.includes("analytics")) {
+      await expect(page.getByRole("heading").first()).toBeVisible();
+      await expect(page.getByTestId("customer-trend-chart")).toHaveCount(0);
+      await expect(page.getByTestId("customer-payments-chart")).toHaveCount(0);
+      await expect(page.getByTestId("stat-trend")).toHaveCount(0);
+      return;
+    }
     await expect(page.getByTestId("customer-trend-chart").locator("svg").first()).toBeVisible();
     await expect(page.getByTestId("customer-payments-chart").locator("svg").first()).toBeVisible();
     await page.getByText("View sales chart data", { exact: true }).click();

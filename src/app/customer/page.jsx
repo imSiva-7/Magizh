@@ -1,5 +1,4 @@
 "use client";
-import { CustomerOverviewCharts } from "@/components/CustomerCharts";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
@@ -891,7 +890,6 @@ export default function Customer() {
           </table>
         </div>
       </div>
-      <CustomerOverviewCharts />
     </div>
   );
 }

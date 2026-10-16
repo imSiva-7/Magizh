@@ -37,6 +37,13 @@ async function mockData(page, { fail = false } = {}) {
 for (const [path, name] of [["/supplier/analytics", "analytics"], ["/supplier", "directory"], ["/supplier/procurement?supplierId=chart-supplier", "supplier-detail"], ["/supplier/procurement/history", "history"]]) {
   test(`${name} charts match dashboard, show weighted quality, and fit mobile`, async ({ page }) => {
     await mockData(page); await page.goto(path);
+    if (name !== "analytics") {
+      await expect(page.getByRole("heading").first()).toBeVisible();
+      await expect(page.getByTestId("supplier-trend-chart")).toHaveCount(0);
+      await expect(page.getByTestId("supplier-payments-chart")).toHaveCount(0);
+      await expect(page.getByTestId("stat-trend")).toHaveCount(0);
+      return;
+    }
     const trend = page.getByRole("region", { name: "Milk collections", exact: true });
     await expect(trend.getByTestId("supplier-trend-chart").locator("svg").first()).toBeVisible();
     await expect(page.getByRole("region", { name: "Paid & due", exact: true }).getByTestId("supplier-payments-chart").locator("svg").first()).toBeVisible();

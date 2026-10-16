@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback, useMemo } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/attendance.module.css";
+import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "@/utils/attendanceDates.mjs";
 import { exportAttendanceToPDF } from "@/utils/exportAttendance";
 
 function AttendanceContent() {
@@ -21,13 +22,13 @@ function AttendanceContent() {
   const [showAdvanceForm, setShowAdvanceForm] = useState(false);
   const [advanceForm, setAdvanceForm] = useState({
     amount: "",
-    date: new Date().toISOString().split("T")[0],
+    date: attendanceToday(),
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Date filter state
-  const currentMonth = new Date().toISOString().slice(0, 7);
+  const currentMonth = attendanceToday().slice(0, 7);
   const [month, setMonth] = useState(currentMonth);
 
   // Fetch employees list
@@ -133,7 +134,7 @@ function AttendanceContent() {
       setShowAdvanceForm(false);
       setAdvanceForm({
         amount: "",
-        date: new Date().toISOString().split("T")[0],
+        date: attendanceToday(),
         reason: "",
       });
       fetchAttendanceData(selectedEmpID, month);
@@ -296,7 +297,7 @@ function AttendanceContent() {
 
           {/* Salary Summary Card */}
           <div className={styles.summaryCard}>
-            <h2>Salary Summary - {month}</h2>
+            <h2>Salary Summary - {formatAttendanceMonth(month)}</h2>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Days in Month:</span>
@@ -461,7 +462,7 @@ function AttendanceContent() {
                       setShowAdvanceForm(false);
                       setAdvanceForm({
                         amount: "",
-                        date: new Date().toISOString().split("T")[0],
+                        date: attendanceToday(),
                         reason: "",
                       });
                     }}
@@ -488,7 +489,7 @@ function AttendanceContent() {
                   <tbody>
                     {attendanceData.advances.map((advance) => (
                       <tr key={advance._id}>
-                        <td>{advance.date}</td>
+                        <td>{formatAttendanceDate(advance.date)}</td>
                         <td className={styles.amountCell}>
                           {formatCurrency(advance.amount)}
                         </td>
@@ -519,7 +520,7 @@ function AttendanceContent() {
           {attendanceData && (
             <div className={styles.exportSection}>
               <span className={styles.entryCount}>
-                Attendance data for {attendanceData.employee.name} ({month})
+                Attendance data for {attendanceData.employee.name} ({formatAttendanceMonth(month)})
               </span>
               <div className={styles.exportButtons}>
                 <button
@@ -542,8 +543,8 @@ function AttendanceContent() {
                     <tr>
                       <th>Date</th>
                       <th>Status</th>
-                      <th>Check In</th>
-                      <th>Check Out</th>
+                      <th>Check In (IST)</th>
+                      <th>Check Out (IST)</th>
                       <th>Hours Worked</th>
                     </tr>
                   </thead>
@@ -555,7 +556,7 @@ function AttendanceContent() {
                           day.status === "absent" ? styles.absentRow : ""
                         }
                       >
-                        <td className={styles.dateCell}>{day.date}</td>
+                        <td className={styles.dateCell}>{formatAttendanceDate(day.date)}</td>
                         <td className={styles.statusCell}>
                           {day.status === "absent" ? (
                             <span className={styles.absentBadge}>Absent</span>

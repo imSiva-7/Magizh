@@ -1,23 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { attendanceToday, formatAttendanceDate } from "@/utils/attendanceDates.mjs";
 import Link from "next/link";
 import PageHeading from "@/components/PageHeading";
 import styles from "@/css/attendance.module.css";
 
-const getCurrentMonth = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-};
+const getCurrentMonth = () => attendanceToday().slice(0, 7);
 const formatTime = (time) => {
   if (!time) return "—";
   const [hour, minute] = time.split(":");
   const hours = Number(hour);
   return `${hours % 12 || 12}:${minute} ${hours >= 12 ? "PM" : "AM"}`;
 };
-const formatDate = (date) => new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
-  weekday: "short", day: "numeric", month: "short",
-});
 
 export default function AttendanceHistoryPage() {
   const [month, setMonth] = useState(getCurrentMonth);
@@ -82,7 +77,7 @@ export default function AttendanceHistoryPage() {
   return (
     <div className={`${styles.container} ${styles.compactHistory}`}>
       <div className={styles.headerContent}>
-        <PageHeading title="Attendance History" section="YOUR TEAM" description="Daily check-in, check-out, and hours worked." />
+        <PageHeading title="Attendance History" section="YOUR TEAM" description="Daily check-in, check-out, and hours worked. Times in IST." />
         <Link href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
       </div>
 
@@ -124,11 +119,11 @@ export default function AttendanceHistoryPage() {
           </div>}
           <div className={styles.historyGroups}>
             {groups.map(([date, records]) => (
-              <section key={date} className={styles.historyGroup} aria-label={formatDate(date)}>
-                <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatDate(date)}</time></h2></div>
+              <section key={date} className={styles.historyGroup} aria-label={formatAttendanceDate(date)}>
+                <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatAttendanceDate(date)}</time></h2></div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.attendanceTable}>
-                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in</th><th scope="col">Check out</th><th scope="col">Hours</th></tr></thead>
+                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in (IST)</th><th scope="col">Check out (IST)</th><th scope="col">Hours</th></tr></thead>
                     <tbody>{records.map((record, index) => (
                       <tr key={`${record.empID}-${date}-${index}`}>
                         <td className={styles.nameCell}>

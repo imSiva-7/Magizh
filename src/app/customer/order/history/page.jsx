@@ -1,6 +1,5 @@
 "use client";
 
-import CustomerCharts from "@/components/CustomerCharts";
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -83,7 +82,6 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
 
 function OrderHistoryContent() {
   const [loading, setLoading] = useState(true);
-  const [chartError, setChartError] = useState("");
   const [data, setData] = useState({ orders: [], summary: {} });
   const [filters, setFilters] = useState({
     startDate: getCurrentMonthStartDate(),
@@ -95,7 +93,6 @@ function OrderHistoryContent() {
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
-      setChartError("");
       const params = new URLSearchParams();
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
@@ -104,7 +101,6 @@ function OrderHistoryContent() {
       const json = await res.json();
       setData(json);
     } catch (err) {
-      setChartError(err.message);
       toast.error(err.message);
     } finally {
       setLoading(false);
@@ -300,7 +296,7 @@ function OrderHistoryContent() {
       </div>
 
       {/* Summary Cards */}
-      <CustomerCharts records={data.orders} filters={filters} loading={loading} error={chartError} onRetry={fetchHistory} />
+
 
       {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.stats_card}>

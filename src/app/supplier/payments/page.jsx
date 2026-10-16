@@ -10,12 +10,15 @@ import {
 import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import Link from "next/link";
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
+import { procurementDaily } from "@/lib/supplier-charts";
 
 
-const INITIAL_FILTERS = {
-  startDate: "",
-  endDate: "",
-};
+const getInitialFilters = () => ({
+  startDate: getCurrentMonthStartDate(),
+  endDate: getTodayDate(),
+});
 
 const INITIAL_VISIBLE_COUNT = 20;
 
@@ -66,7 +69,7 @@ export default function Payments() {
   const [checkedSupplierId, setCheckedSupplierId] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [filters, setFilters] = useState(getInitialFilters);
   const [statusFilter, setStatusFilter] = useState("");
 
   const [visibleCounts, setVisibleCounts] = useState({});
@@ -117,16 +120,19 @@ export default function Payments() {
 
         const data = await res.json();
         const records = Array.isArray(data) ? data : data.data || [];
-        setProcurementRecords(records);
+        if (!signal?.aborted) setProcurementRecords(records);
       } catch (error) {
-        if (error.name !== "AbortError") {
+        if (error.name !== "AbortError" && !signal?.aborted) {
           console.error(error);
+          setProcurementRecords([]);
           toast.error(error.message);
         }
       } finally {
-        setCheckedIds([]);
-        setCheckedSupplierId("");
-        setIsLoading(false);
+        if (!signal?.aborted) {
+          setCheckedIds([]);
+          setCheckedSupplierId("");
+          setIsLoading(false);
+        }
       }
     },
     [filters],
@@ -238,6 +244,7 @@ export default function Payments() {
     let globalSnf = 0;
 
     procurementRecords.forEach((record) => {
+      if ((statusFilter === "Paid" && record.paymentStatus !== "Paid") || (statusFilter === "Not Paid" && record.paymentStatus === "Paid")) return;
       const id = record.supplierId;
 
       if (!totals[id]) {
@@ -313,7 +320,7 @@ export default function Payments() {
       : supplierList;
 
     // Sort by total milk quantity (highest first)
-    return filtered.sort((a, b) => {
+    return [...filtered].filter((supplier) => supplierTotalsMap[supplier._id]?.procurements.length > 0).sort((a, b) => {
       const milkA = supplierTotalsMap[a._id]?.totalMilk || 0;
       const milkB = supplierTotalsMap[b._id]?.totalMilk || 0;
       return milkB - milkA; // Descending order (highest first)
@@ -375,7 +382,15 @@ export default function Payments() {
     toast.info("Loaded today's records.");
   };
 
-  const globalStats = supplierTotalsMap.all;
+  const globalStats = useMemo(() => filteredSupplierList.reduce((totals, supplier) => {
+    const stats = supplierTotalsMap[supplier._id];
+    for (const field of ["totalMilk", "totalAmount", "paidAmount", "dueAmount"]) totals[field] += stats[field] || 0;
+    return totals;
+  }, { totalMilk: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0 }), [filteredSupplierList, supplierTotalsMap]);
+  const cardTrends = useMemo(() => {
+    const daily = procurementDaily(filteredSupplierList.flatMap(supplier => supplierTotalsMap[supplier._id].procurements));
+    return Object.fromEntries(["milk", "amount", "paid", "due"].map(field => [field, daily.map(day => ({ date: day.date, value: day[field] }))]));
+  }, [filteredSupplierList, supplierTotalsMap]);
 
 
 // const vada = filteredSupplierList.map((supplier) => supplier.supplierID).sort((a, b) => b.supplierID.procurement.length - a.supplier.procurement.lenght)
@@ -548,30 +563,33 @@ export default function Payments() {
       </div>
 
       {/* Global Summary (All Suppliers) */}
-      {!isLoading && globalStats.totalAmount > 0 && !searchQuery && (
+      {!isLoading && globalStats.totalMilk > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}>All Suppliers Summary</h2>
+            <h2 className={styles.global_title}>Filtered Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
               {getFormattedDateRange(filters.startDate, filters.endDate)}
             </span>
           </div>
 
           <div className={styles.global_stats_grid}>
-            <div className={styles.global_stat_item}>
+            <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
+              <StatTrendBackground points={cardTrends.milk} />
               <div className={styles.global_stat_label}>Total Milk</div>
               <div className={styles.global_stat_value}>
                 {formatNumberWithCommas(globalStats.totalMilk.toFixed(1))}{" "}
                 <span className={styles.unit_label}>L</span>
               </div>
             </div>
-            <div className={styles.global_stat_item}>
+            <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
+              <StatTrendBackground points={cardTrends.amount} tone="amount" />
               <div className={styles.global_stat_label}>Total Amount</div>
               <div className={styles.global_stat_value}>
                 ₹{formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}
               </div>
             </div>
-            <div className={styles.global_stat_item}>
+            <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
+              <StatTrendBackground points={cardTrends.paid} />
               <div className={styles.global_stat_label}>Amount Paid</div>
               <div
                 className={`${styles.global_stat_value} ${styles.text_green}`}
@@ -579,7 +597,8 @@ export default function Payments() {
                 ₹{formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}
               </div>
             </div>
-            <div className={styles.global_stat_item}>
+            <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
+              <StatTrendBackground points={cardTrends.due} tone="amount" />
               <div className={styles.global_stat_label}>Amount Due</div>
               <div className={`${styles.global_stat_value} ${styles.text_red}`}>
                 ₹{formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}

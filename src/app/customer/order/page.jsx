@@ -1,6 +1,5 @@
 "use client";
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
-import CustomerCharts from "@/components/CustomerCharts";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -714,7 +713,6 @@ function OrdersContent() {
         </div>
       )}
 
-      <CustomerCharts records={filteredOrders} filters={filters} loading={loading} />
 
       {/* Orders Table */}
       <div className={styles.table_wrapper}>

@@ -1,7 +1,9 @@
 "use client";
 
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
-import { accountStatus } from "@/lib/customer-payments.mjs";
+import { matchesPeriodActivity, sumPaymentPeriod, paymentCardTrends } from "@/lib/customer-payment-period.mjs";
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "@/css/customer-payment.module.css";
@@ -17,10 +19,10 @@ import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import { formatDateForDisplay } from "@/utils/dateUtils";
 
 // ========== CONSTANTS ==========
-const INITIAL_FILTERS = {
-  startDate: "",
-  endDate: "",
-};
+const getInitialFilters = () => ({
+  startDate: getCurrentMonthStartDate(),
+  endDate: getTodayDate(),
+});
 
 const INITIAL_VISIBLE_COUNT = 20;
 
@@ -56,8 +58,9 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const StatItem = ({ label, value, unit = "", colorClass = "" }) => (
-  <div className={styles.stat_card}>
+const StatItem = ({ label, value, unit = "", colorClass = "", trend, tone }) => (
+  <div className={`${styles.stat_card} ${trend?.length ? trendStyles.card : ""}`}>
+    {trend?.length > 0 && <StatTrendBackground points={trend} tone={tone} />}
     <div className={styles.stat_card_label}>{label}</div>
     <div className={`${styles.stat_card_value} ${colorClass}`}>
       {value}
@@ -130,94 +133,66 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
 export default function CustomerPayments() {
   const [customerList, setCustomerList] = useState([]);
   const [ordersData, setOrdersData] = useState([]);
-  const [customerTotals, setCustomerTotals] = useState({}); // Changed to object
+  const [customerTotals, setCustomerTotals] = useState({}); // Dialog balances only
+  const [periodTotals, setPeriodTotals] = useState([]);
+  const [periodError, setPeriodError] = useState("");
   const { data: session } = useSession();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [filters, setFilters] = useState(getInitialFilters);
   const [statusFilter, setStatusFilter] = useState("");
   const [visibleCounts, setVisibleCounts] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [openingCustomerId, setOpeningCustomerId] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  // Fetch all customers and their totals from total_orders API
+  // Load the directory only. Period summaries do not depend on lifetime totals.
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchCustomers() {
       setIsLoadingCustomers(true);
       try {
-        const [custRes, totalRes] = await Promise.all([
-          fetch("/api/customer"),
-          fetch("/api/customer/total_orders"), // Fetch all customer totals
-        ]);
-
-        if (!custRes.ok) throw new Error("Failed to fetch customers");
-        if (!totalRes.ok) throw new Error("Failed to fetch customer totals");
-
-        const [customerData, totalData] = await Promise.all([
-          custRes.json(),
-          totalRes.json(),
-        ]);
-
-        setCustomerList(
-          Array.isArray(customerData) ? customerData : customerData.data || [],
-        );
-
-        // Convert total_orders array to a map for easy lookup
-        const totalsMap = {};
-        if (Array.isArray(totalData)) {
-          totalData.forEach((total) => {
-            if (total._id && total._id !== "global") {
-              totalsMap[total._id.toString()] = {
-                totalAmount: total.totalAmount || 0,
-                paidAmount: total.paidAmount || 0,
-                dueAmount: Math.round(((total.totalAmount || 0) - (total.paidAmount || 0)) * 100) / 100,
-                totalOrders: total.totalOrders || 0,
-              };
-            }
-          });
-        }
-        setCustomerTotals(totalsMap);
+        const response = await fetch("/api/customer", { signal: controller.signal });
+        if (!response.ok) throw new Error("Failed to fetch customers");
+        const data = await response.json();
+        if (!controller.signal.aborted) setCustomerList(Array.isArray(data) ? data : data.data || []);
       } catch (error) {
-        console.error(error);
-        setCustomerList([]);
-        setCustomerTotals({});
-        toast.error(error.message);
-      } finally {
-        setIsLoadingCustomers(false);
-      }
+        if (!controller.signal.aborted) { setCustomerList([]); toast.error(error.message); }
+      } finally { if (!controller.signal.aborted) setIsLoadingCustomers(false); }
     }
-    fetchCustomers();
+    fetchCustomers(); return () => controller.abort();
   }, []);
 
   // Fetch orders with date filters
   const fetchOrders = useCallback(
     async (signal) => {
       setIsLoading(true);
+      setPeriodError("");
       try {
         const queryParams = new URLSearchParams();
         if (filters.startDate)
           queryParams.append("startDate", filters.startDate);
         if (filters.endDate) queryParams.append("endDate", filters.endDate);
 
-        const res = await fetch(`/api/customer/order/history?${queryParams}`, {
-          cache: "no-store",
-          signal,
-        });
-        if (!res.ok) throw new Error("Failed to load order history");
-
-        const data = await res.json();
+        const [res, summaryRes] = await Promise.all([
+          fetch(`/api/customer/order/history?${queryParams}`, { cache: "no-store", signal }),
+          fetch(`/api/customer/payment-summary?${queryParams}`, { cache: "no-store", signal }),
+        ]);
+        if (!res.ok || !summaryRes.ok) throw new Error("Could not load data for this period. Please retry.");
+        const [data, summary] = await Promise.all([res.json(), summaryRes.json()]);
+        if (!Array.isArray(summary.customers)) throw new Error("Could not read payment totals for this period.");
         const orders = Array.isArray(data.orders) ? data.orders : [];
-        setOrdersData(orders);
+        if (!signal?.aborted) { setOrdersData(orders); setPeriodTotals(summary.customers); }
       } catch (error) {
-        if (error.name !== "AbortError") {
+        if (error.name !== "AbortError" && !signal?.aborted) {
           console.error(error);
-          toast.error(error.message);
+          setPeriodError(error.message); setOrdersData([]); setPeriodTotals([]);
         }
       } finally {
-        setIsLoading(false);
+        if (!signal?.aborted) setIsLoading(false);
       }
     },
     [filters],
@@ -304,95 +279,25 @@ export default function CustomerPayments() {
     toast.info("Loaded today's records.");
   };
 
-  // Build customer totals and filtered orders
-  // Note: Total amounts now come from total_orders API (customerTotals state)
-  // This useMemo only groups orders by customer and applies filters
+  // Filtered page totals are period activity; account balances are only used
+  // in the receipt dialog, where opening debts and credits must remain intact.
   const customerTotalsMap = useMemo(() => {
-    const totals = {
-      all: {
-        totalAmount: 0,
-        paidAmount: 0,
-        dueAmount: 0,
-        creditAmount: 0,
-        totalOrders: 0,
-        orders: [],
-        uniqueDates: new Set(),
-      },
-    };
-
-    // Initialize totals for each customer from API data (customerTotals)
-    Object.keys(customerTotals).forEach((custId) => {
-      const apiData = customerTotals[custId];
-      totals[custId] = {
-        totalAmount: apiData.totalAmount || 0,
-        paidAmount: apiData.paidAmount || 0,
-        dueAmount: apiData.dueAmount || 0,
-        totalOrders: apiData.totalOrders || 0,
-        orders: [],
-        uniqueDates: new Set(),
-      };
-    });
-
-    // Group orders by customer and apply status filter
-    if (ordersData.length > 0) {
-      ordersData.forEach((order) => {
-        const custId = order.customerId;
-
-        // Initialize customer totals if not already present
-        if (!totals[custId]) {
-          totals[custId] = {
-            totalAmount: 0,
-            paidAmount: 0,
-            dueAmount: 0,
-            totalOrders: 0,
-            orders: [],
-            uniqueDates: new Set(),
-          };
-        }
-
-        const date = order.date;
-        totals[custId].uniqueDates.add(date);
-        totals[custId].orders.push(order);
-        totals.all.orders.push(order);
-
-        totals.all.uniqueDates.add(date);
-      });
+    const totals = Object.fromEntries(periodTotals.map(row => [row.customerId, { ...row, orders: [], uniqueDates: new Set() }]));
+    for (const order of ordersData) if (totals[order.customerId]) {
+      totals[order.customerId].orders.push(order);
+      totals[order.customerId].uniqueDates.add(order.date);
     }
-
-    // Calculate global totals from customerTotals API data
-    Object.keys(customerTotals).forEach((custId) => {
-      const apiData = customerTotals[custId];
-      totals.all.totalAmount += apiData.totalAmount || 0;
-      totals.all.paidAmount += apiData.paidAmount || 0;
-      totals.all.dueAmount += Math.max(0, apiData.dueAmount || 0);
-      totals.all.creditAmount += Math.max(0, -(apiData.dueAmount || 0));
-      totals.all.totalOrders += apiData.totalOrders || 0;
-    });
-
     return totals;
-  }, [ordersData, customerTotals]);
+  }, [ordersData, periodTotals]);
 
-  // Filter customers by search and sort by total orders (highest first)
   const filteredCustomerList = useMemo(() => {
-    let filtered = searchQuery.trim()
-      ? customerList.filter((cust) =>
-          cust.customerName?.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : customerList;
+    const term = searchQuery.trim().toLowerCase();
+    return customerList.filter(customer => (!term || customer.customerName?.toLowerCase().includes(term)) && matchesPeriodActivity(customerTotalsMap[customer._id], statusFilter))
+      .sort((a, b) => customerTotalsMap[b._id].totalOrders - customerTotalsMap[a._id].totalOrders);
+  }, [customerList, searchQuery, customerTotalsMap, statusFilter]);
 
-    filtered = filtered.filter(customer => {
-      const totals = customerTotals[customer._id];
-      return totals && (totals.totalAmount !== 0 || totals.paidAmount !== 0) && (!statusFilter || accountStatus(totals.totalAmount, totals.paidAmount) === statusFilter);
-    });
-    // Sort by total number of orders (highest first)
-    return [...filtered].sort((a, b) => {
-      const ordersA = customerTotalsMap[a._id]?.orders?.length || 0;
-      const ordersB = customerTotalsMap[b._id]?.orders?.length || 0;
-      return ordersB - ordersA; // Descending order (highest first)
-    });
-  }, [customerList, searchQuery, customerTotalsMap, customerTotals, statusFilter]);
-
-  const globalStats = customerTotalsMap.all;
+  const globalStats = useMemo(() => sumPaymentPeriod(filteredCustomerList.map(customer => customerTotalsMap[customer._id])), [filteredCustomerList, customerTotalsMap]);
+  const cardTrends = useMemo(() => paymentCardTrends(filteredCustomerList.map(customer => customerTotalsMap[customer._id])), [filteredCustomerList, customerTotalsMap]);
 
   const handleSingleInvoice = async (order, customer) => {
     const customerDetails = {
@@ -415,37 +320,22 @@ export default function CustomerPayments() {
   };
 
   // Handle opening payment popup
-  const handleOpenPayment = (customer) => {
-    setSelectedCustomer(customer);
-    setShowPaymentPopup(true);
+  const handleOpenPayment = async (customer) => {
+    if (openingCustomerId) return;
+    setOpeningCustomerId(customer._id);
+    try {
+      const response = await fetch(`/api/customer/total_orders?customerId=${encodeURIComponent(customer._id)}`, { cache: "no-store" });
+      const balance = await response.json();
+      if (!response.ok || !balance || Array.isArray(balance)) throw new Error("Could not load this customer's account balance. Please retry.");
+      setCustomerTotals(previous => ({ ...previous, [customer._id]: { ...balance, dueAmount: Math.round((Number(balance.totalAmount || 0) - Number(balance.paidAmount || 0)) * 100) / 100 } }));
+      setSelectedCustomer(customer); setShowPaymentPopup(true);
+    } catch (error) { toast.error(error.message); }
+    finally { setOpeningCustomerId(null); }
   };
 
-  // Handle successful payment - refresh data
   const handlePaymentSuccess = async (result) => {
     if (selectedCustomer && result) setCustomerTotals(previous => ({ ...previous, [selectedCustomer._id]: { ...previous[selectedCustomer._id], paidAmount: result.paidAmount, dueAmount: result.dueAmount } }));
-    // Refresh customer totals
-    try {
-      const totalRes = await fetch("/api/customer/total_orders");
-      if (totalRes.ok) {
-        const totalData = await totalRes.json();
-        const totalsMap = {};
-        if (Array.isArray(totalData)) {
-          totalData.forEach((total) => {
-            if (total._id && total._id !== "global") {
-              totalsMap[total._id.toString()] = {
-                totalAmount: total.totalAmount || 0,
-                paidAmount: total.paidAmount || 0,
-                dueAmount: Math.round(((total.totalAmount || 0) - (total.paidAmount || 0)) * 100) / 100,
-                totalOrders: total.totalOrders || 0,
-              };
-            }
-          });
-        }
-        setCustomerTotals(totalsMap);
-      }
-    } catch (error) {
-      console.error("Failed to refresh totals:", error);
-    }
+    await fetchOrders();
   };
 
   return (
@@ -457,8 +347,7 @@ export default function CustomerPayments() {
         <h1 className={styles.page_title}>Customer Payments</h1>
       </div>
 
-      <p className={styles.account_hint}>Record each amount received. Partial payments reduce the customer balance; extra payments become credit. Account balances cover all orders, regardless of the order date filter.</p>
-      <label className={styles.search_label}>Account status <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All accounts</option>{["Unpaid", "Part paid", "Settled", "Credit"].map(value => <option key={value}>{value}</option>)}</select></label>
+      {/* <label className={styles.search_label}>Period activity <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All activity</option><option value="receipts">With receipts or corrections</option><option value="sales-only">Sales without receipts</option><option value="increase">Receivables increased</option><option value="decrease">Receivables decreased</option></select></label> */}
       {/* Search Section */}
       <div className={styles.filter_section}>
         <div className={styles.search_wrapper}>
@@ -510,7 +399,7 @@ export default function CustomerPayments() {
       <div className={styles.filter_section}>
         <div className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
-          <span>(Does not have an effect on summary & stats)</span>
+          <span>Applies to orders, receipts and summary cards</span>
         </div>
 
         <div className={styles.date_input_group}>
@@ -571,35 +460,41 @@ export default function CustomerPayments() {
         </div>
       </div>
 
-      {/* Global Summary - Data from total_orders API */}
-      {!isLoading && globalStats.totalAmount > 0 && !searchQuery && (
+      {periodError && <div className={styles.account_hint} role="alert">{periodError} <button type="button" onClick={() => fetchOrders()}>Retry period data</button></div>}
+      {!isLoading && !periodError && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
-            <h2 className={styles.global_title}>All Customers Summary</h2>
-            <span className={styles.date_range_badge}>All Time Totals</span>
+            <h2 className={styles.global_title}>Filtered Customers Summary</h2>
+            <span className={styles.date_range_badge}>{filters.startDate || "First record"} to {filters.endDate || "Latest record"}</span>
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
               label="Total Orders"
+              trend={cardTrends.totalOrders}
               value={formatNumberWithCommasNoDecimal(
                 globalStats.totalOrders || 0,
               )}
             />
             <StatItem
               label="Total Sales"
+              trend={cardTrends.totalAmount}
+              tone="amount"
               value={`₹${formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}`}
             />
             <StatItem
-              label="Total Received"
-              value={`₹${formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}`}
+              label="Net received"
+              trend={cardTrends.receivedAmount}
+              value={`₹${formatNumberWithCommas(globalStats.receivedAmount.toFixed(2))}`}
               colorClass={styles.text_green}
             />
             <StatItem
-              label="Total Due"
-              value={`₹${formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}`}
-              colorClass={styles.text_red}
+              label="Net receivable change"
+              trend={cardTrends.netChange}
+              tone="amount"
+              value={`₹${formatNumberWithCommas(globalStats.netChange.toFixed(2))}`}
+              colorClass={globalStats.netChange < 0 ? styles.text_green : styles.text_red}
             />
-            <StatItem label="Customer Credit" value={`₹${formatNumberWithCommas(globalStats.creditAmount)}`} colorClass={styles.text_green} />
+
           </div>
         </div>
       )}
@@ -613,11 +508,9 @@ export default function CustomerPayments() {
         <div className={styles.supplier_grid}>
           {filteredCustomerList.map((customer) => {
             // Get totals from API data
-            const apiTotals = customerTotals[customer._id];
             const stats = customerTotalsMap[customer._id];
 
-            // Only show customers that have data in total_orders API
-            if (!apiTotals) return null;
+            if (!stats) return null;
 
             // Get orders for this customer (filtered by date and status)
             const orders = stats?.orders || [];
@@ -642,14 +535,14 @@ export default function CustomerPayments() {
                     >
                       {customer.customerType || "Other"}
                     </span>
-                    <span className={styles.date_range_badge}>{accountStatus(apiTotals.totalAmount, apiTotals.paidAmount)}</span>
+                    <span className={styles.date_range_badge}>{stats.receiptCount ? "Receipts / corrections in period" : "Sales in period"}</span>
                   </div>
                   <div className={styles.header_right}>
                     <button
                       onClick={() => handleOpenPayment(customer)}
                       className={styles.edit_payment_btn}
                       title="Record Payment"
-                      disabled={isLoadingCustomers}
+                      disabled={isLoadingCustomers || Boolean(openingCustomerId)}
                     >
                       <Image 
                         src="/payment.png" 
@@ -657,7 +550,7 @@ export default function CustomerPayments() {
                         width={20} 
                         height={20} 
                       />
-                      <span>Record payment</span>
+                      <span>{openingCustomerId === customer._id ? "Loading balance…" : "Record payment"}</span>
                     </button>
                   </div>
                 </div>
@@ -665,28 +558,28 @@ export default function CustomerPayments() {
                 {/* Quick Stats Row - Data from total_orders API */}
                 <div className={styles.quick_stats}>
                   <StatItem
-                    label="Total Orders (All Time)"
-                    value={customerTotals[customer._id]?.totalOrders || 0}
+                    label="Orders in period"
+                    value={stats.totalOrders}
                   />
                   <StatItem
                     label="Total Sales"
                     value={`₹${formatNumberWithCommas(
-                      customerTotals[customer._id]?.totalAmount || 0,
+                      stats.totalAmount,
                     )}`}
                   />
                   <StatItem
-                    label="Received"
+                    label="Net received"
                     value={`₹${formatNumberWithCommas(
-                      customerTotals[customer._id]?.paidAmount || 0,
+                      stats.receivedAmount,
                     )}`}
                     colorClass={styles.text_green}
                   />
                   <StatItem
-                    label={(customerTotals[customer._id]?.dueAmount || 0) < 0 ? "Credit" : "Due"}
+                    label="Net receivable change"
                     value={`₹${formatNumberWithCommas(
-                      Math.abs(customerTotals[customer._id]?.dueAmount || 0),
+                      stats.netChange,
                     )}`}
-                    colorClass={(customerTotals[customer._id]?.dueAmount || 0) < 0 ? styles.text_green : styles.text_red}
+                    colorClass={stats.netChange < 0 ? styles.text_green : styles.text_red}
                   />
                 </div>
 

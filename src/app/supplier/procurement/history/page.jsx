@@ -1,5 +1,4 @@
 "use client";
-import SupplierCharts from "@/components/SupplierCharts";
 
 import {
   useState,
@@ -88,6 +87,7 @@ const sanitizeNumericInput = (value, fieldName) => {
 
 const StatItem = ({ label, value, unit, prefix = "" }) => (
   <div className={styles.stat_item}>
+
     <span className={styles.stat_label}>{label}</span>
     <span className={styles.stat_value}>
       {prefix}
@@ -468,6 +468,7 @@ function ProcurementHistoryContent() {
 
   const summary = useMemo(() => getProcurementSummary(procurementData), [procurementData]);
 
+
   const handleExport = (format) => {
     if (!procurementData.length) {
       toast.error("No data to export");
@@ -847,7 +848,7 @@ function ProcurementHistoryContent() {
       </form>
 
       {/* SUMMARY */}
-      <SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} />
+
 
       {loading ? (
         <div className={styles.loadingSection}>
@@ -889,12 +890,16 @@ function ProcurementHistoryContent() {
                 label="Total Milk"
                 value={formatNumberWithCommasNoDecimal(summary.milk)}
                 unit="L"
+
+
               />
               <StatItem
                 label="Total Amount"
                 value={formatNumberWithCommasNoDecimal(summary.amount)}
                 unit=""
                 prefix="₹"
+
+
               />
             </div>
           </div>

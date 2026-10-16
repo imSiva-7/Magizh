@@ -1,3 +1,4 @@
+import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "./attendanceDates.mjs";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatNumberWithCommas } from "./formatNumberWithComma";
@@ -130,13 +131,13 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
 
     doc.text("Report Month:", rightBoxX + 5, startY + 16);
     doc.setFont("helvetica", "bold");
-    doc.text(month, rightBoxX + 35, startY + 16);
+    doc.text(formatAttendanceMonth(month), rightBoxX + 35, startY + 16);
 
     doc.setFont("helvetica", "normal");
     doc.text("Generated:", rightBoxX + 5, startY + 22);
     doc.setFont("helvetica", "bold");
     doc.text(
-      new Date().toLocaleDateString("en-IN"),
+      formatAttendanceDate(attendanceToday()),
       rightBoxX + 35,
       startY + 22,
     );
@@ -245,7 +246,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     currentY += 8;
 
     const advancesData = attendanceData.advances.map((advance) => [
-      advance.date,
+      formatAttendanceDate(advance.date),
       formatCurrency(advance.amount),
       advance.reason || "-",
     ]);
@@ -305,7 +306,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     const attendanceRows = attendanceData.attendance.map((day) => {
       const status = day.status === "absent" ? "Absent" : "Present";
       return [
-        day.date,
+        formatAttendanceDate(day.date),
         status,
         formatTime(status, day.checkIn),
         formatTime(status, day.checkOut),
@@ -315,7 +316,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
 
     autoTable(doc, {
       startY: currentY,
-      head: [["Date", "Status", "Check In", "Check Out", "Hours Worked"]],
+      head: [["Date", "Status", "Check In (IST)", "Check Out (IST)", "Hours Worked"]],
       body: attendanceRows,
       theme: "plain",
       headStyles: {
