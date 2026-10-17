@@ -1,12 +1,9 @@
-.dialog { width: min(680px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); padding: 0; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); color: var(--text); box-shadow: var(--shadow-raised); overflow: hidden; }
-.dialog[open] { display: flex; flex-direction: column; }
-.dialog::backdrop { background: #163e3280; backdrop-filter: blur(3px); }
+.panel { min-width: 0; margin-bottom: 2rem; padding: 1.5rem; border: 2px solid #bbf7d0; border-radius: 1rem; background: linear-gradient(135deg, #fff 0%, #f0fdf4 100%); color: var(--text); box-shadow: 0 4px 6px #00000014; scroll-margin-top: 5rem; }
 .header, .footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; }
-.header { border-bottom: 1px solid var(--border); }
-.header h2 { margin: .3rem 0 0; font-size: 1.5rem; }
-.eyebrow { font-size: .65rem; font-weight: 700; letter-spacing: .12em; color: var(--brand); }
+.header { border-bottom: 2px solid #bbf7d0; padding: 0 0 1rem; margin-bottom: 1.25rem; }
+.header h2 { margin: 0; font-size: 1.35rem; color: #166534; }
 .close { border: 0; border-radius: .5rem; background: var(--surface-muted); color: var(--text); width: 44px; height: 44px; font-size: 1.2rem; flex-shrink: 0; }
-.body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 1.25rem 1.5rem; }
+.body { min-width: 0; }
 .hint { color: var(--text-muted); font-size: .8rem; line-height: 1.6; margin: 0 0 1rem; }
 .field { display: flex; flex-direction: column; gap: .45rem; font-size: .85rem; font-weight: 600; margin-bottom: 1rem; }
 .field input, .field select, .field textarea, .product input { min-height: 44px; width: 100%; border: 1px solid var(--border); border-radius: .6rem; background: var(--surface); color: var(--text); font: inherit; font-size: 1rem; padding: .65rem; }
@@ -28,7 +25,7 @@
 .checkbox { display: flex; align-items: center; gap: .6rem; min-height: 44px; font-size: .85rem; margin: .75rem 0 1rem; }
 .checkbox input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--brand); }
 .error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .6rem; padding: .8rem; }
-.footer { border-top: 1px solid var(--border); background: var(--surface-muted); }
+.footer { border-top: 1px solid #bbf7d0; padding: 1.25rem 0 0; }
 .footer span { display: block; color: var(--text-muted); font-size: .75rem; }
 .footer strong { font-size: 1.3rem; color: var(--brand-dark); }
 .actions { display: flex; gap: .6rem; }
@@ -37,7 +34,7 @@
 .cancel { background: var(--surface); color: var(--text); }
 .save:disabled, .cancel:disabled, .close:disabled { opacity: .5; cursor: not-allowed; }
 @media (max-width: 480px) {
-  .header, .footer, .body { padding: 1rem; }
+  .panel { padding: 1rem; }
   .options { grid-template-columns: 1fr; gap: 0; }
   .product { grid-template-columns: minmax(0, 1fr) 5rem 5rem; gap: .5rem; }
   .footer { align-items: flex-start; flex-wrap: wrap; gap: .65rem; }

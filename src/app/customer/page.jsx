@@ -1,4 +1,5 @@
 "use client";
+import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
 
@@ -848,7 +849,7 @@ export default function Customer() {
                             ⋮
                           </button>
                           {openActionMenuId === item._id && (
-                            <div className={styles.actionMenuPopup}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
                               <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
@@ -869,7 +870,7 @@ export default function Customer() {
                               >
                                 Delete
                               </button>
-                            </div>
+                            </RowActionPopup>
                           )}
                         </div>
                       </td>

@@ -1,4 +1,6 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
 import PageHeading from "@/components/PageHeading";
 
 import { ToastContainer, toast } from "react-toastify";
@@ -61,11 +63,7 @@ const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
   return (
     <tr>
       <td>
-        {new Date(entry.date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        })}
+        {formatDateForDisplay(entry.date)}
       </td>
       <td className={styles.batchCell}>{entry.batch}</td>
       <td>{formatValue(entry.milk_quantity)}</td>
@@ -127,10 +125,7 @@ export default function ProductionPage() {
 
   useEffect(() => {
     if (!dateStr) return;
-    const date = new Date(dateStr);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear().toString().slice(2);
+    const [day, month, year] = formatDateForDisplay(dateStr).split("/");
     setBatchNo(`B${day}${month}${year}`);
   }, [dateStr]);
 

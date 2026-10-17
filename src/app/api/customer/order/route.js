@@ -1,3 +1,4 @@
+import { getTodayDate } from "@/lib/india-date.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
@@ -262,7 +263,7 @@ export async function POST(request) {
         customerId: new ObjectId(data.customerId),
         customerName: customerName?.trim() || "",
         customerType: customerType?.trim() || "",
-        date: date || new Date().toISOString().split("T")[0],
+        date: date || getTodayDate(),
         items: items.map((item) => ({
           product: item.product.trim(),
           quantity: parseFloat(item.quantity) || 0,

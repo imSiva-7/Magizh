@@ -18,6 +18,7 @@ for (const width of [1280, 390]) {
       if (url.pathname === "/api/customer/order/history") json = { orders: [], summary: {} };
       if (url.pathname === "/api/customer/payment-summary") json = { customers: [] };
       if (url.pathname === "/api/stock/balance") json = {};
+      if (url.pathname.startsWith("/api/analytics/")) json = { daily: [], overall: {}, totals: {}, products: [], payment: [] };
       return route.fulfill({ json });
     });
     const appearance = locator => locator.evaluate(element => {
@@ -29,6 +30,9 @@ for (const width of [1280, 390]) {
       ["/", "This Month"],
       ["/customer/order/history", "Reset", "New order"],
       ["/supplier/procurement/history", "Reset", "Add Procurement"],
+      ["/customer/analytics", "Reset"],
+      ["/supplier/analytics", "Reset"],
+      ["/productions/analytics", "Reset"],
       ["/customer", null, "New Customer"],
       ["/supplier", null, "New Supplier"],
     ]) {
@@ -40,6 +44,12 @@ for (const width of [1280, 390]) {
         secondary ??= current;
         expect(current).toEqual(secondary);
         expect(await appearance(page.getByRole("button", { name: "Clear", exact: true }))).toEqual(secondary);
+        const actions = button.locator('xpath=ancestor::*[@data-filter="actions"][1]');
+        const alignedRight = await actions.evaluate(element => {
+          const lastButton = [...element.querySelectorAll("button")].at(-1);
+          return Math.abs(element.getBoundingClientRect().right - lastButton.getBoundingClientRect().right) <= 1;
+        });
+        expect(alignedRight).toBe(true);
         const input = page.locator('[data-filter="card"] input[type="date"]').first();
         const inputStyle = await appearance(input);
         dateInput ??= inputStyle;
@@ -48,6 +58,23 @@ for (const width of [1280, 390]) {
         await button.focus();
         await expect(button).toBeFocused();
         await expect(button).toHaveCSS("outline-style", "solid");
+        if (path.endsWith("/analytics")) {
+          await expect(actions.getByRole("button")).toHaveText(["Reset", "Clear", "Today"]);
+          const start = page.locator("#startDate");
+          const end = page.locator("#endDate");
+          const defaults = [await start.inputValue(), await end.inputValue()];
+          await actions.getByRole("button", { name: "Clear", exact: true }).click();
+          await expect(start).toHaveValue("");
+          await expect(end).toHaveValue("");
+          const todayButton = actions.getByRole("button", { name: "Today", exact: true });
+          expect(await appearance(todayButton)).toEqual(secondary);
+          await todayButton.click();
+          await expect(start).toHaveValue(defaults[1]);
+          await expect(end).toHaveValue(defaults[1]);
+          await button.click();
+          await expect(start).toHaveValue(defaults[0]);
+          await expect(end).toHaveValue(defaults[1]);
+        }
       }
       if (add) {
         const button = page.getByRole("button", { name: new RegExp(add, "i") }).first();

@@ -21,7 +21,7 @@ const round = value => Math.round((value + Number.EPSILON) * 100) / 100;
 
 export default function NewCustomerOrder({ onClose, onCreated }) {
   const { data: session } = useSession();
-  const dialogRef = useRef(null);
+  const panelRef = useRef(null);
   const searchRef = useRef(null);
   const dateRef = useRef(null);
   const busy = useRef(false);
@@ -40,10 +40,8 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const dialog = dialogRef.current;
-    const launcher = document.activeElement;
-    dialog.showModal();
-    return () => { dialog.close(); launcher?.focus(); };
+    panelRef.current?.scrollIntoView({ block: "start" });
+    searchRef.current?.focus({ preventScroll: true });
   }, []);
 
   useEffect(() => {
@@ -100,8 +98,8 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
     finally { busy.current = false; setSaving(false); }
   };
 
-  return <dialog ref={dialogRef} className={styles.dialog} aria-labelledby="new-customer-order-title" aria-describedby="new-customer-order-description" onCancel={event => { event.preventDefault(); if (!busy.current) onClose(); }}>
-    <div className={styles.header}><div><span className={styles.eyebrow}>CUSTOMER ORDER</span><h2 id="new-customer-order-title">New order</h2></div><button data-button="icon" type="button" className={styles.close} aria-label="Close new order" onClick={onClose} disabled={saving}>✕</button></div>
+  return <section id="new-customer-order" ref={panelRef} className={styles.panel} aria-labelledby="new-customer-order-title" aria-describedby="new-customer-order-description" onKeyDown={event => { if (event.key === "Escape" && !busy.current) { event.preventDefault(); onClose(); } }}>
+    <div className={styles.header}><h2 id="new-customer-order-title">New order</h2><button data-button="icon" type="button" className={styles.close} aria-label="Close new order" onClick={onClose} disabled={saving}>✕</button></div>
     <div className={styles.body}>
       <p id="new-customer-order-description" className={styles.hint}>Choose a customer and enter quantities using their saved prices.</p>
       {!customer ? <section aria-label="Choose customer">
@@ -124,5 +122,5 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
       {error && <p className={styles.error} role="alert">{error}</p>}
     </div>
     <div className={styles.footer}><div><span>Order total</span><strong aria-live="polite">{money(total)}</strong></div><div className={styles.actions}><button data-button="secondary" type="button" className={styles.cancel} disabled={saving} onClick={onClose}>Cancel</button><button data-button="primary" type="submit" form="history-new-order" className={styles.save} disabled={!customer || saving}>{saving ? "Saving…" : "Save order"}</button></div></div>
-  </dialog>;
+  </section>;
 }

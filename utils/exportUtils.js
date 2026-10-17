@@ -12,12 +12,7 @@ const formatNumberWithCommas = (value, decimals = 2) => {
   });
 };
 
-const formatDateForCSV = (dateStr) => {
-  const date = new Date(dateStr);
-  return `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}-${date.getFullYear().toString().slice(-2)}`;
-};
+const formatDateForCSV = formatDateForDisplay;
 
 const calculateTotals = (procurements) => {
   if (!procurements.length) {
@@ -158,9 +153,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   doc.setFont("helvetica", "normal");
   doc.text("Period:", rightBoxX + 5, infoStartY + 22);
   doc.setFont("helvetica", "bold");
-  const periodText = dateRange.start === dateRange.end
-    ? dateRange.start
-    : `${dateRange.start} - ${dateRange.end}`;
+  const periodStart = /^\d{4}-\d{2}-\d{2}/.test(dateRange.start) ? formatDateForDisplay(dateRange.start) : dateRange.start;
+    const periodEnd = /^\d{4}-\d{2}-\d{2}/.test(dateRange.end) ? formatDateForDisplay(dateRange.end) : dateRange.end;
+    const periodText = periodStart === periodEnd ? periodStart : `${periodStart} - ${periodEnd}`;
   const splitPeriod = doc.splitTextToSize(periodText, boxWidth - 40);
   doc.text(splitPeriod, rightBoxX + 30, infoStartY + 22);
 

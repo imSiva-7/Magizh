@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
+import { productSalesSummary } from "@/lib/customer-products";
+import { paymentPeriodRange } from "@/lib/customer-payment-period.mjs";
 
 export async function GET(request) {
   try {
@@ -7,15 +9,8 @@ export async function GET(request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
+    const { orderMatch: matchStage } = paymentPeriodRange(startDate, endDate);
     const db = await getDatabase();
-
-    // Build date filter
-    const matchStage = {};
-    if (startDate || endDate) {
-      matchStage.date = {};
-      if (startDate) matchStage.date.$gte = startDate;
-      if (endDate) matchStage.date.$lte = endDate;
-    }
 
     // Daily aggregation
     const dailyPipeline = [
@@ -53,11 +48,12 @@ export async function GET(request) {
       {
         $group: {
           _id: "$items.product",
-          totalQuantity: { $sum: "$items.quantity" },
-          totalAmount: { $sum: "$items.totalAmount" }
+          totalQuantity: { $sum: { $convert: { input: "$items.quantity", to: "decimal", onError: 0, onNull: 0 } } },
+          totalAmount: { $sum: { $convert: { input: "$items.totalAmount", to: "decimal", onError: 0, onNull: 0 } } }
         }
       },
-      { $sort: { totalAmount: -1 } }
+      { $sort: { totalAmount: -1 } },
+      { $project: { totalQuantity: { $convert: { input: { $round: ["$totalQuantity", 4] }, to: "double" } }, totalAmount: { $convert: { input: { $round: ["$totalAmount", 2] }, to: "double" } } } }
     ];
 
     const productStats = await db
@@ -118,6 +114,7 @@ export async function GET(request) {
       dueAmount: 0
     };
 
+    const productSales = productSalesSummary(productStats.map(product => ({ name: product._id, quantity: product.totalQuantity, amount: product.totalAmount })));
     return NextResponse.json({
       daily: dailyStats.map(d => ({
         date: d._id,
@@ -127,19 +124,16 @@ export async function GET(request) {
         paid: d.paidAmount,
         due: d.dueAmount
       })),
-      products: productStats.map(p => ({
-        name: p._id,
-        quantity: p.totalQuantity,
-        amount: p.totalAmount
-      })),
+      products: productSales.products,
       payment: paymentStats.map(p => ({
         status: p._id,
         count: p.count,
         amount: p.total
       })),
-      overall
+      overall: { ...overall, litresSold: productSales.litres, kilogramsSold: productSales.kilograms }
     });
   } catch (error) {
+    if (error.status === 400) return NextResponse.json({ error: error.message }, { status: 400 });
     console.error("Order analytics API error:", error);
     return NextResponse.json({ error: "Failed to fetch analytics" }, { status: 500 });
   }

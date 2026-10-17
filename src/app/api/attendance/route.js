@@ -1,3 +1,4 @@
+import { month as indiaMonth } from "@/lib/india-date.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
@@ -85,10 +86,7 @@ export async function GET(request) {
 
     // Generate all dates in the month and mark absent days (only up to today)
     const attendanceArray = [];
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1; // 0-indexed
-    const currentDay = today.getDate();
+    const [currentYear, currentMonth, currentDay] = getTodayDate().split("-").map(Number);
     
     // Determine the last day to show (either end of month or today, whichever is earlier)
     let lastDayToShow = daysInPeriod;
@@ -217,11 +215,11 @@ export async function POST(request) {
       );
     }
 
-    const month = data.month || new Date().toISOString().slice(0, 7); // YYYY-MM
+    const month = data.month || indiaMonth(); // YYYY-MM
     const advanceData = {
       _id: new ObjectId().toString(),
       amount: parseFloat(data.amount),
-      date: data.date || new Date().toISOString().split("T")[0],
+      date: data.date || getTodayDate(),
       reason: data.reason?.trim() || "",
       createdAt: new Date(),
     };

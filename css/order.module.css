@@ -901,11 +901,11 @@ button:disabled {
 }
 .comment {
   display: inline-block;
-  background-color: #d2eaf5;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  line-height: 24px;
+  background: transparent;
+  border: 0;
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
   text-align: center;
   font-weight: 500;
   color: var(--brand);
@@ -914,7 +914,8 @@ button:disabled {
   font-style: normal;
   position: relative;
 }
-.comment:hover::after {
+.comment:hover::after,
+.comment:focus-visible::after {
   content: attr(data-text);
   position: absolute;
   bottom: 100%;
@@ -930,7 +931,8 @@ button:disabled {
   margin-bottom: 0.5rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
-.comment:hover::before {
+.comment:hover::before,
+.comment:focus-visible::before {
   content: "";
   position: absolute;
   bottom: 100%;
@@ -942,6 +944,7 @@ button:disabled {
   margin-bottom: 0.25rem;
   z-index: 10;
 }
+.comment:focus-visible { outline: 3px solid #70ad91; outline-offset: 3px; }
 
 .actions_cell {
   min-width: 60px;

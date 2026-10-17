@@ -1,4 +1,8 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
+import { statNumberTone } from "@/lib/stat-number-tone";
+import CategoryBadge from "@/components/CategoryBadge";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
@@ -63,13 +67,13 @@ const validateDateRange = (startDate, endDate) => {
 
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
+    const from = formatDateForDisplay(startDate);
+    const to = formatDateForDisplay(endDate);
     return from === to ? from : `${from} to ${to}`;
   }
   if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    return `From ${formatDateForDisplay(startDate)}`;
+  if (endDate) return `Till ${formatDateForDisplay(endDate)}`;
   return "All Records";
 };
 
@@ -94,7 +98,7 @@ const StatItem = ({ label, value, unit, prefix = "", trend, tone = "milk" }) => 
     <StatTrendBackground points={trend} tone={tone} />
 
     <span className={styles.stat_label}>{label}</span>
-    <span className={styles.stat_value}>
+    <span data-stat-tone={statNumberTone(label, value)} className={styles.stat_value}>
       {prefix}
       {value}
       {unit && <span className={styles.stat_unit}>{unit}</span>}
@@ -465,10 +469,7 @@ function ProcurementHistoryContent() {
 
       const isFirstOfDate = dateCounts[dateKey] === 1;
       const displayDate = isFirstOfDate
-        ? `(${dateCounts[dateKey]}) ${new Date(row.date).toLocaleDateString(
-            "en-IN",
-            { day: "2-digit", month: "short", year: "2-digit" },
-          )} `
+        ? `(${dateCounts[dateKey]}) ${formatDateForDisplay(row.date)} `
         : `(${dateCounts[dateKey]})`;
 
       return { ...row, displayDate };
@@ -487,17 +488,9 @@ function ProcurementHistoryContent() {
 
     const dateRange = {
       start:
-        new Date(procurementData.at(-1).date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        }) || "----",
+        formatDateForDisplay(procurementData.at(-1).date) || "----",
       end:
-        new Date(procurementData[0].date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        }) || "----",
+        formatDateForDisplay(procurementData[0].date) || "----",
     };
     const supplierName = "All Suppliers records";
     const fileName = `${supplierName}_${dateRange.start}_to_${dateRange.end}`;
@@ -597,10 +590,10 @@ function ProcurementHistoryContent() {
                           {s.supplierName}
                         </span>
                         {s.isHeadSupplier && (
-                          <span className={styles.tag_head}>Head</span>
+                          <CategoryBadge kind="supplierRole" value="Head" />
                         )}
                         {s.isChildSupplier && !s.isHeadSupplier && (
-                          <span className={styles.tag_child}>Child</span>
+                          <CategoryBadge kind="supplierRole" value="Child" />
                         )}
                       </div>
                       <div className={styles.supplier_result_meta}>

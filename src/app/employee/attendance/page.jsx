@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/attendance.module.css";
 import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "@/utils/attendanceDates.mjs";
 import { exportAttendanceToPDF } from "@/utils/exportAttendance";
+import { useEmployeeRankings, EmployeeRankBadge } from "@/components/EmployeeRank";
 
 function AttendanceContent() {
   const router = useRouter();
@@ -30,6 +31,7 @@ function AttendanceContent() {
   // Date filter state
   const currentMonth = attendanceToday().slice(0, 7);
   const [month, setMonth] = useState(currentMonth);
+  const ranking = useEmployeeRankings(month);
 
   // Fetch employees list
   const fetchEmployees = useCallback(async () => {
@@ -77,7 +79,9 @@ function AttendanceContent() {
     if (empIDFromURL) {
       setSelectedEmpID(empIDFromURL);
     }
-  }, [searchParams]);
+    const monthFromURL = searchParams.get("month");
+    if (/^\d{4}-(0[1-9]|1[0-2])$/.test(monthFromURL || "") && monthFromURL <= currentMonth) setMonth(monthFromURL);
+  }, [searchParams, currentMonth]);
 
   useEffect(() => {
     if (selectedEmpID && month) {
@@ -88,7 +92,7 @@ function AttendanceContent() {
   const handleEmployeeChange = (empID) => {
     setSelectedEmpID(empID);
     if (empID) {
-      router.push(`/employee/attendance?empID=${empID}`);
+      router.push(`/employee/attendance?empID=${empID}&month=${month}`);
     } else {
       router.push("/employee/attendance");
       setAttendanceData(null);
@@ -278,6 +282,7 @@ function AttendanceContent() {
                 <span className={styles.infoLabel}>Name:</span>
                 <span className={styles.infoValue}>
                   {attendanceData.employee.name}
+                  {" "}{!ranking.loading && !ranking.error && <EmployeeRankBadge ranking={ranking.byEmployee.get(String(attendanceData.employee.empID))} month={month} />}
                 </span>
               </div>
               <div className={styles.infoItem}>

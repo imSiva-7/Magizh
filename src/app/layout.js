@@ -12,7 +12,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <body>
         <AuthProvider>
           <a className="skip-link" href="#main-content">Skip to content</a>

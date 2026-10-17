@@ -159,9 +159,9 @@ export const exportInvoiceToPDF = async (
     doc.setFont("helvetica", "normal");
     doc.text("Period:", rightBoxX + 5, startY + 22);
     doc.setFont("helvetica", "bold");
-    const periodText = dateRange.start === dateRange.end
-      ? dateRange.start
-      : `${dateRange.start} - ${dateRange.end}`;
+    const periodStart = /^\d{4}-\d{2}-\d{2}/.test(dateRange.start) ? formatDateForDisplay(dateRange.start) : dateRange.start;
+    const periodEnd = /^\d{4}-\d{2}-\d{2}/.test(dateRange.end) ? formatDateForDisplay(dateRange.end) : dateRange.end;
+    const periodText = periodStart === periodEnd ? periodStart : `${periodStart} - ${periodEnd}`;
     const splitPeriod = doc.splitTextToSize(periodText, boxWidth - 40);
     doc.text(splitPeriod, rightBoxX + 35, startY + 22);
 

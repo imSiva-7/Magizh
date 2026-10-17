@@ -30,6 +30,10 @@ table { font-variant-numeric: tabular-nums; }
 h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; }
 :where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #70ad91; outline-offset: 3px; }
 ::selection { background: #cee5d5; color: #163e32; }
+/* Keep stat-number colors consistent even in cards with older utility colors. */
+[data-stat-tone="positive"] { color: #166534 !important; }
+[data-stat-tone="negative"] { color: #b91c1c !important; }
+[data-stat-tone="neutral"] { color: var(--text) !important; }
 .skip-link { position: fixed; left: 1rem; top: -5rem; z-index: 3000; padding: 0.75rem 1rem; background: var(--brand-dark); color: white; border-radius: 0.5rem; }
 .skip-link:focus { top: 0.75rem; }
 @media (prefers-reduced-motion: reduce) {

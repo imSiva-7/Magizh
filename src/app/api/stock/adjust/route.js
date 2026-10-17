@@ -1,3 +1,4 @@
+import { getTodayDate } from "@/lib/india-date.mjs";
 import { requireAdmin } from "@/lib/mutation-auth";
 
 import { NextResponse } from "next/server";
@@ -24,7 +25,7 @@ export async function POST(request) {
     product,
     quantity: qty,
     comment: comment || "",
-    date: new Date().toISOString().split("T")[0],
+    date: getTodayDate(),
     createdAt: new Date(),
   });
 

@@ -1,4 +1,7 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
+import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 
 import { useSession } from "next-auth/react";
@@ -20,7 +23,7 @@ const StatItem = ({ label, value, colorClass = "", className = "", trend, tone =
   <div className={`${styles.global_stat_item} ${trendStyles.card} ${className}`}>
     <StatTrendBackground points={trend} tone={tone} />
     <div className={styles.global_stat_label}>{label}</div>
-    <div className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
+    <div data-stat-tone={statNumberTone(label, value)} className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
   </div>
 );
 
@@ -454,7 +457,7 @@ export default function Home() {
             <h2 className={styles.global_title}>Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
               {filters.startDate && filters.endDate
-                ? `${filters.startDate} to ${filters.endDate}`
+                ? `${formatDateForDisplay(filters.startDate)} to ${formatDateForDisplay(filters.endDate)}`
                 : "All Time"}
             </span>
           </div>
@@ -527,7 +530,7 @@ export default function Home() {
               <h2 className={styles.global_title}>Customers Summary</h2>
               <span className={styles.date_range_badge}>
                 {filters.startDate && filters.endDate
-                  ? `${filters.startDate} to ${filters.endDate}`
+                  ? `${formatDateForDisplay(filters.startDate)} to ${formatDateForDisplay(filters.endDate)}`
                   : "All Time"}
               </span>
             </div>

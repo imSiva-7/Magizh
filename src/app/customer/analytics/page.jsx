@@ -1,37 +1,46 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
+import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import PageHeading from "@/components/PageHeading";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CustomerCharts from "@/components/CustomerCharts";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
+import CustomerProductSales, {
+  CustomerOrderStatus,
+} from "@/components/CustomerProductSales";
+import { productSalesSummary } from "@/lib/customer-products";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
 import styles from "@/css/analytics.module.css";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
-
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
+    const from = formatDateForDisplay(startDate);
+    const to = formatDateForDisplay(endDate);
     return from === to ? from : `${from} – ${to}`;
   }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+  if (startDate) return `From ${formatDateForDisplay(startDate)}`;
+  if (endDate) return `Till ${formatDateForDisplay(endDate)}`;
   return "All Records";
 };
 
 export default function CustomerAnalyticsPage() {
   const [dateRange, setDateRange] = useState({
     startDate: getPreviousMonthDate(),
-    endDate: getTodayDate()
+    endDate: getTodayDate(),
   });
   const [data, setData] = useState({
     daily: [],
     products: [],
     payment: [],
-    overall: {}
+    overall: {},
   });
+  const productSales = useMemo(
+    () => productSalesSummary(data.products),
+    [data.products],
+  );
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -43,12 +52,16 @@ export default function CustomerAnalyticsPage() {
       setError("");
       try {
         const params = new URLSearchParams(dateRange);
-        const res = await fetch(`/api/analytics/customers?${params}`, { signal: controller.signal, cache: "no-store" });
+        const res = await fetch(`/api/analytics/customers?${params}`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error("Failed to fetch");
         const json = await res.json();
         if (!controller.signal.aborted) setData(json);
       } catch (error) {
-        if (!controller.signal.aborted) setError("Customer analytics could not be loaded.");
+        if (!controller.signal.aborted)
+          setError("Customer analytics could not be loaded.");
       } finally {
         if (!controller.signal.aborted) setLoading(false);
       }
@@ -58,13 +71,13 @@ export default function CustomerAnalyticsPage() {
   }, [dateRange, reload]);
 
   const handleDateChange = (e) => {
-    setDateRange(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setDateRange((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const resetDateRange = () => {
     setDateRange({
       startDate: getPreviousMonthDate(),
-      endDate: getTodayDate()
+      endDate: getTodayDate(),
     });
   };
 
@@ -72,7 +85,11 @@ export default function CustomerAnalyticsPage() {
     <div className={styles.page_container}>
       {/* Header */}
       <div className={styles.header}>
-        <PageHeading title="Customer Analytics" section="BUSINESS INSIGHTS" description="Understand sales trends, product demand, and customer payment patterns." />
+        <PageHeading
+          title="Customer Analytics"
+          section="BUSINESS INSIGHTS"
+          description="Understand sales trends, product demand, and customer payment patterns."
+        />
       </div>
 
       {/* Filter Section */}
@@ -108,17 +125,43 @@ export default function CustomerAnalyticsPage() {
           </div>
         </div>
         <div data-filter="actions" className={styles.filter_actions}>
-          <button data-button="secondary"
+          <button
+            data-button="secondary"
             type="button"
             onClick={resetDateRange}
             className={`${styles.btn} ${styles.btn_primary}`}
           >
             Reset
           </button>
+          <button
+            data-button="secondary"
+            type="button"
+            onClick={() => setDateRange({ startDate: "", endDate: "" })}
+            className={`${styles.btn} ${styles.btn_primary}`}
+          >
+            Clear
+          </button>
+          <button
+            data-button="secondary"
+            type="button"
+            onClick={() => {
+              const today = getTodayDate();
+              setDateRange({ startDate: today, endDate: today });
+            }}
+            className={`${styles.btn} ${styles.btn_primary}`}
+          >
+            Today
+          </button>
         </div>
       </div>
 
-      <CustomerCharts daily={data.daily} filters={dateRange} loading={loading} error={error} onRetry={() => setReload(value => value + 1)} />
+      <CustomerCharts
+        daily={data.daily}
+        filters={dateRange}
+        loading={loading}
+        error={error}
+        onRetry={() => setReload((value) => value + 1)}
+      />
 
       {error ? null : loading ? (
         <div className={styles.loading_container}>
@@ -128,7 +171,7 @@ export default function CustomerAnalyticsPage() {
       ) : (
         <>
           {/* Summary Cards */}
-          {data.overall && (
+          {/* {data.overall && (
             <div className={styles.summary_card}>
               <div className={styles.summary_header}>
                 <h2>Summary</h2>
@@ -137,92 +180,65 @@ export default function CustomerAnalyticsPage() {
                 </span>
               </div>
               <div className={styles.stats_grid}>
+                <div className={styles.stat_item}><div className={styles.stat_label}>Litres sold</div><div className={styles.stat_value}>{formatNumberWithCommas(productSales.litres, 2)} <span className={styles.stat_unit}>L</span></div></div>
+                <div className={styles.stat_item}><div className={styles.stat_label}>Kilograms sold</div><div className={styles.stat_value}>{formatNumberWithCommas(productSales.kilograms, 2)} <span className={styles.stat_unit}>kg</span></div></div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Orders</div>
-                  <div className={styles.stat_value}>
+                  <div data-stat-tone={statNumberTone("Orders", formatStat(data.overall.totalOrders || 0))} className={styles.stat_value}>
                     {formatStat(data.overall.totalOrders || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Items</div>
-                  <div className={styles.stat_value}>
-                    {formatStat(data.overall.totalItems || 0)}
-                  </div>
-                </div>
-                <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Sales</div>
-                  <div className={styles.stat_value}>
+                  <div data-stat-tone={statNumberTone("Sales", formatStat(data.overall.totalAmount || 0))} className={styles.stat_value}>
                     ₹{formatStat(data.overall.totalAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Paid</div>
-                  <div className={`${styles.stat_value} ${styles.text_green}`}>
+                  <div data-stat-tone={statNumberTone("Paid", formatStat(data.overall.paidAmount || 0))} className={`${styles.stat_value} ${styles.text_green}`}>
                     ₹{formatStat(data.overall.paidAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Due</div>
-                  <div className={`${styles.stat_value} ${styles.text_red}`}>
+                  <div data-stat-tone={statNumberTone("Due", formatStat(data.overall.dueAmount || 0))} className={`${styles.stat_value} ${styles.text_red}`}>
                     ₹{formatStat(data.overall.dueAmount || 0)}
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
-          {/* Product Breakdown Pie Chart */}
-          {data.products.length > 0 && (
-            <div className={styles.chart_card}>
-              <h3>Product Sales (by Amount)</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={data.products}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="amount"
-                    nameKey="name"
-                  >
-                    {data.products.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          {productSales.products.length > 0 && (
+            <section className={styles.summary_card} aria-label="Products sold">
+              <div className={styles.summary_header}>
+                <h2>Products sold</h2>
+                <span className={styles.date_range_badge}>
+                  {getFormattedDateRange(
+                    dateRange.startDate,
+                    dateRange.endDate,
+                  )}
+                </span>
+              </div>
+              <div className={styles.stats_grid}>
+                {productSales.products.map((product) => (
+                  <div className={styles.stat_item} key={product.name}>
+                    <div className={styles.stat_label}>{product.name}</div>
+                    <div className={styles.stat_value}>
+                      {formatNumberWithCommas(product.quantity, 2)}{" "}
+                      <span className={styles.stat_unit}>
+                        {product.unit || "unit unknown"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
-
-          {/* Payment Status Pie Chart */}
-          {data.payment.length > 0 && (
-            <div className={styles.chart_card}>
-              <h3>Payment Status</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={data.payment}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="count"
-                    nameKey="status"
-                  >
-                    {data.payment.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+          <CustomerProductSales products={productSales.products} />
+          {data.payment?.length > 0 && (
+            <CustomerOrderStatus payment={data.payment} />
           )}
         </>
       )}

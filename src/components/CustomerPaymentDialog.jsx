@@ -1,4 +1,6 @@
 "use client";
+import { formatDateTimeForDisplay } from "@/lib/india-date.mjs";
+
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
@@ -89,7 +91,7 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
         <div className={styles.modal_actions}><button data-button="primary" type="submit" disabled={submitting}>{submitting ? "Saving…" : kind === "payment" ? "Save payment" : "Save correction"}</button><button data-button="secondary" type="button" className={styles.ledger_btn} onClick={loadHistory} disabled={historyLoading || submitting}>{historyLoading ? "Loading history…" : "View payment history"}</button><button data-button="secondary" type="button" onClick={onClose} disabled={submitting}>Cancel</button></div>
       </form>
       {historyError && <p role="alert">{historyError}</p>}
-      {history !== null && <div className={styles.ledger_table_wrapper}><h4>Payment history</h4>{history.length ? <table className={styles.ledger_table}><caption>Receipts and corrections for {customerName}</caption><thead><tr><th>Date</th><th>Amount</th><th>Received total</th><th>Balance after entry</th><th>Details</th></tr></thead><tbody>{history.map((entry, index) => <tr key={entry.paymentId || index}><td>{new Date(entry.date).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</td><td>{money(entry.amount)}{entry.kind === "correction" && " (correction)"}</td><td>{money(entry.newBalance)}</td><td>{entry.newDue == null ? "—" : balanceText(entry.newDue)}</td><td>{[entry.method, entry.reference, entry.note].filter(Boolean).join(" · ") || "Legacy payment"}</td></tr>)}</tbody></table> : <p>No payments recorded yet.</p>}</div>}
+      {history !== null && <div className={styles.ledger_table_wrapper}><h4>Payment history</h4>{history.length ? <table className={styles.ledger_table}><caption>Receipts and corrections for {customerName}</caption><thead><tr><th>Date</th><th>Amount</th><th>Received total</th><th>Balance after entry</th><th>Details</th></tr></thead><tbody>{history.map((entry, index) => <tr key={entry.paymentId || index}><td>{formatDateTimeForDisplay(entry.date)}</td><td>{money(entry.amount)}{entry.kind === "correction" && " (correction)"}</td><td>{money(entry.newBalance)}</td><td>{entry.newDue == null ? "—" : balanceText(entry.newDue)}</td><td>{[entry.method, entry.reference, entry.note].filter(Boolean).join(" · ") || "Legacy payment"}</td></tr>)}</tbody></table> : <p>No payments recorded yet.</p>}</div>}
     </div>
   </div>;
 }

@@ -516,6 +516,8 @@
   color: var(--brand);
 }
 
+.supplierRole { display: inline-flex; margin-left: 0.5rem; vertical-align: middle; }
+
 .milkQuantityCell {
   text-align: right;
   font-variant-numeric: tabular-nums;

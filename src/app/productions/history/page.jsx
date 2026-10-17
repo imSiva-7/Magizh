@@ -1,4 +1,6 @@
 "use client";
+import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay } from "@/lib/india-date.mjs";
+
 import { formatStat } from "@/utils/formatNumberWithComma";
 
 import { useState, useEffect, useCallback } from "react";
@@ -93,7 +95,7 @@ const generateCSVData = (entries, stats, dateRange) => {
   const formatEntryValue = (value) => value || "0";
 
   const csvRows = entries.map((entry) => [
-    entry.date,
+    formatDateForDisplay(entry.date),
     entry.batch || "",
     formatEntryValue(entry.milk_quantity),
     formatEntryValue(entry.fat_percentage),
@@ -104,7 +106,7 @@ const generateCSVData = (entries, stats, dateRange) => {
     formatEntryValue(entry.butter_quantity),
     formatEntryValue(entry.cream_quantity),
     formatEntryValue(entry.ghee_quantity),
-    new Date(entry.createdAt).toLocaleString("en-IN"),
+    formatDateTimeForDisplay(entry.createdAt),
   ]);
 
   // Add total row
@@ -248,14 +250,14 @@ export default function ProductionHistoryPage() {
     const { fromDate, toDate } = filters;
 
     if (fromDate && toDate) {
-      const from = new Date(fromDate).toLocaleDateString("en-IN");
-      const to = new Date(toDate).toLocaleDateString("en-IN");
+      const from = formatDateForDisplay(fromDate);
+      const to = formatDateForDisplay(toDate);
       return from === to ? from : `${from} to ${to}`;
     }
 
     if (fromDate)
-      return `From ${new Date(fromDate).toLocaleDateString("en-IN")}`;
-    if (toDate) return `Till ${new Date(toDate).toLocaleDateString("en-IN")}`;
+      return `From ${formatDateForDisplay(fromDate)}`;
+    if (toDate) return `Till ${formatDateForDisplay(toDate)}`;
 
     return "All Records";
   };
@@ -277,11 +279,7 @@ export default function ProductionHistoryPage() {
   ];
 
   const renderTableRow = (entry) => ({
-    date: new Date(entry.date).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }),
+    date: formatDateForDisplay(entry.date),
     batch: entry.batch || "-",
     milk: entry.milk_quantity || "-",
     fat: entry.fat_percentage || "-",
@@ -292,7 +290,7 @@ export default function ProductionHistoryPage() {
     butter: entry.butter_quantity || "-",
     cream: entry.cream_quantity || "-",
     ghee: entry.ghee_quantity || "-",
-    createdAt: new Date(entry.createdAt).toLocaleDateString("en-IN"),
+    createdAt: formatDateForDisplay(entry.createdAt),
   });
 
   return (
@@ -314,7 +312,7 @@ export default function ProductionHistoryPage() {
         <h1>Production History</h1>
         {lastFetchTime && (
           <div className={styles.lastUpdated}>
-            Last updated: {lastFetchTime.toLocaleTimeString("en-IN")}
+            Last updated: {formatTimeForDisplay(lastFetchTime)}
           </div>
         )}
       </div>

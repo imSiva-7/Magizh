@@ -456,6 +456,10 @@
   border: 1px solid #93c5fd;
 }
 
+.employeeRank { display: block; margin-top: .4rem; }
+.rankingHint { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; font-size: .8125rem; color: var(--text-muted); margin: 1rem 0; }
+.rankingHint a { color: var(--brand); }
+
 .gender-female {
   background-color: #fce7f3;
   color: #9f1239;

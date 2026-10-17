@@ -59,6 +59,11 @@ test("supplier detail shows child relationship and supports decimal quantities a
   await mockProcurements(page);
   await page.goto("/supplier/procurement?supplierId=child");
   await expect(page.getByRole("heading", { name: supplier.supplierName })).toBeVisible();
+  await expect(page.locator('[data-category-badge="rate"]')).toHaveText("TSR: 280");
+  await expect(page.locator('[data-category-badge="supplierRole"]')).toHaveText("Child supplier");
+  await expect(page.getByText("Linked to River Society", { exact: true })).toBeVisible();
+  const badgeSizes = await page.locator('[data-category-badge]').evaluateAll(elements => elements.map(element => ({ height: element.getBoundingClientRect().height, font: getComputedStyle(element).fontSize })));
+  expect(badgeSizes).toEqual(Array(3).fill({ height: 28, font: "12px" }));
   await page.getByLabel("Milk Quantity (L)", { exact: true }).fill("25.5");
   await page.getByLabel("Fat %", { exact: true }).fill("3.5");
   await page.getByLabel("SNF %", { exact: true }).fill("8.5");
@@ -79,6 +84,7 @@ test("supplier detail shows child relationship and supports decimal quantities a
 test("head commissions use active dates and flag recovered uncertain payments", async ({ page }) => {
   const requests = await mockProcurements(page, { head: true });
   await page.goto("/supplier/procurement?supplierId=head");
+  await expect(page.locator('[data-category-badge="supplierRole"]')).toHaveText("Head supplier");
   await expect(page.getByText("Review payment", { exact: true })).toBeVisible();
   await expect(page.getByText(/recovered commission needs payment review/)).toBeVisible();
   await page.getByRole("button", { name: "Today", exact: true }).click();

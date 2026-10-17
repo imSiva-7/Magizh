@@ -1,6 +1,9 @@
 "use client";
+import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
+import { useEmployeeRankings, EmployeeRankBadge } from "@/components/EmployeeRank";
+import { attendanceToday, formatAttendanceMonth } from "@/utils/attendanceDates.mjs";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -76,6 +79,8 @@ export default function Employee() {
   const [createEmployee, setCreateEmployee] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
+  const rankingMonth = attendanceToday().slice(0, 7);
+  const ranking = useEmployeeRankings(rankingMonth, entries, entries.length > 0 && !loading);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const searchInputRef = useRef(null);
@@ -669,6 +674,10 @@ export default function Employee() {
       </div>
 
       {/* Employees Table */}
+      {/* {entries.length > 0 && <div className={styles.rankingHint}>
+        <span>Hours rank · {formatAttendanceMonth(rankingMonth)}. Completed attendance only.</span>
+        {ranking.loading ? <span role="status">Loading ranks…</span> : ranking.error ? <span role="alert">{ranking.error} <button data-button="secondary" type="button" onClick={ranking.retry}>Retry ranking</button></span> : <Link href={`/employee/attendance/history?month=${rankingMonth}`}>View top employees</Link>}
+      </div>} */}
       <div className={styles.tableContainer}>
         <div className={styles.tableWrapper}>
           <table className={styles.employeeTable}>
@@ -727,6 +736,7 @@ export default function Employee() {
                       >
                         {item.name || "-"}
                       </Link>
+                      {/* {!ranking.loading && !ranking.error && <span className={styles.employeeRank}><EmployeeRankBadge ranking={ranking.byEmployee.get(String(item.empID))} month={rankingMonth} /></span>} */}
                     </td>
                     <td className={styles.empIDCell}>
                       <span className={styles.empIDBadge}>
@@ -769,7 +779,7 @@ export default function Employee() {
                             ⋮
                           </button>
                           {openActionMenuId === item._id && (
-                            <div className={styles.actionMenuPopup}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
                               <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
@@ -806,7 +816,7 @@ export default function Employee() {
                                   "Delete"
                                 )}
                               </button>
-                            </div>
+                            </RowActionPopup>
                           )}
                         </div>
                       </td>

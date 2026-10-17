@@ -9,6 +9,63 @@ const supplier = { _id: id, supplierName: "Green Valley Society", supplierNumber
 const order = { _id: "order", customerId: id, customerName: customer.customerName, customerType: customer.customerType, date, totalAmount: 400, items: [{ product: "Milk", quantity: 10, ratePerUnit: 40, totalAmount: 400 }], paymentStatus: "Not Paid" };
 const procurement = { _id: "procurement", supplierId: id, supplierName: supplier.supplierName, date, time: "AM", milkQuantity: 10, fatPercentage: 3.5, snfPercentage: 8.5, supplierTSRate: 300, rate: 36, totalAmount: 360, paymentStatus: "Not Paid" };
 
+test.describe("Indian dates on a device outside India", () => {
+  test.use({ timezoneId: "America/Los_Angeles" });
+  test("history filters and new orders use the IST day and short Indian dates", async ({ page }) => {
+    await page.clock.install({ time: new Date("2026-10-17T19:00:00Z") });
+    await page.goto("/customer/order/history");
+    await expect(page.getByLabel("To Date", { exact: true })).toHaveValue("2026-10-18");
+    await expect(page.locator('[class*="date_range_badge"]').first()).toHaveText("01/10/26 to 18/10/26");
+    await page.getByRole("button", { name: "New order", exact: true }).click();
+    const dialog = page.getByRole("region", { name: "New order", exact: true });
+    await dialog.getByRole("button", { name: /Green Valley Restaurant/ }).click();
+    await expect(dialog.getByLabel("Order date")).toHaveValue("2026-10-18");
+  });
+});
+
+test("stat numbers use consistent financial colors and keep non-financial metrics neutral", async ({ page }) => {
+  await page.goto(`/customer/order?customerId=${id}`);
+  for (const [label, color] of [["Sales", "rgb(22, 101, 52)"], ["Received", "rgb(22, 101, 52)"], ["Due", "rgb(185, 28, 28)"], ["Orders", "rgb(32, 60, 50)"]]) {
+    const card = page.getByText(label, { exact: true }).locator("..");
+    await expect(card.locator("[data-stat-tone]")).toHaveCSS("color", color);
+  }
+  await page.goto("/supplier/analytics");
+  for (const [label, color] of [["Paid", "rgb(22, 101, 52)"], ["Due", "rgb(185, 28, 28)"], ["Milk", "rgb(32, 60, 50)"]]) {
+    await expect(page.getByText(label, { exact: true }).locator("..").locator("[data-stat-tone]")).toHaveCSS("color", color);
+  }
+});
+
+for (const width of [390, 1280]) {
+  test(`first-row Edit stays above scrolling tables at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 640 });
+    for (const path of ["/customer", "/supplier", "/employee", `/customer/order?customerId=${id}`, `/supplier/procurement?supplierId=${id}`]) {
+      await test.step(path, async () => {
+        await page.goto(path);
+        const trigger = page.locator("tbody tr").first().locator('button[class*="actionMenuButton"]');
+        await trigger.click();
+        const edit = page.getByRole("button", { name: "Edit", exact: true });
+        await expect(edit).toBeInViewport();
+        await expect(edit).toBeFocused();
+        expect(await edit.evaluate(element => {
+          const r = element.getBoundingClientRect();
+          return element.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+        })).toBe(true);
+        await page.keyboard.press("Escape");
+        await expect(edit).toHaveCount(0);
+        await expect(trigger).toBeFocused();
+        await trigger.evaluate(element => element.scrollIntoView({ block: "center" }));
+        await trigger.click();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await expect(edit).toHaveCount(0);
+        await trigger.click();
+        await edit.click();
+        await expect(page.getByRole("heading").filter({ hasText: /Edit/ }).first()).toBeVisible();
+        await expect(page.locator('[popover]:popover-open')).toHaveCount(0);
+      });
+    }
+  });
+}
+
 test.beforeEach(async ({ context, page, baseURL }) => {
   loadEnvConfig(process.cwd(), true);
   test.skip(!process.env.NEXTAUTH_SECRET, "Local auth secret required");
@@ -65,9 +122,11 @@ test("small-screen procurement entry and payment controls remain reachable", asy
   await expect(page.getByRole("button", { name: "Add Record", exact: true })).toBeInViewport();
   await page.goto("/customer/order/history");
   await page.getByRole("button", { name: "New order", exact: true }).click();
-  const orderDialog = page.getByRole("dialog", { name: "New order", exact: true });
+  const orderDialog = page.getByRole("region", { name: "New order", exact: true });
   await orderDialog.getByRole("button", { name: /Green Valley Restaurant/ }).click();
   await orderDialog.getByLabel("Milk quantity (L)").fill("2.5");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await orderDialog.getByRole("button", { name: "Save order", exact: true }).scrollIntoViewIfNeeded();
   await expect(orderDialog.getByRole("button", { name: "Save order", exact: true })).toBeInViewport();
   expect(await orderDialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
   await page.goto("/customer/payments");

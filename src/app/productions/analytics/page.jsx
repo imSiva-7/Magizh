@@ -1,4 +1,6 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
 import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import PageHeading from "@/components/PageHeading";
 
@@ -33,12 +35,12 @@ const COLORS = [
 
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
+    const from = formatDateForDisplay(startDate);
+    const to = formatDateForDisplay(endDate);
     return from === to ? from : `${from} – ${to}`;
   }
-  if (startDate) return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+  if (startDate) return `From ${formatDateForDisplay(startDate)}`;
+  if (endDate) return `Till ${formatDateForDisplay(endDate)}`;
   return "All Records";
 };
 
@@ -130,6 +132,25 @@ export default function ProductionAnalyticsPage() {
           >
             Reset
           </button>
+          <button
+            data-button="secondary"
+            type="button"
+            onClick={() => setDateRange({ startDate: "", endDate: "" })}
+            className={`${styles.btn} ${styles.btn_primary}`}
+          >
+            Clear
+          </button>
+          <button
+            data-button="secondary"
+            type="button"
+            onClick={() => {
+              const today = getTodayDate();
+              setDateRange({ startDate: today, endDate: today });
+            }}
+            className={`${styles.btn} ${styles.btn_primary}`}
+          >
+            Today
+          </button>
         </div>
       </div>
 
@@ -184,9 +205,9 @@ export default function ProductionAnalyticsPage() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
                   type="monotone"
@@ -210,9 +231,9 @@ export default function ProductionAnalyticsPage() {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} />
                 <YAxis domain={[0, "dataMax"]} />
-                <Tooltip />
+                <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
                   type="monotone"

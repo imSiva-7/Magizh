@@ -1,4 +1,8 @@
 "use client";
+import { formatMonthForDisplay } from "@/lib/india-date.mjs";
+
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
 
 import { useMemo } from "react";
 import Link from "next/link";
@@ -12,9 +16,7 @@ const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN", { maxi
 const shortMoney = (value) => Math.abs(value) >= 100000
   ? `₹${(value / 100000).toFixed(1)}L`
   : Math.abs(value) >= 1000 ? `₹${(value / 1000).toFixed(1)}k` : `₹${value}`;
-const dateLabel = (value) => new Date(`${value.length === 7 ? `${value}-01` : value}T00:00:00`).toLocaleDateString("en-IN", {
-  month: "short", ...(value.length === 7 ? { year: "2-digit" } : { day: "numeric" }),
-});
+const dateLabel = value => value.length === 7 ? formatMonthForDisplay(value) : formatDateForDisplay(value);
 
 export default function HomeCharts({ orders, procurements, customerSummary, supplierSummary, filters }) {
   const { trend, monthly } = useMemo(() => {
@@ -72,7 +74,7 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <details className={styles.chartDetails}><summary>View trend data</summary><div className={styles.tableWrapper}><table className={styles.chartTable}><caption>Sales and milk procurement value in rupees</caption><thead><tr><th scope="col">Period</th><th scope="col">Sales</th><th scope="col">Milk procurement</th></tr></thead><tbody>{trend.map((entry) => <tr key={entry.date}><th scope="row">{entry.date}</th><td>{money(entry.sales)}</td><td>{money(entry.procurement)}</td></tr>)}</tbody></table></div></details>
+          <details className={styles.chartDetails}><summary>View trend data</summary><div className={styles.tableWrapper}><table className={styles.chartTable}><caption>Sales and milk procurement value in rupees</caption><thead><tr><th scope="col">Period</th><th scope="col">Sales</th><th scope="col">Milk procurement</th></tr></thead><tbody>{trend.map((entry) => <tr key={entry.date}><th scope="row">{dateLabel(entry.date)}</th><td>{money(entry.sales)}</td><td>{money(entry.procurement)}</td></tr>)}</tbody></table></div></details>
         </> : <div className={styles.chartEmpty}>No sales or procurement records in this date range.</div>}
       </section>
       <section className={styles.chartCard} aria-labelledby="payments-chart-title">

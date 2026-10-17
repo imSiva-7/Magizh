@@ -1068,3 +1068,7 @@
 
 .compactHistory .historyControls { margin-top: 1.5rem; }
 .compactHistory .historyGroups { margin-top: 1.25rem; }
+@media (max-width: 380px) {
+  .compactHistory .historyControls { grid-template-columns: minmax(0, 1fr); }
+  .compactHistory .historyControls .inputGroup:nth-child(2) { grid-column: auto; grid-row: auto; }
+}

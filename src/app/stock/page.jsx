@@ -1,4 +1,6 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -249,7 +251,7 @@ export default function StockPage() {
             const quantity = stockNumber(entry.quantity);
             const rawDate = entry.date || entry.createdAt;
             const date = rawDate ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? `${rawDate}T00:00:00` : rawDate) : null;
-            return <tr key={entry._id || index}><td>{date && Number.isFinite(date.getTime()) ? date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }) : "—"}</td><td>{PRODUCT_NAMES[entry.product] || entry.product}</td><td><span className={styles.movementType}>{MOVEMENT_NAMES[entry.type] || entry.type}</span></td><td className={quantity < 0 ? styles.warningText : styles.positiveText}>{quantity > 0 ? "+" : ""}{stockQuantity(quantity)} {PRODUCT_UNITS[entry.product] || ""}</td><td className={styles.reasonCell}>{entry.comment || "—"}</td></tr>;
+            return <tr key={entry._id || index}><td>{date && Number.isFinite(date.getTime()) ? formatDateForDisplay(date) : "—"}</td><td>{PRODUCT_NAMES[entry.product] || entry.product}</td><td><span className={styles.movementType}>{MOVEMENT_NAMES[entry.type] || entry.type}</span></td><td className={quantity < 0 ? styles.warningText : styles.positiveText}>{quantity > 0 ? "+" : ""}{stockQuantity(quantity)} {PRODUCT_UNITS[entry.product] || ""}</td><td className={styles.reasonCell}>{entry.comment || "—"}</td></tr>;
           })}</tbody></table></div>}
         </section>
       </>}

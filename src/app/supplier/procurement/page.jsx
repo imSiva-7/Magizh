@@ -1,4 +1,8 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
+import { statNumberTone } from "@/lib/stat-number-tone";
+import RowActionPopup from "@/components/RowActionPopup";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
@@ -109,7 +113,7 @@ const StatItem = ({ label, value, unit, prefix = "", trend, tone = "milk" }) => 
     <StatTrendBackground points={trend} tone={tone} />
 
     <span className={styles.stat_label}>{label}</span>
-    <span className={styles.stat_value}>
+    <span data-stat-tone={statNumberTone(label, value)} className={styles.stat_value}>
       {prefix}
       {value}
       <span className={styles.stat_unit}>{unit}</span>
@@ -165,14 +169,12 @@ const SummaryStats = ({ summary, filters, trends }) => (
 const getDateRangeLabel = (startDate, endDate) => {
   if (startDate && endDate) {
     return startDate === endDate
-      ? startDate
-      : `${new Date(startDate).toLocaleDateString("en-IN")} to ${new Date(
-          endDate,
-        ).toLocaleDateString("en-IN")}`;
+      ? formatDateForDisplay(startDate)
+      : `${formatDateForDisplay(startDate)} to ${formatDateForDisplay(endDate)}`;
   }
   if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    return `From ${formatDateForDisplay(startDate)}`;
+  if (endDate) return `Till ${formatDateForDisplay(endDate)}`;
   return "All Records";
 };
 
@@ -691,17 +693,9 @@ function ProcurementContent() {
     }
     const dateRange = {
       start:
-        new Date(filteredProcurements.at(-1).date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        }) || "----",
+        formatDateForDisplay(filteredProcurements.at(-1).date) || "----",
       end:
-        new Date(filteredProcurements[0].date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        }) || "----",
+        formatDateForDisplay(filteredProcurements[0].date) || "----",
     };
     const supplierName = data.supplier?.supplierName || "Unknown";
     const fileName =
@@ -770,41 +764,25 @@ function ProcurementContent() {
               <CategoryBadge kind="supplier" value={data.supplier?.supplierType} />
 
               {data.supplier?.supplierCustomRate ? (
-                <span className={styles.ts_rate_tag}>
-                  Custom Rate: ₹
-                  {parseFloat(data.supplier?.supplierCustomRate || 0).toFixed(
-                    0,
-                  )}
-                </span>
+                <CategoryBadge kind="rate" value={`Rate: ₹${formatNumberWithCommas(data.supplier.supplierCustomRate, 2)}`} />
               ) : (
-                <span className={styles.ts_rate_tag}>
-                  TSR: {effectiveTSRate.toFixed(0)}
-                  {hasCut && (
-                    <span className={styles.ts_rate_original}>
-                      {" "}
-                      (was{" "}
-                      {parseFloat(data.supplier?.supplierTSRate || 0).toFixed(
-                        0,
-                      )}
-                      )
-                    </span>
-                  )}
-                </span>
+                <CategoryBadge kind="rate" value={`TSR: ${effectiveTSRate.toFixed(0)}`} />
               )}
 
               {data.supplier?.isHeadSupplier && (
-                <span className={styles.head_supplier_tag}>Head Supplier</span>
+                <CategoryBadge kind="supplierRole" value="Head supplier" />
               )}
-
-              {hasCut && (
-                <span className={styles.head_link_tag}>
-                  Linked to:{" "}
-                  <strong>{data.supplier?.headSupplierName || "Head"}</strong>
-                  {" · "}
-                  Cut: {parseFloat(data.supplier?.cutPercentage).toFixed(0)}
-                </span>
+              {data.supplier?.isChildSupplier && !data.supplier?.isHeadSupplier && (
+                <CategoryBadge kind="supplierRole" value="Child supplier" />
               )}
             </div>
+            {data.supplier?.isChildSupplier && !data.supplier?.isHeadSupplier && (
+              <p className={styles.supplier_relationship}>
+                <span>Linked to <strong>{data.supplier.headSupplierName || "Head supplier"}</strong></span>
+                <span>Cut TSR: <strong>{Number(data.supplier.cutPercentage || 0)}</strong></span>
+                {hasCut && <span>Base TSR: <strong>{Number(data.supplier.supplierTSRate || 0)}</strong></span>}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -1236,11 +1214,7 @@ function ProcurementContent() {
                     {headData.entries.map((row, idx) => (
                       <tr key={`${row.procurementId}-${idx}`}>
                         <td className={styles.date_cell}>
-                          {new Date(row.date).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "2-digit",
-                          })}
+                          {formatDateForDisplay(row.date)}
                         </td>
                         <td className={styles.time_cell}>
                           <span
@@ -1376,11 +1350,7 @@ function ProcurementContent() {
                         <div className={styles.continuation_wrapper}>
                           {`(${row.occurrenceCount}) `}
                           <span className={styles.date_text}>
-                            {new Date(row.date).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-
-                            })}
+                            {formatDateForDisplay(row.date)}
                           </span>
                         </div>
                       ) : (
@@ -1466,7 +1436,7 @@ function ProcurementContent() {
                             ⋮
                           </button>
                           {openActionMenuId === row._id && (
-                            <div className={styles.actionMenuPopup}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
                               <button data-button="menu"
                                 onClick={() => handleEdit(row)}
                                 className={styles.actionEditButton}
@@ -1481,7 +1451,7 @@ function ProcurementContent() {
                               >
                                 Delete
                               </button>
-                            </div>
+                            </RowActionPopup>
                           )}
                         </div>
                       </td>

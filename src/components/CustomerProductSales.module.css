@@ -1,0 +1,23 @@
+.card { padding: 1.5rem; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; box-shadow: var(--shadow-card); min-width: 0; }
+.heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.heading h2 { font-size: 1.1rem; margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hint, .quantity, .empty { color: var(--text-muted); font-size: .8125rem; line-height: 1.6; }
+.hint { margin: .75rem 0 1.25rem; }
+.bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.25rem; }
+.bars li { min-width: 0; }
+.barLabel { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .35rem 1rem; margin-bottom: .4rem; font-size: .875rem; }
+.barLabel span { overflow-wrap: anywhere; }
+.barLabel strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.track { height: .65rem; background: var(--surface-muted); border-radius: 999px; overflow: hidden; }
+.track > span { display: block; height: 100%; background: var(--brand); border-radius: inherit; }
+.track > .unpaid { background: #b91c1c; }
+.quantity { display: block; margin-top: .3rem; }
+.tableWrapper { overflow-x: auto; margin-top: 1.5rem; }
+.tableWrapper table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+.tableWrapper caption { text-align: left; color: var(--text-muted); font-size: .75rem; margin-bottom: .75rem; }
+.tableWrapper th, .tableWrapper td { padding: .75rem .5rem; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.tableWrapper th:first-child { text-align: left; }
+.tableWrapper tbody th { font-weight: 500; }
+.tableWrapper td { white-space: nowrap; }
+@media (max-width: 600px) { .card { padding: 1rem; } .controls { width: 100%; } }

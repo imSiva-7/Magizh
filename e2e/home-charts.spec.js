@@ -35,8 +35,8 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await expect(page.getByTestId("stat-trend").first()).toHaveAttribute("data-points", "2");
   await expect(page.getByTestId("stat-trend").first().locator("path")).toHaveAttribute("fill", "none");
   await trend.getByText("View trend data", { exact: true }).click();
-  await expect(trend.getByRole("row").filter({ hasText: "2026-10-01" })).toContainText("₹2,000");
-  await expect(trend.getByRole("row").filter({ hasText: "2026-10-02" })).toContainText("₹0");
+  await expect(trend.getByRole("row").filter({ hasText: "01/10/26" })).toContainText("₹2,000");
+  await expect(trend.getByRole("row").filter({ hasText: "02/10/26" })).toContainText("₹0");
   await payment.getByText("View payment data", { exact: true }).click();
   await expect(payment.getByRole("row").filter({ hasText: "Customers" })).toContainText("₹4,200");
   await expect(payment.getByRole("row").filter({ hasText: "Suppliers" })).toContainText("₹900");
@@ -46,7 +46,7 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await page.screenshot({ path: "test-results/home-charts-desktop.png" });
   await page.getByLabel("To", { exact: true }).fill("2026-10-02");
   await trend.getByText("View trend data", { exact: true }).click();
-  await expect(trend.getByRole("row").filter({ hasText: "2026-10-03" })).toHaveCount(0);
+  await expect(trend.getByRole("row").filter({ hasText: "03/10/26" })).toHaveCount(0);
   await payment.getByText("View payment data", { exact: true }).click();
   await expect(payment.getByRole("row").filter({ hasText: "Customers" })).toContainText("₹1,200");
   await page.setViewportSize({ width: 390, height: 844 });
@@ -61,6 +61,6 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await page.getByLabel("To", { exact: true }).fill("2026-10-03");
   await expect(trend).toContainText("MONTHLY TREND");
   await trend.getByText("View trend data", { exact: true }).click();
-  await expect(trend.getByRole("row").filter({ hasText: "2026-10" })).toContainText("₹5,000");
-  await expect(trend.getByRole("row").filter({ hasText: "2026-10" })).toContainText("₹1,400");
+  await expect(trend.getByRole("row").filter({ hasText: "10/26" })).toContainText("₹5,000");
+  await expect(trend.getByRole("row").filter({ hasText: "10/26" })).toContainText("₹1,400");
 });

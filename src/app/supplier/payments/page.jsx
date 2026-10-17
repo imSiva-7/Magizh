@@ -1,4 +1,7 @@
 "use client";
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
+import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import CategoryBadge from "@/components/CategoryBadge";
 
@@ -26,13 +29,13 @@ const INITIAL_VISIBLE_COUNT = 20;
 
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
-    const from = new Date(startDate).toLocaleDateString("en-IN");
-    const to = new Date(endDate).toLocaleDateString("en-IN");
+    const from = formatDateForDisplay(startDate);
+    const to = formatDateForDisplay(endDate);
     return from === to ? from : `${from} to ${to}`;
   }
   if (startDate)
-    return `From ${new Date(startDate).toLocaleDateString("en-IN")}`;
-  if (endDate) return `Till ${new Date(endDate).toLocaleDateString("en-IN")}`;
+    return `From ${formatDateForDisplay(startDate)}`;
+  if (endDate) return `Till ${formatDateForDisplay(endDate)}`;
   return "All Records";
 };
 
@@ -568,7 +571,7 @@ export default function Payments() {
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.milk} />
               <div className={styles.global_stat_label}>Milk</div>
-              <div className={styles.global_stat_value}>
+              <div data-stat-tone={statNumberTone("Milk", formatNumberWithCommas(globalStats.totalMilk, 2))} className={styles.global_stat_value}>
                 {formatNumberWithCommas(globalStats.totalMilk, 2)}{" "}
                 <span className={styles.unit_label}>L</span>
               </div>
@@ -576,14 +579,14 @@ export default function Payments() {
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.amount} tone="amount" />
               <div className={styles.global_stat_label}>Value</div>
-              <div className={styles.global_stat_value}>
+              <div data-stat-tone={statNumberTone("Value", formatStat(globalStats.totalAmount))} className={styles.global_stat_value}>
                 ₹{formatStat(globalStats.totalAmount)}
               </div>
             </div>
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.paid} />
               <div className={styles.global_stat_label}>Paid</div>
-              <div
+              <div data-stat-tone={statNumberTone("Paid", formatStat(globalStats.paidAmount))}
                 className={`${styles.global_stat_value} ${styles.text_green}`}
               >
                 ₹{formatStat(globalStats.paidAmount)}
@@ -592,7 +595,7 @@ export default function Payments() {
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.due} tone="amount" />
               <div className={styles.global_stat_label}>Due</div>
-              <div className={`${styles.global_stat_value} ${styles.text_red}`}>
+              <div data-stat-tone={statNumberTone("Due", formatStat(globalStats.dueAmount))} className={`${styles.global_stat_value} ${styles.text_red}`}>
                 ₹{formatStat(globalStats.dueAmount)}
               </div>
             </div>
@@ -651,20 +654,20 @@ export default function Payments() {
                 <div className={styles.quick_stats}>
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Milk</div>
-                    <div className={styles.stat_card_value}>
+                    <div data-stat-tone={statNumberTone("Milk", formatNumberWithCommas(stats.totalMilk, 2))} className={styles.stat_card_value}>
                       {formatNumberWithCommas(stats.totalMilk, 2)}{" "}
                       <span className={styles.unit_label}>L</span>
                     </div>
                   </div>
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Value</div>
-                    <div className={styles.stat_card_value}>
+                    <div data-stat-tone={statNumberTone("Value", formatStat(stats.totalAmount))} className={styles.stat_card_value}>
                       ₹{formatStat(stats.totalAmount)}
                     </div>
                   </div>
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Paid</div>
-                    <div
+                    <div data-stat-tone={statNumberTone("Paid", formatStat(stats.paidAmount))}
                       className={`${styles.stat_card_value} ${styles.text_green}`}
                     >
                       ₹{formatStat(stats.paidAmount)}
@@ -672,7 +675,7 @@ export default function Payments() {
                   </div>
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Due</div>
-                    <div
+                    <div data-stat-tone={statNumberTone("Due", formatStat(stats.dueAmount))}
                       className={`${styles.stat_card_value} ${styles.text_red}`}
                     >
                       ₹{formatStat(stats.dueAmount)}
@@ -763,10 +766,7 @@ export default function Payments() {
                           <tr key={row._id} className={styles.table_row}>
                             <td className={styles.table_cell}>
                               {showDate ? (
-                                new Date(row.date).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                })
+                                formatDateForDisplay(row.date)
                               ) : (
                                 <span className={styles.continuation_arrow}>
                                   ↳

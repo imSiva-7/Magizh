@@ -1,4 +1,6 @@
 "use client";
+import { statNumberTone } from "@/lib/stat-number-tone";
+import RowActionPopup from "@/components/RowActionPopup";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
@@ -88,7 +90,7 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "", trend, ton
   <div className={`${styles.stat_item} ${trendStyles.card}`}>
     <StatTrendBackground points={trend} tone={tone} />
     <span className={styles.stat_label}>{label}</span>
-    <span className={`${styles.stat_value} ${colorClass}`}>
+    <span data-stat-tone={statNumberTone(label, value)} className={`${styles.stat_value} ${colorClass}`}>
       {prefix}
       {value}
       <span className={styles.stat_unit}>{unit}</span>
@@ -765,6 +767,8 @@ function OrdersContent() {
                           <span
                             className={styles.comment}
                             data-text={order.comment}
+                            tabIndex={0}
+                            aria-label={`Comment: ${order.comment}`}
                           >
                             i
                           </span>
@@ -773,7 +777,7 @@ function OrdersContent() {
                         )}
                       </td>
                       <td className={styles.invoice_cell}>
-                        <button data-button="icon"
+                        <button data-button="table-icon"
                           onClick={() =>
                             handleExport(
                               "pdf",
@@ -813,7 +817,7 @@ function OrdersContent() {
                               ⋮
                             </button>
                             {openActionMenuId === order._id && (
-                              <div className={styles.actionMenuPopup}>
+                              <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
                                 <button data-button="menu"
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
@@ -832,7 +836,7 @@ function OrdersContent() {
                                 >
                                   Delete
                                 </button>
-                              </div>
+                              </RowActionPopup>
                             )}
                           </div>
                         </td>

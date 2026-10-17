@@ -1,4 +1,5 @@
 "use client";
+import { getTodayDate } from "@/lib/india-date.mjs";
 
 import styles from "@/css/footer.module.css";
 import Image from "next/image";
@@ -6,7 +7,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = Number(getTodayDate().slice(0, 4));
 
   const { data: session } = useSession();
   const isAdmin =
@@ -132,7 +133,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.4</span>
+            <span className={styles.version}>v1.7.5</span>
           </div>
         </div>
       </div>

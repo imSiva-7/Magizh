@@ -5,6 +5,7 @@ import { attendanceToday, formatAttendanceDate } from "@/utils/attendanceDates.m
 import Link from "next/link";
 import PageHeading from "@/components/PageHeading";
 import styles from "@/css/attendance.module.css";
+import { useEmployeeRankings, EmployeeLeaderboard } from "@/components/EmployeeRank";
 
 const getCurrentMonth = () => attendanceToday().slice(0, 7);
 const formatTime = (time) => {
@@ -23,6 +24,7 @@ export default function AttendanceHistoryPage() {
   const [data, setData] = useState({ records: [], summary: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const ranking = useEmployeeRankings(month, refresh);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearchDebounced(search), 300);
@@ -103,6 +105,8 @@ export default function AttendanceHistoryPage() {
           <button data-button="primary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton} disabled={loading} aria-label="Refresh attendance">Refresh</button>
         </div>
       </div>
+
+      <EmployeeLeaderboard month={month} state={ranking} />
 
       {loading ? (
         <div className={styles.loadingContainer} role="status"><div className={styles.spinner} aria-hidden="true" /><p>Loading attendance…</p></div>

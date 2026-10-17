@@ -1,4 +1,8 @@
 "use client";
+import { formatMonthForDisplay } from "@/lib/india-date.mjs";
+
+import { formatDateForDisplay } from "@/lib/india-date.mjs";
+
 import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
@@ -10,7 +14,7 @@ import local from "@/css/supplier-charts.module.css";
 const quantity = value => Number(value || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
 const money = value => `₹${quantity(value)}`;
 const short = value => Math.abs(value) >= 100000 ? `${(value / 100000).toFixed(1)}L` : Math.abs(value) >= 1000 ? `${(value / 1000).toFixed(1)}k` : quantity(value);
-const label = date => new Date(`${date.length === 7 ? `${date}-01` : date}T00:00:00Z`).toLocaleDateString("en-IN", { month: "short", ...(date.length === 7 ? { year: "2-digit" } : { day: "numeric" }), timeZone: "UTC" });
+const label = date => date.length === 7 ? formatMonthForDisplay(date) : formatDateForDisplay(date);
 
 export default function CustomerCharts({ records, daily = [], filters = {}, loading = false, error = "", onRetry }) {
   const [metric, setMetric] = useState("amount");
@@ -18,7 +22,7 @@ export default function CustomerCharts({ records, daily = [], filters = {}, load
   const { rows, monthly } = useMemo(() => customerChartSeries(records ? customerDaily(records) : daily, filters), [records, daily, filters]);
   const fallback = <div className={styles.chartEmpty}>{loading ? <span role="status">Loading customer charts…</span> : error ? <div role="alert"><p>{error}</p>{onRetry && <button data-button="secondary" type="button" className={local.retry} onClick={onRetry}>Retry charts</button>}</div> : "No orders in this date range."}</div>;
   const axes = <><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" /><XAxis dataKey="date" tickFormatter={label} tickLine={false} axisLine={false} minTickGap={28} tick={{ fontSize: 11 }} /><YAxis tickFormatter={short} allowDecimals={metric !== "orders"} tickLine={false} axisLine={false} width={62} tick={{ fontSize: 11 }} /><Tooltip labelFormatter={label} formatter={(value, name) => [metric === "amount" ? money(value) : quantity(value), name]} /></>;
-  const table = (payments) => <details className={styles.chartDetails}><summary>View {payments ? "order payment" : "sales"} chart data</summary><div className={`${styles.tableWrapper} ${local.data}`}><table className={styles.chartTable}><caption>{payments ? "Order payment status in rupees" : "Customer sales for the selected period"}</caption><thead><tr><th scope="col">Period</th>{(payments ? ["Paid", "Due"] : ["Orders", "Sales value"]).map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.date}><th scope="row">{row.date}</th><td>{payments ? money(row.paid) : quantity(row.orders)}</td><td>{money(payments ? row.due : row.amount)}</td></tr>)}</tbody></table></div></details>;
+  const table = (payments) => <details className={styles.chartDetails}><summary>View {payments ? "order payment" : "sales"} chart data</summary><div className={`${styles.tableWrapper} ${local.data}`}><table className={styles.chartTable}><caption>{payments ? "Order payment status in rupees" : "Customer sales for the selected period"}</caption><thead><tr><th scope="col">Period</th>{(payments ? ["Paid", "Due"] : ["Orders", "Sales value"]).map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead><tbody>{rows.map(row => <tr key={row.date}><th scope="row">{row.date.length === 7 ? formatMonthForDisplay(row.date) : formatDateForDisplay(row.date)}</th><td>{payments ? money(row.paid) : quantity(row.orders)}</td><td>{money(payments ? row.due : row.amount)}</td></tr>)}</tbody></table></div></details>;
   return <div className={`${styles.chartGrid} ${local.grid}`}>
     <section className={styles.chartCard} aria-labelledby={`${id}-sales`}>
       <div className={styles.chartHeader}><div><span className={styles.eyebrow}>{monthly ? "MONTHLY" : "DAILY"} TREND</span><h3 id={`${id}-sales`}>{metric === "amount" ? "Sales value" : "Customer orders"}</h3></div><div className={local.controls} role="group" aria-label="Sales chart metric">{[["amount", "Value"], ["orders", "Orders"]].map(([value, name]) => <button data-button="toggle" key={value} type="button" aria-pressed={metric === value} onClick={() => setMetric(value)}>{name}</button>)}</div></div>

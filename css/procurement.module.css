@@ -318,10 +318,22 @@
 /* ========== 2. BADGES & SUPPLIER INFO ========== */
 .supplier_info {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
 }
+
+.supplier_relationship {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.supplier_relationship span { min-width: 0; overflow-wrap: anywhere; }
+.supplier_relationship strong { color: var(--text-secondary); font-weight: 600; }
 
 .type_society_badge,
 .type_milkman_badge,

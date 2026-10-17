@@ -1,12 +1,14 @@
 "use client";
+import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import NewCustomerOrder from "@/components/NewCustomerOrder";
+import CustomerLeaderboard from "@/components/CustomerLeaderboard";
 
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { orderCardTrends } from "@/lib/history-card-trends";
 import { sumPaymentPeriod } from "@/lib/customer-payment-period.mjs";
-import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/order-history.module.css";
@@ -59,14 +61,14 @@ const CommentEditor = ({
           placeholder="Add comment..."
         />
         <div className={styles.comment_actions}>
-          <button data-button="primary"
+          <button data-button="table-text"
             onClick={handleSave}
             className={styles.comment_save_btn}
             disabled={isSaving}
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
-          <button data-button="secondary"
+          <button data-button="table-text"
             onClick={handleCancel}
             className={styles.comment_cancel_btn}
             disabled={isSaving}
@@ -82,7 +84,7 @@ const CommentEditor = ({
     <div className={styles.comment_display}>
       <span className={styles.comment_text}>{comment || "-"}</span>
       {canEdit && (
-        <button data-button="icon"
+        <button data-button="table-icon"
           onClick={() => setIsEditing(true)}
           className={styles.comment_edit_btn}
           title="Edit comment"
@@ -110,6 +112,7 @@ function OrderHistoryContent() {
   });
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
+  const newOrderButtonRef = useRef(null);
   const { data: session } = useSession();
 
   const fetchHistory = useCallback(async () => {
@@ -157,11 +160,7 @@ function OrderHistoryContent() {
       const dateKey = order.date.split("T")[0];
       dateCounts[dateKey] = (dateCounts[dateKey] || 0) + 1;
       const isFirstOfDate = dateCounts[dateKey] === 1;
-      const displayDate = new Date(order.date).toLocaleDateString("en-IN", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      });
+      const displayDate = formatDateForDisplay(order.date);
       return {
         ...order,
         isFirstOfDate,
@@ -264,8 +263,13 @@ function OrderHistoryContent() {
     });
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
 
-  const handleOrderCreated = (date) => {
+  const closeNewOrder = () => {
     setShowNewOrder(false);
+    requestAnimationFrame(() => newOrderButtonRef.current?.focus());
+  };
+
+  const handleOrderCreated = (date) => {
+    closeNewOrder();
     toast.success("Order created");
     // Keep the saved order visible even when it falls outside the current range.
     const next = {
@@ -279,13 +283,14 @@ function OrderHistoryContent() {
   return (
     <div className={styles.page_container}>
       <ToastContainer position="top-right" autoClose={3000} />
-      {["admin", "dev", "employee"].includes(session?.user?.role) && <button data-button="primary" data-button-placement="floating" type="button" className={styles.new_order_button} aria-haspopup="dialog" aria-expanded={showNewOrder} onClick={() => setShowNewOrder(true)}><span aria-hidden="true">+</span> New order</button>}
-      {showNewOrder && <NewCustomerOrder onClose={() => setShowNewOrder(false)} onCreated={handleOrderCreated} />}
+      {["admin", "dev", "employee"].includes(session?.user?.role) && !showNewOrder && <button ref={newOrderButtonRef} data-button="primary" data-button-placement="floating" type="button" className={styles.new_order_button} aria-controls="new-customer-order" aria-expanded={showNewOrder} onClick={() => setShowNewOrder(true)}><span aria-hidden="true">+</span> New order</button>}
 
       {/* Header */}
       <div className={styles.page_header}>
         <h1 className={styles.page_title}>Order History</h1>
       </div>
+
+      {showNewOrder && <NewCustomerOrder onClose={closeNewOrder} onCreated={handleOrderCreated} />}
 
       {/* Filter Card */}
       <div data-filter="card" className={styles.filter_card}>
@@ -370,8 +375,8 @@ function OrderHistoryContent() {
           <h2 id="order-history-summary" className={styles.stats_header}>
             Summary
             <span className={styles.date_range_badge}>
-              {filters.startDate || "Beginning"} to{" "}
-              {filters.endDate || "Latest"}
+              {formatDateForDisplay(filters.startDate) || "Beginning"} to{" "}
+              {formatDateForDisplay(filters.endDate) || "Latest"}
             </span>
           </h2>
           <div className={styles.stats_grid}>
@@ -413,7 +418,7 @@ function OrderHistoryContent() {
                 >
                   {label}
                 </span>
-                <span className={styles.stat_value}>{value}</span>
+                <span data-stat-tone={statNumberTone(label, value)} className={styles.stat_value}>{value}</span>
               </div>
             ))}
           </div>
@@ -426,6 +431,7 @@ function OrderHistoryContent() {
       )}
 
       {/* Export Section */}
+      {/* {!loading && !loadError && <CustomerLeaderboard totals={trendCustomers} orders={data.orders} startDate={filters.startDate} endDate={filters.endDate} />} */}
       {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.exportSection}>
           <span className={styles.entryCount}>
@@ -521,7 +527,7 @@ function OrderHistoryContent() {
                       </span>
                     </td>
                     <td className={styles.invoice_cell}>
-                      <button data-button="icon"
+                      <button data-button="table-icon"
                         onClick={() => handleSingleInvoice(order)}
                         className={styles.export_btn_table}
                         disabled={loading}

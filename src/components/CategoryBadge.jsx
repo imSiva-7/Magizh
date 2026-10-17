@@ -3,6 +3,7 @@ import styles from "./CategoryBadge.module.css";
 const tones = {
   gender: { male: "blue", female: "rose", other: "neutral" },
   supplier: { society: "blue", milkman: "green", farmer: "amber", other: "neutral" },
+  supplierRole: { head: "blue", child: "amber", "head supplier": "blue", "child supplier": "amber" },
   customer: { distributor: "blue", wholesale: "green", retail: "amber", restaurant: "purple", other: "neutral" },
 };
 

@@ -1,6 +1,8 @@
 "use client";
+import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import CategoryBadge from "@/components/CategoryBadge";
+import CustomerLeaderboard from "@/components/CustomerLeaderboard";
 
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
 import { matchesPeriodActivity, sumPaymentPeriod, paymentCardTrends } from "@/lib/customer-payment-period.mjs";
@@ -54,7 +56,7 @@ const StatItem = ({ label, value, unit = "", colorClass = "", trend, tone }) => 
   <div className={`${styles.stat_card} ${trend?.length ? trendStyles.card : ""}`}>
     {trend?.length > 0 && <StatTrendBackground points={trend} tone={tone} />}
     <div className={styles.stat_card_label}>{label}</div>
-    <div className={`${styles.stat_card_value} ${colorClass}`}>
+    <div data-stat-tone={statNumberTone(label, value)} className={`${styles.stat_card_value} ${colorClass}`}>
       {value}
       {unit && <span className={styles.stat_unit}>{unit}</span>}
     </div>
@@ -88,14 +90,14 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving, canEdit }) =
           placeholder="Add comment..."
         />
         <div className={styles.comment_actions}>
-          <button data-button="primary"
+          <button data-button="table-text"
             onClick={handleSave}
             className={styles.comment_save_btn}
             disabled={isSaving}
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
-          <button data-button="secondary"
+          <button data-button="table-text"
             onClick={handleCancel}
             className={styles.comment_cancel_btn}
             disabled={isSaving}
@@ -110,7 +112,7 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving, canEdit }) =
   return (
     <div className={styles.comment_display}>
       <span className={styles.comment_text}>{comment || "-"}</span>
-      {canEdit && (<button data-button="icon"
+      {canEdit && (<button data-button="table-icon"
         onClick={() => setIsEditing(true)}
         className={styles.comment_edit_btn}
         title="Edit comment"
@@ -457,7 +459,7 @@ export default function CustomerPayments() {
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Customers Summary</h2>
-            <span className={styles.date_range_badge}>{filters.startDate || "First record"} to {filters.endDate || "Latest record"}</span>
+            <span className={styles.date_range_badge}>{formatDateForDisplay(filters.startDate) || "First record"} to {formatDateForDisplay(filters.endDate) || "Latest record"}</span>
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
@@ -492,6 +494,7 @@ export default function CustomerPayments() {
       )}
 
       {/* Customer Cards Grid */}
+      {!isLoading && !isLoadingCustomers && !periodError && <CustomerLeaderboard totals={periodTotals} customers={customerList} orders={ordersData} startDate={filters.startDate} endDate={filters.endDate} />}
       {isLoading || isLoadingCustomers ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
@@ -532,12 +535,12 @@ export default function CustomerPayments() {
                       title="Record Payment"
                       disabled={isLoadingCustomers || Boolean(openingCustomerId)}
                     >
-                      <Image 
+                      {/* <Image
                         src="/payment.png" 
                         alt=""
                         width={20} 
                         height={20} 
-                      />
+                      /> */}
                       <span>{openingCustomerId === customer._id ? "Loading balance…" : "Record payment"}</span>
                     </button>
                   </div>
@@ -594,13 +597,7 @@ export default function CustomerPayments() {
                           <tr key={order._id} className={styles.table_row}>
                             <td className={styles.table_cell}>
                               {showDate ? (
-                                new Date(order.date).toLocaleDateString(
-                                  "en-IN",
-                                  {
-                                    day: "2-digit",
-                                    month: "short",
-                                  },
-                                )
+                                formatDateForDisplay(order.date)
                               ) : (
                                 <span className={styles.continuation_arrow}>
                                   ↳
@@ -616,7 +613,7 @@ export default function CustomerPayments() {
                               )}
                             </td>
                             <td className={styles.table_cell}>
-                              <button data-button="icon"
+                              <button data-button="table-icon"
                                 onClick={() =>
                                   handleSingleInvoice(order, customer)
                                 }

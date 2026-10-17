@@ -113,6 +113,22 @@
   box-shadow: none;
 }
 
+/* Invoice and comment actions stay plain inside table cells. */
+:root body [data-button][data-button]:is([data-button="table-icon"], [data-button="table-text"]),
+:root body [data-button][data-button]:is([data-button="table-icon"], [data-button="table-text"]):hover:not(:disabled) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+  color: var(--brand);
+}
+:root body [data-button="table-icon"][data-button] { width: 44px; height: 44px; min-width: 44px; padding: .5rem; flex-shrink: 0; }
+:root body [data-button="table-text"][data-button] { width: auto; padding: .25rem .5rem; }
+
 /* History launchers share a compact shape and remain reachable while scrolling. */
 :root body [data-button][data-button][data-button-placement="floating"] {
   position: fixed;

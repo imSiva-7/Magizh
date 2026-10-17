@@ -1,4 +1,5 @@
 "use client";
+import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
 
@@ -1016,19 +1017,19 @@ export default function Supplier() {
                         {item.supplierName || "-"}
                       </Link>
                       {item.isHeadSupplier && (
-                        <span className={styles.headTag}>Head</span>
+                        <span className={styles.supplierRole}><CategoryBadge kind="supplierRole" value="Head" /></span>
                       )}
                       {item.isChildSupplier && !item.isHeadSupplier && (
-                        <span className={styles.childTag}>Child</span>
+                        <span className={styles.supplierRole}><CategoryBadge kind="supplierRole" value="Child" /></span>
                       )}
                     </td>
                     <td className={styles.typeCell}>
                       <CategoryBadge kind="supplier" value={item.supplierType} fallback="-" />
                     </td>
                     <td className={styles.tsRateCell}>
-                      {item.supplierCustomRate
+                      <CategoryBadge kind="rate" value={item.supplierCustomRate
                         ? `Rs: ${item.supplierCustomRate}`
-                        : formatTSRate(item.supplierTSRate)}
+                        : formatTSRate(item.supplierTSRate)} />
                     </td>
                     <td
                       className={styles.phoneCell}
@@ -1063,7 +1064,7 @@ export default function Supplier() {
                             ⋮
                           </button>
                           {openActionMenuId === item._id && (
-                            <div className={styles.actionMenuPopup}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
                               <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
@@ -1100,7 +1101,7 @@ export default function Supplier() {
                                   "Delete"
                                 )}
                               </button>
-                            </div>
+                            </RowActionPopup>
                           )}
                         </div>
                       </td>

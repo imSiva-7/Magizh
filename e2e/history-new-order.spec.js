@@ -35,16 +35,19 @@ async function setup(page, context, baseURL, { failOnce = false } = {}) {
   return writes;
 }
 
-test("staff can create an order from an always-reachable mobile launcher with saved prices", async ({ page, context, baseURL }) => {
+test("staff can create an order in the inline history form with saved prices on mobile", async ({ page, context, baseURL }) => {
   const writes = await setup(page, context, baseURL);
-  await page.setViewportSize({ width: 390, height: 640 });
+  await page.setViewportSize({ width: 320, height: 568 });
   await page.goto("/customer/order/history");
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const launcher = page.getByRole("button", { name: "New order", exact: true });
   await expect(launcher).toBeInViewport();
   await launcher.focus(); await page.keyboard.press("Enter");
-  const dialog = page.getByRole("dialog", { name: "New order", exact: true });
+  const dialog = page.getByRole("region", { name: "New order", exact: true });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(launcher).toHaveCount(0);
   await expect(dialog.getByLabel("Search customers")).toBeFocused();
+  await expect(dialog.getByLabel("Search customers")).toBeInViewport();
   await dialog.getByLabel("Search customers").fill("987654");
   await dialog.getByRole("button", { name: /Corner Shop/ }).click();
   await expect(dialog.getByLabel("Order date")).toBeFocused();
@@ -53,14 +56,16 @@ test("staff can create an order from an always-reachable mobile launcher with sa
   await expect(dialog.getByLabel("Butter quantity (kg)")).toBeDisabled();
   await dialog.getByLabel("GST", { exact: true }).selectOption("exclusive");
   await expect(dialog.getByText("Order total", { exact: true }).locator("..")).toContainText("₹105.00");
+  await dialog.getByRole("button", { name: "Save order", exact: true }).scrollIntoViewIfNeeded();
   await expect(dialog.getByRole("button", { name: "Save order", exact: true })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   await dialog.screenshot({ path: "test-results/history-new-order-mobile.png" });
   await dialog.getByRole("button", { name: "Save order", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
   await expect(page.getByLabel("From Date", { exact: true })).toHaveValue(earlierDate);
-  await expect(page.getByRole("link", { name: "Corner Shop", exact: true })).toBeVisible();
+  await expect(page.getByRole("table").getByRole("link", { name: "Corner Shop", exact: true })).toBeVisible();
   expect(writes).toHaveLength(1);
   expect(writes[0]).toMatchObject({ customerId: customer._id, totalAmount: 105, gstType: "exclusive", gstRate: 5, affectStockValue: false, paymentStatus: "Not Paid", items: [{ product: "Milk", quantity: 2.5, ratePerUnit: 40, totalAmount: 105 }] });
 });
@@ -70,15 +75,22 @@ test("failed saves retain input and double clicks submit once; Escape restores f
   await page.goto("/customer/order/history");
   const launcher = page.getByRole("button", { name: "New order", exact: true });
   await launcher.click();
-  const dialog = page.getByRole("dialog", { name: "New order", exact: true });
+  const dialog = page.getByRole("region", { name: "New order", exact: true });
   await dialog.getByRole("button", { name: /Corner Shop/ }).click();
   await dialog.getByLabel("Milk quantity (L)").fill("3");
   await dialog.getByLabel("Deduct quantities from stock").check();
-  await dialog.getByRole("button", { name: "Save order", exact: true }).evaluate(button => { button.click(); button.click(); });
+  const save = dialog.getByRole("button", { name: "Save order", exact: true });
+  await save.scrollIntoViewIfNeeded();
+  await save.focus();
+  await save.evaluate(button => { button.click(); button.click(); });
   await expect(dialog.getByRole("alert")).toHaveText("Insufficient stock for milk");
   await expect(dialog.getByLabel("Milk quantity (L)")).toHaveValue("3");
   expect(writes).toHaveLength(1);
   await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(launcher).toBeFocused();
+  await launcher.click();
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
 });
