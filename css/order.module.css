@@ -200,6 +200,7 @@
 
 .header_title {
   flex: 1;
+  min-width: 0;
 }
 
 .header_title h1 {
@@ -638,7 +639,7 @@ button:disabled {
 
 .stats_grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
 }
 
@@ -667,6 +668,8 @@ button:disabled {
   letter-spacing: 0.5px;
 }
 .stat_value {
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
@@ -1482,9 +1485,6 @@ button:disabled {
     font-size: 0.813rem;
   }
 
-  .header_payment_btn span {
-    display: none;
-  }
 }
 
 /* Summary header with button */

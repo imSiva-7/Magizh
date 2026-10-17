@@ -1,5 +1,5 @@
 "use client";
-import { formatDateForDisplay } from "@/lib/india-date.mjs";
+import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -31,11 +31,6 @@ import Link from "next/link";
 const INITIAL_FILTERS = {
   startDate: getCurrentMonthStartDate(),
   endDate: getTodayDate(),
-};
-
-const getCurrentTimePeriod = () => {
-  const hour = new Date().getHours();
-  return hour >= 12 ? "PM" : "AM";
 };
 
 const makeInitialForm = () => ({
@@ -136,6 +131,7 @@ function ProcurementHistoryContent() {
   const [procurementData, setProcurementData] = useState([]);
   const [lastFetchTime, setLastFetchTime] = useState(null);
   const [loadError, setLoadError] = useState("");
+  const historyRequestRef = useRef(null);
 
   // ---------- Add Procurement state ----------
   const [showAddForm, setShowAddForm] = useState(false);
@@ -158,6 +154,9 @@ function ProcurementHistoryContent() {
 
   // ---- History fetch ----
   const fetchAllData = useCallback(async () => {
+    historyRequestRef.current?.abort();
+    const controller = new AbortController();
+    historyRequestRef.current = controller;
     const error = validateDateRange(filters.startDate, filters.endDate);
     if (error) {
       toast.error(error);
@@ -175,7 +174,7 @@ function ProcurementHistoryContent() {
 
       const response = await fetch(
         `/api/supplier/procurement/history?${queryParams}`,
-        { cache: "no-store" },
+        { cache: "no-store", signal: controller.signal },
       );
 
       if (!response.ok) {
@@ -186,6 +185,7 @@ function ProcurementHistoryContent() {
       }
 
       const data = await response.json();
+      if (controller.signal.aborted) return;
       const responseData = Array.isArray(data) ? data : data.data || data;
 
       if (Array.isArray(responseData)) {
@@ -195,17 +195,19 @@ function ProcurementHistoryContent() {
         throw new Error("Invalid data format received from server");
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Load error:", error);
       toast.error(error.message || "Failed to load procurement history");
       setLoadError(error.message || "Failed to load procurement history");
       setProcurementData([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
     fetchAllData();
+    return () => historyRequestRef.current?.abort();
   }, [filters, fetchAllData]);
 
   const fetchSuppliers = useCallback(async () => {
@@ -823,7 +825,6 @@ function ProcurementHistoryContent() {
                 type="button"
                 onClick={resetFilters}
                 className={`${styles.btn} ${styles.btn_primary}`}
-                disabled={loading}
               >
                 Reset
               </button>
@@ -831,7 +832,7 @@ function ProcurementHistoryContent() {
                 type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_secondary}`}
-                disabled={loading || (!filters.startDate && !filters.endDate)}
+                disabled={!filters.startDate && !filters.endDate}
               >
                 Clear
               </button>
@@ -839,9 +840,8 @@ function ProcurementHistoryContent() {
                 type="button"
                 onClick={todayFilter}
                 className={`${styles.btn} ${styles.btn_primary2}`}
-                disabled={loading}
               >
-                Load Today
+                Today
               </button>
             </div>
           </div>

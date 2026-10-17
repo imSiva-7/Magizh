@@ -55,24 +55,31 @@ export default function ProductionAnalyticsPage() {
     products: [],
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    const controller = new AbortController();
     async function fetchData() {
       setLoading(true);
+      setError("");
       try {
+        if (dateRange.startDate && dateRange.endDate && dateRange.startDate > dateRange.endDate) throw new Error("From date must be before the to date.");
         const params = new URLSearchParams(dateRange);
-        const res = await fetch(`/api/analytics/productions?${params}`);
-        if (!res.ok) throw new Error("Failed to fetch");
+        const res = await fetch(`/api/analytics/productions?${params}`, { signal: controller.signal, cache: "no-store" });
+        if (!res.ok) throw new Error("Production analytics could not be loaded. Please retry.");
         const json = await res.json();
-        setData(json);
+        if (!Array.isArray(json.daily) || !Array.isArray(json.products) || !json.totals) throw new Error("Production analytics returned an invalid response. Please retry.");
+        if (!controller.signal.aborted) setData(json);
       } catch (error) {
-        console.error(error);
+        if (!controller.signal.aborted) setError(error.message);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }
     fetchData();
-  }, [dateRange]);
+    return () => controller.abort();
+  }, [dateRange, reload]);
 
   const handleDateChange = (e) => {
     setDateRange((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -154,7 +161,12 @@ export default function ProductionAnalyticsPage() {
         </div>
       </div>
 
-      {loading ? (
+      {error ? (
+        <div className={styles.empty_state} role="alert">
+          <p>{error}</p>
+          <button data-button="secondary" type="button" onClick={() => setReload(value => value + 1)}>Retry analytics</button>
+        </div>
+      ) : loading ? (
         <div className={styles.loading_container}>
           <div className={styles.spinner}></div>
           <span className={styles.loading_text}>Loading analytics...</span>

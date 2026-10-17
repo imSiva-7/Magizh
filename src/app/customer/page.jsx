@@ -78,7 +78,8 @@ export default function Customer() {
   const isAdmin = session?.user?.role === "admin";
 
   const [createCustomer, setCreateCustomer] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [entries, setEntries] = useState([]);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -243,8 +244,9 @@ export default function Customer() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
-      const res = await fetch("/api/customer");
+      const res = await fetch("/api/customer", { cache: "no-store" });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
@@ -252,11 +254,12 @@ export default function Customer() {
         );
       }
       const data = await res.json();
-      setEntries(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) throw new Error("Invalid customer list response");
+      setEntries(data);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error(error.message || "Failed to load customers");
-      setEntries([]);
+      setLoadError("Customer list could not be loaded. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -739,6 +742,7 @@ export default function Customer() {
         </div>
       </div>
 
+      {loadError && <div data-filter="card" role="alert"><p>{loadError}</p><button data-button="secondary" type="button" onClick={fetchData} disabled={loading}>Try again</button></div>}
       {/* Customers Table */}
       <div className={styles.tableContainer}>
         <div className={styles.tableWrapper}>
@@ -768,11 +772,11 @@ export default function Customer() {
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
-                        {searchDebounced
+                        {loadError ? "Customer list unavailable" : searchDebounced
                           ? `No customers found for "${searchDebounced}"`
                           : "No customers found"}
                       </p>
-                      {!searchDebounced && !createCustomer && (
+                      {!loadError && !searchDebounced && !createCustomer && (
                         <button data-button="primary"
                           onClick={() => {
                             setCreateCustomer(true);

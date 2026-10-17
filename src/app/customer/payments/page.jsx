@@ -9,7 +9,7 @@ import { matchesPeriodActivity, sumPaymentPeriod, paymentCardTrends } from "@/li
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import styles from "@/css/customer-payment.module.css";
 import {
   formatNumberWithCommasNoDecimal,
@@ -142,6 +142,7 @@ export default function CustomerPayments() {
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [openingCustomerId, setOpeningCustomerId] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const paymentTriggerRef = useRef(null);
 
   // Load the directory only. Period summaries do not depend on lifetime totals.
   useEffect(() => {
@@ -314,8 +315,9 @@ export default function CustomerPayments() {
   };
 
   // Handle opening payment popup
-  const handleOpenPayment = async (customer) => {
+  const handleOpenPayment = async (customer, trigger) => {
     if (openingCustomerId) return;
+    paymentTriggerRef.current = trigger;
     setOpeningCustomerId(customer._id);
     try {
       const response = await fetch(`/api/customer/total_orders?customerId=${encodeURIComponent(customer._id)}`, { cache: "no-store" });
@@ -530,7 +532,7 @@ export default function CustomerPayments() {
                   </div>
                   <div className={styles.header_right}>
                     <button data-button="primary"
-                      onClick={() => handleOpenPayment(customer)}
+                      onClick={(event) => handleOpenPayment(customer, event.currentTarget)}
                       className={styles.edit_payment_btn}
                       title="Record Payment"
                       disabled={isLoadingCustomers || Boolean(openingCustomerId)}
@@ -676,6 +678,7 @@ export default function CustomerPayments() {
       {selectedCustomer && (
         <CustomerPaymentDialog
           isOpen={showPaymentPopup}
+          returnFocusRef={paymentTriggerRef}
           customerId={selectedCustomer._id}
           customerName={selectedCustomer.customerName}
           currentPaid={customerTotals[selectedCustomer._id]?.paidAmount || 0}

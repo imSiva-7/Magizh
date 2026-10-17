@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getTodayDate, getCurrentMonthStartDate, getPreviousMonthDate, formatDateForDisplay, formatDateTimeForDisplay, month } from "./india-date.mjs";
+import { getTodayDate, getCurrentMonthStartDate, getPreviousMonthDate, formatDateForDisplay, formatDateTimeForDisplay, month, getIndiaTimePeriod } from "./india-date.mjs";
 
 test("IST calendar and display dates stay consistent across device time zones", () => {
   const original = process.env.TZ;
@@ -16,6 +16,9 @@ test("IST calendar and display dates stay consistent across device time zones", 
       assert.equal(month("2026-12-31T20:00:00Z"), "2027-01");
       assert.equal(formatDateForDisplay("2026-10-12T00:10:00"), "12/10/26");
       assert.match(formatDateTimeForDisplay("2026-10-17T19:00:00Z"), /^18\/10\/26, 12:30 am IST$/i);
+      assert.equal(getIndiaTimePeriod("2026-10-18T06:29:59Z"), "AM");
+      assert.equal(getIndiaTimePeriod("2026-10-18T06:30:00Z"), "PM");
+      assert.equal(getIndiaTimePeriod("2026-10-18T18:30:00Z"), "AM");
     }
   } finally {
     if (original === undefined) delete process.env.TZ;

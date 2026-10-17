@@ -113,9 +113,13 @@ function OrderHistoryContent() {
   const [savingCommentId, setSavingCommentId] = useState(null);
   const [showNewOrder, setShowNewOrder] = useState(false);
   const newOrderButtonRef = useRef(null);
+  const historyRequestRef = useRef(null);
   const { data: session } = useSession();
 
   const fetchHistory = useCallback(async () => {
+    historyRequestRef.current?.abort();
+    const controller = new AbortController();
+    historyRequestRef.current = controller;
     try {
       setLoading(true);
       setLoadError("");
@@ -129,28 +133,31 @@ function OrderHistoryContent() {
       )
         throw new Error("From date must be before the to date.");
       const [res, payments] = await Promise.all([
-        fetch(`/api/customer/order/history?${params}`, { cache: "no-store" }),
-        fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store" }),
+        fetch(`/api/customer/order/history?${params}`, { cache: "no-store", signal: controller.signal }),
+        fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store", signal: controller.signal }),
       ]);
       if (!res.ok || !payments.ok)
         throw new Error("History could not be loaded. Please retry.");
       const [json, period] = await Promise.all([res.json(), payments.json()]);
+      if (controller.signal.aborted) return;
       setData(json);
       setPaymentPeriod(sumPaymentPeriod(period.customers || []));
       setTrendCustomers(period.customers || []);
     } catch (err) {
+      if (controller.signal.aborted) return;
       setLoadError(err.message);
       setData({ orders: [], summary: {} });
       setPaymentPeriod(null);
       setTrendCustomers([]);
       toast.error(err.message);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => {
     fetchHistory();
+    return () => historyRequestRef.current?.abort();
   }, [fetchHistory]);
 
   // Handle repeated date "arrow" logic (like procurement history)
@@ -342,7 +349,6 @@ function OrderHistoryContent() {
                 type="button"
                 onClick={resetFilters}
                 className={`${styles.btn} ${styles.btn_primary}`}
-                disabled={loading}
               >
                 Reset
               </button>
@@ -350,7 +356,7 @@ function OrderHistoryContent() {
                 type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_secondary}`}
-                disabled={loading || (!filters.startDate && !filters.endDate)}
+                disabled={!filters.startDate && !filters.endDate}
               >
                 Clear
               </button>
@@ -358,7 +364,6 @@ function OrderHistoryContent() {
                 type="button"
                 onClick={todayFilter}
                 className={`${styles.btn} ${styles.btn_primary2}`}
-                disabled={loading}
               >
                 Today
               </button>

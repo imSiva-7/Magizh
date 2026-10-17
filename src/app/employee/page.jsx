@@ -77,7 +77,8 @@ export default function Employee() {
   const isAdmin = session?.user?.role === "admin";
 
   const [createEmployee, setCreateEmployee] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [entries, setEntries] = useState([]);
   const rankingMonth = attendanceToday().slice(0, 7);
   const ranking = useEmployeeRankings(rankingMonth, entries, entries.length > 0 && !loading);
@@ -255,8 +256,9 @@ export default function Employee() {
   // API Fetch
   const fetchData = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
-      const res = await fetch(`/api/employee`);
+      const res = await fetch(`/api/employee`, { cache: "no-store" });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
@@ -264,11 +266,12 @@ export default function Employee() {
         );
       }
       const data = await res.json();
-      setEntries(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) throw new Error("Invalid employee list response");
+      setEntries(data);
     } catch (error) {
       console.error("Fetch error:", error);
       toast.error(error.message || "Failed to load employees");
-      setEntries([]);
+      setLoadError("Employee list could not be loaded. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -673,6 +676,7 @@ export default function Employee() {
         </div>
       </div>
 
+      {loadError && <div data-filter="card" role="alert"><p>{loadError}</p><button data-button="secondary" type="button" onClick={fetchData} disabled={loading}>Try again</button></div>}
       {/* Employees Table */}
       {/* {entries.length > 0 && <div className={styles.rankingHint}>
         <span>Hours rank · {formatAttendanceMonth(rankingMonth)}. Completed attendance only.</span>
@@ -707,11 +711,11 @@ export default function Employee() {
                     <div className={styles.emptyState}>
                       <div className={styles.emptyIcon}>📭</div>
                       <p className={styles.emptyText}>
-                        {searchDebounced
+                        {loadError ? "Employee list unavailable" : searchDebounced
                           ? `No employees found for "${searchDebounced}"`
                           : "No employees found"}
                       </p>
-                      {!searchDebounced && !createEmployee && isAdmin && (
+                      {!loadError && !searchDebounced && !createEmployee && isAdmin && (
                         <button data-button="primary"
                           onClick={() => {
                             setCreateEmployee(true);

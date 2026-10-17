@@ -27,7 +27,7 @@ button:disabled { cursor: not-allowed; }
 input, select, textarea { max-width: 100%; }
 input[type="date"], input[type="number"] { font-variant-numeric: tabular-nums; }
 table { font-variant-numeric: tabular-nums; }
-h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; }
+h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; overflow-wrap: anywhere; }
 :where(a, button, input, select, textarea, summary):focus-visible { outline: 3px solid #70ad91; outline-offset: 3px; }
 ::selection { background: #cee5d5; color: #163e32; }
 /* Keep stat-number colors consistent even in cards with older utility colors. */

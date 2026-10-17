@@ -41,4 +41,10 @@ export function formatTimeForDisplay(value) {
   const date = asDate(value);
   return date ? new Intl.DateTimeFormat("en-IN", { timeZone: INDIA_TIME_ZONE, hour: "2-digit", minute: "2-digit", hour12: true }).format(date) : "—";
 }
+export function getIndiaTimePeriod(now = new Date()) {
+  const date = asDate(now);
+  if (!date) return "";
+  const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: INDIA_TIME_ZONE, hour: "2-digit", hourCycle: "h23" }).format(date));
+  return hour >= 12 ? "PM" : "AM";
+}
 export const formatDateTimeForDisplay = value => `${formatDateForDisplay(value) || "—"}, ${formatTimeForDisplay(value)} IST`;

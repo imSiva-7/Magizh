@@ -306,6 +306,7 @@
 
 .header_title {
   flex: 1;
+  min-width: 0;
 }
 
 .header_title h1 {
@@ -725,7 +726,7 @@ input[type="date"]::-webkit-date-and-time-value {
 
 .stats_grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 1rem;
 }
 
@@ -754,6 +755,8 @@ input[type="date"]::-webkit-date-and-time-value {
   letter-spacing: 0.5px;
 }
 .stat_value {
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
   font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);

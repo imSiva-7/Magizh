@@ -36,7 +36,10 @@
 @media (max-width: 480px) {
   .panel { padding: 1rem; }
   .options { grid-template-columns: 1fr; gap: 0; }
-  .product { grid-template-columns: minmax(0, 1fr) 5rem 5rem; gap: .5rem; }
+  .product { grid-template-columns: minmax(0, 1fr) 5rem; gap: .5rem; }
+  .product output { grid-column: 1 / -1; }
+  .selected { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .selected button { align-self: flex-end; }
   .footer { align-items: flex-start; flex-wrap: wrap; gap: .65rem; }
   .actions { flex: 1; justify-content: flex-end; }
   .customers button { flex-wrap: wrap; }

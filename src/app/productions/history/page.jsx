@@ -3,7 +3,7 @@ import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay } 
 
 import { formatStat } from "@/utils/formatNumberWithComma";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import styles from "@/css/history.module.css";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,13 +22,13 @@ const validateDateRange = (startDate, endDate) => {
 };
 
 // Helper function for data fetching
-const fetchProductionData = async (fromDate, toDate) => {
+const fetchProductionData = async (fromDate, toDate, signal) => {
   try {
     const queryParams = new URLSearchParams();
     if (fromDate) queryParams.append("fromDate", fromDate);
     if (toDate) queryParams.append("toDate", toDate);
 
-    const response = await fetch(`/api/production/history?${queryParams}`);
+    const response = await fetch(`/api/production/history?${queryParams}`, { signal, cache: "no-store" });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -39,7 +39,7 @@ const fetchProductionData = async (fromDate, toDate) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Fetch error:", error);
+    if (!signal?.aborted) console.error("Fetch error:", error);
     throw error;
   }
 };
@@ -159,15 +159,22 @@ export default function ProductionHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const historyRequestRef = useRef(null);
 
   // Stats calculation
   const stats = calculateStats(entries);
 
   // Fetch data with proper error handling
   const fetchData = useCallback(async () => {
+    historyRequestRef.current?.abort();
+    const controller = new AbortController();
+    historyRequestRef.current = controller;
     const validationError = validateDateRange(filters.fromDate, filters.toDate);
     if (validationError) {
       toast.error(validationError);
+      setError(validationError);
+      setEntries([]);
+      setLoading(false);
       return;
     }
 
@@ -175,7 +182,8 @@ export default function ProductionHistoryPage() {
     setError(null);
 
     try {
-      const data = await fetchProductionData(filters.fromDate, filters.toDate);
+      const data = await fetchProductionData(filters.fromDate, filters.toDate, controller.signal);
+      if (controller.signal.aborted) return;
 
       if (!Array.isArray(data)) {
         throw new Error("Invalid response format from server");
@@ -190,19 +198,21 @@ export default function ProductionHistoryPage() {
         toast.success(`Found ${data.length} production entries`);
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Fetch data error:", error);
       const errorMessage = error.message || "Failed to fetch production data";
       setError(errorMessage);
       toast.error(errorMessage);
       setEntries([]);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [filters.fromDate, filters.toDate]);
 
   // Initial data fetch and refetch when filters change
   useEffect(() => {
     fetchData();
+    return () => historyRequestRef.current?.abort();
   }, [fetchData]);
 
   // Handler functions
@@ -363,7 +373,6 @@ export default function ProductionHistoryPage() {
                 type="button"
                 onClick={resetFilters}
                 className={styles.primaryBtn}
-                disabled={loading}
                 aria-label="Reset filters to default"
               >
                 Reset Filters
@@ -373,7 +382,7 @@ export default function ProductionHistoryPage() {
                 type="button"
                 onClick={clearFilters}
                 className={styles.secondaryBtn}
-                disabled={loading || (!filters.fromDate && !filters.toDate)}
+                disabled={!filters.fromDate && !filters.toDate}
                 aria-label="Clear all filters"
               >
                 Clear Filters

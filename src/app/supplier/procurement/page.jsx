@@ -1,5 +1,5 @@
 "use client";
-import { formatDateForDisplay } from "@/lib/india-date.mjs";
+import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -35,11 +35,6 @@ const LoadingSpinner = () => (
     </div>
   </div>
 );
-
-const getCurrentTimePeriod = () => {
-  const hour = new Date().getHours();
-  return hour >= 12 ? "PM" : "AM";
-};
 
 const initialForm = {
   date: getTodayDate(),

@@ -68,13 +68,19 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const InputGroup = ({ label, error, required, readOnly, ...props }) => (
+const InputGroup = ({ label, error, required, readOnly, ...props }) => {
+  const id = props.id || `order-${String(props.name || label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  return (
   <div className={styles.input_group}>
-    <label className={required ? styles.required_label : ""}>
+    <label htmlFor={id} className={required ? styles.required_label : ""}>
       {label}
       {required && <span className={styles.required_asterisk}>*</span>}
     </label>
     <input
+      id={id}
+      aria-required={Boolean(required)}
+      aria-invalid={Boolean(error)}
+      aria-describedby={error ? `${id}-error` : undefined}
       className={`${styles.input} ${error ? styles.input_error : ""} ${
         readOnly ? styles.read_only_input : ""
       }`}
@@ -82,9 +88,10 @@ const InputGroup = ({ label, error, required, readOnly, ...props }) => (
       readOnly={readOnly}
       {...props}
     />
-    {error && <span className={styles.error_text}>{error}</span>}
+    {error && <span id={`${id}-error`} className={styles.error_text}>{error}</span>}
   </div>
-);
+  );
+};
 
 const StatItem = ({ label, value, unit, prefix = "", colorClass = "", trend, tone = "milk" }) => (
   <div className={`${styles.stat_item} ${trendStyles.card}`}>
@@ -367,8 +374,9 @@ function OrdersContent() {
     if (!orderForm.date) newErrors.date = "Date is required";
     let hasQuantity = false;
     PRODUCT_FIELDS.forEach((product) => {
-      const qty = parseFloat(quantities[product.name] || 0);
-      if (qty < 0) newErrors[product.name] = "Quantity must be ≥ 0";
+      const qty = Number(quantities[product.name] || 0);
+      if (!Number.isFinite(qty)) newErrors[product.name] = "Enter a valid quantity";
+      else if (qty < 0) newErrors[product.name] = "Quantity must be ≥ 0";
       else if (qty > 0) hasQuantity = true;
     });
     if (!hasQuantity)
@@ -539,14 +547,14 @@ function OrdersContent() {
                 label={product.name}
                 name={product.name}
                 type="text"
-                inputMode="numeric"
+                inputMode="decimal"
                 value={quantities[product.name] || ""}
                 onChange={(e) =>
                   handleQuantityChange(product.name, e.target.value)
                 }
                 placeholder={`Enter ${product.name} quantity`}
                 error={errors[product.name]}
-                disabled={submitting}
+                disabled={submitting || loading}
               />
             ))}
           </div>
@@ -559,16 +567,17 @@ function OrdersContent() {
               placeholder="Enter comments"
               value={orderForm.comment}
               onChange={handleInputChange}
-              disabled={submitting}
+              disabled={submitting || loading}
             />
             <div className={styles.input_group}>
-              <label>GST Option</label>
+              <label htmlFor="order-gst">GST Option</label>
               <select
+                id="order-gst"
                 name="gstType"
                 value={orderForm.gstType}
                 onChange={handleInputChange}
                 className={styles.select_input}
-                disabled={submitting}
+                disabled={submitting || loading}
               >
                 {GST_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -596,7 +605,7 @@ function OrdersContent() {
                     }))
                   }
                   className={styles.checkbox}
-                  disabled={submitting}
+                  disabled={submitting || loading}
                 />
                 <span className={styles.checkboxLabel}>Affect Stock Value</span>
               </label>
@@ -610,7 +619,7 @@ function OrdersContent() {
           <div className={styles.form_actions}>
             <button data-button="primary"
               type="submit"
-              disabled={submitting}
+              disabled={submitting || loading}
               className={styles.primary_btn}
             >
               {submitting

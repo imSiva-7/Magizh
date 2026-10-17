@@ -10,7 +10,7 @@ import styles from "@/css/customer-payment.module.css";
 const money = value => `₹${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const balanceText = value => value < 0 ? `${money(-value)} credit` : `${money(value)} due`;
 
-export default function CustomerPaymentDialog({ isOpen, customerId, customerName, currentPaid, currentDue, onClose, onSuccess }) {
+export default function CustomerPaymentDialog({ isOpen, customerId, customerName, currentPaid, currentDue, onClose, onSuccess, returnFocusRef }) {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const [amount, setAmount] = useState("");
@@ -25,6 +25,23 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
   const [error, setError] = useState("");
   const attempt = useRef(null);
   const busy = useRef(false);
+  const dialogRef = useRef(null);
+  const amountRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const dialog = dialogRef.current;
+    const launcher = returnFocusRef?.current || document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog.showModal();
+    amountRef.current?.focus();
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      if (launcher?.isConnected) launcher.focus({ preventScroll: true });
+    };
+  }, [isOpen, returnFocusRef]);
 
   useEffect(() => {
     if (isOpen) {
@@ -74,14 +91,19 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
     finally { busy.current = false; setSubmitting(false); }
   };
 
-  return <div className={styles.modal_overlay}>
-    <div className={`${styles.modal_content_large} ${styles.payment_dialog}`} role="dialog" aria-modal="true" aria-labelledby="customer-payment-title">
-      <div className={styles.modal_header}><h3 id="customer-payment-title">Record payment — {customerName}</h3><button data-button="icon" type="button" className={styles.close_btn} onClick={onClose} disabled={submitting} aria-label="Close payment dialog">✕</button></div>
+  return <dialog ref={dialogRef} className={`${styles.modal_content_large} ${styles.payment_dialog}`} aria-labelledby="customer-payment-title" onCancel={event => { event.preventDefault(); if (!busy.current) onClose(); }} onKeyDown={event => {
+    if (event.key !== "Tab") return;
+    const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]')].filter(element => element.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }}>
+      <div className={styles.modal_header}><h3 id="customer-payment-title" title={customerName}>Record payment — {customerName}</h3><button data-button="icon" type="button" className={styles.close_btn} onClick={onClose} disabled={submitting} aria-label="Close payment dialog">✕</button></div>
       <p>Record the amount received, including partial payments. Extra payments stay as customer credit.</p>
       <div className={styles.payment_info}><p>Total received: <strong>{money(currentPaid)}</strong></p><p>Current balance: <strong>{balanceText(currentDue)}</strong></p></div>
       <form onSubmit={submit} className={styles.payment_form}>
         <label>Entry type<select value={kind} onChange={event => setKind(event.target.value)} disabled={submitting}><option value="payment">Payment received</option>{isAdmin && <option value="correction">Payment correction</option>}</select></label>
-        <label>{kind === "payment" ? "Amount received (₹)" : "Correction amount (₹)"}<input type="number" step="0.01" min={kind === "payment" ? "0.01" : undefined} value={amount} onChange={event => setAmount(event.target.value)} disabled={submitting} required autoFocus /></label>
+        <label>{kind === "payment" ? "Amount received (₹)" : "Correction amount (₹)"}<input ref={amountRef} type="number" step="0.01" inputMode="decimal" min={kind === "payment" ? "0.01" : undefined} value={amount} onChange={event => setAmount(event.target.value)} disabled={submitting} required /></label>
         {kind === "correction" && <p>Use a negative amount to reverse a receipt, or a positive amount to correct an under-recorded receipt. The reason is saved in payment history.</p>}
         <label>Payment method<select value={method} onChange={event => setMethod(event.target.value)} disabled={submitting}>{["Cash", "UPI", "Bank transfer", "Cheque", "Other"].map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Reference (optional)<input value={reference} maxLength={100} onChange={event => setReference(event.target.value)} disabled={submitting} placeholder="UPI or bank reference" /></label>
@@ -92,6 +114,5 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
       </form>
       {historyError && <p role="alert">{historyError}</p>}
       {history !== null && <div className={styles.ledger_table_wrapper}><h4>Payment history</h4>{history.length ? <table className={styles.ledger_table}><caption>Receipts and corrections for {customerName}</caption><thead><tr><th>Date</th><th>Amount</th><th>Received total</th><th>Balance after entry</th><th>Details</th></tr></thead><tbody>{history.map((entry, index) => <tr key={entry.paymentId || index}><td>{formatDateTimeForDisplay(entry.date)}</td><td>{money(entry.amount)}{entry.kind === "correction" && " (correction)"}</td><td>{money(entry.newBalance)}</td><td>{entry.newDue == null ? "—" : balanceText(entry.newDue)}</td><td>{[entry.method, entry.reference, entry.note].filter(Boolean).join(" · ") || "Legacy payment"}</td></tr>)}</tbody></table> : <p>No payments recorded yet.</p>}</div>}
-    </div>
-  </div>;
+  </dialog>;
 }

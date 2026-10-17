@@ -588,12 +588,16 @@
 
 .header_left {
   display: flex;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
 .supplierName {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--brand);
   font-size: 1.5rem;
   text-decoration: none;
@@ -663,6 +667,7 @@
 }
 
 .stat_card {
+  min-width: 0;
   background-color: var(--surface-muted);
   padding: 1rem;
   border-radius: 0.5rem;
@@ -686,6 +691,8 @@
 }
 
 .stat_card_value {
+  overflow-wrap: anywhere;
+  flex-wrap: wrap;
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);

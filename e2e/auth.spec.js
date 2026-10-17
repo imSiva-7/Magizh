@@ -9,7 +9,7 @@ test.describe("Authentication Flows", () => {
     await expect(page.getByRole("heading", { name: "Welcome Back!" })).toBeVisible();
     await expect(page.getByLabel("Email Address")).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByRole("button", { name: /Log In/i })).toBeVisible();
+    await expect(page.locator("form").getByRole("button", { name: /Log In/i })).toBeVisible();
   });
 
   test("should require email and password inputs", async ({ page }) => {
@@ -23,7 +23,7 @@ test.describe("Authentication Flows", () => {
   test("should show error on invalid credentials", async ({ page }) => {
     await page.getByLabel("Email Address").fill("nonexistent@example.com");
     await page.getByLabel("Password").fill("wrongpassword123");
-    await page.getByRole("button", { name: /Log In/i }).click();
+    await page.locator("form").getByRole("button", { name: /Log In/i }).click();
 
     // Verify error message appears
     const errorMessage = page.locator("text=Invalid email or password");

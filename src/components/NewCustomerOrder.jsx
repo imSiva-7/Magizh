@@ -24,6 +24,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
   const panelRef = useRef(null);
   const searchRef = useRef(null);
   const dateRef = useRef(null);
+  const errorRef = useRef(null);
   const busy = useRef(false);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +59,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
   }, [reload]);
 
   useEffect(() => { if (customer) dateRef.current?.focus(); else searchRef.current?.focus(); }, [customer]);
+  useEffect(() => { if (error) errorRef.current?.focus(); }, [error]);
 
   const matches = useMemo(() => {
     const search = query.trim().toLowerCase();
@@ -119,7 +121,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
           </fieldset>
         </form>
       </>}
-      {error && <p className={styles.error} role="alert">{error}</p>}
+      {error && <p ref={errorRef} tabIndex={-1} className={styles.error} role="alert">{error}</p>}
     </div>
     <div className={styles.footer}><div><span>Order total</span><strong aria-live="polite">{money(total)}</strong></div><div className={styles.actions}><button data-button="secondary" type="button" className={styles.cancel} disabled={saving} onClick={onClose}>Cancel</button><button data-button="primary" type="submit" form="history-new-order" className={styles.save} disabled={!customer || saving}>{saving ? "Saving…" : "Save order"}</button></div></div>
   </section>;
