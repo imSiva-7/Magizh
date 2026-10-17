@@ -1,4 +1,5 @@
 "use client";
+import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
@@ -458,7 +459,7 @@ export default function Customer() {
 
           {!createCustomer && (
             <div className={styles.createSection}>
-              <button
+              <button data-button="primary"
                 onClick={() => {
                   setCreateCustomer(true);
                   setIsEditing(false);
@@ -665,7 +666,7 @@ export default function Customer() {
           </div>
 
           <div className={styles.formActions}>
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={isSubmitting}
               className={styles.submitButton}
@@ -682,7 +683,7 @@ export default function Customer() {
               )}
             </button>
 
-            <button
+            <button data-button="secondary"
               type="button"
               onClick={resetForm}
               className={styles.cancelButton}
@@ -694,7 +695,7 @@ export default function Customer() {
         </form>
       )}
 
-      <div className={styles.searchSection}>
+      <div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Customers:
@@ -712,7 +713,7 @@ export default function Customer() {
               autoComplete="off"
             />
             {searchByName && (
-              <button
+              <button data-button="icon"
                 type="button"
                 onClick={handleClearSearch}
                 className={styles.clearSearchButton}
@@ -771,7 +772,7 @@ export default function Customer() {
                           : "No customers found"}
                       </p>
                       {!searchDebounced && !createCustomer && (
-                        <button
+                        <button data-button="primary"
                           onClick={() => {
                             setCreateCustomer(true);
                             setIsEditing(false);
@@ -797,15 +798,7 @@ export default function Customer() {
                       </Link>
                     </td>
                     <td className={styles.typeCell}>
-                      <span
-                        className={`${styles.typeBadge} ${
-                          styles[
-                            `type-${item.customerType?.toLowerCase() || "other"}`
-                          ]
-                        }`}
-                      >
-                        {item.customerType || "-"}
-                      </span>
+                      <CategoryBadge kind="customer" value={item.customerType} fallback="-" />
                     </td>
                     <td
                       className={styles.phoneCell}
@@ -840,7 +833,7 @@ export default function Customer() {
                     {isAdmin && (
                       <td className={styles.actionsCell}>
                         <div className={styles.actionMenuWrapper}>
-                          <button
+                          <button data-button="icon"
                             className={styles.actionMenuButton}
                             onClick={() =>
                               setOpenActionMenuId(
@@ -856,7 +849,7 @@ export default function Customer() {
                           </button>
                           {openActionMenuId === item._id && (
                             <div className={styles.actionMenuPopup}>
-                              <button
+                              <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
                                   setOpenActionMenuId(null);
@@ -866,7 +859,7 @@ export default function Customer() {
                               >
                                 Edit
                               </button>
-                              <button
+                              <button data-button="menu-danger"
                                 onClick={() => {
                                   handleDelete(item._id);
                                   setOpenActionMenuId(null);

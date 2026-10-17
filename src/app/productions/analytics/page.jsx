@@ -1,4 +1,5 @@
 "use client";
+import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect } from "react";
@@ -18,7 +19,6 @@ import {
   Cell,
 } from "recharts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
-import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
 const COLORS = [
@@ -91,12 +91,12 @@ export default function ProductionAnalyticsPage() {
       </div>
 
       {/* Filter Section */}
-      <div className={styles.filter_section}>
-        <div className={styles.filter_title}>
+      <div data-filter="card" className={styles.filter_section}>
+        <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.date_input_group}>
-          <div className={styles.date_field}>
+        <div data-filter="grid" className={styles.date_input_group}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="startDate">From Date</label>
             <input
               type="date"
@@ -108,7 +108,7 @@ export default function ProductionAnalyticsPage() {
               className={styles.date_input}
             />
           </div>
-          <div className={styles.date_field}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="endDate">To Date</label>
             <input
               type="date"
@@ -122,8 +122,8 @@ export default function ProductionAnalyticsPage() {
             />
           </div>
         </div>
-        <div className={styles.filter_actions}>
-          <button
+        <div data-filter="actions" className={styles.filter_actions}>
+          <button data-button="secondary"
             type="button"
             onClick={resetDateRange}
             className={`${styles.btn} ${styles.btn_primary}`}
@@ -151,27 +151,27 @@ export default function ProductionAnalyticsPage() {
               </div>
               <div className={styles.stats_grid}>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Total Batches</div>
+                  <div className={styles.stat_label}>Batches</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.totals.totalBatches || 0)}
+                    {formatStat(data.totals.totalBatches || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Total Milk</div>
+                  <div className={styles.stat_label}>Milk</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.totals.milk || 0)} <span className={styles.stat_unit}>L</span>
+                    {formatNumberWithCommas(data.totals.milk || 0, 2)} <span className={styles.stat_unit}>L</span>
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg Fat</div>
                   <div className={styles.stat_value}>
-                    {data.totals.avgFat || 0}<span className={styles.stat_unit}>%</span>
+                    {formatNumberWithCommas(data.totals.avgFat || 0, 1)}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg SNF</div>
                   <div className={styles.stat_value}>
-                    {data.totals.avgSnf || 0}<span className={styles.stat_unit}>%</span>
+                    {formatNumberWithCommas(data.totals.avgSnf || 0, 1)}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
               </div>

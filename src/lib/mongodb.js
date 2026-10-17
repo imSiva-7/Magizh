@@ -3,97 +3,65 @@ import { MongoClient } from "mongodb";
 const uri = process.env.MONGODB_URI;
 
 if (!uri) {
-  throw new Error("❌ MONGODB_URI is not defined in environment variables");
+  throw new Error("MONGODB_URI is not defined in environment variables");
 }
 
 const options = {
   maxPoolSize: 20,
-  minPoolSize: 5,
-  maxIdleTimeMS: 60000, // Close idle connections after 60 seconds
+  minPoolSize: 0,
+  maxIdleTimeMS: 60000,
   serverSelectionTimeoutMS: process.env.NODE_ENV === "development" ? 15000 : 30000,
   socketTimeoutMS: 45000,
   connectTimeoutMS: 10000,
-  ...(process.env.NODE_ENV === "development" && {
-    monitorCommands: false, // Disabled to reduce memory overhead
-  }),
 };
 
-let client;
-let clientPromise;
+// Next.js can load this module through multiple route bundles and hot reloads.
+// Share the pending connection as well as the connected client in every mode.
+const cacheKey = Symbol.for("magizhdairyproductions.mongodb");
+const cache = (globalThis[cacheKey] ??= { promise: null });
 
-if (process.env.NODE_ENV === "development") {
-  // In development mode, use a global variable to preserve the connection
-  // across hot module reloads (HMR)
-  if (!global._mongoClientPromise) {
-    console.log("🔧 Creating new MongoDB connection pool...");
-    
-    client = new MongoClient(uri, options);
-
-    // Connection pool monitoring
-    client.on("connectionPoolCreated", () => {
-      console.log("📊 MongoDB connection pool created");
-    });
-
-    client.on("connectionPoolClosed", () => {
-      console.log("📊 MongoDB connection pool closed");
-    });
-
-    // Optional: Monitor connection pool stats
-    if (process.env.MONGO_DEBUG === "true") {
-      client.on("commandStarted", (event) => {
-        if (event.commandName !== "ping" && event.commandName !== "isMaster") {
-          console.log(`🔍 MongoDB ${event.commandName} started`);
+export function getMongoClient() {
+  if (!cache.promise) {
+    const promise = Promise.resolve()
+      .then(async () => {
+        const client = new MongoClient(uri, options);
+        try {
+          await client.connect();
+          if (process.env.MONGO_DEBUG === "true") {
+            console.info("MongoDB client connected");
+          }
+          return client;
+        } catch (error) {
+          // Release any sockets created by an unsuccessful connection attempt.
+          await client.close().catch(() => {});
+          throw error;
         }
-      });
-
-      client.on("commandSucceeded", (event) => {
-        if (event.commandName !== "ping" && event.commandName !== "isMaster") {
-          console.log(`✅ MongoDB ${event.commandName} succeeded`);
-        }
-      });
-
-      client.on("commandFailed", (event) => {
-        console.error(`❌ MongoDB ${event.commandName} failed:`, event.failure);
-      });
-    }
-
-    global._mongoClientPromise = client
-      .connect()
-      .then(() => {
-        console.log("🎉 MongoDB connected successfully!");
-        return client;
       })
-      .catch((err) => {
-        console.error("💥 MongoDB connection failed:", err.message);
-        delete global._mongoClientPromise; // Clear failed promise so it can be retried
-        throw err;
+      .catch((error) => {
+        if (cache.promise === promise) cache.promise = null;
+        throw error;
       });
-  } else {
-    console.log("♻️  Reusing existing MongoDB connection");
+
+    cache.promise = promise;
   }
-  
-  clientPromise = global._mongoClientPromise;
-} else {
-  // In production, create a single client promise
-  if (!clientPromise) {
-    client = new MongoClient(uri, options);
-    clientPromise = client.connect();
-  }
+
+  return cache.promise;
 }
 
-// Graceful shutdown handler
-if (typeof process !== "undefined") {
-  const cleanup = async () => {
-    if (client) {
-      console.log("🔌 Closing MongoDB connection...");
-      await client.close();
-      console.log("✅ MongoDB connection closed");
-    }
-  };
+// Preserve existing `await clientPromise` callers and the auth adapter, while
+// connecting only when needed. A later await can retry a failed initial attempt.
+const clientPromise = {
+  then(onFulfilled, onRejected) {
+    return getMongoClient().then(onFulfilled, onRejected);
+  },
+  catch(onRejected) {
+    return getMongoClient().catch(onRejected);
+  },
+  finally(onFinally) {
+    return getMongoClient().finally(onFinally);
+  },
+};
 
-  process.on("SIGINT", cleanup);
-  process.on("SIGTERM", cleanup);
-  process.on("beforeExit", cleanup);
-}
-
+// Next.js owns process shutdown; adding signal listeners here leaks them on HMR.
+// Driver pool events are per replica-set server, not new application clients.
 export default clientPromise;

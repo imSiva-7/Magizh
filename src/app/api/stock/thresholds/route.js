@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 
@@ -10,6 +11,8 @@ export async function GET() {
 
 // PUT
 export async function PUT(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const db = await getDatabase();
   const { thresholds } = await request.json();
   await db.collection("settings").updateOne(

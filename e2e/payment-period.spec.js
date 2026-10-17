@@ -121,9 +121,9 @@ test("customer totals and background trends follow search and dates; balances lo
   const { balanceRequests, summaryRequests } = await mockCustomer(page);
   await page.goto("/customer/payments");
   const summary = summaryCard(page, "Filtered Customers Summary");
-  await expect(stat(summary, "Total Sales")).toContainText("1,000.00");
-  await expect(stat(summary, "Net received")).toContainText("650.00");
-  await expect(stat(summary, "Net receivable change")).toContainText("350.00");
+  await expect(stat(summary, "Sales")).toContainText("1,000");
+  await expect(stat(summary, "Received")).toContainText("650");
+  await expect(stat(summary, "Net Change")).toContainText("350");
   await expect(summary.getByTestId("stat-trend")).toHaveCount(4);
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
@@ -141,14 +141,14 @@ test("customer totals and background trends follow search and dates; balances lo
     page.getByRole("button", { name: "Record payment", exact: true }),
   ).toHaveCount(2);
   await page.getByPlaceholder("Search by name").fill("Beta");
-  await expect(stat(summary, "Net receivable change")).toContainText("-400.00");
+  await expect(stat(summary, "Net Change")).toContainText("-400");
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
     "1",
   );
   await page.getByPlaceholder("Search by name").fill("");
   await page.getByLabel("To Date", { exact: true }).fill("2026-10-01");
-  await expect(stat(summary, "Total Sales")).toContainText("400.00");
+  await expect(stat(summary, "Sales")).toContainText("400");
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
     "1",
@@ -244,7 +244,7 @@ test("supplier summary figures and graphs follow paid/due, search and date filte
   });
   await page.goto("/supplier/payments");
   const summary = summaryCard(page, "Filtered Suppliers Summary");
-  await expect(stat(summary, "Total Amount")).toContainText("1,450.00");
+  await expect(stat(summary, "Value")).toContainText("1,450");
   await expect(summary.getByTestId("stat-trend")).toHaveCount(4);
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
@@ -258,20 +258,20 @@ test("supplier summary figures and graphs follow paid/due, search and date filte
     path: "test-results/supplier-payment-trends-mobile.png",
   });
   await page.getByRole("radio", { name: "Paid", exact: true }).check();
-  await expect(stat(summary, "Total Amount")).toContainText("650.00");
-  await expect(stat(summary, "Amount Due")).toContainText("0.00");
+  await expect(stat(summary, "Value")).toContainText("650");
+  await expect(stat(summary, "Due")).toContainText("0");
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
     "2",
   );
   await page.getByPlaceholder("Search by name").fill("Alpha");
-  await expect(stat(summary, "Total Amount")).toContainText("400.00");
+  await expect(stat(summary, "Value")).toContainText("400");
   await page.getByRole("radio", { name: "Due", exact: true }).check();
-  await expect(stat(summary, "Amount Due")).toContainText("800.00");
+  await expect(stat(summary, "Due")).toContainText("800");
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("radio", { name: "All Records", exact: true }).check();
   await page.getByLabel("To Date", { exact: true }).fill("2026-10-01");
-  await expect(stat(summary, "Total Amount")).toContainText("400.00");
+  await expect(stat(summary, "Value")).toContainText("400");
   await expect(summary.getByTestId("stat-trend").first()).toHaveAttribute(
     "data-points",
     "1",

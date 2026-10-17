@@ -13,7 +13,7 @@ test.beforeEach(async ({ context, baseURL }) => {
   ]);
 });
 
-async function mockStock(page, { failBalance = false, failExtras = false } = {}) {
+async function mockStock(page, { failBalance = false, failExtras = false, balanceGate } = {}) {
   const balance = { butter: "12", cream: 0, curd: 60, ghee: 8, soft_paneer: -2, premium_paneer: 15 };
   let thresholds = { butter: 20, cream: 10, curd: 10, ghee: 5 };
   const adjustments = [];
@@ -21,7 +21,10 @@ async function mockStock(page, { failBalance = false, failExtras = false } = {})
     const request = route.request();
     const path = new URL(request.url()).pathname;
     if (path === "/api/auth/session") return route.fulfill({ json: { user: { role: "admin", name: "Stock preview" }, expires: "2099-01-01" } });
-    if (path === "/api/stock/balance") return route.fulfill({ status: failBalance ? 500 : 200, json: failBalance ? { error: "Offline" } : balance });
+    if (path === "/api/stock/balance") {
+      if (balanceGate) await balanceGate;
+      return route.fulfill({ status: failBalance ? 500 : 200, json: failBalance ? { error: "Offline" } : balance });
+    }
     if (path === "/api/stock/adjust") {
       const entry = request.postDataJSON();
       adjustments.push(entry);
@@ -59,7 +62,7 @@ test("stock overview has correct values, clear statuses, and charts with separat
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "test-results/stock-redesign-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "test-results/stock-redesign-mobile.png", fullPage: true });
 });
@@ -110,4 +113,32 @@ test("failed balance requests show a retry instead of a false empty inventory", 
   await expect(page.getByRole("alert").filter({ hasText: "Could not load stock balances" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "+ Adjust stock", exact: true })).toBeDisabled();
+});
+
+test("slow stock requests show card placeholders and refresh retains loaded inventory", async ({ page }) => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  await mockStock(page, { balanceGate: gate });
+  await page.goto("/stock");
+  const loading = page.getByTestId("stock-loading");
+  await expect(loading).toBeVisible();
+  await expect(page.getByRole("status")).toHaveText("Loading inventory…");
+  await expect(page.getByTestId("stock-product-skeleton")).toHaveCount(6);
+  await expect(page.getByRole("button", { name: "+ Adjust stock", exact: true })).toBeDisabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  await page.screenshot({ path: "test-results/stock-loading-mobile.png", fullPage: true });
+  release();
+  await expect(loading).toHaveCount(0);
+  const butter = page.getByRole("article", { name: "Butter inventory" });
+  await expect(butter).toContainText("12.00");
+  let releaseRefresh;
+  const refreshGate = new Promise(resolve => { releaseRefresh = resolve; });
+  await page.route("**/api/stock/balance", async route => { await refreshGate; await route.fulfill({ json: { butter: 14 } }); });
+  await page.getByRole("button", { name: "Refresh", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveText("Updating inventory…");
+  await expect(butter).toContainText("12.00");
+  await expect(loading).toHaveCount(0);
+  releaseRefresh();
+  await expect(butter).toContainText("14.00");
 });

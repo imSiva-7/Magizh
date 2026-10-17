@@ -1,8 +1,11 @@
+import { requireAdmin } from "@/lib/mutation-auth";
 
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 
 export async function POST(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const db = await getDatabase();
   const { product, quantity, comment } = await request.json();
 

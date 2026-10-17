@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import getDatabase from "@/database/connectToMongoDB";
@@ -5,6 +6,10 @@ import getDatabase from "@/database/connectToMongoDB";
 export async function POST(request) {
   try {
     const { name, email, password, role } = await request.json();
+    if (role && role !== "employee") {
+      const denied = await requireAdmin();
+      if (denied) return denied;
+    }
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -23,7 +28,7 @@ export async function POST(request) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Allowed roles (only admin/dev can assign others)
+    // Only an authenticated admin may create elevated accounts.
     const allowedRoles = ["employee", "admin", "dev"];
     const userRole = allowedRoles.includes(role) ? role : "employee";
 

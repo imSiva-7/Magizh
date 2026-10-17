@@ -30,7 +30,7 @@ export default function StockCharts({ items }) {
       <section className={styles.panel} aria-labelledby="stock-level-title">
         <div className={styles.sectionHeading}>
           <h2 id="stock-level-title">Stock & minimum levels</h2>
-          <div className={styles.segmented} role="group" aria-label="Chart units">{["kg", "L"].map((value) => <button key={value} type="button" aria-pressed={unit === value} onClick={() => setUnit(value)}>{value}</button>)}</div>
+          <div className={styles.segmented} role="group" aria-label="Chart units">{["kg", "L"].map((value) => <button data-button="toggle" key={value} type="button" aria-pressed={unit === value} onClick={() => setUnit(value)}>{value}</button>)}</div>
         </div>
         <p className={styles.helper}>Compare quantities within the same unit. Unset minimums are shown as zero.</p>
         <div className={styles.chartCanvas}>

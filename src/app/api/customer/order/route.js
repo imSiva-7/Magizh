@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
@@ -193,6 +194,8 @@ export async function GET(request) {
 // POST – create order, optionally deduct from stock
 // -------------------------------------------------------------------
 export async function POST(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.POST;
 
   try {
@@ -226,6 +229,10 @@ export async function POST(request) {
         affectStockValue,
       } = data;
 
+      if (data.gstType !== undefined && !["inclusive", "exclusive"].includes(data.gstType)) {
+        return NextResponse.json({ error: "Invalid GST option" }, { status: 400 });
+      }
+
       if (!items || !Array.isArray(items) || items.length === 0) {
         return NextResponse.json(
           { error: "At least one order item is required" },
@@ -240,6 +247,14 @@ export async function POST(request) {
             { status: 400 }
           );
         }
+        if (!Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0 ||
+            !Number.isFinite(Number(item.ratePerUnit)) || Number(item.ratePerUnit) <= 0 ||
+            !Number.isFinite(Number(item.totalAmount)) || Number(item.totalAmount) < 0) {
+          return NextResponse.json({ error: "Order quantities and rates must be positive; amounts cannot be negative" }, { status: 400 });
+        }
+      }
+      if (!Number.isFinite(Number(totalAmount)) || Number(totalAmount) < 0) {
+        return NextResponse.json({ error: "Order amount cannot be negative" }, { status: 400 });
       }
 
       // --- build order document (include affectStockValue) ---
@@ -255,6 +270,8 @@ export async function POST(request) {
           totalAmount: parseFloat(item.totalAmount) || 0,
         })),
         totalAmount: parseFloat(totalAmount) || 0,
+        gstType: data.gstType || "inclusive",
+        gstRate: 5,
         paymentStatus: paymentStatus || "Not Paid",
         comment: comment?.trim() || "",
         actionDoneBy: actionDoneBy?.trim() || "",
@@ -336,6 +353,8 @@ export async function POST(request) {
 // PUT – update order, adjust stock if items / affectStockValue change
 // -------------------------------------------------------------------
 export async function PUT(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.PUT;
 
   try {
@@ -361,6 +380,11 @@ export async function PUT(request) {
 
       // --- build update fields ---
       const updateData = { updatedAt: new Date() };
+      if (data.gstType !== undefined) {
+        if (!["inclusive", "exclusive"].includes(data.gstType)) return NextResponse.json({ error: "Invalid GST option" }, { status: 400 });
+        updateData.gstType = data.gstType;
+        updateData.gstRate = 5;
+      }
 
       if (data.date !== undefined) updateData.date = data.date;
       if (data.paymentStatus !== undefined) updateData.paymentStatus = data.paymentStatus;
@@ -493,6 +517,8 @@ export async function PUT(request) {
 // DELETE – remove order, restore stock if it was deducted
 // -------------------------------------------------------------------
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.DELETE;
 
   try {
@@ -569,6 +595,8 @@ export async function DELETE(request) {
 // PATCH – bulk update (status/comment) – no stock impact, no totals impact
 // -------------------------------------------------------------------
 export async function PATCH(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.PATCH;
 
   try {

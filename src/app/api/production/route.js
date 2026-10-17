@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
@@ -172,6 +173,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.POST;
 
   try {
@@ -298,6 +301,8 @@ export async function POST(request) {
 }
 
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.DELETE;
 
   try {

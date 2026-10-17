@@ -1,11 +1,11 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect } from "react";
 import CustomerCharts from "@/components/CustomerCharts";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { getPreviousMonthDate, getTodayDate } from "@/utils/dateUtils";
-import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "@/css/analytics.module.css";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
@@ -76,12 +76,12 @@ export default function CustomerAnalyticsPage() {
       </div>
 
       {/* Filter Section */}
-      <div className={styles.filter_section}>
-        <div className={styles.filter_title}>
+      <div data-filter="card" className={styles.filter_section}>
+        <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.date_input_group}>
-          <div className={styles.date_field}>
+        <div data-filter="grid" className={styles.date_input_group}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="startDate">From Date</label>
             <input
               type="date"
@@ -93,7 +93,7 @@ export default function CustomerAnalyticsPage() {
               className={styles.date_input}
             />
           </div>
-          <div className={styles.date_field}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="endDate">To Date</label>
             <input
               type="date"
@@ -107,8 +107,8 @@ export default function CustomerAnalyticsPage() {
             />
           </div>
         </div>
-        <div className={styles.filter_actions}>
-          <button
+        <div data-filter="actions" className={styles.filter_actions}>
+          <button data-button="secondary"
             type="button"
             onClick={resetDateRange}
             className={`${styles.btn} ${styles.btn_primary}`}
@@ -138,33 +138,33 @@ export default function CustomerAnalyticsPage() {
               </div>
               <div className={styles.stats_grid}>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Total Orders</div>
+                  <div className={styles.stat_label}>Orders</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.overall.totalOrders || 0)}
+                    {formatStat(data.overall.totalOrders || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Total Items</div>
+                  <div className={styles.stat_label}>Items</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.overall.totalItems || 0)}
+                    {formatStat(data.overall.totalItems || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
-                  <div className={styles.stat_label}>Total Amount</div>
+                  <div className={styles.stat_label}>Sales</div>
                   <div className={styles.stat_value}>
-                    ₹{formatNumberWithCommas(data.overall.totalAmount || 0)}
+                    ₹{formatStat(data.overall.totalAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Paid</div>
                   <div className={`${styles.stat_value} ${styles.text_green}`}>
-                    ₹{formatNumberWithCommas(data.overall.paidAmount || 0)}
+                    ₹{formatStat(data.overall.paidAmount || 0)}
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Due</div>
                   <div className={`${styles.stat_value} ${styles.text_red}`}>
-                    ₹{formatNumberWithCommas(data.overall.dueAmount || 0)}
+                    ₹{formatStat(data.overall.dueAmount || 0)}
                   </div>
                 </div>
               </div>

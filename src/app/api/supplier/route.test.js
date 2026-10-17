@@ -7,6 +7,7 @@
 
 import { GET } from './route';
 import { NextResponse } from 'next/server';
+jest.mock('@/app/api/auth/[...nextauth]/route', () => ({ authOptions: {} }));
 
 // Mock dependencies
 jest.mock('next/server', () => ({
@@ -54,9 +55,9 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
       expect(responseData.error).toBeUndefined();
     });
 
-    it('should accept "totalMilkQuantity" as a valid sortBy value', async () => {
+    it('should accept "supplierTSRate" as a valid sortBy value', async () => {
       const request = {
-        url: 'http://localhost/api/supplier?sortBy=totalMilkQuantity',
+        url: 'http://localhost/api/supplier?sortBy=supplierTSRate',
       };
 
       await GET(request);
@@ -77,7 +78,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining('Invalid sortBy parameter'),
+          error: expect.stringContaining('Invalid sortBy'),
         }),
         expect.objectContaining({ status: 400 })
       );
@@ -85,20 +86,20 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
     it('should return 400 error with helpful message for invalid sortBy', async () => {
       const request = {
-        url: 'http://localhost/api/supplier?sortBy=supplierName',
+        url: 'http://localhost/api/supplier?sortBy=unsupportedField',
       };
 
       await GET(request);
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         {
-          error: 'Invalid sortBy parameter. Allowed values: createdAt, totalMilkQuantity',
+          error: 'Invalid sortBy. Allowed: createdAt, updatedAt, supplierName, supplierTSRate',
         },
         { status: 400 }
       );
     });
 
-    it('should default to "createdAt" when sortBy is not provided', async () => {
+    it('should default to supplier name when sortBy is not provided', async () => {
       const request = {
         url: 'http://localhost/api/supplier',
       };
@@ -151,7 +152,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining('Invalid sortOrder parameter'),
+          error: expect.stringContaining('Invalid sortOrder'),
         }),
         expect.objectContaining({ status: 400 })
       );
@@ -166,7 +167,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         {
-          error: 'Invalid sortOrder parameter. Allowed values: asc, desc',
+          error: 'Invalid sortOrder. Allowed: asc, desc',
         },
         { status: 400 }
       );
@@ -190,7 +191,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
   describe('combined parameter validation', () => {
     it('should accept both valid sortBy and sortOrder parameters', async () => {
       const request = {
-        url: 'http://localhost/api/supplier?sortBy=totalMilkQuantity&sortOrder=asc',
+        url: 'http://localhost/api/supplier?sortBy=supplierTSRate&sortOrder=asc',
       };
 
       await GET(request);
@@ -212,7 +213,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
       // Should return sortBy error (checked first)
       expect(NextResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining('Invalid sortBy parameter'),
+          error: expect.stringContaining('Invalid sortBy'),
         }),
         { status: 400 }
       );
@@ -220,7 +221,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
     it('should work with search parameter alongside valid sort parameters', async () => {
       const request = {
-        url: 'http://localhost/api/supplier?search=test&sortBy=totalMilkQuantity&sortOrder=desc',
+        url: 'http://localhost/api/supplier?search=test&sortBy=supplierTSRate&sortOrder=desc',
       };
 
       await GET(request);
@@ -234,34 +235,16 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
   });
 
   describe('edge cases', () => {
-    it('should handle empty string sortBy parameter as invalid', async () => {
-      const request = {
-        url: 'http://localhost/api/supplier?sortBy=',
-      };
-
-      await GET(request);
-
-      expect(NextResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('Invalid sortBy parameter'),
-        }),
-        { status: 400 }
-      );
+    it('should use the default for an empty sortBy parameter', async () => {
+      const response = await GET({ url: 'http://localhost/api/supplier?sortBy=' });
+      expect(response.status).toBe(200);
+      expect(response.data).toEqual([]);
     });
 
-    it('should handle empty string sortOrder parameter as invalid', async () => {
-      const request = {
-        url: 'http://localhost/api/supplier?sortOrder=',
-      };
-
-      await GET(request);
-
-      expect(NextResponse.json).toHaveBeenCalledWith(
-        expect.objectContaining({
-          error: expect.stringContaining('Invalid sortOrder parameter'),
-        }),
-        { status: 400 }
-      );
+    it('should use the default for an empty sortOrder parameter', async () => {
+      const response = await GET({ url: 'http://localhost/api/supplier?sortOrder=' });
+      expect(response.status).toBe(200);
+      expect(response.data).toEqual([]);
     });
 
     it('should be case-sensitive for sortBy parameter', async () => {
@@ -273,7 +256,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining('Invalid sortBy parameter'),
+          error: expect.stringContaining('Invalid sortBy'),
         }),
         { status: 400 }
       );
@@ -288,7 +271,7 @@ describe('GET /api/supplier - Query Parameter Validation', () => {
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          error: expect.stringContaining('Invalid sortOrder parameter'),
+          error: expect.stringContaining('Invalid sortOrder'),
         }),
         { status: 400 }
       );

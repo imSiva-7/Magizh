@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import getDatabase from "@/database/connectToMongoDB";
@@ -46,6 +47,8 @@ export async function GET(request) {
 
 // PUT: record an amount received or a correction, never an order status.
 export async function PUT(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   try {
     const customerId = new URL(request.url).searchParams.get("customerId");
     if (!customerId || !ObjectId.isValid(customerId)) return NextResponse.json({ error: "Valid customerId required" }, { status: 400 });
@@ -56,6 +59,10 @@ export async function PUT(request) {
     if (cents === 0) return NextResponse.json({ error: "Amount must be greater than zero" }, { status: 400 });
     const kind = data.kind || (cents < 0 ? "correction" : "payment");
     if (!["payment", "correction"].includes(kind) || (kind === "payment" && cents < 0)) return NextResponse.json({ error: "Use a correction to reduce a previous payment" }, { status: 400 });
+    if (kind === "correction" || cents < 0) {
+      const denied = await requireAdmin();
+      if (denied) return denied;
+    }
     const note = typeof data.note === "string" ? data.note.trim() : "";
     if (kind === "correction" && !note) return NextResponse.json({ error: "A reason is required for corrections" }, { status: 400 });
     const method = data.method || "Cash";

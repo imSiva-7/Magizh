@@ -217,7 +217,7 @@ export default function Header() {
               <span className={styles.userName}>
                 Hi, {session.user?.name || "User"}
               </span>
-              <button
+              <button data-button="icon"
                 onClick={() => signOut()}
                 className={styles.logoutButton}
                 aria-label="Sign out"
@@ -232,7 +232,7 @@ export default function Header() {
               </button>
             </div>
           ) : status === "loading" ? <span className={styles.sessionLoading}>Connecting…</span> : (
-            <button
+            <button data-button="secondary"
               onClick={() => router.push("/login")}
               className={styles.loginButton}
               aria-label="Log in"
@@ -248,7 +248,7 @@ export default function Header() {
             </button>
           )}
 
-          <button
+          <button data-button="icon"
             ref={menuButtonRef}
             className={styles.mobileMenuButton}
             onClick={toggleMobileMenu}
@@ -278,7 +278,7 @@ export default function Header() {
             >
               <div className={styles.mobileNavHeader}>
                 <span className={styles.mobileNavTitle}>Your workspace</span>
-                <button
+                <button data-button="icon"
                   onClick={() => setMobileMenuOpen(false)}
                   className={styles.mobileCloseBtn}
                   aria-label="Close menu"
@@ -305,7 +305,7 @@ export default function Header() {
                   ))}
                   {session && (
                     <li>
-                      <button
+                      <button data-button="secondary"
                         onClick={() => {
                           signOut();
                           setMobileMenuOpen(false);

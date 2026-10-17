@@ -78,10 +78,10 @@ export default function AttendanceHistoryPage() {
     <div className={`${styles.container} ${styles.compactHistory}`}>
       <div className={styles.headerContent}>
         <PageHeading title="Attendance History" section="YOUR TEAM" description="Daily check-in, check-out, and hours worked. Times in IST." />
-        <Link href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
+        <Link data-button="secondary" href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
       </div>
 
-      <div className={styles.historyControls}>
+      <div data-filter="card" className={styles.historyControls}>
         <div className={styles.inputGroup}>
           <label htmlFor="history-month">Month</label>
           <input id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} max={getCurrentMonth()} className={styles.input} required />
@@ -98,16 +98,16 @@ export default function AttendanceHistoryPage() {
             <option value="incomplete">Missing checkout</option>
           </select>
         </div>
-        <div className={styles.historyControlActions}>
-          <button type="button" onClick={reset} className={styles.secondaryButton}>Reset</button>
-          <button type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton} disabled={loading} aria-label="Refresh attendance">Refresh</button>
+        <div data-filter="actions" className={styles.historyControlActions}>
+          <button data-button="secondary" type="button" onClick={reset} className={styles.secondaryButton}>Reset</button>
+          <button data-button="primary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton} disabled={loading} aria-label="Refresh attendance">Refresh</button>
         </div>
       </div>
 
       {loading ? (
         <div className={styles.loadingContainer} role="status"><div className={styles.spinner} aria-hidden="true" /><p>Loading attendance…</p></div>
       ) : error ? (
-        <div className={styles.emptyState} role="alert"><p>{error}</p><button type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton}>Try again</button></div>
+        <div className={styles.emptyState} role="alert"><p>{error}</p><button data-button="secondary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton}>Try again</button></div>
       ) : !data.records.length ? (
         <div className={styles.emptyState}><p>{!month ? "Choose a month to view attendance." : searchDebounced ? `No attendance found for “${searchDebounced}”.` : "No attendance found for these filters."}</p></div>
       ) : (

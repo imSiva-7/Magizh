@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
@@ -184,6 +185,8 @@ export async function GET(request) {
  * POST: Add an advance payment for an employee (nested in employee.advances)
  */
 export async function POST(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.POST;
 
   try {
@@ -260,6 +263,8 @@ export async function POST(request) {
  * PUT: Update an advance payment (nested in employee.advances)
  */
 export async function PUT(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.PUT;
 
   try {
@@ -317,6 +322,8 @@ export async function PUT(request) {
  * DELETE: Delete an advance payment (nested in employee.advances)
  */
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.DELETE;
 
   try {

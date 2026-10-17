@@ -1,4 +1,9 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
+import { customerAccountTrends } from "@/lib/history-card-trends";
+import CategoryBadge from "@/components/CategoryBadge";
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
 
 import { useSession } from "next-auth/react";
@@ -8,7 +13,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/order.module.css";
 import {
-  formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
@@ -46,22 +50,7 @@ const initialFilters = {
 };
 
 // ---------- Helper Functions ----------
-const getCustomerTypeClass = (customerType) => {
-  switch (customerType?.toLowerCase()) {
-    case "distributor":
-      return styles.type_distributor_badge;
-    case "wholesale":
-      return styles.type_wholesale_badge;
-    case "retail":
-      return styles.type_retail_badge;
-    case "restaurant":
-      return styles.type_restaurant_badge;
-    case "other":
-      return styles.type_other_badge;
-    default:
-      return styles.default_customer;
-  }
-};
+
 
 const sanitizeNumericInput = (value) => {
   return value.replace(/[^0-9.]/g, "");
@@ -95,8 +84,9 @@ const InputGroup = ({ label, error, required, readOnly, ...props }) => (
   </div>
 );
 
-const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
-  <div className={styles.stat_item}>
+const StatItem = ({ label, value, unit, prefix = "", colorClass = "", trend, tone = "milk" }) => (
+  <div className={`${styles.stat_item} ${trendStyles.card}`}>
+    <StatTrendBackground points={trend} tone={tone} />
     <span className={styles.stat_label}>{label}</span>
     <span className={`${styles.stat_value} ${colorClass}`}>
       {prefix}
@@ -106,7 +96,7 @@ const StatItem = ({ label, value, unit, prefix = "", colorClass = "" }) => (
   </div>
 );
 
-const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
+const SummaryStats = ({ summary, customerBalance, onEditPaid, trends }) => {
   const dateRangeLabel = "All Time";
 
   return (
@@ -118,7 +108,7 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
         </h3>
         {customerBalance && (
           <div className={styles.header_actions}>
-            <button
+            <button data-button="primary"
               onClick={onEditPaid}
               className={styles.header_payment_btn}
               title="Record Payment"
@@ -129,21 +119,21 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid }) => {
         )}
       </div>
       <div className={styles.stats_grid}>
-        <StatItem label="No. of Orders" value={summary.orderCount} unit="" />
+        <StatItem label="Orders" trend={trends.orders} value={summary.orderCount} unit="" />
         <StatItem
-          label="Total Amount"
-          value={formatNumberWithCommas(summary.totalAmount)}
+          label="Sales" trend={trends.sales} tone="amount"
+          value={formatStat(summary.totalAmount)}
           prefix="₹"
         />
         <StatItem
-          label="Amount Received"
-          value={formatNumberWithCommas(summary.paidAmount)}
+          label="Received" trend={trends.received}
+          value={formatStat(summary.paidAmount)}
           prefix="₹"
           colorClass={styles.text_green}
         />
         <StatItem
-          label={summary.dueAmount < 0 ? "Customer Credit" : "Amount Due"}
-          value={formatNumberWithCommas(Math.abs(summary.dueAmount))}
+          label={summary.dueAmount < 0 ? "Credit" : "Due"} trend={trends.due} tone="amount"
+          value={formatStat(Math.abs(summary.dueAmount))}
           prefix="₹"
           colorClass={summary.dueAmount < 0 ? styles.text_green : styles.text_red}
         />
@@ -171,6 +161,8 @@ function OrdersContent() {
 
   // New state for balance
   const [customerBalance, setCustomerBalance] = useState(null);
+  const [payments, setPayments] = useState(null);
+  const cardTrends = useMemo(() => customerAccountTrends(data.orders, payments, customerBalance), [data.orders, payments, customerBalance]);
   const [showPaidPopup, setShowPaidPopup] = useState(false);
 
   const { data: session } = useSession();
@@ -182,6 +174,17 @@ function OrdersContent() {
     PRODUCT_FIELDS.forEach((p) => (initial[p.name] = ""));
     setQuantities(initial);
   }, []);
+
+  const fetchPaymentHistory = useCallback(async () => {
+    if (!customerId) return;
+    try {
+      const response = await fetch(`/api/customer/ledger?customerId=${customerId}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Payment history unavailable");
+      const result = await response.json();
+      setPayments(result.payments || []);
+    } catch { setPayments(null); }
+  }, [customerId]);
+  useEffect(() => { setPayments(null); fetchPaymentHistory(); }, [fetchPaymentHistory]);
 
   // Fetch customer balance from total_orders
   const fetchCustomerBalance = useCallback(async () => {
@@ -478,7 +481,7 @@ function OrdersContent() {
     return (
       <div className={styles.error_state}>
         <h2>Customer Not Found</h2>
-        <button
+        <button data-button="secondary"
           onClick={() => router.push("/customer")}
           className={styles.error_state_primary_btn}
         >
@@ -500,11 +503,7 @@ function OrdersContent() {
           <div className={styles.header_title}>
             <h1>{data.customer?.customerName}</h1>
             <div className={styles.customer_info_badges}>
-              <span
-                className={getCustomerTypeClass(data.customer?.customerType)}
-              >
-                {data.customer?.customerType}
-              </span>
+              <CategoryBadge kind="customer" value={data.customer?.customerType} />
               {data.customer?.customerGST && (
                 <span className={styles.gst_tag}>
                   GST: {data.customer.customerGST}
@@ -607,7 +606,7 @@ function OrdersContent() {
           )}
 
           <div className={styles.form_actions}>
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={submitting}
               className={styles.primary_btn}
@@ -619,7 +618,7 @@ function OrdersContent() {
                   : "Create Order"}
             </button>
             {editingId._id && (
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={resetForm}
                 className={styles.secondary_btn}
@@ -634,6 +633,7 @@ function OrdersContent() {
       {customerBalance && (
         <SummaryStats
           summary={summary}
+          trends={cardTrends}
           customerBalance={customerBalance}
           onEditPaid={() => setShowPaidPopup(true)}
         />
@@ -641,14 +641,13 @@ function OrdersContent() {
 
       {/* Filter Section */}
       {data.orders.length > 0 && (
-        <div className={styles.filter_section}>
+        <div data-filter="card" className={styles.filter_section}>
           <div className={styles.form_header}>
             <h2>Filter by Date Range</h2>
-            <span>(Does not have an effect on summary)</span>
           </div>
-          <div className={styles.filter_row}>
-            <div className={styles.date_input_group}>
-              <div className={styles.date_field}>
+          <div data-filter="content" className={styles.filter_row}>
+            <div data-filter="grid" className={styles.date_input_group}>
+              <div data-filter="field" className={styles.date_field}>
                 <label>From Date</label>
                 <input
                   type="date"
@@ -658,7 +657,7 @@ function OrdersContent() {
                   className={styles.filter_input}
                 />
               </div>
-              <div className={styles.date_field}>
+              <div data-filter="field" className={styles.date_field}>
                 <label>To Date</label>
                 <input
                   type="date"
@@ -669,22 +668,22 @@ function OrdersContent() {
                 />
               </div>
             </div>
-            <div className={styles.filter_actions}>
-              <button
+            <div data-filter="actions" className={styles.filter_actions}>
+              <button data-button="secondary"
                 type="button"
                 onClick={resetFilterForm}
                 className={styles.btn_secondary}
               >
                 Reset
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={clearFilters}
                 className={styles.btn_secondary_2}
               >
                 Clear
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={todayFilter}
                 className={styles.btn_primary}
@@ -703,7 +702,7 @@ function OrdersContent() {
             {filteredOrders.length} order(s) found
           </div>
           <div className={styles.export_buttons}>
-            <button
+            <button data-button="secondary"
               onClick={() => handleExport("pdf", filteredOrders)}
               className={styles.export_btn}
             >
@@ -774,7 +773,7 @@ function OrdersContent() {
                         )}
                       </td>
                       <td className={styles.invoice_cell}>
-                        <button
+                        <button data-button="icon"
                           onClick={() =>
                             handleExport(
                               "pdf",
@@ -796,7 +795,7 @@ function OrdersContent() {
                       {isAdmin && (
                         <td className={styles.actions_cell}>
                           <div className={styles.actionMenuWrapper}>
-                            <button
+                            <button data-button="icon"
                               className={styles.actionMenuButton}
                               onClick={() =>
                                 setOpenActionMenuId(
@@ -815,7 +814,7 @@ function OrdersContent() {
                             </button>
                             {openActionMenuId === order._id && (
                               <div className={styles.actionMenuPopup}>
-                                <button
+                                <button data-button="menu"
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
                                   disabled={
@@ -824,7 +823,7 @@ function OrdersContent() {
                                 >
                                   Edit
                                 </button>
-                                <button
+                                <button data-button="menu-danger"
                                   onClick={() => handleDelete(order._id)}
                                   className={styles.actionDeleteButton}
                                   disabled={
@@ -855,7 +854,7 @@ function OrdersContent() {
         customerName={data.customer?.customerName || "Customer"}
         customerId={customerId}
         onClose={() => setShowPaidPopup(false)}
-        onSuccess={(result) => { setCustomerBalance(previous => ({ ...previous, paidAmount: result.paidAmount, dueAmount: result.dueAmount })); }}
+        onSuccess={(result) => { setCustomerBalance(previous => ({ ...previous, paidAmount: result.paidAmount, dueAmount: result.dueAmount })); fetchPaymentHistory(); }}
       />
     </div>
   );

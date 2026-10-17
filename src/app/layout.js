@@ -1,4 +1,6 @@
 import "./globals.css";
+import "./buttons.css";
+import "./filters.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AuthProvider from "./AuthProvider"; // import the client component

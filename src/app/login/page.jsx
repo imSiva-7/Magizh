@@ -84,7 +84,7 @@ export default function LoginPage() {
             {error && <div id="login-error" role="alert" className={styles.error_message}>{error}</div>}
           </div>
 
-          <button type="submit" className={styles.btn} disabled={loading}>
+          <button data-button="primary" type="submit" className={styles.btn} disabled={loading}>
             {loading ? (
               <>
                 <span className={styles.button_spinner}></span>

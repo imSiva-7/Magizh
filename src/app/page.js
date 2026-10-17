@@ -1,4 +1,5 @@
 "use client";
+import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -6,14 +7,18 @@ import { useEffect, useState, useMemo } from "react";
 import styles from "./page.module.css";
 import { getTodayDate, getPreviousMonthDate, getCurrentMonthStartDate } from "@/utils/dateUtils";
 import {
-  formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 import HomeCharts from "@/components/HomeCharts";
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
+import { customerDaily } from "@/lib/customer-charts";
+import { procurementDaily } from "@/lib/supplier-charts";
 
-const StatItem = ({ label, value, colorClass = "", className = "" }) => (
-  <div className={`${styles.global_stat_item} ${className}`}>
+const StatItem = ({ label, value, colorClass = "", className = "", trend, tone = "milk" }) => (
+  <div className={`${styles.global_stat_item} ${trendStyles.card} ${className}`}>
+    <StatTrendBackground points={trend} tone={tone} />
     <div className={styles.global_stat_label}>{label}</div>
     <div className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
   </div>
@@ -182,6 +187,14 @@ export default function Home() {
     return Array.from(dueMap.values()).sort((a, b) => b.due - a.due);
   }, [supplierData.procurements]);
 
+  const cardTrends = useMemo(() => {
+    const series = (rows, keys) => Object.fromEntries(keys.map(key => [key, rows.map(row => ({ date: row.date, value: row[key] }))]));
+    return {
+      customers: series(customerDaily(customerData.orders), ["orders", "amount", "paid", "due"]),
+      suppliers: series(procurementDaily(supplierData.procurements), ["milk", "amount", "paid", "due"]),
+    };
+  }, [customerData.orders, supplierData.procurements]);
+
   return (
     <div className={styles.dashboard}>
       {/* Header */}
@@ -200,7 +213,7 @@ export default function Home() {
               )}
             </>
           ) : status === "unauthenticated" ? (
-            <Link href="/login" className={styles.loginLink}>
+            <Link data-button="secondary" href="/login" className={styles.loginLink}>
               Log in
             </Link>
           ) : <span className={styles.sessionStatus}>Connecting…</span>}
@@ -304,13 +317,13 @@ export default function Home() {
         <div><span className={styles.eyebrow}>AT A GLANCE</span><h2>Business overview</h2></div>
       </div>
       {/* Date Filters */}
-      <div className={styles.filter_form}>
-        <div className={styles.filter_header}>
+      <div data-filter="card" className={styles.filter_form}>
+        <div data-filter="title" className={styles.filter_header}>
           <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.date_filter_section}>
-          <div className={styles.date_input_group}>
-            <div className={styles.date_field}>
+        <div data-filter="section" className={styles.date_filter_section}>
+          <div data-filter="grid" className={styles.date_input_group}>
+            <div data-filter="field" className={styles.date_field}>
               <label htmlFor="start-date">From</label>
               <input
                 id="start-date"
@@ -323,7 +336,7 @@ export default function Home() {
                 className={styles.filter_input}
               />
             </div>
-            <div className={styles.date_field}>
+            <div data-filter="field" className={styles.date_field}>
               <label htmlFor="end-date">To</label>
               <input
                 id="end-date"
@@ -338,8 +351,8 @@ export default function Home() {
               />
             </div>
           </div>
-          <div className={styles.filter_actions}>
-            <button
+          <div data-filter="actions" className={styles.filter_actions}>
+            <button data-button="secondary"
               onClick={() =>
                 setFilters({
                   startDate: getCurrentMonthStartDate(),
@@ -350,7 +363,7 @@ export default function Home() {
             >
               This Month
             </button>
-            <button
+            <button data-button="secondary"
               onClick={() =>
                 setFilters({
                   startDate: getTodayDate(),
@@ -361,7 +374,7 @@ export default function Home() {
             >
               Today
             </button>
-            <button
+            <button data-button="secondary"
               onClick={() =>
                 setFilters({
                   startDate: "",
@@ -384,7 +397,7 @@ export default function Home() {
       ) : error ? (
         <div className={styles.dataStatus} role="alert">
           <div><h3>Overview unavailable</h3><p>{error}. You can still use the workspace links above.</p></div>
-          <button onClick={() => setFilters((prev) => ({ ...prev }))} className={styles.retryBtn}>Try again</button>
+          <button data-button="secondary" onClick={() => setFilters((prev) => ({ ...prev }))} className={styles.retryBtn}>Try again</button>
         </div>
       ) : (
       <>
@@ -406,13 +419,13 @@ export default function Home() {
             <span className={styles.date_range_badge}>All time</span>
           </div>
           <div className={styles.three_col_grid}>
-          Comment this  <StatItem label="Milk (L)" value={formatNumberWithCommas(productionSummary.milk_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Curd (kg)" value={formatNumberWithCommas(productionSummary.curd_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Cream (kg)" value={formatNumberWithCommas(productionSummary.cream_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Soft Paneer (kg)" value={formatNumberWithCommas(productionSummary.soft_paneer_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Premium Paneer (kg)" value={formatNumberWithCommas(productionSummary.premium_paneer_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Butter (kg)" value={formatNumberWithCommas(productionSummary.butter_quantity.toFixed(1))} className={styles.production_stat_item} />
-            <StatItem label="Ghee (L)" value={formatNumberWithCommas(productionSummary.ghee_quantity.toFixed(1))} className={styles.production_stat_item} />
+          Comment this  <StatItem label="Milk (L)" value={formatStat(productionSummary.milk_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Curd (kg)" value={formatStat(productionSummary.curd_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Cream (kg)" value={formatStat(productionSummary.cream_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Soft Paneer (kg)" value={formatStat(productionSummary.soft_paneer_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Premium Paneer (kg)" value={formatStat(productionSummary.premium_paneer_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Butter (kg)" value={formatStat(productionSummary.butter_quantity)} className={styles.production_stat_item} />
+            <StatItem label="Ghee (L)" value={formatStat(productionSummary.ghee_quantity)} className={styles.production_stat_item} />
           </div>
         </div>
       )} */}
@@ -425,12 +438,12 @@ export default function Home() {
             <span className={styles.date_range_badge}>Live</span>
           </div>
           <div className={styles.three_col_grid}>
-            <StatItem label="Butter (kg)" value={formatNumberWithCommas((stockBalance.butter || 0).toFixed(1))} className={styles.stock_stat_item} />
-            <StatItem label="Cream (kg)" value={formatNumberWithCommas((stockBalance.cream || 0).toFixed(1))} className={styles.stock_stat_item} />
-            <StatItem label="Curd (kg)" value={formatNumberWithCommas((stockBalance.curd || 0).toFixed(1))} className={styles.stock_stat_item} />
-            <StatItem label="Ghee (L)" value={formatNumberWithCommas((stockBalance.ghee || 0).toFixed(1))} className={styles.stock_stat_item} />
-            <StatItem label="Soft Paneer (kg)" value={formatNumberWithCommas((stockBalance.soft_paneer || 0).toFixed(1))} className={styles.stock_stat_item} />
-            <StatItem label="Premium Paneer (kg)" value={formatNumberWithCommas((stockBalance.premium_paneer || 0).toFixed(1))} className={styles.stock_stat_item} />
+            <StatItem label="Butter (kg)" value={formatStat((stockBalance.butter || 0))} className={styles.stock_stat_item} />
+            <StatItem label="Cream (kg)" value={formatStat((stockBalance.cream || 0))} className={styles.stock_stat_item} />
+            <StatItem label="Curd (kg)" value={formatStat((stockBalance.curd || 0))} className={styles.stock_stat_item} />
+            <StatItem label="Ghee (L)" value={formatStat((stockBalance.ghee || 0))} className={styles.stock_stat_item} />
+            <StatItem label="Soft Paneer (kg)" value={formatStat((stockBalance.soft_paneer || 0))} className={styles.stock_stat_item} />
+            <StatItem label="Premium Paneer (kg)" value={formatStat((stockBalance.premium_paneer || 0))} className={styles.stock_stat_item} />
           </div>
         </div>
       )}  */}
@@ -447,21 +460,27 @@ export default function Home() {
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
-              label="Total Milk"
-              value={`${formatNumberWithCommas(supplierData.summary.totalMilk.toFixed(1))} L`}
+              label="Milk"
+              trend={cardTrends.suppliers.milk}
+              value={`${formatNumberWithCommas(supplierData.summary.totalMilk, 2)} L`}
             />
             <StatItem
-              label="Total Amount"
-              value={`₹${formatNumberWithCommas(supplierData.summary.totalAmount.toFixed(2))}`}
+              label="Procurement"
+              trend={cardTrends.suppliers.amount}
+              tone="amount"
+              value={`₹${formatStat(supplierData.summary.totalAmount)}`}
             />
             <StatItem
-              label="Total Paid"
-              value={`₹${formatNumberWithCommas(supplierData.summary.paidAmount.toFixed(2))}`}
+              label="Paid"
+              trend={cardTrends.suppliers.paid}
+              value={`₹${formatStat(supplierData.summary.paidAmount)}`}
               colorClass={styles.text_green}
             />
             <StatItem
-              label="Total Due"
-              value={`₹${formatNumberWithCommas(supplierData.summary.dueAmount.toFixed(2))}`}
+              label="Due"
+              trend={cardTrends.suppliers.due}
+              tone="amount"
+              value={`₹${formatStat(supplierData.summary.dueAmount)}`}
               colorClass={styles.text_red}
             />
           </div>
@@ -514,21 +533,27 @@ export default function Home() {
             </div>
             <div className={styles.global_stats_grid}>
               <StatItem
-                label="Total Orders"
+                label="Orders"
+                trend={cardTrends.customers.orders}
                 value={customerData.summary.orderCount}
               />
               <StatItem
-                label="Total Sales"
-                value={`₹${formatNumberWithCommas(customerData.summary.totalAmount.toFixed(2))}`}
+                label="Sales"
+                trend={cardTrends.customers.amount}
+                tone="amount"
+                value={`₹${formatStat(customerData.summary.totalAmount)}`}
               />
               <StatItem
-                label="Total Received"
-                value={`₹${formatNumberWithCommas(customerData.summary.paidAmount.toFixed(2))}`}
+                label="Received"
+                trend={cardTrends.customers.paid}
+                value={`₹${formatStat(customerData.summary.paidAmount)}`}
                 colorClass={styles.text_green}
               />
               <StatItem
-                label="Total Outstanding"
-                value={`₹${formatNumberWithCommas(customerData.summary.dueAmount.toFixed(2))}`}
+                label="Outstanding"
+                trend={cardTrends.customers.due}
+                tone="amount"
+                value={`₹${formatStat(customerData.summary.dueAmount)}`}
                 colorClass={styles.text_red}
               />
             </div>

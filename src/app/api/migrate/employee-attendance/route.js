@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 
@@ -8,6 +9,8 @@ import getDatabase from "@/database/connectToMongoDB";
  * POST http://localhost:3000/api/migrate/employee-attendance
  */
 export async function POST(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   try {
     const db = await getDatabase();
     

@@ -1,4 +1,5 @@
 "use client";
+import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
@@ -592,7 +593,7 @@ export default function Supplier() {
 
           {!createSupplier && (
             <div className={styles.createSection}>
-              <button
+              <button data-button="primary"
                 onClick={() => {
                   setCreateSupplier(true);
                   setIsEditing(false);
@@ -641,7 +642,7 @@ export default function Supplier() {
                   type="checkbox"
                   checked={formData.isHeadSupplier}
                   onChange={handleHeadSupplierToggle}
-                  disabled={isSubmitting}
+                  disabled={!isAdmin || isSubmitting}
                 />
                 <span>Head Supplier</span>
               </label>
@@ -668,7 +669,7 @@ export default function Supplier() {
                     </span>
                   </h4>
                   {selectedChildCount > 0 && (
-                    <button
+                    <button data-button="secondary"
                       type="button"
                       onClick={handleClearAllChildren}
                       className={styles.clearChildrenBtn}
@@ -878,7 +879,7 @@ export default function Supplier() {
           </div>
 
           <div className={styles.formActions}>
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={isSubmitting}
               className={styles.submitButton}
@@ -895,7 +896,7 @@ export default function Supplier() {
               )}
             </button>
 
-            <button
+            <button data-button="secondary"
               type="button"
               onClick={resetForm}
               className={styles.cancelButton}
@@ -908,7 +909,7 @@ export default function Supplier() {
       )}
 
       {/* ---------- Search ---------- */}
-      <div className={styles.searchSection}>
+      <div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Suppliers:
@@ -926,7 +927,7 @@ export default function Supplier() {
               autoComplete="off"
             />
             {searchByName && (
-              <button
+              <button data-button="icon"
                 type="button"
                 onClick={handleClearSearch}
                 className={styles.clearSearchButton}
@@ -951,9 +952,9 @@ export default function Supplier() {
       </div>
 
       {loadError && (
-        <div className={styles.searchSection} role="alert">
+        <div data-filter="card" className={styles.searchSection} role="alert">
           <p className={styles.emptyText}>{loadError}{entries.length ? " Previously loaded suppliers are shown below." : ""}</p>
-          <button type="button" className={styles.createEmptyButton} onClick={fetchData} disabled={loading}>Try again</button>
+          <button data-button="secondary" type="button" className={styles.createEmptyButton} onClick={fetchData} disabled={loading}>Try again</button>
         </div>
       )}
       {/* ---------- Table ---------- */}
@@ -990,7 +991,7 @@ export default function Supplier() {
                           : "No suppliers found"}
                       </p>
                       {!searchDebounced && !createSupplier && isAdmin && (
-                        <button
+                        <button data-button="primary"
                           onClick={() => {
                             setCreateSupplier(true);
                             setIsEditing(false);
@@ -1022,15 +1023,7 @@ export default function Supplier() {
                       )}
                     </td>
                     <td className={styles.typeCell}>
-                      <span
-                        className={`${styles.typeBadge} ${
-                          styles[
-                            `type-${item.supplierType?.toLowerCase() || "other"}`
-                          ]
-                        }`}
-                      >
-                        {item.supplierType || "-"}
-                      </span>
+                      <CategoryBadge kind="supplier" value={item.supplierType} fallback="-" />
                     </td>
                     <td className={styles.tsRateCell}>
                       {item.supplierCustomRate
@@ -1055,7 +1048,7 @@ export default function Supplier() {
                     {isAdmin && (
                       <td className={styles.actionsCell}>
                         <div className={styles.actionMenuWrapper}>
-                          <button
+                          <button data-button="icon"
                             className={styles.actionMenuButton}
                             onClick={() =>
                               setOpenActionMenuId(
@@ -1071,7 +1064,7 @@ export default function Supplier() {
                           </button>
                           {openActionMenuId === item._id && (
                             <div className={styles.actionMenuPopup}>
-                              <button
+                              <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
                                   setOpenActionMenuId(null);
@@ -1088,7 +1081,7 @@ export default function Supplier() {
                                   ? "Cancel"
                                   : "Edit"}
                               </button>
-                              <button
+                              <button data-button="menu-danger"
                                 onClick={() => {
                                   handleDelete(item._id);
                                   setOpenActionMenuId(null);

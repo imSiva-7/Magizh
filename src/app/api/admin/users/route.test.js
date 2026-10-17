@@ -43,12 +43,12 @@ test.each([null, { user: { role: "employee" } }])(
   "non-administrators cannot read or mutate accounts",
   async (session) => {
     getServerSession.mockResolvedValue(session);
+    expect((await GET(request("GET"))).status).toBe(403);
     for (const response of [
-      await GET(request("GET")),
       await PATCH(request("PATCH", { userId: otherId, role: "admin" })),
       await DELETE(request("DELETE")),
     ])
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(session ? 403 : 401);
     expect(mockCollection.find).not.toHaveBeenCalled();
     expect(mockCollection.updateOne).not.toHaveBeenCalled();
     expect(mockCollection.deleteOne).not.toHaveBeenCalled();

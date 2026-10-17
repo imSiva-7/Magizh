@@ -1,4 +1,5 @@
 "use client";
+import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
@@ -475,7 +476,7 @@ export default function Employee() {
 
           {!createEmployee && (
             <div className={styles.createSection}>
-              <button
+              <button data-button="primary"
                 onClick={() => {
                   setCreateEmployee(true);
                   setIsEditing(false);
@@ -596,7 +597,7 @@ export default function Employee() {
           </div>
 
           <div className={styles.formActions}>
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={isSubmitting || empIDCheckLoading}
               className={styles.submitButton}
@@ -613,7 +614,7 @@ export default function Employee() {
               )}
             </button>
 
-            <button
+            <button data-button="secondary"
               type="button"
               onClick={resetForm}
               className={styles.cancelButton}
@@ -625,7 +626,7 @@ export default function Employee() {
         </form>
       )}
 
-      <div className={styles.searchSection}>
+      <div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Employees:
@@ -643,7 +644,7 @@ export default function Employee() {
               autoComplete="off"
             />
             {searchByName && (
-              <button
+              <button data-button="icon"
                 type="button"
                 onClick={handleClearSearch}
                 className={styles.clearSearchButton}
@@ -702,7 +703,7 @@ export default function Employee() {
                           : "No employees found"}
                       </p>
                       {!searchDebounced && !createEmployee && isAdmin && (
-                        <button
+                        <button data-button="primary"
                           onClick={() => {
                             setCreateEmployee(true);
                             setIsEditing(false);
@@ -733,13 +734,7 @@ export default function Employee() {
                       </span>
                     </td>
                     <td className={styles.genderCell}>
-                      <span
-                        className={`${styles.genderBadge} ${
-                          styles[`gender-${item.gender?.toLowerCase() || "other"}`]
-                        }`}
-                      >
-                        {item.gender || "-"}
-                      </span>
+                      <CategoryBadge kind="gender" value={item.gender} fallback="-" />
                     </td>
                     <td className={styles.salaryCell}>
                       {formatSalary(item.salary)}
@@ -759,7 +754,7 @@ export default function Employee() {
                     {isAdmin && (
                       <td className={styles.actionsCell}>
                         <div className={styles.actionMenuWrapper}>
-                          <button
+                          <button data-button="icon"
                             className={styles.actionMenuButton}
                             onClick={() =>
                               setOpenActionMenuId(
@@ -775,7 +770,7 @@ export default function Employee() {
                           </button>
                           {openActionMenuId === item._id && (
                             <div className={styles.actionMenuPopup}>
-                              <button
+                              <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
                                   setOpenActionMenuId(null);
@@ -792,7 +787,7 @@ export default function Employee() {
                                   ? "Cancel"
                                   : "Edit"}
                               </button>
-                              <button
+                              <button data-button="menu-danger"
                                 onClick={() => {
                                   handleDelete(item._id);
                                   setOpenActionMenuId(null);

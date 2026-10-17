@@ -1,4 +1,6 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
+import CategoryBadge from "@/components/CategoryBadge";
 
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
 import { matchesPeriodActivity, sumPaymentPeriod, paymentCardTrends } from "@/lib/customer-payment-period.mjs";
@@ -8,7 +10,6 @@ import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import styles from "@/css/customer-payment.module.css";
 import {
-  formatNumberWithCommas,
   formatNumberWithCommasNoDecimal,
 } from "@/utils/formatNumberWithComma";
 import { useSession } from "next-auth/react";
@@ -39,16 +40,7 @@ const INITIAL_VISIBLE_COUNT = 20;
 //   return "All Records";
 // };
 
-const getCustomerTypeClass = (customerType) => {
-  const typeClassMap = {
-    Distributor: styles.type_distributor_badge,
-    Wholesale: styles.type_wholesale_badge,
-    Retail: styles.type_retail_badge,
-    Restaurant: styles.type_restaurant_badge,
-    Other: styles.type_other_badge,
-  };
-  return typeClassMap[customerType] || styles.default_customer;
-};
+
 
 // ========== REUSABLE COMPONENTS ==========
 const LoadingSpinner = () => (
@@ -69,7 +61,7 @@ const StatItem = ({ label, value, unit = "", colorClass = "", trend, tone }) => 
   </div>
 );
 // Comment editor component with button toggle
-const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
+const CommentEditor = ({ orderId, initialComment, onSave, isSaving, canEdit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [comment, setComment] = useState(initialComment || "");
 
@@ -96,14 +88,14 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
           placeholder="Add comment..."
         />
         <div className={styles.comment_actions}>
-          <button
+          <button data-button="primary"
             onClick={handleSave}
             className={styles.comment_save_btn}
             disabled={isSaving}
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
-          <button
+          <button data-button="secondary"
             onClick={handleCancel}
             className={styles.comment_cancel_btn}
             disabled={isSaving}
@@ -118,13 +110,13 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   return (
     <div className={styles.comment_display}>
       <span className={styles.comment_text}>{comment || "-"}</span>
-      <button
+      {canEdit && (<button data-button="icon"
         onClick={() => setIsEditing(true)}
         className={styles.comment_edit_btn}
         title="Edit comment"
       >
         <Image src="/edit-comment.png" alt="edit" width={20} height={20} />
-      </button>
+      </button>)}
     </div>
   );
 };
@@ -349,7 +341,7 @@ export default function CustomerPayments() {
 
       {/* <label className={styles.search_label}>Period activity <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All activity</option><option value="receipts">With receipts or corrections</option><option value="sales-only">Sales without receipts</option><option value="increase">Receivables increased</option><option value="decrease">Receivables decreased</option></select></label> */}
       {/* Search Section */}
-      <div className={styles.filter_section}>
+      <div data-filter="card" className={styles.filter_section}>
         <div className={styles.search_wrapper}>
           <label htmlFor="searchInput" className={styles.search_label}>
             Search Customers:
@@ -366,7 +358,7 @@ export default function CustomerPayments() {
               autoComplete="off"
             />
             {searchQuery && (
-              <button
+              <button data-button="icon"
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className={styles.clear_search_button}
@@ -396,14 +388,14 @@ export default function CustomerPayments() {
       </div>
 
       {/* Date & Status Filters */}
-      <div className={styles.filter_section}>
-        <div className={styles.filter_title}>
+      <div data-filter="card" className={styles.filter_section}>
+        <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
           <span>Applies to orders, receipts and summary cards</span>
         </div>
 
-        <div className={styles.date_input_group}>
-          <div className={styles.date_field}>
+        <div data-filter="grid" className={styles.date_input_group}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="startDate">From Date</label>
             <input
               type="date"
@@ -416,7 +408,7 @@ export default function CustomerPayments() {
               disabled={isLoading}
             />
           </div>
-          <div className={styles.date_field}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="endDate">To Date</label>
             <input
               type="date"
@@ -432,8 +424,8 @@ export default function CustomerPayments() {
           </div>
         </div>
 
-        <div className={styles.filter_actions}>
-          <button
+        <div data-filter="actions" className={styles.filter_actions}>
+          <button data-button="secondary"
             type="button"
             onClick={resetFilters}
             className={`${styles.btn} ${styles.btn_reset}`}
@@ -441,7 +433,7 @@ export default function CustomerPayments() {
           >
             Reset
           </button>
-          <button
+          <button data-button="secondary"
             type="button"
             onClick={clearFilters}
             className={`${styles.btn} ${styles.btn_clear}`}
@@ -449,7 +441,7 @@ export default function CustomerPayments() {
           >
             Clear
           </button>
-          <button
+          <button data-button="secondary"
             type="button"
             onClick={loadTodayData}
             className={`${styles.btn} ${styles.btn_today}`}
@@ -460,7 +452,7 @@ export default function CustomerPayments() {
         </div>
       </div>
 
-      {periodError && <div className={styles.account_hint} role="alert">{periodError} <button type="button" onClick={() => fetchOrders()}>Retry period data</button></div>}
+      {periodError && <div className={styles.account_hint} role="alert">{periodError} <button data-button="secondary" type="button" onClick={() => fetchOrders()}>Retry period data</button></div>}
       {!isLoading && !periodError && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>
@@ -469,29 +461,29 @@ export default function CustomerPayments() {
           </div>
           <div className={styles.global_stats_grid}>
             <StatItem
-              label="Total Orders"
+              label="Orders"
               trend={cardTrends.totalOrders}
-              value={formatNumberWithCommasNoDecimal(
+              value={formatStat(
                 globalStats.totalOrders || 0,
               )}
             />
             <StatItem
-              label="Total Sales"
+              label="Sales"
               trend={cardTrends.totalAmount}
               tone="amount"
-              value={`₹${formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}`}
+              value={`₹${formatStat(globalStats.totalAmount)}`}
             />
             <StatItem
-              label="Net received"
+              label="Received"
               trend={cardTrends.receivedAmount}
-              value={`₹${formatNumberWithCommas(globalStats.receivedAmount.toFixed(2))}`}
+              value={`₹${formatStat(globalStats.receivedAmount)}`}
               colorClass={styles.text_green}
             />
             <StatItem
-              label="Net receivable change"
+              label="Net Change"
               trend={cardTrends.netChange}
               tone="amount"
-              value={`₹${formatNumberWithCommas(globalStats.netChange.toFixed(2))}`}
+              value={`₹${formatStat(globalStats.netChange)}`}
               colorClass={globalStats.netChange < 0 ? styles.text_green : styles.text_red}
             />
 
@@ -530,15 +522,11 @@ export default function CustomerPayments() {
                     >
                       {customer.customerName || "-"}
                     </Link>
-                    <span
-                      className={getCustomerTypeClass(customer.customerType)}
-                    >
-                      {customer.customerType || "Other"}
-                    </span>
+                    <CategoryBadge kind="customer" value={customer.customerType} />
                     <span className={styles.date_range_badge}>{stats.receiptCount ? "Receipts / corrections in period" : "Sales in period"}</span>
                   </div>
                   <div className={styles.header_right}>
-                    <button
+                    <button data-button="primary"
                       onClick={() => handleOpenPayment(customer)}
                       className={styles.edit_payment_btn}
                       title="Record Payment"
@@ -558,25 +546,25 @@ export default function CustomerPayments() {
                 {/* Quick Stats Row - Data from total_orders API */}
                 <div className={styles.quick_stats}>
                   <StatItem
-                    label="Orders in period"
+                    label="Orders"
                     value={stats.totalOrders}
                   />
                   <StatItem
-                    label="Total Sales"
-                    value={`₹${formatNumberWithCommas(
+                    label="Sales"
+                    value={`₹${formatStat(
                       stats.totalAmount,
                     )}`}
                   />
                   <StatItem
-                    label="Net received"
-                    value={`₹${formatNumberWithCommas(
+                    label="Received"
+                    value={`₹${formatStat(
                       stats.receivedAmount,
                     )}`}
                     colorClass={styles.text_green}
                   />
                   <StatItem
-                    label="Net receivable change"
-                    value={`₹${formatNumberWithCommas(
+                    label="Net Change"
+                    value={`₹${formatStat(
                       stats.netChange,
                     )}`}
                     colorClass={stats.netChange < 0 ? styles.text_green : styles.text_red}
@@ -628,7 +616,7 @@ export default function CustomerPayments() {
                               )}
                             </td>
                             <td className={styles.table_cell}>
-                              <button
+                              <button data-button="icon"
                                 onClick={() =>
                                   handleSingleInvoice(order, customer)
                                 }
@@ -648,6 +636,7 @@ export default function CustomerPayments() {
                               className={`${styles.table_cell} ${styles.cell_comment}`}
                             >
                               <CommentEditor
+                                canEdit={session?.user?.role === "admin"}
                                 orderId={order._id}
                                 initialComment={order.comment}
                                 onSave={handleCommentUpdate}
@@ -661,7 +650,7 @@ export default function CustomerPayments() {
                   </table>
                   {hasMore && (
                     <div className={styles.show_more_container}>
-                      <button
+                      <button data-button="secondary"
                         onClick={() => handleShowMore(customer._id)}
                         className={styles.show_more_btn}
                         disabled={isLoadingCustomers}

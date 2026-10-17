@@ -1,3 +1,7 @@
+import { getServerSession } from "next-auth";
+jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
+jest.mock("@/app/api/auth/[...nextauth]/route", () => ({ authOptions: {} }));
+beforeEach(() => { getServerSession.mockResolvedValue({ user: { role: "admin" } }); });
 import { ObjectId } from "mongodb";
 import { PUT } from "./route";
 import getDatabase from "@/database/connectToMongoDB";
@@ -65,4 +69,16 @@ test("ledger failure rolls back balances", async () => {
     expect((await PUT(request({ paidAmount: "300" }))).status).toBe(500);
     expect(db.state().total_orders[0].paidAmount).toBe(0);
   } finally { log.mockRestore(); }
+});
+
+test.each(["employee", "dev"])("%s may add a payment receipt but cannot correct one", async role => {
+  const db = database(); getDatabase.mockResolvedValue(db);
+  getServerSession.mockResolvedValue({ user: { role } });
+  const receipt = await PUT(request({ paidAmount: "300" }));
+  expect(receipt.status).toBe(200);
+  expect(receipt.data.dueAmount).toBe(700);
+  const correction = await PUT(request({ paidAmount: "-100", kind: "correction", note: "Fix receipt" }));
+  expect(correction.status).toBe(403);
+  expect(db.state().total_orders[0].paidAmount).toBe(300);
+  expect(db.state().totalOrdersLedger[0].payments).toHaveLength(1);
 });

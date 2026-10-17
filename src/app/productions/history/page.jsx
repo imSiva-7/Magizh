@@ -1,4 +1,5 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
 
 import { useState, useEffect, useCallback } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -319,15 +320,15 @@ export default function ProductionHistoryPage() {
       </div>
 
       {/* Filter Form */}
-      <form onSubmit={handleSubmit} className={styles.filterForm}>
-        <div className={styles.filterHeader}>
+      <form data-filter="card" onSubmit={handleSubmit} className={styles.filterForm}>
+        <div data-filter="title" className={styles.filterHeader}>
           <h2>Filter by Date Range</h2>
         </div>
 
-        <div className={styles.filterRow}>
-          <div className={styles.dateFilterSection}>
-            <div className={styles.dateInputGroup}>
-              <div className={styles.dateField}>
+        <div data-filter="content" className={styles.filterRow}>
+          <div data-filter="section" className={styles.dateFilterSection}>
+            <div data-filter="grid" className={styles.dateInputGroup}>
+              <div data-filter="field" className={styles.dateField}>
                 <label htmlFor="fromDate">From Date</label>
                 <input
                   id="fromDate"
@@ -341,7 +342,7 @@ export default function ProductionHistoryPage() {
                 />
               </div>
 
-              <div className={styles.dateField}>
+              <div data-filter="field" className={styles.dateField}>
                 <label htmlFor="toDate">To Date</label>
                 <input
                   id="toDate"
@@ -358,9 +359,9 @@ export default function ProductionHistoryPage() {
             </div>
           </div>
 
-          <div className={styles.filterActions}>
-            <div className={styles.buttonGroup}>
-              <button
+          <div data-filter="actions" className={styles.filterActions}>
+            <div data-filter="buttons" className={styles.buttonGroup}>
+              <button data-button="secondary"
                 type="button"
                 onClick={resetFilters}
                 className={styles.primaryBtn}
@@ -370,7 +371,7 @@ export default function ProductionHistoryPage() {
                 Reset Filters
               </button>
 
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={clearFilters}
                 className={styles.secondaryBtn}
@@ -391,7 +392,7 @@ export default function ProductionHistoryPage() {
           <div className={styles.errorContent}>
             <strong>Error loading data:</strong>
             <p>{error}</p>
-            <button
+            <button data-button="secondary"
               onClick={fetchData}
               className={styles.retryBtn}
               aria-label="Retry loading data"
@@ -415,7 +416,7 @@ export default function ProductionHistoryPage() {
                 <div key={key} className={styles.statItem}>
                   <span className={styles.statLabel}>{label}</span>
                   <span className={styles.statValue}>
-                    {formatNumberWithCommas(stats[key])}
+                    {key === "totalMilk" ? formatNumberWithCommas(stats[key], 2) : formatStat(stats[key])}
                     <span className={styles.statUnit}>{unit}</span>
                   </span>
                 </div>
@@ -429,7 +430,7 @@ export default function ProductionHistoryPage() {
               {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
               found
             </span>
-            <button
+            <button data-button="secondary"
               onClick={handleExportCSV}
               disabled={entries.length === 0 || loading}
               className={styles.exportBtn}
@@ -468,7 +469,7 @@ export default function ProductionHistoryPage() {
                     : "Start by adding production entries"}
                 </p>
                 {(filters.fromDate || filters.toDate) && (
-                  <button
+                  <button data-button="secondary"
                     onClick={clearFilters}
                     className={styles.clearFilterLink}
                   >

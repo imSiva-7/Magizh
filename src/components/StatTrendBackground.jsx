@@ -1,11 +1,9 @@
 "use client";
 
-import { useId } from "react";
 import styles from "@/css/stat-trend.module.css";
 
 // Decorative only: the labelled statistic remains the accessible content.
 export default function StatTrendBackground({ points = [], tone = "milk" }) {
-  const id = useId().replaceAll(":", "");
   const valid = points.filter(
     (point) =>
       Number.isFinite(point.value) && Number.isFinite(Date.parse(point.date)),
@@ -29,7 +27,6 @@ export default function StatTrendBackground({ points = [], tone = "milk" }) {
         `${index ? "L" : "M"}${point.x.toFixed(2)},${point.y.toFixed(2)}`,
     )
     .join(" ");
-  const fill = `${line} L${coordinates.at(-1).x.toFixed(2)},100 L${coordinates[0].x.toFixed(2)},100 Z`;
   return (
     <svg
       className={`${styles.graphic} ${tone === "amount" ? styles.amount : styles.milk}`}
@@ -40,15 +37,7 @@ export default function StatTrendBackground({ points = [], tone = "milk" }) {
       data-testid="stat-trend"
       data-points={ordered.length}
     >
-      <defs>
-        <linearGradient id={`${id}-stat-fill`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="currentColor" stopOpacity=".2" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity=".025" />
-        </linearGradient>
-      </defs>
       {ordered.length > 1 ? (
-        <>
-          <path d={fill} fill={`url(#${id}-stat-fill)`} />
           <path
             d={line}
             fill="none"
@@ -59,15 +48,8 @@ export default function StatTrendBackground({ points = [], tone = "milk" }) {
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
           />
-        </>
       ) : (
-        <circle
-          cx={coordinates[0].x}
-          cy={coordinates[0].y}
-          r="3"
-          fill="currentColor"
-          opacity=".35"
-        />
+        <path d={`M154,${coordinates[0].y} L166,${coordinates[0].y}`} fill="none" stroke="currentColor" strokeWidth="2" strokeOpacity=".4" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       )}
     </svg>
   );

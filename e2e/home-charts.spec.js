@@ -31,6 +31,9 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   const trend = page.getByRole("region", { name: "Sales & procurement" });
   const payment = page.getByRole("region", { name: "Paid & outstanding" });
   await expect(trend.getByRole("application")).toBeVisible();
+  await expect(page.getByTestId("stat-trend")).toHaveCount(8);
+  await expect(page.getByTestId("stat-trend").first()).toHaveAttribute("data-points", "2");
+  await expect(page.getByTestId("stat-trend").first().locator("path")).toHaveAttribute("fill", "none");
   await trend.getByText("View trend data", { exact: true }).click();
   await expect(trend.getByRole("row").filter({ hasText: "2026-10-01" })).toContainText("₹2,000");
   await expect(trend.getByRole("row").filter({ hasText: "2026-10-02" })).toContainText("₹0");

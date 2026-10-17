@@ -1,17 +1,44 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PageHeading from "@/components/PageHeading";
 import StockCharts from "@/components/StockCharts";
 import { STOCK_PRODUCTS, buildInventory, stockNumber, stockMoney, stockQuantity } from "@/lib/stock";
+import { formatStat } from "@/utils/formatNumberWithComma";
 import styles from "@/css/stock.module.css";
 
 const emptyAdjustment = (product = "butter") => ({ product, direction: "add", quantity: "", comment: "" });
 const PRODUCT_NAMES = Object.fromEntries(STOCK_PRODUCTS.map((item) => [item.field, item.name]));
 const PRODUCT_UNITS = Object.fromEntries(STOCK_PRODUCTS.map((item) => [item.field, item.unit]));
 const MOVEMENT_NAMES = { production: "Production", order: "Customer order", adjustment: "Adjustment", reversal: "Reversal" };
+
+const Skeleton = ({ large = false }) => <span className={`${styles.skeleton} ${large ? styles.skeletonValue : ""}`} />;
+
+function StockLoadingState() {
+  return <div aria-busy="true" data-testid="stock-loading">
+    <p className={styles.helper} role="status">Loading inventory…</p>
+    <div aria-hidden="true">
+      <div className={styles.summaryGrid}>
+        {["Stock value", "In stock", "Attention"].map((label, index) => <div key={label} className={`${styles.summaryCard} ${index === 0 ? styles.valueSummary : ""}`}><span>{label}</span><Skeleton large /><Skeleton /></div>)}
+      </div>
+      <section className={styles.inventorySection}>
+        <div className={styles.sectionHeading}><h2>Product inventory</h2></div>
+        <div className={styles.productGrid}>{STOCK_PRODUCTS.map(item => <div key={item.field} className={styles.productCard} data-testid="stock-product-skeleton">
+          <div className={styles.productHeading}><h3>{item.name}</h3><span className={styles.skeletonBadge} /></div>
+          <div className={styles.skeletonQuantity}><Skeleton large /><span>{item.unit}</span></div>
+          <Skeleton />
+          <dl className={styles.productDetails}><div><dt>Avg. selling price / {item.unit}</dt><dd><Skeleton /></dd></div><div><dt>Estimated value</dt><dd><Skeleton /></dd></div></dl>
+          <Skeleton />
+        </div>)}</div>
+      </section>
+      <div className={styles.chartsGrid}>{["Stock levels", "Stock value"].map(label => <div key={label} className={styles.panel}><div className={styles.sectionHeading}><h2>{label}</h2></div><div className={`${styles.skeleton} ${styles.skeletonChart}`} /></div>)}</div>
+      <div className={styles.panel}><div className={styles.sectionHeading}><h2>Recent movements</h2></div>{[0, 1, 2].map(row => <div key={row} className={styles.skeletonRow}><Skeleton /><Skeleton /><Skeleton /></div>)}</div>
+    </div>
+  </div>;
+}
 
 async function readResponse(response) {
   const data = await response.json().catch(() => null);
@@ -34,6 +61,8 @@ async function loadStockPart(url, signal) {
 }
 
 export default function StockPage() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -159,25 +188,25 @@ export default function StockPage() {
       <div className={styles.header_content}>
         <PageHeading title="Stock Management" section="INVENTORY" description="See what is available, spot low stock, and keep every movement accounted for." />
         <div className={styles.headerActions}>
-          <button type="button" className={styles.secondary_btn} onClick={fetchStockData} disabled={loading || saving}>{loading ? "Refreshing…" : "Refresh"}</button>
-          <button type="button" className={styles.secondary_btn} onClick={() => panel === "thresholds" ? setPanel(null) : openThresholds()} disabled={!data || data.thresholds === null || loading || saving} aria-expanded={panel === "thresholds"} aria-controls="stock-editor">Minimum levels</button>
-          <button type="button" className={styles.primary_btn} onClick={() => panel === "adjustment" ? setPanel(null) : openAdjustment()} disabled={!data || loading || saving} aria-expanded={panel === "adjustment"} aria-controls="stock-editor">+ Adjust stock</button>
+          <button data-button="secondary" type="button" className={styles.secondary_btn} onClick={fetchStockData} disabled={loading || saving}>{loading ? "Refreshing…" : "Refresh"}</button>
+          <button data-button="secondary" type="button" className={styles.secondary_btn} onClick={() => panel === "thresholds" ? setPanel(null) : openThresholds()} disabled={!isAdmin || !data || data.thresholds === null || loading || saving} aria-expanded={panel === "thresholds"} aria-controls="stock-editor">Minimum levels</button>
+          <button data-button="primary" type="button" className={styles.primary_btn} onClick={() => panel === "adjustment" ? setPanel(null) : openAdjustment()} disabled={!isAdmin || !data || loading || saving} aria-expanded={panel === "adjustment"} aria-controls="stock-editor">+ Adjust stock</button>
         </div>
       </div>
 
-      {error && <div className={styles.errorBanner} role="alert"><span>{error}{data ? " Showing previously loaded data." : ""}</span><button type="button" onClick={fetchStockData} disabled={loading || saving}>Try again</button></div>}
-      {loading && !data ? <div className={styles.loadingState} role="status"><span className={styles.spinner} aria-hidden="true" /><p>Loading inventory…</p></div> : data && <>
+      {error && <div className={styles.errorBanner} role="alert"><span>{error}{data ? " Showing previously loaded data." : ""}</span><button data-button="secondary" type="button" onClick={fetchStockData} disabled={loading || saving}>Try again</button></div>}
+      {loading && !data ? <StockLoadingState /> : data && <>
         {loading && <p className={styles.helper} role="status">Updating inventory…</p>}
         {(data.thresholds === null || data.customers === null || data.ledger === null) && <div className={styles.notice} role="status">Some information could not be loaded: {[data.thresholds === null && "minimum levels", data.customers === null && "customer prices", data.ledger === null && "recent movements"].filter(Boolean).join(", ")}. Refresh to retry.</div>}
 
         <div className={styles.summaryGrid}>
-          <div className={`${styles.summaryCard} ${styles.valueSummary}`}><span>Estimated selling value</span><strong>{stockMoney(totalValue)}</strong><small>{priced.length ? `${priced.length} of ${items.length} products priced` : "Customer prices not available"}</small></div>
-          <div className={styles.summaryCard}><span>Products in stock</span><strong>{items.filter((item) => item.quantity > 0).length}<small> / {items.length}</small></strong><small>Products with a positive balance</small></div>
-          <div className={styles.summaryCard}><span>Needs attention</span><strong className={attention.length ? styles.warningText : ""}>{attention.length}</strong><small>Low, empty, or negative balances</small></div>
+          <div className={`${styles.summaryCard} ${styles.valueSummary}`}><span>Stock value</span><strong>{totalValue === null ? "—" : `₹${formatStat(totalValue)}`}</strong><small>{priced.length ? `${priced.length} of ${items.length} products priced` : "Customer prices not available"}</small></div>
+          <div className={styles.summaryCard}><span>In stock</span><strong>{items.filter((item) => item.quantity > 0).length}<small> / {items.length}</small></strong><small>Products with a positive balance</small></div>
+          <div className={styles.summaryCard}><span>Attention</span><strong className={attention.length ? styles.warningText : ""}>{attention.length}</strong><small>Low, empty, or negative balances</small></div>
         </div>
 
-        {panel && <section ref={formRef} id="stock-editor" className={styles.panel} aria-labelledby="stock-editor-title">
-          <div className={styles.sectionHeading}><h2 id="stock-editor-title">{panel === "adjustment" ? "Adjust a product" : "Minimum stock levels"}</h2><button type="button" className={styles.textButton} onClick={() => setPanel(null)} disabled={saving}>Cancel</button></div>
+        {isAdmin && panel && <section ref={formRef} id="stock-editor" className={styles.panel} aria-labelledby="stock-editor-title">
+          <div className={styles.sectionHeading}><h2 id="stock-editor-title">{panel === "adjustment" ? "Adjust a product" : "Minimum stock levels"}</h2><button data-button="secondary" type="button" className={styles.textButton} onClick={() => setPanel(null)} disabled={saving}>Cancel</button></div>
           {panel === "adjustment" ? <form onSubmit={submitAdjustment}>
             <p className={styles.helper}>Record a correction, opening balance, or stock loss. Add one product at a time.</p>
             <fieldset className={styles.formFields} disabled={saving}>
@@ -189,25 +218,25 @@ export default function StockPage() {
               <div className={styles.inputGroup}><label htmlFor="adjust-reason">Reason (optional)</label><input id="adjust-reason" value={adjustment.comment} onChange={(event) => setAdjustment((previous) => ({ ...previous, comment: event.target.value }))} placeholder="For example, damaged stock or opening balance" maxLength={500} /></div>
               <div className={styles.adjustmentPreview} aria-live="polite"><span>Current <strong>{stockQuantity(selected.quantity)} {selected.unit}</strong></span><span aria-hidden="true">→</span><span>After adjustment <strong className={nextQuantity < 0 ? styles.warningText : ""}>{stockQuantity(nextQuantity)} {selected.unit}</strong></span></div>
               {nextQuantity < 0 && <p className={styles.warningText}>This adjustment would leave a negative balance. Check the quantity before saving.</p>}
-              <div className={styles.formActions}><button type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save adjustment"}</button></div>
+              <div className={styles.formActions}><button data-button="primary" type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save adjustment"}</button></div>
             </fieldset>
           </form> : <form onSubmit={saveThresholds}>
             <p className={styles.helper}>Products below these levels are marked as low stock. Use zero or leave blank to unset a minimum.</p>
             <fieldset className={styles.formFields} disabled={saving}>
               <div className={styles.thresholdGrid}>{STOCK_PRODUCTS.map((item) => <div key={item.field} className={styles.inputGroup}><label htmlFor={`minimum-${item.field}`}>{item.name} ({item.unit})</label><input id={`minimum-${item.field}`} type="number" min="0" step="0.01" value={thresholdDraft[item.field] ?? ""} onChange={(event) => setThresholdDraft((previous) => ({ ...previous, [item.field]: event.target.value }))} placeholder="Not set" /></div>)}</div>
-              <div className={styles.formActions}><button type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save minimum levels"}</button></div>
+              <div className={styles.formActions}><button data-button="primary" type="submit" className={styles.primary_btn} disabled={loading}>{saving ? "Saving…" : "Save minimum levels"}</button></div>
             </fieldset>
           </form>}
         </section>}
 
         <section aria-labelledby="inventory-title" className={styles.inventorySection}>
-          <div className={styles.sectionHeading}><h2 id="inventory-title">Product inventory</h2><div className={styles.segmented} role="group" aria-label="Inventory filter"><button type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All products</button><button type="button" aria-pressed={filter === "attention"} onClick={() => setFilter("attention")}>Needs attention ({attention.length})</button></div></div>
+          <div className={styles.sectionHeading}><h2 id="inventory-title">Product inventory</h2><div className={styles.segmented} role="group" aria-label="Inventory filter"><button data-button="toggle" type="button" aria-pressed={filter === "all"} onClick={() => setFilter("all")}>All products</button><button data-button="toggle" type="button" aria-pressed={filter === "attention"} onClick={() => setFilter("attention")}>Needs attention ({attention.length})</button></div></div>
           <div className={styles.productGrid}>{items.filter((item) => filter === "all" || item.needsAttention).map((item) => <article key={item.field} className={`${styles.productCard} ${item.needsAttention ? styles.attentionCard : ""}`} aria-label={`${item.name} inventory`}>
             <div className={styles.productHeading}><h3>{item.name}</h3><span className={`${styles.badge} ${item.needsAttention ? styles.warningBadge : item.status === "Healthy" ? styles.healthyBadge : ""}`}>{item.status}</span></div>
             <div className={styles.productQuantity}>{stockQuantity(item.quantity)} <span>{item.unit}</span></div>
             <p className={styles.minimum}>{item.minimum === null ? "Minimum unavailable" : item.minimum > 0 ? `Minimum ${stockQuantity(item.minimum)} ${item.unit}` : "No minimum set"}</p>
             <dl className={styles.productDetails}><div><dt>Avg. selling price / {item.unit}</dt><dd>{item.averagePrice === null ? "Not priced" : stockMoney(item.averagePrice)}</dd></div><div><dt>Estimated value</dt><dd>{stockMoney(item.estimatedValue)}</dd></div></dl>
-            <button type="button" className={styles.textButton} onClick={() => openAdjustment(item.field)} disabled={saving || loading} aria-label={`Adjust ${item.name}`}>Adjust stock <span aria-hidden="true">↗</span></button>
+            <button data-button="ghost" type="button" className={styles.textButton} onClick={() => openAdjustment(item.field)} disabled={!isAdmin || saving || loading} aria-label={`Adjust ${item.name}`}>Adjust stock <span aria-hidden="true">↗</span></button>
           </article>)}</div>
           {filter === "attention" && !attention.length && <div className={styles.emptyState}>No products need attention.</div>}
         </section>

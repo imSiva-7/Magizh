@@ -121,6 +121,7 @@ export function paymentPeriodPipelines(startDate, endDate) {
             $push: {
               date: "$_id.date",
               receivedAmount: publicMoney("$receivedAmount"),
+              receiptCount: "$receiptCount",
             },
           },
         },

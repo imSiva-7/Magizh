@@ -224,8 +224,8 @@ function AttendanceContent() {
       </div>
 
       {/* Employee Selection */}
-      <div className={styles.filterSection}>
-        <div className={styles.filterGrid}>
+      <div data-filter="card" className={styles.filterSection}>
+        <div data-filter="grid" className={styles.filterGrid}>
           <div className={styles.inputGroup}>
             <label htmlFor="employee-select">Select Employee</label>
             <select
@@ -382,7 +382,7 @@ function AttendanceContent() {
             <div className={styles.advancesHeader}>
               <h2>Advance Payments</h2>
               {isAdmin && !showAdvanceForm && (
-                <button
+                <button data-button="primary"
                   onClick={() => setShowAdvanceForm(true)}
                   className={styles.addButton}
                 >
@@ -449,14 +449,14 @@ function AttendanceContent() {
                   </div>
                 </div>
                 <div className={styles.formActions}>
-                  <button
+                  <button data-button="primary"
                     type="submit"
                     disabled={isSubmitting}
                     className={styles.submitButton}
                   >
                     {isSubmitting ? "Saving..." : "Save Advance"}
                   </button>
-                  <button
+                  <button data-button="secondary"
                     type="button"
                     onClick={() => {
                       setShowAdvanceForm(false);
@@ -496,7 +496,7 @@ function AttendanceContent() {
                         <td>{advance.reason || "-"}</td>
                         {isAdmin && (
                           <td className={styles.actionsCell}>
-                            <button
+                            <button data-button="danger"
                               onClick={() => handleDeleteAdvance(advance._id)}
                               className={styles.deleteButton}
                             >
@@ -523,7 +523,7 @@ function AttendanceContent() {
                 Attendance data for {attendanceData.employee.name} ({formatAttendanceMonth(month)})
               </span>
               <div className={styles.exportButtons}>
-                <button
+                <button data-button="secondary"
                   onClick={handleExportPDF}
                   className={styles.exportBtn}
                   aria-label="Export attendance as PDF"

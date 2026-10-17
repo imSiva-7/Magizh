@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { getProcurementStore } from "@/lib/supplier-procurements.mjs";
@@ -186,11 +187,18 @@ export async function GET(request) {
 
 // --- POST ---
 export async function POST(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.POST;
 
   try {
-    const db = await getDatabase();
     const data = await request.json();
+    // Creating a head also changes existing children's commission settings.
+    if (data.isHeadSupplier) {
+      const denied = await requireAdmin();
+      if (denied) return denied;
+    }
+    const db = await getDatabase();
 
     const phone = data.supplierNumber?.trim();
 
@@ -269,6 +277,8 @@ export async function POST(request) {
 
 // --- PUT ---
 export async function PUT(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.PUT;
 
   try {
@@ -397,6 +407,8 @@ export async function PUT(request) {
 
 // --- DELETE ---
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.DELETE;
 
   try {

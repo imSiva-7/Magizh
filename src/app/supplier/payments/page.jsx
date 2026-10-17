@@ -1,4 +1,6 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
+import CategoryBadge from "@/components/CategoryBadge";
 
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import { useState, useMemo, useEffect, useCallback } from "react";
@@ -34,17 +36,7 @@ const getFormattedDateRange = (startDate, endDate) => {
   return "All Records";
 };
 
-const getSupplierTypeClass = (supplierType) => {
-  const baseBadge = styles.type_badge || styles.typeBadge;
-  let colorBadge = styles.type_other;
-  if (supplierType) {
-    const type = supplierType.toLowerCase().trim();
-    if (type === "society") colorBadge = styles.type_society;
-    if (type === "milkman") colorBadge = styles.type_milkman;
-    if (type === "farmer") colorBadge = styles.type_farmer;
-  }
-  return `${baseBadge} ${colorBadge}`;
-};
+
 
 const formatTimeBadge = (time) => {
   if (!time) return "AM";
@@ -63,7 +55,7 @@ export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
   const [procurementRecords, setProcurementRecords] = useState([]);
   const { data: session } = useSession();
-  // const isAdmin = session?.user?.role === "admin";
+  const isAdmin = session?.user?.role === "admin";
 
   const [checkedIds, setCheckedIds] = useState([]);
   const [checkedSupplierId, setCheckedSupplierId] = useState("");
@@ -145,7 +137,7 @@ export default function Payments() {
   }, [fetchSupplierProcurements]);
 
   const handleBulkUpdateStatus = async (status) => {
-    if (checkedIds.length === 0) return;
+    if (!isAdmin || checkedIds.length === 0) return;
     if (!window.confirm(`Mark ${checkedIds.length} records as ${status}?`))
       return;
 
@@ -412,7 +404,7 @@ export default function Payments() {
       </div>
 
       {/* Search Section */}
-      <div className={styles.filter_section}>
+      <div data-filter="card" className={styles.filter_section}>
         <div className={styles.search_wrapper}>
           <label htmlFor="searchInput" className={styles.search_label}>
             Search Suppliers:
@@ -429,7 +421,7 @@ export default function Payments() {
               autoComplete="off"
             />
             {searchQuery && (
-              <button
+              <button data-button="icon"
                 type="button"
                 onClick={() => setSearchQuery("")}
                 className={styles.clear_search_button}
@@ -459,8 +451,8 @@ export default function Payments() {
       </div>
 
       {/* Date & Status Filters */}
-      <div className={styles.filter_section}>
-        <div className={styles.filter_title}>
+      <div data-filter="card" className={styles.filter_section}>
+        <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range & Status</h2>
         </div>
 
@@ -502,8 +494,8 @@ export default function Payments() {
         </div>
 
         {/* Date Inputs */}
-        <div className={styles.date_input_group}>
-          <div className={styles.date_field}>
+        <div data-filter="grid" className={styles.date_input_group}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="startDate">From Date</label>
             <input
               type="date"
@@ -517,7 +509,7 @@ export default function Payments() {
               disabled={isLoading}
             />
           </div>
-          <div className={styles.date_field}>
+          <div data-filter="field" className={styles.date_field}>
             <label htmlFor="endDate">To Date</label>
             <input
               type="date"
@@ -534,8 +526,8 @@ export default function Payments() {
         </div>
 
         {/* Filter Actions */}
-        <div className={styles.filter_actions}>
-          <button
+        <div data-filter="actions" className={styles.filter_actions}>
+          <button data-button="secondary"
             type="button"
             onClick={resetFilters}
             className={`${styles.btn} ${styles.btn_reset}`}
@@ -543,7 +535,7 @@ export default function Payments() {
           >
             Reset
           </button>
-          <button
+          <button data-button="secondary"
             type="button"
             onClick={clearFilters}
             className={`${styles.btn} ${styles.btn_clear}`}
@@ -551,7 +543,7 @@ export default function Payments() {
           >
             Clear
           </button>
-          <button
+          <button data-button="secondary"
             type="button"
             onClick={loadTodayData}
             className={`${styles.btn} ${styles.btn_today}`}
@@ -575,33 +567,33 @@ export default function Payments() {
           <div className={styles.global_stats_grid}>
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.milk} />
-              <div className={styles.global_stat_label}>Total Milk</div>
+              <div className={styles.global_stat_label}>Milk</div>
               <div className={styles.global_stat_value}>
-                {formatNumberWithCommas(globalStats.totalMilk.toFixed(1))}{" "}
+                {formatNumberWithCommas(globalStats.totalMilk, 2)}{" "}
                 <span className={styles.unit_label}>L</span>
               </div>
             </div>
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.amount} tone="amount" />
-              <div className={styles.global_stat_label}>Total Amount</div>
+              <div className={styles.global_stat_label}>Value</div>
               <div className={styles.global_stat_value}>
-                ₹{formatNumberWithCommas(globalStats.totalAmount.toFixed(2))}
+                ₹{formatStat(globalStats.totalAmount)}
               </div>
             </div>
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.paid} />
-              <div className={styles.global_stat_label}>Amount Paid</div>
+              <div className={styles.global_stat_label}>Paid</div>
               <div
                 className={`${styles.global_stat_value} ${styles.text_green}`}
               >
-                ₹{formatNumberWithCommas(globalStats.paidAmount.toFixed(2))}
+                ₹{formatStat(globalStats.paidAmount)}
               </div>
             </div>
             <div className={`${styles.global_stat_item} ${trendStyles.card}`}>
               <StatTrendBackground points={cardTrends.due} tone="amount" />
-              <div className={styles.global_stat_label}>Amount Due</div>
+              <div className={styles.global_stat_label}>Due</div>
               <div className={`${styles.global_stat_value} ${styles.text_red}`}>
-                ₹{formatNumberWithCommas(globalStats.dueAmount.toFixed(2))}
+                ₹{formatStat(globalStats.dueAmount)}
               </div>
             </div>
           </div>
@@ -651,27 +643,23 @@ export default function Payments() {
                         {supplier.supplierName || "-"}
                       </Link>
                     </h3>
-                    <span
-                      className={getSupplierTypeClass(supplier.supplierType)}
-                    >
-                      {supplier.supplierType || "Other"}
-                    </span>
+                    <CategoryBadge kind="supplier" value={supplier.supplierType} />
                   </div>
                 </div>
 
                 {/* Quick Stats Row */}
                 <div className={styles.quick_stats}>
                   <div className={styles.stat_card}>
-                    <div className={styles.stat_card_label}>Total Milk</div>
+                    <div className={styles.stat_card_label}>Milk</div>
                     <div className={styles.stat_card_value}>
-                      {formatNumberWithCommas(stats.totalMilk.toFixed(1))}{" "}
+                      {formatNumberWithCommas(stats.totalMilk, 2)}{" "}
                       <span className={styles.unit_label}>L</span>
                     </div>
                   </div>
                   <div className={styles.stat_card}>
-                    <div className={styles.stat_card_label}>Total Amount</div>
+                    <div className={styles.stat_card_label}>Value</div>
                     <div className={styles.stat_card_value}>
-                      ₹{formatNumberWithCommasNoDecimal(stats.totalAmount)}
+                      ₹{formatStat(stats.totalAmount)}
                     </div>
                   </div>
                   <div className={styles.stat_card}>
@@ -679,7 +667,7 @@ export default function Payments() {
                     <div
                       className={`${styles.stat_card_value} ${styles.text_green}`}
                     >
-                      ₹{formatNumberWithCommasNoDecimal(stats.paidAmount)}
+                      ₹{formatStat(stats.paidAmount)}
                     </div>
                   </div>
                   <div className={styles.stat_card}>
@@ -687,34 +675,34 @@ export default function Payments() {
                     <div
                       className={`${styles.stat_card_value} ${styles.text_red}`}
                     >
-                      ₹{formatNumberWithCommasNoDecimal(stats.dueAmount)}
+                      ₹{formatStat(stats.dueAmount)}
                     </div>
                   </div>
                 </div>
 
                 {/* Bulk Action Banner for Active Supplier */}
-                {checkedIds.length > 0 &&
+                {isAdmin && checkedIds.length > 0 &&
                   supplier._id === checkedSupplierId && (
                     <div className={styles.bulk_actions_banner}>
                       <span className={styles.bulk_actions_text}>
                         {checkedIds.length} order(s) selected
                       </span>
                       <div className={styles.bulk_buttons}>
-                        <button
+                        <button data-button="primary"
                           onClick={() => handleBulkUpdateStatus("Paid")}
                           disabled={submitting}
                           className={styles.primary_btn}
                         >
                           {submitting ? "Processing..." : "Mark  as Paid"}
                         </button>
-                        <button
+                        <button data-button="secondary"
                           onClick={() => handleBulkUpdateStatus("Not Paid")}
                           disabled={submitting}
                           className={styles.secondary_btn}
                         >
                           {submitting ? "Processing..." : "Mark  as Unpaid"}
                         </button>
-                        <button
+                        <button data-button="secondary"
                           onClick={() => {
                             setCheckedIds([]);
                             setCheckedSupplierId("");
@@ -748,7 +736,7 @@ export default function Payments() {
                                 onChange={(e) =>
                                   handleSelectAll(e, supplier._id, displayedProcurements)
                                 }
-                                disabled={isSupplierDisabled}
+                                disabled={!isAdmin || isSupplierDisabled}
                                 checked={isAllChecked}
                                 title={
                                   isSupplierDisabled
@@ -823,7 +811,7 @@ export default function Payments() {
                                 type="checkbox"
                                 className={styles.payment_checkbox}
                                 value={row._id}
-                                disabled={isSupplierDisabled}
+                                disabled={!isAdmin || isSupplierDisabled}
                                 checked={checkedIds.includes(row._id)}
                                 onChange={() =>
                                   handleCheck(row._id, supplier._id)
@@ -851,7 +839,7 @@ export default function Payments() {
                   </table>
                   {hasMore && (
                     <div className={styles.show_more_container}>
-                      <button
+                      <button data-button="secondary"
                         onClick={() => handleShowMore(supplier._id)}
                         className={styles.show_more_btn}
                         disabled={submitting}

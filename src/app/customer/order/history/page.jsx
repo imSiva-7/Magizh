@@ -1,11 +1,17 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
+import NewCustomerOrder from "@/components/NewCustomerOrder";
 
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
+import { orderCardTrends } from "@/lib/history-card-trends";
+import { sumPaymentPeriod } from "@/lib/customer-payment-period.mjs";
 import { useState, useEffect, useCallback, useMemo, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/order-history.module.css";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
-import { formatNumberWithCommasNoDecimal } from "@/utils/formatNumberWithComma";
+import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import { formatDateForDisplay } from "@/utils/dateUtils";
 import { exportInvoiceToPDF } from "@/utils/exportInvoice";
 import Link from "next/link";
@@ -20,7 +26,13 @@ const LoadingSpinner = () => (
 );
 
 // Comment editor component with button toggle
-const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
+const CommentEditor = ({
+  orderId,
+  initialComment,
+  onSave,
+  isSaving,
+  canEdit,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [comment, setComment] = useState(initialComment || "");
 
@@ -47,14 +59,14 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
           placeholder="Add comment..."
         />
         <div className={styles.comment_actions}>
-          <button
+          <button data-button="primary"
             onClick={handleSave}
             className={styles.comment_save_btn}
             disabled={isSaving}
           >
             {isSaving ? "Saving..." : "Save"}
           </button>
-          <button
+          <button data-button="secondary"
             onClick={handleCancel}
             className={styles.comment_cancel_btn}
             disabled={isSaving}
@@ -69,18 +81,27 @@ const CommentEditor = ({ orderId, initialComment, onSave, isSaving }) => {
   return (
     <div className={styles.comment_display}>
       <span className={styles.comment_text}>{comment || "-"}</span>
-      <button
-        onClick={() => setIsEditing(true)}
-        className={styles.comment_edit_btn}
-        title="Edit comment"
-      >
-        <Image src="/edit-comment.png" alt="edit" width={20} height={20} />
-      </button>
+      {canEdit && (
+        <button data-button="icon"
+          onClick={() => setIsEditing(true)}
+          className={styles.comment_edit_btn}
+          title="Edit comment"
+        >
+          <Image src="/edit-comment.png" alt="edit" width={20} height={20} />
+        </button>
+      )}
     </div>
   );
 };
 
 function OrderHistoryContent() {
+  const [loadError, setLoadError] = useState("");
+  const [trendCustomers, setTrendCustomers] = useState([]);
+  const cardTrends = useMemo(
+    () => orderCardTrends(trendCustomers),
+    [trendCustomers],
+  );
+  const [paymentPeriod, setPaymentPeriod] = useState(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ orders: [], summary: {} });
   const [filters, setFilters] = useState({
@@ -88,19 +109,37 @@ function OrderHistoryContent() {
     endDate: getTodayDate(),
   });
   const [savingCommentId, setSavingCommentId] = useState(null);
+  const [showNewOrder, setShowNewOrder] = useState(false);
   const { data: session } = useSession();
 
   const fetchHistory = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError("");
       const params = new URLSearchParams();
       if (filters.startDate) params.append("startDate", filters.startDate);
       if (filters.endDate) params.append("endDate", filters.endDate);
-      const res = await fetch(`/api/customer/order/history?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch history");
-      const json = await res.json();
+      if (
+        filters.startDate &&
+        filters.endDate &&
+        filters.startDate > filters.endDate
+      )
+        throw new Error("From date must be before the to date.");
+      const [res, payments] = await Promise.all([
+        fetch(`/api/customer/order/history?${params}`, { cache: "no-store" }),
+        fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store" }),
+      ]);
+      if (!res.ok || !payments.ok)
+        throw new Error("History could not be loaded. Please retry.");
+      const [json, period] = await Promise.all([res.json(), payments.json()]);
       setData(json);
+      setPaymentPeriod(sumPaymentPeriod(period.customers || []));
+      setTrendCustomers(period.customers || []);
     } catch (err) {
+      setLoadError(err.message);
+      setData({ orders: [], summary: {} });
+      setPaymentPeriod(null);
+      setTrendCustomers([]);
       toast.error(err.message);
     } finally {
       setLoading(false);
@@ -164,7 +203,12 @@ function OrderHistoryContent() {
 
     const fileName = `orders_${dateRange.start}_to_${dateRange.end}`;
 
-    await exportInvoiceToPDF(data.orders, "Orders History", dateRange, fileName);
+    await exportInvoiceToPDF(
+      data.orders,
+      "Orders History",
+      dateRange,
+      fileName,
+    );
     toast.success("PDF exported");
   };
 
@@ -220,9 +264,23 @@ function OrderHistoryContent() {
     });
   const clearFilters = () => setFilters({ startDate: "", endDate: "" });
 
+  const handleOrderCreated = (date) => {
+    setShowNewOrder(false);
+    toast.success("Order created");
+    // Keep the saved order visible even when it falls outside the current range.
+    const next = {
+      startDate: filters.startDate && date < filters.startDate ? date : filters.startDate,
+      endDate: filters.endDate && date > filters.endDate ? date : filters.endDate,
+    };
+    if (next.startDate !== filters.startDate || next.endDate !== filters.endDate) setFilters(next);
+    else fetchHistory();
+  };
+
   return (
     <div className={styles.page_container}>
       <ToastContainer position="top-right" autoClose={3000} />
+      {["admin", "dev", "employee"].includes(session?.user?.role) && <button data-button="primary" data-button-placement="floating" type="button" className={styles.new_order_button} aria-haspopup="dialog" aria-expanded={showNewOrder} onClick={() => setShowNewOrder(true)}><span aria-hidden="true">+</span> New order</button>}
+      {showNewOrder && <NewCustomerOrder onClose={() => setShowNewOrder(false)} onCreated={handleOrderCreated} />}
 
       {/* Header */}
       <div className={styles.page_header}>
@@ -230,17 +288,23 @@ function OrderHistoryContent() {
       </div>
 
       {/* Filter Card */}
-      <div className={styles.filter_card}>
-        <div className={styles.filter_title}>
+      <div data-filter="card" className={styles.filter_card}>
+        <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
-        <div className={styles.filter_content}>
-          <div className={styles.date_section}>
-            <div className={styles.date_inputs_grid}>
-              <div className={styles.date_field}>
-                <label className={styles.date_label}>From Date</label>
+        <div data-filter="content" className={styles.filter_content}>
+          <div data-filter="section" className={styles.date_section}>
+            <div data-filter="grid" className={styles.date_inputs_grid}>
+              <div data-filter="field" className={styles.date_field}>
+                <label
+                  htmlFor="order-history-from"
+                  className={styles.date_label}
+                >
+                  From Date
+                </label>
                 <input
                   type="date"
+                  id="order-history-from"
                   value={filters.startDate}
                   onChange={(e) =>
                     setFilters((p) => ({ ...p, startDate: e.target.value }))
@@ -249,10 +313,13 @@ function OrderHistoryContent() {
                   max={filters.endDate || getTodayDate()}
                 />
               </div>
-              <div className={styles.date_field}>
-                <label className={styles.date_label}>To Date</label>
+              <div data-filter="field" className={styles.date_field}>
+                <label htmlFor="order-history-to" className={styles.date_label}>
+                  To Date
+                </label>
                 <input
                   type="date"
+                  id="order-history-to"
                   value={filters.endDate}
                   onChange={(e) =>
                     setFilters((p) => ({ ...p, endDate: e.target.value }))
@@ -264,9 +331,9 @@ function OrderHistoryContent() {
               </div>
             </div>
           </div>
-          <div className={styles.filter_actions}>
-            <div className={styles.filter_buttons}>
-              <button
+          <div data-filter="actions" className={styles.filter_actions}>
+            <div data-filter="buttons" className={styles.filter_buttons}>
+              <button data-button="secondary"
                 type="button"
                 onClick={resetFilters}
                 className={`${styles.btn} ${styles.btn_primary}`}
@@ -274,7 +341,7 @@ function OrderHistoryContent() {
               >
                 Reset
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_secondary}`}
@@ -282,7 +349,7 @@ function OrderHistoryContent() {
               >
                 Clear
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={todayFilter}
                 className={`${styles.btn} ${styles.btn_primary2}`}
@@ -295,46 +362,67 @@ function OrderHistoryContent() {
         </div>
       </div>
 
-      {/* Summary Cards */}
-
-
-      {!loading && data.summary?.orderCount > 0 && (
-        <div className={styles.stats_card}>
-          <h3 className={styles.stats_header}>
+      {!loading && !loadError && (
+        <section
+          className={styles.stats_card}
+          aria-labelledby="order-history-summary"
+        >
+          <h2 id="order-history-summary" className={styles.stats_header}>
             Summary
             <span className={styles.date_range_badge}>
-              {filters.startDate && filters.endDate
-                ? `${new Date(filters.startDate).toLocaleDateString("en-IN")} – ${new Date(filters.endDate).toLocaleDateString("en-IN")}`
-                : "All records"}
+              {filters.startDate || "Beginning"} to{" "}
+              {filters.endDate || "Latest"}
             </span>
-          </h3>
+          </h2>
           <div className={styles.stats_grid}>
-            <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Total Orders</span>
-              <span className={styles.stat_value}>
-                {data.summary.orderCount}
-              </span>
-            </div>
-            <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Total Sales</span>
-              <span className={styles.stat_value}>
-                ₹{formatNumberWithCommasNoDecimal(data.summary.totalAmount)}
-              </span>
-            </div>
-            {/* <div className={styles.stat_item}>
-              <span className={styles.stat_label}> Amount Recevied</span>
-              <span className={`${styles.stat_value} ${styles.text_green}`}>
-                ₹{formatNumberWithCommasNoDecimal(data.summary.paidAmount)}
-              </span>
-            </div>
-            <div className={styles.stat_item}>
-              <span className={styles.stat_label}>Amount Due</span>
-              <span className={`${styles.stat_value} ${styles.text_red}`}>
-                ₹{formatNumberWithCommasNoDecimal(data.summary.dueAmount)}
-              </span>
-            </div> */}
+            {[
+              ["Orders", data.summary?.orderCount || 0, "totalOrders"],
+              [
+                "Sales",
+                `₹${formatStat(data.summary?.totalAmount || 0)}`,
+                "totalAmount",
+              ],
+              [
+                "Received",
+                `₹${formatStat(paymentPeriod?.receivedAmount || 0)}`,
+                "receivedAmount",
+              ],
+              // ["Net Change", `₹${formatStat(paymentPeriod?.netChange || 0)}`, "netChange"],
+              [
+                "AOV",
+                `₹${formatStat(data.summary?.orderCount ? data.summary.totalAmount / data.summary.orderCount : 0)}`,
+                "averageOrder",
+              ],
+              // ["Payments", paymentPeriod?.receiptCount || 0, "receiptCount"],
+            ].map(([label, value, metric]) => (
+              <div
+                key={label}
+                className={`${styles.stat_item} ${trendStyles.card}`}
+              >
+                <StatTrendBackground
+                  points={cardTrends[metric]}
+                  tone={
+                    metric === "totalOrders" || metric === "receiptCount"
+                      ? "milk"
+                      : "amount"
+                  }
+                />
+                <span
+                  className={styles.stat_label}
+                  title={label === "AOV" ? "Average order value" : undefined}
+                >
+                  {label}
+                </span>
+                <span className={styles.stat_value}>{value}</span>
+              </div>
+            ))}
           </div>
-        </div>
+          {/* <p>
+            Net received includes receipts and corrections dated in this period.
+            Net change is sales minus receipts, excluding opening balances.
+            Current due and credit are on Customer Payments.
+          </p> */}
+        </section>
       )}
 
       {/* Export Section */}
@@ -345,7 +433,7 @@ function OrderHistoryContent() {
             {data.summary.orderCount !== 1 ? "s" : ""} found
           </span>
 
-          <button
+          <button data-button="secondary"
             onClick={() => handleExport("pdf")}
             className={styles.exportBtn}
             disabled={!data.orders.length}
@@ -359,6 +447,17 @@ function OrderHistoryContent() {
       <div className={styles.table_wrapper}>
         {loading ? (
           <LoadingSpinner />
+        ) : loadError ? (
+          <div className={styles.empty_state} role="alert">
+            <p>{loadError}</p>
+            <button data-button="secondary"
+              type="button"
+              className={styles.clear_filter_btn}
+              onClick={fetchHistory}
+            >
+              Retry history
+            </button>
+          </div>
         ) : data.orders.length === 0 ? (
           <div className={styles.empty_state}>
             <span className={styles.empty_icon}>📋</span>
@@ -366,7 +465,7 @@ function OrderHistoryContent() {
             <p className={styles.empty_message}>
               No orders found for the selected date range.
             </p>
-            <button
+            <button data-button="secondary"
               onClick={clearFilters}
               className={styles.clear_filter_btn}
               disabled={loading}
@@ -408,7 +507,7 @@ function OrderHistoryContent() {
                       </Link>
                     </td>
                     <td className={styles.total_cell}>
-                      ₹{formatNumberWithCommasNoDecimal(order.totalAmount)}
+                      ₹{formatNumberWithCommas(order.totalAmount)}
                     </td>
                     <td className={styles.status_cell}>
                       <span
@@ -422,7 +521,7 @@ function OrderHistoryContent() {
                       </span>
                     </td>
                     <td className={styles.invoice_cell}>
-                      <button
+                      <button data-button="icon"
                         onClick={() => handleSingleInvoice(order)}
                         className={styles.export_btn_table}
                         disabled={loading}
@@ -438,6 +537,7 @@ function OrderHistoryContent() {
                     </td>
                     <td className={styles.comment_cell}>
                       <CommentEditor
+                        canEdit={session?.user?.role === "admin"}
                         orderId={order._id}
                         initialComment={order.comment}
                         onSave={handleCommentUpdate}

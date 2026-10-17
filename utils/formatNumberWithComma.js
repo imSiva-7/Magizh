@@ -24,4 +24,7 @@ const formatNumberWithCommasNoDecimal = (value, decimals = 0) => {
   });
 };
 
-export {formatNumberWithCommas, formatNumberWithCommasNoDecimal};
+// Summary cards use whole numbers; calculations and entry displays retain precision.
+const formatStat = (value) => formatNumberWithCommasNoDecimal(value);
+
+export {formatNumberWithCommas, formatNumberWithCommasNoDecimal, formatStat};

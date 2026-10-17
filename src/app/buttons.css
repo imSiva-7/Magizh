@@ -1,0 +1,141 @@
+/* Shared action styles. Page modules still control placement and responsive layout.
+   Use primary for add/save, secondary for filters/cancel, danger for deletion,
+   and icon/menu/toggle/choice for controls with a specific interaction shape. */
+:root {
+  --button-height: 44px;
+  --button-radius: 0.6rem;
+  --button-font-size: 0.875rem;
+}
+
+:root body [data-button][data-button] {
+  min-height: var(--button-height);
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--button-radius);
+  padding: 0.625rem 0.875rem;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--button-font-size);
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+:root body [data-button]:is([data-button="primary"], [data-button="secondary"], [data-button="danger"], [data-button="ghost"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  vertical-align: middle;
+  text-align: center;
+}
+
+:root body [data-button="primary"][data-button] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+:root body [data-button="danger"][data-button],
+:root body [data-button="menu-danger"][data-button] {
+  background: #fff1f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+:root body [data-button="ghost"][data-button] {
+  background: transparent;
+  border-color: transparent;
+}
+
+:root body [data-button="icon"][data-button] {
+  width: var(--button-height);
+  height: var(--button-height);
+  min-width: var(--button-height);
+  padding: 0.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+:root body [data-button="choice"][data-button] {
+  text-align: left;
+  padding: 0.8rem;
+}
+
+:root body [data-button]:is([data-button="menu"], [data-button="menu-danger"]) {
+  width: 100%;
+  text-align: left;
+}
+
+:root body [data-button][data-button]:hover:not(:disabled) {
+  background: var(--brand-soft);
+  border-color: #a8cbb8;
+  color: var(--brand-dark);
+  box-shadow: none;
+}
+
+:root body [data-button="primary"][data-button]:hover:not(:disabled) {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+  color: #fff;
+}
+
+:root body [data-button]:is([data-button="danger"], [data-button="menu-danger"]):hover:not(:disabled) {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  color: #991b1b;
+}
+
+:root body [data-button="toggle"][aria-pressed="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+:root body [data-button][data-button]:not([data-button="icon"]):hover:not(:disabled) {
+  transform: none;
+}
+
+:root body [data-button][data-button]:focus-visible {
+  outline: 3px solid #70ad91;
+  outline-offset: 3px;
+}
+
+:root body [data-button][data-button]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* History launchers share a compact shape and remain reachable while scrolling. */
+:root body [data-button][data-button][data-button-placement="floating"] {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  left: auto;
+  z-index: 90;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  min-height: 44px;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--button-radius);
+  font-size: var(--button-font-size);
+  box-shadow: 0 3px 12px #163e3226;
+}
+
+:root body [data-button-placement="floating"] span {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+main > div:has([data-button-placement="floating"]) { padding-bottom: 6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  body [data-button][data-button] { transition: none; }
+}

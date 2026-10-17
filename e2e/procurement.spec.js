@@ -46,8 +46,8 @@ test("history shows daily milk and weighted quality averages and fits desktop an
   await page.goto("/supplier/procurement/history");
   const table = page.getByRole("table", { name: "All procurement history" });
   await expect(table.locator("tbody tr")).toHaveCount(2);
-  await expect(page.getByText("Avg Milk / Day", { exact: true }).locator("..")).toContainText("35.50");
-  await expect(page.getByText("Weighted Fat/SNF", { exact: true }).locator("..")).toContainText("3.5 / 8.5");
+  await expect(page.getByText("Milk / day", { exact: true }).locator("..")).toContainText("35.50");
+  await expect(page.getByText("Fat / SNF", { exact: true }).locator("..")).toContainText("3.5 / 8.5");
   await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
   await page.screenshot({ path: "test-results/procurement-history-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });

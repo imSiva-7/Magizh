@@ -1,3 +1,4 @@
+import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
@@ -73,6 +74,8 @@ async function checkDuplicate(store, entry, exceptId) {
 }
 
 export async function POST(request) {
+  const denied = await requireStaff();
+  if (denied) return denied;
   const blocked = paused();
   if (blocked) return blocked;
   try {
@@ -141,6 +144,8 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const blocked = paused();
   if (blocked) return blocked;
   try {
@@ -203,6 +208,8 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const blocked = paused();
   if (blocked) return blocked;
   try {
@@ -227,6 +234,8 @@ export async function DELETE(request) {
 }
 
 export async function PATCH(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const blocked = paused();
   if (blocked) return blocked;
   try {

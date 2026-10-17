@@ -1,3 +1,7 @@
+import { getServerSession } from "next-auth";
+jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
+jest.mock("@/app/api/auth/[...nextauth]/route", () => ({ authOptions: {} }));
+beforeEach(() => { getServerSession.mockResolvedValue({ user: { role: "admin" } }); });
 import { ObjectId } from "mongodb";
 import { POST } from "./route";
 import getDatabase from "@/database/connectToMongoDB";
@@ -74,4 +78,25 @@ test("transaction retries reuse the parsed request and commit a single order", a
   expect(json).toHaveBeenCalledTimes(1);
   expect(db.state().orders).toHaveLength(1);
   expect(db.state().stock_balance[0].milk).toBe(8);
+});
+
+test("creation cannot disguise a balance reduction as a negative order", async () => {
+  const db = database(10);
+  getDatabase.mockResolvedValue(db);
+  getServerSession.mockResolvedValue({ user: { role: "employee" } });
+  const payload = await request().json();
+  expect((await POST({ json: async () => ({ ...payload, totalAmount: -100 }) })).status).toBe(400);
+  expect((await POST({ json: async () => ({ ...payload, items: [{ ...payload.items[0], quantity: -2 }] }) })).status).toBe(400);
+  expect(db.state().orders).toHaveLength(0);
+  expect(db.state().total_orders).toHaveLength(0);
+});
+
+test("new orders retain the GST option for later editing", async () => {
+  const db = database(10);
+  getDatabase.mockResolvedValue(db);
+  const payload = await request().json();
+  expect((await POST({ json: async () => ({ ...payload, gstType: "exclusive" }) })).status).toBe(201);
+  expect(db.state().orders[0]).toMatchObject({ gstType: "exclusive", gstRate: 5 });
+  expect((await POST({ json: async () => ({ ...payload, gstType: "invalid" }) })).status).toBe(400);
+  expect(db.state().orders).toHaveLength(1);
 });

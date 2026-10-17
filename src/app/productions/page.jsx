@@ -79,7 +79,7 @@ const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
       <td>{formatValue(entry.ghee_quantity)}</td>
       {isAdmin && (
         <td>
-          <button
+          <button data-button="danger"
             onClick={() => onDelete(entry._id)}
             className={styles.deleteBtn}
             title={"Delete entry"}
@@ -395,7 +395,7 @@ export default function ProductionPage() {
 
           {/* Form Actions */}
           <section className={styles.formActions}>
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={!batchNo || isSubmitting}
               className={styles.submitBtn}
@@ -423,7 +423,7 @@ export default function ProductionPage() {
                   Recent Production Entries ({entries.length})
                 </h2>
                 <div className={styles.sectionActions}>
-                  <button
+                  <button data-button="secondary"
                     onClick={navigateToHistory}
                     className={styles.historyBtn}
                   >

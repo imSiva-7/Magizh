@@ -1,4 +1,9 @@
 "use client";
+import { formatStat } from "@/utils/formatNumberWithComma";
+import StatTrendBackground from "@/components/StatTrendBackground";
+import trendStyles from "@/css/stat-trend.module.css";
+import { procurementCardTrends } from "@/lib/history-card-trends";
+import CategoryBadge from "@/components/CategoryBadge";
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -99,8 +104,9 @@ const TimePeriodSelect = ({ value, onChange, error }) => (
   </div>
 );
 
-const StatItem = ({ label, value, unit, prefix = "" }) => (
-  <div className={styles.stat_item}>
+const StatItem = ({ label, value, unit, prefix = "", trend, tone = "milk" }) => (
+  <div className={`${styles.stat_item} ${trendStyles.card}`}>
+    <StatTrendBackground points={trend} tone={tone} />
 
     <span className={styles.stat_label}>{label}</span>
     <span className={styles.stat_value}>
@@ -111,7 +117,7 @@ const StatItem = ({ label, value, unit, prefix = "" }) => (
   </div>
 );
 
-const SummaryStats = ({ summary, filters }) => (
+const SummaryStats = ({ summary, filters, trends }) => (
   <div className={styles.summary_box}>
     <h3>
       Summary{" "}
@@ -121,31 +127,31 @@ const SummaryStats = ({ summary, filters }) => (
     </h3>
     <div className={styles.stats_grid}>
       <StatItem
-        label="Avg Milk / Day"
-        value={summary.avgMilkDaily}
+        label="Milk / day" trend={trends.milk}
+        value={formatNumberWithCommas(summary.avgMilkDaily, 2)}
         unit="L/day"
       />
       <StatItem
-        label="Weighted Fat/SNF"
-        value={`${summary.avgFat} / ${summary.avgSnf}`}
+        label="Fat / SNF" trend={trends.quality}
+        value={`${formatNumberWithCommas(summary.avgFat, 1)} / ${formatNumberWithCommas(summary.avgSnf, 1)}`}
         unit="%"
       />
       <StatItem
-        label="Daily Avg Amount"
-        value={formatNumberWithCommasNoDecimal(summary.avgRateDaily)}
+        label="Value / day" trend={trends.amount} tone="amount"
+        value={formatStat(summary.avgRateDaily)}
         prefix="₹"
       />
-      <StatItem label="Avg Rate" value={summary.avgRate} unit="/L" prefix="₹" />
+      <StatItem label="Avg Rate" trend={trends.rate} tone="amount" value={formatNumberWithCommas(summary.avgRate, 2)} unit="/L" prefix="₹" />
       <StatItem
-        label="Total Milk"
-        value={formatNumberWithCommas(summary.milk.toFixed(2))}
+        label="Milk" trend={trends.milk}
+        value={formatNumberWithCommas(summary.milk, 2)}
         unit="L"
 
 
       />
       <StatItem
-        label="Total Amount"
-        value={formatNumberWithCommasNoDecimal(summary.amount)}
+        label="Value" trend={trends.amount} tone="amount"
+        value={formatStat(summary.amount)}
         unit=""
         prefix="₹"
 
@@ -186,15 +192,7 @@ const sanitizeNumericInput = (value, fieldName) => {
   return sanitized;
 };
 
-const getSupplierTypeClass = (supplierType) => {
-  const typeClassMap = {
-    Society: styles.type_society_badge,
-    Milkman: styles.type_milkman_badge,
-    Farmer: styles.type_farmer_badge,
-    Other: styles.type_other_badge,
-  };
-  return typeClassMap[supplierType] || styles.default_supplier;
-};
+
 
 // ========== MAIN COMPONENT ==========
 function ProcurementContent() {
@@ -679,6 +677,7 @@ function ProcurementContent() {
     });
   }, [filteredProcurements]);
 
+  const cardTrends = useMemo(() => procurementCardTrends(filteredProcurements), [filteredProcurements]);
   const summary = useMemo(
     () => getProcurementSummary(filteredProcurements),
     [filteredProcurements],
@@ -729,7 +728,7 @@ function ProcurementContent() {
           }
         </p>
         <div className={styles.error_actions}>
-          <button
+          <button data-button="secondary"
             onClick={() => router.push("/supplier")}
             className={styles.primary_btn}
             aria-label="Go back to suppliers"
@@ -768,11 +767,7 @@ function ProcurementContent() {
             <h1>{data.supplier?.supplierName}</h1>
 
             <div className={styles.supplier_info}>
-              <span
-                className={getSupplierTypeClass(data.supplier?.supplierType)}
-              >
-                {data.supplier?.supplierType}
-              </span>
+              <CategoryBadge kind="supplier" value={data.supplier?.supplierType} />
 
               {data.supplier?.supplierCustomRate ? (
                 <span className={styles.ts_rate_tag}>
@@ -965,7 +960,7 @@ function ProcurementContent() {
 
           <div className={styles.form_actions}>
             {editingId._id && (
-              <button
+              <button data-button="secondary"
                 type="button"
                 disabled={submitting}
                 className={styles.secondary_btn}
@@ -974,7 +969,7 @@ function ProcurementContent() {
                 Cancel edit
               </button>
             )}
-            <button
+            <button data-button="primary"
               type="submit"
               disabled={submitting || loading || !data.supplier}
               className={styles.primary_btn}
@@ -996,14 +991,14 @@ function ProcurementContent() {
       </div>
 
       {data.allProcurements.length > 0 && (
-        <form className={styles.filter_form}>
-          <div className={styles.filter_header}>
+        <form data-filter="card" className={styles.filter_form}>
+          <div data-filter="title" className={styles.filter_header}>
             <h2>Filter by Date Range</h2>
           </div>
-          <div className={styles.filter_row}>
-            <div className={styles.date_filter_section}>
-              <div className={styles.date_input_group}>
-                <div className={styles.date_field}>
+          <div data-filter="content" className={styles.filter_row}>
+            <div data-filter="section" className={styles.date_filter_section}>
+              <div data-filter="grid" className={styles.date_input_group}>
+                <div data-filter="field" className={styles.date_field}>
                   <label htmlFor="startDate">From Date</label>
                   <input
                     id="startDate"
@@ -1016,7 +1011,7 @@ function ProcurementContent() {
                     aria-label="Select start date"
                   />
                 </div>
-                <div className={styles.date_field}>
+                <div data-filter="field" className={styles.date_field}>
                   <label htmlFor="endDate">To Date</label>
                   <input
                     id="endDate"
@@ -1032,15 +1027,15 @@ function ProcurementContent() {
                 </div>
               </div>
             </div>
-            <div className={styles.filter_actions}>
-              <button
+            <div data-filter="actions" className={styles.filter_actions}>
+              <button data-button="secondary"
                 type="button"
                 onClick={resetFilterForm}
                 className={`${styles.btn} ${styles.btn_reset}`}
               >
                 Reset
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={clearFilters}
                 className={`${styles.btn} ${styles.btn_clear}`}
@@ -1048,7 +1043,7 @@ function ProcurementContent() {
               >
                 Clear
               </button>
-              <button
+              <button data-button="secondary"
                 type="button"
                 onClick={loadTodayData}
                 className={`${styles.btn} ${styles.btn_today}`}
@@ -1062,7 +1057,7 @@ function ProcurementContent() {
 
       {/* SUMMARY SECTION */}
       {summary.count > 0 && (
-        <SummaryStats summary={summary} filters={filters} />
+        <SummaryStats summary={summary} filters={filters} trends={cardTrends} />
       )}
 
       {/* EXPORT SECTION */}
@@ -1073,7 +1068,7 @@ function ProcurementContent() {
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
           </span>
           <div className={styles.export_buttons}>
-            <button
+            <button data-button="secondary"
               onClick={() => handleExport("csv")}
               className={styles.export_btn}
               disabled={!filteredProcurements.length}
@@ -1081,7 +1076,7 @@ function ProcurementContent() {
             >
               Export as CSV
             </button>
-            <button
+            <button data-button="secondary"
               onClick={() => handleExport("pdf")}
               className={styles.export_btn}
               disabled={!filteredProcurements.length}
@@ -1100,21 +1095,21 @@ function ProcurementContent() {
             {checkedIds.length} record(s) selected
           </span>
           <div className={styles.bulk_buttons}>
-            <button
+            <button data-button="primary"
               onClick={() => handleBulkUpdateStatus("Paid")}
               disabled={submitting}
               className={styles.primary_btn}
             >
               {submitting ? "Processing..." : "Mark as Paid"}
             </button>
-            <button
+            <button data-button="secondary"
               onClick={() => handleBulkUpdateStatus("Not Paid")}
               disabled={submitting}
               className={styles.secondary_btn}
             >
               {submitting ? "Processing..." : "Mark as Unpaid"}
             </button>
-            <button
+            <button data-button="secondary"
               onClick={() => setCheckedIds([])}
               disabled={submitting}
               className={styles.clear_filter_link}
@@ -1135,7 +1130,7 @@ function ProcurementContent() {
                 TSR cuts received from child suppliers
               </span>
             </div>
-            <button
+            <button data-button="secondary"
               type="button"
               onClick={fetchHeadEntries}
               className={styles.refresh_btn}
@@ -1179,10 +1174,10 @@ function ProcurementContent() {
                   </span>
                 </div>
                 <div className={styles.head_total_card}>
-                  <span className={styles.head_total_label}>Total Milk</span>
+                  <span className={styles.head_total_label}>Milk</span>
                   <span className={styles.head_total_value}>
                     {formatNumberWithCommas(
-                      Number(headData.totals.milk || 0).toFixed(2),
+                      Number(headData.totals.milk || 0), 2,
                     )}
                     <span className={styles.head_total_unit}>L</span>
                   </span>
@@ -1191,7 +1186,7 @@ function ProcurementContent() {
                   <span className={styles.head_total_label}>Earned</span>
                   <span className={styles.head_total_value}>
                     ₹
-                    {formatNumberWithCommasNoDecimal(
+                    {formatStat(
                       headData.totals.earned || 0,
                     )}
                   </span>
@@ -1202,7 +1197,7 @@ function ProcurementContent() {
                     className={`${styles.head_total_value} ${styles.text_paid}`}
                   >
                     ₹
-                    {formatNumberWithCommasNoDecimal(headData.totals.paid || 0)}
+                    {formatStat(headData.totals.paid || 0)}
                   </span>
                 </div>
                 <div className={styles.head_total_card}>
@@ -1210,7 +1205,7 @@ function ProcurementContent() {
                   <span
                     className={`${styles.head_total_value} ${styles.text_due}`}
                   >
-                    ₹{formatNumberWithCommasNoDecimal(headData.totals.due || 0)}
+                    ₹{formatStat(headData.totals.due || 0)}
                   </span>
                 </div>
               </div>
@@ -1312,7 +1307,7 @@ function ProcurementContent() {
               <>
                 <span className={styles.empty_icon}>⚠️</span>
                 <h3>Supplier not found</h3>
-                <button
+                <button data-button="secondary"
                   onClick={() => router.push("/supplier")}
                   className={styles.secondary_btn}
                 >
@@ -1328,7 +1323,7 @@ function ProcurementContent() {
               <>
                 <span className={styles.empty_icon}>📊</span>
                 <p>No procurement records found for the selected date range</p>
-                <button
+                <button data-button="secondary"
                   onClick={clearFilters}
                   className={styles.clear_filter_link}
                 >
@@ -1456,7 +1451,7 @@ function ProcurementContent() {
                     {isAdmin && (
                       <td className={styles.actions_cell}>
                         <div className={styles.actionMenuWrapper}>
-                          <button
+                          <button data-button="icon"
                             className={styles.actionMenuButton}
                             onClick={() =>
                               setOpenActionMenuId(
@@ -1472,14 +1467,14 @@ function ProcurementContent() {
                           </button>
                           {openActionMenuId === row._id && (
                             <div className={styles.actionMenuPopup}>
-                              <button
+                              <button data-button="menu"
                                 onClick={() => handleEdit(row)}
                                 className={styles.actionEditButton}
                                 disabled={submitting}
                               >
                                 {editingId._id === row._id ? "Cancel" : "Edit"}
                               </button>
-                              <button
+                              <button data-button="menu-danger"
                                 onClick={() => handleDelete(row._id)}
                                 className={styles.actionDeleteButton}
                                 disabled={submitting}

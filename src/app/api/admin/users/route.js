@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -55,10 +56,9 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const session = await getServerSession(authOptions);
-  if (!session || !isAdminOrDev(session)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
 
   try {
     const { userId, role } = await request.json();
@@ -113,10 +113,9 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
   const session = await getServerSession(authOptions);
-  if (!session || !isAdminOrDev(session)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
 
   try {
     const { searchParams } = new URL(request.url);

@@ -21,7 +21,7 @@ const ROLES = [
   {
     value: "dev",
     label: "Developer",
-    description: "Full workspace and administration access.",
+    description: "View workspace data and add entries. Changes require an admin.",
   },
   {
     value: "customer",
@@ -90,7 +90,7 @@ function DeleteDialog({ user, busy, onClose, onConfirm }) {
         </div>
         <p className={styles.muted}>Existing business records are kept.</p>
         <div className={styles.dialogActions}>
-          <button
+          <button data-button="secondary"
             type="button"
             className={styles.secondaryButton}
             onClick={onClose}
@@ -99,7 +99,7 @@ function DeleteDialog({ user, busy, onClose, onConfirm }) {
           >
             Keep account
           </button>
-          <button
+          <button data-button="danger"
             type="button"
             className={styles.dangerButton}
             onClick={onConfirm}
@@ -118,7 +118,7 @@ export default function AdminPage() {
   const router = useRouter();
   const allowed =
     status === "authenticated" &&
-    ["admin", "dev"].includes(session?.user?.role);
+    session?.user?.role === "admin";
   const [users, setUsers] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -317,7 +317,7 @@ export default function AdminPage() {
               <span className={styles.eyebrow}>TEAM DIRECTORY</span>
               <h2 id="user-directory-title">Workspace accounts</h2>
             </div>
-            <button
+            <button data-button="secondary"
               type="button"
               className={styles.secondaryButton}
               disabled={loading || Boolean(busy) || pending > 0}
@@ -369,7 +369,7 @@ export default function AdminPage() {
             aria-label="Filter users by role"
           >
             {[{ value: "all", label: "All roles" }, ...ROLES].map((role) => (
-              <button
+              <button data-button="toggle"
                 type="button"
                 key={role.value}
                 aria-pressed={filter === role.value}
@@ -389,7 +389,7 @@ export default function AdminPage() {
               <span>
                 {pending} unsaved role {pending === 1 ? "change" : "changes"}
               </span>
-              <button
+              <button data-button="secondary"
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => {
@@ -410,7 +410,7 @@ export default function AdminPage() {
                   <p>Your previously loaded accounts are still shown.</p>
                 )}
               </div>
-              <button
+              <button data-button="secondary"
                 type="button"
                 className={styles.secondaryButton}
                 disabled={loading || Boolean(busy) || pending > 0}
@@ -524,7 +524,7 @@ export default function AdminPage() {
                               <>
                                 {changed && (
                                   <>
-                                    <button
+                                    <button data-button="primary"
                                       type="button"
                                       className={styles.primaryButton}
                                       disabled={disabled}
@@ -536,7 +536,7 @@ export default function AdminPage() {
                                         ? "Saving…"
                                         : "Save role"}
                                     </button>
-                                    <button
+                                    <button data-button="secondary"
                                       type="button"
                                       className={styles.textButton}
                                       disabled={disabled}
@@ -546,7 +546,7 @@ export default function AdminPage() {
                                     </button>
                                   </>
                                 )}
-                                <button
+                                <button data-button="danger"
                                   type="button"
                                   className={styles.deleteButton}
                                   disabled={disabled}
@@ -575,7 +575,7 @@ export default function AdminPage() {
                       : "Registered users will appear here."}
                   </p>
                   {users.length > 0 && (
-                    <button
+                    <button data-button="secondary"
                       type="button"
                       className={styles.secondaryButton}
                       onClick={() => {

@@ -159,7 +159,7 @@ export default function RegisterPage() {
 
               {error && <div className={styles.error_message}>{error}</div>}
 
-              <button type="submit" className={styles.btn} disabled={loading}>
+              <button data-button="primary" type="submit" className={styles.btn} disabled={loading}>
                 {loading ? (
                   <>
                     <span className={styles.button_spinner}></span>

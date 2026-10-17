@@ -1424,29 +1424,6 @@ button:disabled {
   border-bottom: none;
 }
 
-.ledger_btn {
-  background: #3b82f6 !important;
-  color: white !important;
-  border: none !important;
-  padding: 0.75rem 1.5rem !important;
-  border-radius: 0.5rem !important;
-  font-size: 1rem !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  transition: all 0.2s !important;
-}
-
-.ledger_btn:hover:not(:disabled) {
-  background: #2563eb !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
-}
-
-.ledger_btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .empty_state {
   text-align: center;
   padding: 3rem 1rem;
