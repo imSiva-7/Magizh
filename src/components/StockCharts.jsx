@@ -1,7 +1,8 @@
 "use client";
+import ResponsiveContainer from "./InteractiveChartContainer";
 
 import { useState } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { stockMoney, stockQuantity } from "@/lib/stock";
 import styles from "@/css/stock.module.css";
 

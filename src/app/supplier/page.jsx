@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
@@ -975,10 +976,7 @@ export default function Supplier() {
               {loading && entries.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 5 : 4} className={styles.loadingCell}>
-                    <div className={styles.loadingContent}>
-                      <div className={styles.tableSpinner}></div>
-                      <span>Loading suppliers...</span>
-                    </div>
+                    <DataSkeleton compact label="Loading suppliers..." />
                   </td>
                 </tr>
               ) : loadError && !entries.length ? null : filteredEntries.length === 0 ? (

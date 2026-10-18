@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import NewCustomerOrder from "@/components/NewCustomerOrder";
@@ -22,12 +23,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 
-const LoadingSpinner = () => (
-  <div className={styles.loading_container}>
-    <div className={styles.spinner}></div>
-    <span className={styles.loading_text}>Loading orders...</span>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading orders..." />;
 
 // Comment editor component with button toggle
 const CommentEditor = ({

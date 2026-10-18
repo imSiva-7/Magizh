@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 
 import { useState, useEffect, useMemo } from "react";
 import { attendanceToday, formatAttendanceDate } from "@/utils/attendanceDates.mjs";
@@ -109,7 +110,7 @@ export default function AttendanceHistoryPage() {
       <EmployeeLeaderboard month={month} state={ranking} />
 
       {loading ? (
-        <div className={styles.loadingContainer} role="status"><div className={styles.spinner} aria-hidden="true" /><p>Loading attendance…</p></div>
+        <DataSkeleton label="Loading attendance…" />
       ) : error ? (
         <div className={styles.emptyState} role="alert"><p>{error}</p><button data-button="secondary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton}>Try again</button></div>
       ) : !data.records.length ? (

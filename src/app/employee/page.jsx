@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
 import PageHeading from "@/components/PageHeading";
@@ -699,10 +700,7 @@ export default function Employee() {
               {loading && entries.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} className={styles.loadingCell}>
-                    <div className={styles.loadingContent}>
-                      <div className={styles.tableSpinner}></div>
-                      <span>Loading employees...</span>
-                    </div>
+                    <DataSkeleton compact label="Loading employees..." />
                   </td>
                 </tr>
               ) : filteredEntries.length === 0 ? (

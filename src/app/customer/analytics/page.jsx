@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -164,10 +165,7 @@ export default function CustomerAnalyticsPage() {
       />
 
       {error ? null : loading ? (
-        <div className={styles.loading_container}>
-          <div className={styles.spinner}></div>
-          <span className={styles.loading_text}>Loading analytics...</span>
-        </div>
+        <DataSkeleton label="Loading analytics..." />
       ) : (
         <>
           {/* Summary Cards */}

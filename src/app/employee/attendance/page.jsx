@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -283,10 +284,7 @@ function AttendanceContent() {
 
       {/* Loading State */}
       {loading && (
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>Loading attendance data...</p>
-        </div>
+        <DataSkeleton label="Loading attendance data..." />
       )}
 
       {/* Attendance Data Display */}
@@ -637,10 +635,7 @@ export default function EmployeeAttendance() {
   return (
     <Suspense
       fallback={
-        <div className={styles.loadingContainer}>
-          <div className={styles.spinner}></div>
-          <p>Loading...</p>
-        </div>
+        <DataSkeleton label="Loading..." />
       }
     >
       <AttendanceContent />

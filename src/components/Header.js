@@ -277,19 +277,21 @@ export default function Header() {
         </div>
 
         {/* Mobile Navigation Overlay */}
-        {mobileMenuOpen && (
+        {(
           <>
             <div
-              className={styles.mobileBackdrop}
+              className={`${styles.mobileBackdrop} ${mobileMenuOpen ? styles.menuVisible : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               aria-hidden="true"
             />
             <div
               ref={mobileMenuRef}
               id="mobile-navigation"
-              className={styles.mobileNavOverlay}
-              role="dialog"
-              aria-modal="true"
+              className={`${styles.mobileNavOverlay} ${mobileMenuOpen ? styles.menuVisible : ""}`}
+              inert={!mobileMenuOpen}
+              aria-hidden={!mobileMenuOpen}
+              role={mobileMenuOpen ? "dialog" : undefined}
+              aria-modal={mobileMenuOpen ? "true" : undefined}
               aria-label="Mobile navigation menu"
             >
               <div className={styles.mobileNavHeader}>

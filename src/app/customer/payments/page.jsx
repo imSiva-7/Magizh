@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -45,12 +46,7 @@ const INITIAL_VISIBLE_COUNT = 20;
 
 
 // ========== REUSABLE COMPONENTS ==========
-const LoadingSpinner = () => (
-  <div className={styles.loading_container}>
-    <div className={styles.spinner}></div>
-    <span className={styles.loading_text}>Loading customer orders...</span>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading customer orders..." />;
 
 const StatItem = ({ label, value, unit = "", colorClass = "", trend, tone }) => (
   <div className={`${styles.stat_card} ${trend?.length ? trendStyles.card : ""}`}>

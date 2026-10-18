@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -47,12 +48,7 @@ const formatTimeBadge = (time) => {
   return timeUpper === "PM" ? "PM" : "AM";
 };
 
-const LoadingSpinner = () => (
-  <div className={styles.loading_container}>
-    <div className={styles.spinner}></div>
-    <span className={styles.loading_text}>Loading procurement records...</span>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading procurement records..." />;
 
 export default function Payments() {
   const [supplierList, setSupplierList] = useState([]);
@@ -454,7 +450,7 @@ export default function Payments() {
       </div>
 
       {/* Date & Status Filters */}
-      <div data-filter="card" className={styles.filter_section}>
+      <div data-filter="card" className={`${styles.filter_section} ${styles.status_filters}`}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range & Status</h2>
         </div>

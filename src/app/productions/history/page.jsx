@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay } from "@/lib/india-date.mjs";
 
 import { formatStat } from "@/utils/formatNumberWithComma";
@@ -452,12 +453,7 @@ export default function ProductionHistoryPage() {
       {/* Data Table */}
       <div className={styles.tableWrapper}>
         {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.spinner}></div>
-            <span className={styles.loadingText}>
-              Loading production history...
-            </span>
-          </div>
+          <DataSkeleton label="Loading production history..." />
         ) : entries.length === 0 ? (
           <div className={styles.emptyState}>
             {error ? (

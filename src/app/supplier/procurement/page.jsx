@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -25,16 +26,7 @@ import { getProcurementSummary } from "@/utils/procurementSummary";
 
 // ========== CONSTANTS & UTILITIES ==========
 
-const LoadingSpinner = () => (
-  <div className={styles.page_container}>
-    <div className={styles.loading_container}>
-      <div className={styles.spinner}></div>
-      <span className={styles.loading_text}>
-        Loading procurement records...
-      </span>
-    </div>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading procurement records..." />;
 
 const initialForm = {
   date: getTodayDate(),
@@ -1124,10 +1116,7 @@ function ProcurementContent() {
           )}
 
           {headLoading && !headData ? (
-            <div className={styles.loading_container}>
-              <div className={styles.spinner}></div>
-              <span className={styles.loading_text}>Loading earnings...</span>
-            </div>
+            <DataSkeleton label="Loading earnings..." />
           ) : !headData || headData.entries.length === 0 ? (
             <div className={styles.empty_state}>
               <span className={styles.empty_icon}>📭</span>
@@ -1467,12 +1456,7 @@ export default function ProcurementPage() {
     <Suspense
       fallback={
         <div className={styles.page_container}>
-          <div className={styles.loading_container}>
-            <div className={styles.spinner}></div>
-            <span className={styles.loading_text}>
-              Loading procurement page...
-            </span>
-          </div>
+          <DataSkeleton label="Loading procurement page..." />
         </div>
       }
     >

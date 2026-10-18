@@ -39,11 +39,15 @@
   gap: 1.5rem;
 }
 
-/* .filter_title {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--border);
-} */
+.status_filters {
+  gap: 0.75rem;
+}
+
+:root body .status_filters [data-filter="title"] {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
 
 .filter_title h2 {
   font-size: 1.5rem;
@@ -132,9 +136,7 @@
   flex-wrap: wrap;
   gap: 1.5rem;
   align-items: center;
-  padding: 0.5rem 0;
-  border-top: 1px solid var(--border);
-  /* border-bottom: 1px solid var(--border); */
+  padding: 0;
 }
 
 .radio_label {

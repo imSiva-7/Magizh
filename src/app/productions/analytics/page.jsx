@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
@@ -167,10 +168,7 @@ export default function ProductionAnalyticsPage() {
           <button data-button="secondary" type="button" onClick={() => setReload(value => value + 1)}>Retry analytics</button>
         </div>
       ) : loading ? (
-        <div className={styles.loading_container}>
-          <div className={styles.spinner}></div>
-          <span className={styles.loading_text}>Loading analytics...</span>
-        </div>
+        <DataSkeleton label="Loading analytics..." />
       ) : (
         <>
           {/* Summary Cards */}

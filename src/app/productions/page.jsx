@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import PageHeading from "@/components/PageHeading";
@@ -11,14 +12,7 @@ import { useSession } from "next-auth/react";
 import styles from "@/css/production.module.css";
 import { getTodayDate } from "@/utils/dateUtils.js";
 
-const LoadingSpinner = () => (
-  <div className={styles.page_container}>
-    <div className={styles.loading_container}>
-      <div className={`${styles.spinner}`}></div>
-      <span className={styles.loading_text}>Loading production records...</span>
-    </div>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading production records..." />;
 
 const ProductionFormInput = ({
   label,

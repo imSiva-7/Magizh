@@ -1,11 +1,12 @@
 "use client";
+import ResponsiveContainer from "./InteractiveChartContainer";
 import { formatMonthForDisplay } from "@/lib/india-date.mjs";
 
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { useId, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import { AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { procurementDaily, supplierChartSeries } from "@/lib/supplier-charts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
 import styles from "@/app/page.module.css";

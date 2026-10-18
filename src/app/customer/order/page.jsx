@@ -1,4 +1,5 @@
 "use client";
+import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import RowActionPopup from "@/components/RowActionPopup";
 import { formatStat } from "@/utils/formatNumberWithComma";
@@ -59,14 +60,7 @@ const sanitizeNumericInput = (value) => {
 };
 
 // ---------- Helper Components ----------
-const LoadingSpinner = () => (
-  <div className={styles.page_container}>
-    <div className={styles.loading_container}>
-      <div className={styles.spinner}></div>
-      <span className={styles.loading_text}>Loading orders...</span>
-    </div>
-  </div>
-);
+const LoadingSpinner = () => <DataSkeleton label="Loading orders..." />;
 
 const InputGroup = ({ label, error, required, readOnly, ...props }) => {
   const id = props.id || `order-${String(props.name || label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;

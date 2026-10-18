@@ -36,6 +36,17 @@ h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; ov
 [data-stat-tone="neutral"] { color: var(--text) !important; }
 .skip-link { position: fixed; left: 1rem; top: -5rem; z-index: 3000; padding: 0.75rem 1rem; background: var(--brand-dark); color: white; border-radius: 0.5rem; }
 .skip-link:focus { top: 0.75rem; }
+@keyframes content-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  main > div,
+  main [data-entry-form],
+  main tbody {
+    animation: content-enter 180ms ease-out;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

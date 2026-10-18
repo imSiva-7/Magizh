@@ -1,4 +1,5 @@
 "use client";
+import ResponsiveContainer from "./InteractiveChartContainer";
 import { formatMonthForDisplay } from "@/lib/india-date.mjs";
 
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
@@ -8,7 +9,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer,
+  Tooltip, Legend,
 } from "recharts";
 import styles from "@/app/page.module.css";
 

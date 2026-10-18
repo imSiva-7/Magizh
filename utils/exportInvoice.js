@@ -9,7 +9,7 @@ const kg = ["Butter", "Fresh Cream", "Soft Paneer", "Premium Paneer"];
 // Brand Colors - Minimal & Professional
 const BRAND_GREEN = [39, 121, 93];        // Primary brand color
 const BRAND_LIGHT = [234, 245, 241];      // Light green background
-const ACCENT_GOLD = [251, 188, 4];        // Gold accent for highlights
+const CARD_BACKGROUND = [248, 251, 249];
 const TEXT_PRIMARY = [30, 41, 59];        // Dark slate
 const TEXT_SECONDARY = [100, 116, 139];   // Muted gray
 const DIVIDER = [226, 232, 240];          // Light divider
@@ -47,7 +47,7 @@ export const exportInvoiceToPDF = async (
     // Company name with modern typography
     doc.setTextColor(...BRAND_GREEN);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(26);
+    doc.setFontSize(20);
     doc.text("MAGIZH AGRO PRODUCT", margin, 18);
 
 
@@ -79,7 +79,7 @@ export const exportInvoiceToPDF = async (
 
     // Invoice title banner
     doc.setFillColor(...BRAND_LIGHT);
-    doc.roundedRect(margin, 38, pageWidth - margin * 2, 12, 2, 2, "F");
+    doc.roundedRect(margin, 38, pageWidth - margin * 2, 12, 4, 4, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(...BRAND_GREEN);
@@ -88,13 +88,22 @@ export const exportInvoiceToPDF = async (
 
   // ========== BILL TO & INVOICE DETAILS (Clean Grid) ==========
   const drawDetailsGrid = (startY) => {
-    const boxHeight = 38;
     const boxWidth = (pageWidth - margin * 3) / 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    const nameLines = doc.splitTextToSize(customer?.customerName || "All Customers", boxWidth - 12);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const address = customer?.customerName ? customer?.address || "No Address Provided" : "";
+    const splitAddress = doc.splitTextToSize(address, boxWidth - 12);
+    const addressY = 22 + (nameLines.length - 1) * 4.5;
+    const boxHeight = Math.max(38, addressY + splitAddress.length * 4 + (customer?.customerGST ? 5 : 0) + (customer?.mobile ? 5 : 0) + 5);
 
     // Left box - Bill To
     doc.setDrawColor(...DIVIDER);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(margin, startY, boxWidth, boxHeight, 3, 3);
+    doc.setLineWidth(0.25);
+    doc.setFillColor(...CARD_BACKGROUND);
+    doc.roundedRect(margin, startY, boxWidth, boxHeight, 4, 4, "FD");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -105,7 +114,7 @@ export const exportInvoiceToPDF = async (
     doc.setFontSize(11);
     doc.setTextColor(...TEXT_PRIMARY);
     doc.text(
-      customer?.customerName || "All Customers",
+      nameLines,
       margin + 5,
       startY + 16
     );
@@ -113,14 +122,10 @@ export const exportInvoiceToPDF = async (
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    const address = customer?.customerName
-      ? customer?.address || "No Address Provided"
-      : "";
-    const splitAddress = doc.splitTextToSize(address, boxWidth - 10);
-    doc.text(splitAddress, margin + 5, startY + 22);
+    doc.text(splitAddress, margin + 5, startY + addressY);
 
     // Customer GST on left side (below address, above phone)
-    let nextY = startY + 22 + (splitAddress.length * 4);
+    let nextY = startY + addressY + (splitAddress.length * 4);
     if (customer?.customerGST) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
@@ -141,7 +146,8 @@ export const exportInvoiceToPDF = async (
 
     // Right box - Invoice Details
     const rightBoxX = margin * 2 + boxWidth;
-    doc.roundedRect(rightBoxX, startY, boxWidth, boxHeight, 3, 3);
+    doc.setFillColor(...CARD_BACKGROUND);
+    doc.roundedRect(rightBoxX, startY, boxWidth, boxHeight, 4, 4, "FD");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -164,8 +170,7 @@ export const exportInvoiceToPDF = async (
     const periodText = periodStart === periodEnd ? periodStart : `${periodStart} - ${periodEnd}`;
     const splitPeriod = doc.splitTextToSize(periodText, boxWidth - 40);
     doc.text(splitPeriod, rightBoxX + 35, startY + 22);
-
-
+    return startY + boxHeight;
   };
 
   // ========== CALCULATE TOTALS ==========
@@ -203,14 +208,15 @@ export const exportInvoiceToPDF = async (
 
   // ========== RENDER DOCUMENT ==========
   drawHeader();
-  drawDetailsGrid(56);
+  const detailsBottom = drawDetailsGrid(56);
 
   // ========== ITEMS TABLE (Modern Design) ==========
-  const tableStartY = 100;
+  const tableStartY = detailsBottom + 8;
 
   if (customer?.customerName) {
     autoTable(doc, {
       startY: tableStartY,
+      margin: { left: margin, right: margin, bottom: 25 },
       head: [["Date", "Product", "Quantity", "Rate", "Amount"]],
       body: tableRows,
       theme: "plain",
@@ -228,7 +234,7 @@ export const exportInvoiceToPDF = async (
         cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252],
+        fillColor: CARD_BACKGROUND,
       },
       columnStyles: {
         0: { cellWidth: 32, halign: "left" },
@@ -239,12 +245,13 @@ export const exportInvoiceToPDF = async (
       },
       styles: {
         lineColor: DIVIDER,
-        lineWidth: 0.3,
+        lineWidth: { bottom: 0.15 },
       },
     });
   } else {
     autoTable(doc, {
       startY: tableStartY,
+      margin: { left: margin, right: margin, bottom: 25 },
       head: [["Date", "Customer", "Product", "Qty", "Rate", "Amount"]],
       body: tableRows,
       theme: "plain",
@@ -262,7 +269,7 @@ export const exportInvoiceToPDF = async (
         cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
       },
       alternateRowStyles: {
-        fillColor: [248, 250, 252],
+        fillColor: CARD_BACKGROUND,
       },
       columnStyles: {
         0: { cellWidth: 28, halign: "left" },
@@ -274,12 +281,17 @@ export const exportInvoiceToPDF = async (
       },
       styles: {
         lineColor: DIVIDER,
-        lineWidth: 0.3,
+        lineWidth: { bottom: 0.15 },
       },
     });
   }
 
   let finalY = doc.lastAutoTable.finalY + 10;
+  const summaryHeight = Math.max(42, 12 + Object.keys(productQuantities).length * 5);
+  if (finalY + summaryHeight > pageHeight - 25) {
+    doc.addPage();
+    finalY = 25;
+  }
 
   // ========== PRODUCT SUMMARY & TOTAL SECTION (Side by Side) ==========
   const summaryWidth = 80;
@@ -309,8 +321,9 @@ export const exportInvoiceToPDF = async (
 
   // Total Summary on the right (Minimal Card Design)
   doc.setDrawColor(...DIVIDER);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 42, 3, 3);
+  doc.setLineWidth(0.25);
+  doc.setFillColor(...CARD_BACKGROUND);
+  doc.roundedRect(summaryX, finalY - 5, summaryWidth, 42, 4, 4, "FD");
 
   // Sub-total
   doc.setFont("helvetica", "normal");
@@ -337,13 +350,13 @@ export const exportInvoiceToPDF = async (
 
   // Grand Total (Highlighted)
   doc.setFillColor(...BRAND_GREEN);
-  doc.roundedRect(summaryX, finalY + 22, summaryWidth, 15, 2, 2, "F");
+  doc.roundedRect(summaryX + 2, finalY + 22, summaryWidth - 4, 13, 3, 3, "F");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   doc.setTextColor(...WHITE);
   doc.text("TOTAL AMOUNT", summaryX + 5, finalY + 31);
-  doc.setFontSize(13);
+  doc.setFontSize(11);
   doc.text(
     `Rs. ${formatNumberWithCommas(grandTotal, 2)}`,
     pageWidth - margin - 5,
@@ -353,7 +366,7 @@ export const exportInvoiceToPDF = async (
 
   // ========== CHECK IF PAYMENT SECTION FITS ON CURRENT PAGE ==========
   const paymentSectionHeight = 65; // Payment box (45) + signature (15) + margins
-  let paymentY = finalY + 50;
+  let paymentY = finalY + summaryHeight + 8;
 
   // If payment section would overflow, start on new page
   if (paymentY + paymentSectionHeight > pageHeight - 20) {
