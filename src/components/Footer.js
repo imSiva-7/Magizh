@@ -1,13 +1,23 @@
 "use client";
-import { getTodayDate } from "@/lib/india-date.mjs";
+import { getTodayDate, INDIA_TIME_ZONE } from "@/lib/india-date.mjs";
+import { useSyncExternalStore } from "react";
 
 import styles from "@/css/footer.module.css";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+const weekdayFormatter = new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: INDIA_TIME_ZONE });
+const getWeekday = () => weekdayFormatter.format(new Date());
+const getServerWeekday = () => "day";
+const subscribeToDay = callback => {
+  const timer = setInterval(callback, 60000);
+  return () => clearInterval(timer);
+};
+
 export default function Footer() {
   const currentYear = Number(getTodayDate().slice(0, 4));
+  const weekday = useSyncExternalStore(subscribeToDay, getWeekday, getServerWeekday);
 
   const { data: session } = useSession();
   const isAdmin =
@@ -128,12 +138,13 @@ export default function Footer() {
         </div>
 
         <div className={styles.footerBottom}>
+          <p className={styles.greeting}>Enjoy the rest of your {weekday}.</p>
           <div className={styles.copyright}>
             {" "}
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.7</span>
+            <span className={styles.version}>v1.7.8</span>
           </div>
         </div>
       </div>
