@@ -19,7 +19,7 @@ test.describe("Indian dates on a device outside India", () => {
     await page.getByRole("button", { name: "New order", exact: true }).click();
     const dialog = page.getByRole("region", { name: "New order", exact: true });
     await dialog.getByRole("button", { name: /Green Valley Restaurant/ }).click();
-    await expect(dialog.getByLabel("Order date")).toHaveValue("2026-10-18");
+    await expect(dialog.getByLabel("Date", { exact: true })).toHaveValue("2026-10-18");
   });
 });
 
@@ -126,8 +126,8 @@ test("small-screen procurement entry and payment controls remain reachable", asy
   await orderDialog.getByRole("button", { name: /Green Valley Restaurant/ }).click();
   await orderDialog.getByLabel("Milk quantity (L)").fill("2.5");
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await orderDialog.getByRole("button", { name: "Save order", exact: true }).scrollIntoViewIfNeeded();
-  await expect(orderDialog.getByRole("button", { name: "Save order", exact: true })).toBeInViewport();
+  await orderDialog.getByRole("button", { name: "Create Order", exact: true }).scrollIntoViewIfNeeded();
+  await expect(orderDialog.getByRole("button", { name: "Create Order", exact: true })).toBeInViewport();
   expect(await orderDialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
   await page.goto("/customer/payments");
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
@@ -141,7 +141,7 @@ test("small-screen procurement entry and payment controls remain reachable", asy
 
 test("mobile add forms and stock editors keep their fields within the screen", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  for (const [path, add] of [["/customer", "Create new customer"], ["/supplier", "Create new supplier"], ["/employee", "Create new employee"], ["/stock", "+ Adjust stock"], ["/stock", "Minimum levels"]]) {
+  for (const [path, add] of [["/customer", "Create new customer"], ["/supplier", "Create new supplier"], ["/employee", "Create new employee"], ["/stock", "+/- stock"], ["/stock", "Min levels"]]) {
     await test.step(add, async () => {
       await page.goto(path);
       await page.getByRole("button", { name: add, exact: true }).click();

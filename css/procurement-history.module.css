@@ -182,6 +182,7 @@
 }
 
 .supplier_result_name {
+  overflow-wrap: anywhere;
   font-weight: 600;
   color: var(--text);
   font-size: 0.95rem;
@@ -232,7 +233,9 @@
   flex-direction: column;
   gap: 0.25rem;
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .selected_supplier_name {
@@ -308,7 +311,7 @@
   border-radius: 0.5rem;
   background: white;
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-family: var(--font-sans);
   transition: border-color 0.2s ease;
   box-sizing: border-box;

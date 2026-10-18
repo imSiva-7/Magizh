@@ -152,6 +152,8 @@
 
 main > div:has([data-button-placement="floating"]) { padding-bottom: 6rem; }
 
+:root body:has([data-entry-form], [role="dialog"], dialog[open]) [data-button][data-button][data-button-placement="floating"] { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   body [data-button][data-button] { transition: none; }
 }

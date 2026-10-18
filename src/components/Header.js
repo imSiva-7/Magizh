@@ -75,6 +75,22 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
+  // A drawer belongs to the mobile page that opened it. Browser history and
+  // crossing the desktop breakpoint must also release its body scroll lock.
+  useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1100px)");
+    const closeMenu = () => setMobileMenuOpen(false);
+    const handleDesktop = event => {
+      if (event.matches) closeMenu();
+    };
+    desktop.addEventListener("change", handleDesktop);
+    window.addEventListener("popstate", closeMenu);
+    return () => {
+      desktop.removeEventListener("change", handleDesktop);
+      window.removeEventListener("popstate", closeMenu);
+    };
+  }, []);
+
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {

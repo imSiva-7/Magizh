@@ -528,7 +528,7 @@ export default function CustomerPayments() {
                       {customer.customerName || "-"}
                     </Link>
                     <CategoryBadge kind="customer" value={customer.customerType} />
-                    <span className={styles.date_range_badge}>{stats.receiptCount ? "Receipts / corrections in period" : "Sales in period"}</span>
+                    {/* <span className={styles.date_range_badge}>{stats.receiptCount ? "Receipts / corrections in period" : "Sales in period"}</span> */}
                   </div>
                   <div className={styles.header_right}>
                     <button data-button="primary"

@@ -1,0 +1,7 @@
+.shortcuts { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); z-index: 90; display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
+.shortcuts a { box-shadow: 0 3px 12px #163e3226 !important; }
+.shortcuts span { font-size: 1.125rem; line-height: 1; }
+.aboveHistoryAction { bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3.25rem); }
+:global(body):has(:global([data-entry-form]), :global([role="dialog"]), :global(dialog[open])) .shortcuts { display: none; }
+:global(body):has(.shortcuts) :global(main) { padding-bottom: 7rem; }
+@media print { .shortcuts { display: none; } }

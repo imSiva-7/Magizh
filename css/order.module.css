@@ -857,7 +857,7 @@ button:disabled {
   background: linear-gradient(135deg, var(--brand-soft) 0%, var(--border) 100%);
 }
 .table th {
-  padding: 1rem;
+  padding: 0.4rem;
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
@@ -869,7 +869,7 @@ button:disabled {
   text-align: left;
 }
 .table td {
-  padding: 1rem;
+  padding: 0.5rem;
   text-align: center;
   border-bottom: 1px solid var(--brand-soft);
   font-size: 0.95rem;
@@ -1160,7 +1160,7 @@ button:disabled {
   }
   .table th,
   .table td {
-    padding: 0.5rem 0.5rem;
+    padding: 0.3rem;
     font-size: 0.875rem;
   }
 }

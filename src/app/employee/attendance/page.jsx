@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -27,6 +27,7 @@ function AttendanceContent() {
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const attendanceRequestRef = useRef(null);
 
   // Date filter state
   const currentMonth = attendanceToday().slice(0, 7);
@@ -49,24 +50,28 @@ function AttendanceContent() {
   // Fetch attendance data for selected employee
   const fetchAttendanceData = useCallback(async (empID, selectedMonth) => {
     if (!empID) return;
-
+    attendanceRequestRef.current?.abort();
+    const controller = new AbortController();
+    attendanceRequestRef.current = controller;
     setLoading(true);
     try {
       const res = await fetch(
         `/api/attendance?empID=${empID}&month=${selectedMonth}`,
+        { signal: controller.signal, cache: "no-store" },
       );
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.error || "Failed to fetch attendance");
       }
       const data = await res.json();
-      setAttendanceData(data);
+      if (!controller.signal.aborted) setAttendanceData(data);
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error("Fetch attendance error:", error);
       toast.error(error.message || "Failed to load attendance data");
       setAttendanceData(null);
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
@@ -87,9 +92,15 @@ function AttendanceContent() {
     if (selectedEmpID && month) {
       fetchAttendanceData(selectedEmpID, month);
     }
+    return () => attendanceRequestRef.current?.abort();
   }, [selectedEmpID, month, fetchAttendanceData]);
 
   const handleEmployeeChange = (empID) => {
+    attendanceRequestRef.current?.abort();
+    setLoading(false);
+    setAttendanceData(null);
+    setShowAdvanceForm(false);
+    setAdvanceForm({ amount: "", date: attendanceToday(), reason: "" });
     setSelectedEmpID(empID);
     if (empID) {
       router.push(`/employee/attendance?empID=${empID}&month=${month}`);
@@ -100,6 +111,11 @@ function AttendanceContent() {
   };
 
   const handleMonthChange = (newMonth) => {
+    attendanceRequestRef.current?.abort();
+    setLoading(false);
+    setAttendanceData(null);
+    setShowAdvanceForm(false);
+    setAdvanceForm({ amount: "", date: attendanceToday(), reason: "" });
     setMonth(newMonth);
   };
 
@@ -237,6 +253,7 @@ function AttendanceContent() {
               value={selectedEmpID}
               onChange={(e) => handleEmployeeChange(e.target.value)}
               className={styles.selectInput}
+              disabled={isSubmitting}
             >
               <option value="">-- Choose Employee --</option>
               {employees.map((emp) => (
@@ -257,6 +274,7 @@ function AttendanceContent() {
                 onChange={(e) => handleMonthChange(e.target.value)}
                 className={styles.input}
                 max={currentMonth}
+                disabled={isSubmitting}
               />
             </div>
           )}
@@ -398,6 +416,7 @@ function AttendanceContent() {
 
             {showAdvanceForm && (
               <form
+                data-entry-form
                 onSubmit={handleAdvanceSubmit}
                 className={styles.advanceForm}
               >

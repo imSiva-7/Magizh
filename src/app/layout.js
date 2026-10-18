@@ -3,6 +3,7 @@ import "./buttons.css";
 import "./filters.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import EntryShortcuts from "@/components/EntryShortcuts";
 import AuthProvider from "./AuthProvider"; // import the client component
 
 export const metadata = {
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
           <a className="skip-link" href="#main-content">Skip to content</a>
           <Header />
           <main id="main-content" tabIndex={-1}>{children}</main>
+          <EntryShortcuts />
           <Footer />
         </AuthProvider>
       </body>

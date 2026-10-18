@@ -614,7 +614,7 @@ export default function Supplier() {
       </div>
 
       {createSupplier && (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form data-entry-form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formHeader}>
             <h2>{isEditing ? "Edit Supplier" : "Create New Supplier"}</h2>
             {isEditing && (

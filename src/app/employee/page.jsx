@@ -506,7 +506,7 @@ export default function Employee() {
 
       {/* Create/Edit Form */}
       {createEmployee && (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form data-entry-form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formHeader}>
             <h2>{isEditing ? "Edit Employee" : "Create New Employee"}</h2>
             {isEditing && (

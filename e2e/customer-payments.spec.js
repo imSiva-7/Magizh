@@ -49,7 +49,7 @@ test("partial payments reduce due and overpayments become credit, with correctio
   await expect.poll(() => dialog.evaluate(el => el.getBoundingClientRect().width <= innerWidth)).toBeTruthy();
   await dialog.screenshot({ path: "test-results/customer-partial-payment-mobile.png" });
   await dialog.getByRole("button", { name: "Save payment", exact: true }).click();
-  await expect(page.getByText("Receipts / corrections in period", { exact: true })).toBeVisible();
+  await expect(dialog).toHaveCount(0);
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
   await dialog.getByLabel("Amount received (₹)").fill("799.75");
   await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹100.00 credit");
@@ -60,7 +60,7 @@ test("partial payments reduce due and overpayments become credit, with correctio
   await dialog.getByLabel("Correction amount (₹)").fill("-100");
   await dialog.getByLabel("Correction reason").fill("Duplicate cash receipt");
   await dialog.getByRole("button", { name: "Save correction", exact: true }).click();
-  await expect(page.getByText("Receipts / corrections in period", { exact: true })).toBeVisible();
+  await expect(dialog).toHaveCount(0);
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
   await dialog.getByRole("button", { name: "View payment history" }).click();
   await expect(dialog.getByRole("cell", { name: "Cash · Duplicate cash receipt", exact: true })).toBeVisible();

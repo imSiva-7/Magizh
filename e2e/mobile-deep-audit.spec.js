@@ -72,9 +72,10 @@ for (const [width, height] of [[320, 568], [390, 844], [768, 1024], [844, 390]])
     const panel = page.getByRole("region", { name: "New order", exact: true });
     await panel.getByRole("button", { name: /Green Valley Restaurant/ }).click();
     await panel.getByLabel("Milk quantity (L)").fill("1234.5");
-    expect((await panel.getByLabel("Milk amount", { exact: true }).boundingBox()).height).toBeLessThan(30);
-    await panel.getByRole("button", { name: "Save order", exact: true }).scrollIntoViewIfNeeded();
-    await expect(panel.getByRole("button", { name: "Save order", exact: true })).toBeInViewport();
+    await expect(panel.getByLabel("Milk amount", { exact: true })).toHaveCount(0);
+    await expect(panel.getByLabel("Order Total", { exact: true })).toHaveAttribute("readonly", "");
+    await panel.getByRole("button", { name: "Create Order", exact: true }).scrollIntoViewIfNeeded();
+    await expect(panel.getByRole("button", { name: "Create Order", exact: true })).toBeInViewport();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     if (width === 320) await panel.screenshot({ path: "test-results/audit-inline-order-320.png" });
     expect(crashes).toEqual([]);

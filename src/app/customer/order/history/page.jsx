@@ -2,6 +2,8 @@
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import NewCustomerOrder from "@/components/NewCustomerOrder";
+import Gstr1Export from "@/components/Gstr1Export";
+import { useEntryForm } from "@/lib/use-entry-form";
 import CustomerLeaderboard from "@/components/CustomerLeaderboard";
 
 import StatTrendBackground from "@/components/StatTrendBackground";
@@ -111,7 +113,8 @@ function OrderHistoryContent() {
     endDate: getTodayDate(),
   });
   const [savingCommentId, setSavingCommentId] = useState(null);
-  const [showNewOrder, setShowNewOrder] = useState(false);
+  const [showNewOrder, setShowNewOrder] = useEntryForm();
+  const [showGstExport, setShowGstExport] = useState(false);
   const newOrderButtonRef = useRef(null);
   const historyRequestRef = useRef(null);
   const { data: session } = useSession();
@@ -298,6 +301,8 @@ function OrderHistoryContent() {
       </div>
 
       {showNewOrder && <NewCustomerOrder onClose={closeNewOrder} onCreated={handleOrderCreated} />}
+      {/* {["admin", "dev", "employee"].includes(session?.user?.role) && <button data-button="secondary" type="button" aria-expanded={showGstExport} onClick={() => setShowGstExport(value => !value)}>Export GSTR-1 JSON</button>}
+      {showGstExport && <Gstr1Export initialMonth={filters.startDate?.slice(0, 7)} onClose={() => setShowGstExport(false)} />} */}
 
       {/* Filter Card */}
       <div data-filter="card" className={styles.filter_card}>

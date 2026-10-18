@@ -27,6 +27,7 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
   const busy = useRef(false);
   const dialogRef = useRef(null);
   const amountRef = useRef(null);
+  const historyRequest = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -45,8 +46,9 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
 
   useEffect(() => {
     if (isOpen) {
-      setAmount(""); setKind("payment"); setMethod("Cash"); setReference(""); setNote(""); setError(""); setHistory(null); setHistoryError(""); attempt.current = null;
+      setAmount(""); setKind("payment"); setMethod("Cash"); setReference(""); setNote(""); setError(""); setHistory(null); setHistoryError(""); setHistoryLoading(false); attempt.current = null;
     }
+    return () => { historyRequest.current?.abort(); historyRequest.current = null; };
   }, [isOpen, customerId]);
 
   if (!isOpen) return null;
@@ -54,14 +56,19 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
   try { if (amount && moneyCents(amount) !== 0) preview = paymentBalance(Number(currentPaid) + Number(currentDue), currentPaid, amount); } catch { /* Inline validation happens on submit. */ }
 
   const loadHistory = async () => {
+    historyRequest.current?.abort();
+    const controller = new AbortController();
+    historyRequest.current = controller;
     setHistoryLoading(true); setHistoryError("");
     try {
-      const response = await fetch(`/api/customer/ledger?customerId=${customerId}`, { cache: "no-store" });
+      const response = await fetch(`/api/customer/ledger?customerId=${encodeURIComponent(customerId)}`, { cache: "no-store", signal: controller.signal });
       if (!response.ok) throw new Error("Payment history could not be loaded.");
       const data = await response.json();
-      setHistory(data.payments || []);
-    } catch (error) { setHistoryError(error.message); }
-    finally { setHistoryLoading(false); }
+      if (!controller.signal.aborted) setHistory(data.payments || []);
+    } catch (error) { if (!controller.signal.aborted) setHistoryError(error.message); }
+    finally {
+      if (historyRequest.current === controller) { setHistoryLoading(false); historyRequest.current = null; }
+    }
   };
 
   const submit = async event => {

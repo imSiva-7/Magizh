@@ -254,7 +254,7 @@ export default function ProductionPage() {
 
       {/* Main Form */}
       <div className={styles.mainContent}>
-        <form onSubmit={handleSubmit} className={styles.productionForm}>
+        <form data-entry-form onSubmit={handleSubmit} className={styles.productionForm}>
           {/* Date & Batch */}
           <section className={styles.formSection}>
             <div className={styles.dateBatchRow}>

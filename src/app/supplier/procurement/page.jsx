@@ -1343,7 +1343,6 @@ function ProcurementContent() {
                     <td className={styles.date_cell}>
                       {row.isFirstOfDate ? (
                         <div className={styles.continuation_wrapper}>
-                          {`(${row.occurrenceCount}) `}
                           <span className={styles.date_text}>
                             {formatDateForDisplay(row.date)}
                           </span>

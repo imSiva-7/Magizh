@@ -484,7 +484,7 @@ export default function Customer() {
 
       {/* Create/Edit Form */}
       {createCustomer && (
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form data-entry-form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formHeader}>
             <h2>{isEditing ? "Edit Customer" : "Create New Customer"}</h2>
             {isEditing && (

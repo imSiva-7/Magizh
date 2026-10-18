@@ -2,6 +2,7 @@
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
+import { useEntryForm } from "@/lib/use-entry-form";
 import CategoryBadge from "@/components/CategoryBadge";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
@@ -134,7 +135,7 @@ function ProcurementHistoryContent() {
   const historyRequestRef = useRef(null);
 
   // ---------- Add Procurement state ----------
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddForm, setShowAddForm] = useEntryForm();
   const [suppliers, setSuppliers] = useState([]);
   const [suppliersLoading, setSuppliersLoading] = useState(false);
   const [suppliersFetched, setSuppliersFetched] = useState(false);
@@ -143,6 +144,7 @@ function ProcurementHistoryContent() {
   const [formData, setFormData] = useState(makeInitialForm);
   const [formErrors, setFormErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const addBusyRef = useRef(false);
   const searchInputRef = useRef(null);
 
   // Debounced supplier search
@@ -329,6 +331,7 @@ function ProcurementHistoryContent() {
   };
 
   const handleCloseAddForm = () => {
+    if (addBusyRef.current) return;
     setShowAddForm(false);
     setSupplierSearch("");
     setSelectedSupplier(null);
@@ -399,11 +402,13 @@ function ProcurementHistoryContent() {
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    if (addBusyRef.current) return;
     if (!validateAddForm()) {
       toast.error("Please fix the form errors");
       return;
     }
 
+    addBusyRef.current = true;
     setSubmitting(true);
     try {
       const isCustomRate = !!selectedSupplier.supplierCustomRate;
@@ -457,6 +462,7 @@ function ProcurementHistoryContent() {
       console.error("Add procurement error:", error);
       toast.error(error.message || "Failed to save record");
     } finally {
+      addBusyRef.current = false;
       setSubmitting(false);
     }
   };
@@ -471,7 +477,7 @@ function ProcurementHistoryContent() {
 
       const isFirstOfDate = dateCounts[dateKey] === 1;
       const displayDate = isFirstOfDate
-        ? `(${dateCounts[dateKey]}) ${formatDateForDisplay(row.date)} `
+        ? formatDateForDisplay(row.date)
         : `(${dateCounts[dateKey]})`;
 
       return { ...row, displayDate };
@@ -540,7 +546,7 @@ function ProcurementHistoryContent() {
 
       {/* ==================== ADD PROCUREMENT ==================== */}
       {showAddForm && (
-        <div id="new-procurement-form" data-procurement-form className={styles.add_section}>
+        <div id="new-procurement-form" data-entry-form data-procurement-form className={styles.add_section}>
           <div className={styles.add_header}>
             <h2>Add Procurement</h2>
             <button data-button="icon"
@@ -548,6 +554,7 @@ function ProcurementHistoryContent() {
               onClick={handleCloseAddForm}
               className={styles.close_add_btn}
               aria-label="Close"
+              disabled={submitting}
             >
               ✕
             </button>
@@ -658,6 +665,7 @@ function ProcurementHistoryContent() {
                     onChange={handleFormInputChange}
                     max={getTodayDate()}
                     error={formErrors.date}
+                    disabled={submitting}
                     required
                   />
 
@@ -672,6 +680,7 @@ function ProcurementHistoryContent() {
                       value={formData.time}
                       onChange={handleFormInputChange}
                       className={styles.form_select}
+                      disabled={submitting}
                     >
                       <option value="AM">AM (Morning)</option>
                       <option value="PM">PM (Evening)</option>
@@ -688,6 +697,7 @@ function ProcurementHistoryContent() {
                     value={formData.milkQuantity}
                     onChange={handleFormInputChange}
                     error={formErrors.milkQuantity}
+                    disabled={submitting}
                     required
                   />
 
@@ -701,6 +711,7 @@ function ProcurementHistoryContent() {
                     value={formData.fatPercentage}
                     onChange={handleFormInputChange}
                     error={formErrors.fatPercentage}
+                    disabled={submitting}
                     required
                   />
 
@@ -714,6 +725,7 @@ function ProcurementHistoryContent() {
                     value={formData.snfPercentage}
                     onChange={handleFormInputChange}
                     error={formErrors.snfPercentage}
+                    disabled={submitting}
                     required
                   />
 
