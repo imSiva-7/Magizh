@@ -55,6 +55,8 @@ export function mergeDay(previous, records) {
   const punches = [...byIdentity.values()].sort((a, b) =>
     a.time.localeCompare(b.time),
   );
+  // Keep raw device events, but never overwrite an administrator's correction.
+  if (previous?.manualTimes) return { ...previous, punches };
   const checkIn = punches[0].time;
   const last = punches[punches.length - 1].time;
   const checkOut = last !== checkIn ? last : null;

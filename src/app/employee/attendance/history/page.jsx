@@ -1,7 +1,11 @@
 "use client";
+import { useSession } from "next-auth/react";
+import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import DataSkeleton from "@/components/DataSkeleton";
 
 import { useState, useEffect, useMemo } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { attendanceToday, formatAttendanceDate } from "@/utils/attendanceDates.mjs";
 import Link from "next/link";
 import PageHeading from "@/components/PageHeading";
@@ -17,6 +21,8 @@ const formatTime = (time) => {
 };
 
 export default function AttendanceHistoryPage() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
   const [month, setMonth] = useState(getCurrentMonth);
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
@@ -79,6 +85,14 @@ export default function AttendanceHistoryPage() {
 
   return (
     <div className={`${styles.container} ${styles.compactHistory}`}>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
       <div className={styles.headerContent}>
         <PageHeading title="Attendance History" section="YOUR TEAM" description="Daily check-in, check-out, and hours worked. Times in IST." />
         <Link data-button="secondary" href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
@@ -128,7 +142,7 @@ export default function AttendanceHistoryPage() {
                 <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatAttendanceDate(date)}</time></h2></div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.attendanceTable}>
-                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in (IST)</th><th scope="col">Check out (IST)</th><th scope="col">Hours</th></tr></thead>
+                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in (IST)</th><th scope="col">Check out (IST)</th><th scope="col">Hours</th>{isAdmin && <th scope="col">Actions</th>}</tr></thead>
                     <tbody>{records.map((record, index) => (
                       <tr key={`${record.empID}-${date}-${index}`}>
                         <td className={styles.nameCell}>
@@ -138,6 +152,7 @@ export default function AttendanceHistoryPage() {
                         <td className={styles.timeCell}>{formatTime(record.checkIn)}</td>
                         <td className={styles.timeCell}>{record.checkOut ? formatTime(record.checkOut) : <span className={styles.missingBadge}>Missing</span>}</td>
                         <td className={styles.hoursCell}>{Number(record.hoursWorked || 0).toFixed(2)}h</td>
+                        {isAdmin && <td><AttendanceTimeEditor empID={record.empID} day={record} onSaved={() => { setRefresh(value => value + 1); toast.success("Attendance times updated"); }} /></td>}
                       </tr>
                     ))}</tbody>
                   </table>

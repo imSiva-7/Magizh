@@ -1,4 +1,5 @@
 "use client";
+import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import DataSkeleton from "@/components/DataSkeleton";
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -18,6 +19,7 @@ function AttendanceContent() {
   const isAdmin = session?.user?.role === "admin";
 
   const [loading, setLoading] = useState(false);
+  const [attendanceRefresh, setAttendanceRefresh] = useState(0);
   const [employees, setEmployees] = useState([]);
   const [selectedEmpID, setSelectedEmpID] = useState("");
   const [attendanceData, setAttendanceData] = useState(null);
@@ -94,7 +96,7 @@ function AttendanceContent() {
       fetchAttendanceData(selectedEmpID, month);
     }
     return () => attendanceRequestRef.current?.abort();
-  }, [selectedEmpID, month, fetchAttendanceData]);
+  }, [selectedEmpID, month, fetchAttendanceData, attendanceRefresh]);
 
   const handleEmployeeChange = (empID) => {
     attendanceRequestRef.current?.abort();
@@ -321,79 +323,30 @@ function AttendanceContent() {
             <h2>Salary Summary - {formatAttendanceMonth(month)}</h2>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Days in Month:</span>
+                <span className={styles.summaryLabel}>Days Present:</span>
+                <span className={styles.summaryValue}>{attendanceData.period.daysWorked}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Days Absent:</span>
                 <span className={styles.summaryValue}>
-                  {attendanceData.period.daysInPeriod}
+                  {attendanceData.attendance.filter(day => day.status === "absent" && day.date <= attendanceToday()).length}
                 </span>
               </div>
               <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Days Worked:</span>
+                <span className={styles.summaryLabel}>Avg Hours / Day:</span>
                 <span className={styles.summaryValue}>
-                  {attendanceData.period.daysWorked}
+                  {attendanceData.period.daysWorked > 0
+                    ? (attendanceData.summary.totalHoursWorked / attendanceData.period.daysWorked).toFixed(2)
+                    : "0.00"}h
                 </span>
               </div>
               <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Standard Hours:</span>
-                <span className={styles.summaryValue}>
-                  {attendanceData.summary.standardHours}h
-                </span>
-              </div>
-              {/* <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Regular Hours:</span>
-                <span className={styles.summaryValue}>
-                  {attendanceData.summary.totalRegularHours}h
-                </span>
-              </div>
-
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Overtime Hours:</span>
-                <span className={styles.summaryValue}>
-                  {attendanceData.summary.totalOvertimeHours}h
-                </span>
-              </div> */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Total Hours:</span>
-                <span className={styles.summaryValue}>
-                  {attendanceData.summary.totalHoursWorked}h
-                </span>
-              </div>
-
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Hourly Rate:</span>
-                <span className={styles.summaryValue}>
-                  {formatCurrency(attendanceData.summary.hourlyRate)}/h
-                </span>
-              </div>
-
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Regular Pay:</span>
-                <span className={styles.summaryValue}>
-                  {formatCurrency(attendanceData.summary.regularPay)}
-                </span>
+                <span className={styles.summaryLabel}>Salary:</span>
+                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.grossSalary)}</span>
               </div>
               <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Overtime Pay:</span>
-                <span className={styles.summaryValue}>
-                  {formatCurrency(attendanceData.summary.overtimePay)}
-                </span>
-              </div>
-              <div className={`${styles.summaryItem} ${styles.highlight}`}>
-                <span className={styles.summaryLabel}>Gross Salary:</span>
-                <span className={styles.summaryValue}>
-                  {formatCurrency(attendanceData.summary.grossSalary)}
-                </span>
-              </div>
-              <div className={`${styles.summaryItem} ${styles.deduction}`}>
-                <span className={styles.summaryLabel}>Total Advances:</span>
-                <span className={styles.summaryValue}>
-                  - {formatCurrency(attendanceData.summary.totalAdvances)}
-                </span>
-              </div>
-              <div className={`${styles.summaryItem} ${styles.netSalary}`}>
-                <span className={styles.summaryLabel}>Net Salary:</span>
-                <span className={styles.summaryValue}>
-                  {formatCurrency(attendanceData.summary.netSalary)}
-                </span>
+                <span className={styles.summaryLabel}>Advances:</span>
+                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.totalAdvances)}</span>
               </div>
             </div>
           </div>
@@ -568,6 +521,7 @@ function AttendanceContent() {
                       <th>Check In (IST)</th>
                       <th>Check Out (IST)</th>
                       <th>Hours Worked</th>
+                      {isAdmin && <th>Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -599,6 +553,7 @@ function AttendanceContent() {
                         <td className={styles.hoursCell}>
                           {day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-"}
                         </td>
+                        {isAdmin && <td>{day.status !== "absent" && <AttendanceTimeEditor empID={selectedEmpID} day={day} onSaved={() => { setAttendanceRefresh(value => value + 1); ranking.retry(); toast.success("Attendance times updated"); }} />}</td>}
                       </tr>
                     ))}
                   </tbody>
