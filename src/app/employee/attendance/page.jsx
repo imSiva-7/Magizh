@@ -8,9 +8,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/attendance.module.css";
-import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "@/utils/attendanceDates.mjs";
+import {
+  attendanceToday,
+  formatAttendanceDate,
+  formatAttendanceMonth,
+} from "@/utils/attendanceDates.mjs";
 import { exportAttendanceToPDF } from "@/utils/exportAttendance";
-import { useEmployeeRankings, EmployeeRankBadge } from "@/components/EmployeeRank";
+import {
+  useEmployeeRankings,
+  EmployeeRankBadge,
+} from "@/components/EmployeeRank";
 
 function AttendanceContent() {
   const router = useRouter();
@@ -88,7 +95,11 @@ function AttendanceContent() {
       setSelectedEmpID(empIDFromURL);
     }
     const monthFromURL = searchParams.get("month");
-    if (/^\d{4}-(0[1-9]|1[0-2])$/.test(monthFromURL || "") && monthFromURL <= currentMonth) setMonth(monthFromURL);
+    if (
+      /^\d{4}-(0[1-9]|1[0-2])$/.test(monthFromURL || "") &&
+      monthFromURL <= currentMonth
+    )
+      setMonth(monthFromURL);
   }, [searchParams, currentMonth]);
 
   useEffect(() => {
@@ -285,9 +296,7 @@ function AttendanceContent() {
       </div>
 
       {/* Loading State */}
-      {loading && (
-        <DataSkeleton label="Loading attendance data..." />
-      )}
+      {loading && <DataSkeleton label="Loading attendance data..." />}
 
       {/* Attendance Data Display */}
       {!loading && attendanceData && (
@@ -299,8 +308,15 @@ function AttendanceContent() {
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>Name:</span>
                 <span className={styles.infoValue}>
-                  {attendanceData.employee.name}
-                  {" "}{!ranking.loading && !ranking.error && <EmployeeRankBadge ranking={ranking.byEmployee.get(String(attendanceData.employee.empID))} month={month} />}
+                  {attendanceData.employee.name}{" "}
+                  {!ranking.loading && !ranking.error && (
+                    <EmployeeRankBadge
+                      ranking={ranking.byEmployee.get(
+                        String(attendanceData.employee.empID),
+                      )}
+                      month={month}
+                    />
+                  )}
                 </span>
               </div>
               <div className={styles.infoItem}>
@@ -323,66 +339,94 @@ function AttendanceContent() {
             <h2>Salary Summary - {formatAttendanceMonth(month)}</h2>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryItem}>
+                <div className={styles.summaryItem}>
+                  <span className={styles.summaryLabel}>Days in Month:</span>
+                  <span className={styles.summaryValue}>
+                    {attendanceData.period.daysInPeriod}
+                  </span>
+                </div>
                 <span className={styles.summaryLabel}>Days Present:</span>
-                <span className={styles.summaryValue}>{attendanceData.period.daysWorked}</span>
+                <span className={styles.summaryValue}>
+                  {attendanceData.period.daysWorked}
+                </span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Days Absent:</span>
                 <span className={styles.summaryValue}>
-                  {attendanceData.attendance.filter(day => day.status === "absent" && day.date <= attendanceToday()).length}
+                  {
+                    attendanceData.attendance.filter(
+                      (day) =>
+                        day.status === "absent" &&
+                        day.date <= attendanceToday(),
+                    ).length
+                  }
                 </span>
+              </div>
+
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Standard Hours:</span>
+                <span
+                  className={styles.summaryValue}
+                >{`${attendanceData.summary.standardHours}h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Hours Worked:</span>
+                <span
+                  className={styles.summaryValue}
+                >{`${attendanceData.summary.totalHoursWorked}h`}</span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Avg Hours / Day:</span>
                 <span className={styles.summaryValue}>
                   {attendanceData.period.daysWorked > 0
-                    ? (attendanceData.summary.totalHoursWorked / attendanceData.period.daysWorked).toFixed(2)
-                    : "0.00"}h
+                    ? (
+                        attendanceData.summary.totalHoursWorked /
+                        attendanceData.period.daysWorked
+                      ).toFixed(2)
+                    : "0.00"}
+                  h
                 </span>
               </div>
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Days in Month:</span>
-                <span className={styles.summaryValue}>{attendanceData.period.daysInPeriod}</span>
-              </div>
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Standard Hours:</span>
-                <span className={styles.summaryValue}>{`${attendanceData.summary.standardHours}h`}</span>
-              </div>
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Total Hours:</span>
-                <span className={styles.summaryValue}>{`${attendanceData.summary.totalHoursWorked}h`}</span>
-              </div>
-              <div className={styles.summaryItem}>
+
+              {/* <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Regular Hours:</span>
                 <span className={styles.summaryValue}>{`${attendanceData.summary.totalRegularHours}h`}</span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Overtime Hours:</span>
                 <span className={styles.summaryValue}>{`${attendanceData.summary.totalOvertimeHours}h`}</span>
-              </div>
+              </div> */}
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Hourly Rate:</span>
-                <span className={styles.summaryValue}>{`${formatCurrency(attendanceData.summary.hourlyRate)}/h`}</span>
+                <span
+                  className={styles.summaryValue}
+                >{`${formatCurrency(attendanceData.summary.hourlyRate)}/h`}</span>
               </div>
-              <div className={styles.summaryItem}>
+              {/*<div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Regular Pay:</span>
                 <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.regularPay)}</span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Overtime Pay:</span>
                 <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.overtimePay)}</span>
-              </div>
+              </div> */}
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Gross Salary:</span>
-                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.grossSalary)}</span>
+                <span className={styles.summaryValue}>
+                  {formatCurrency(attendanceData.summary.grossSalary)}
+                </span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Advances:</span>
-                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.totalAdvances)}</span>
+                <span className={styles.summaryValue}>
+                  {formatCurrency(attendanceData.summary.totalAdvances)}
+                </span>
               </div>
               <div className={`${styles.summaryItem} ${styles.netSalary}`}>
                 <span className={styles.summaryLabel}>Net Salary:</span>
-                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.netSalary)}</span>
+                <span className={styles.summaryValue}>
+                  {formatCurrency(attendanceData.summary.netSalary)}
+                </span>
               </div>
             </div>
           </div>
@@ -392,7 +436,8 @@ function AttendanceContent() {
             <div className={styles.advancesHeader}>
               <h2>Advance Payments</h2>
               {isAdmin && !showAdvanceForm && (
-                <button data-button="primary"
+                <button
+                  data-button="primary"
                   onClick={() => setShowAdvanceForm(true)}
                   className={styles.addButton}
                 >
@@ -460,14 +505,16 @@ function AttendanceContent() {
                   </div>
                 </div>
                 <div className={styles.formActions}>
-                  <button data-button="primary"
+                  <button
+                    data-button="primary"
                     type="submit"
                     disabled={isSubmitting}
                     className={styles.submitButton}
                   >
                     {isSubmitting ? "Saving..." : "Save Advance"}
                   </button>
-                  <button data-button="secondary"
+                  <button
+                    data-button="secondary"
                     type="button"
                     onClick={() => {
                       setShowAdvanceForm(false);
@@ -507,7 +554,8 @@ function AttendanceContent() {
                         <td>{advance.reason || "-"}</td>
                         {isAdmin && (
                           <td className={styles.actionsCell}>
-                            <button data-button="danger"
+                            <button
+                              data-button="danger"
                               onClick={() => handleDeleteAdvance(advance._id)}
                               className={styles.deleteButton}
                             >
@@ -531,10 +579,12 @@ function AttendanceContent() {
           {attendanceData && (
             <div className={styles.exportSection}>
               <span className={styles.entryCount}>
-                Attendance data for {attendanceData.employee.name} ({formatAttendanceMonth(month)})
+                Attendance data for {attendanceData.employee.name} (
+                {formatAttendanceMonth(month)})
               </span>
               <div className={styles.exportButtons}>
-                <button data-button="secondary"
+                <button
+                  data-button="secondary"
                   onClick={handleExportPDF}
                   className={styles.exportBtn}
                   aria-label="Export attendance as PDF"
@@ -568,7 +618,9 @@ function AttendanceContent() {
                           day.status === "absent" ? styles.absentRow : ""
                         }
                       >
-                        <td className={styles.dateCell}>{formatAttendanceDate(day.date)}</td>
+                        <td className={styles.dateCell}>
+                          {formatAttendanceDate(day.date)}
+                        </td>
                         <td className={styles.statusCell}>
                           {day.status === "absent" ? (
                             <span className={styles.absentBadge}>Absent</span>
@@ -589,7 +641,21 @@ function AttendanceContent() {
                         <td className={styles.hoursCell}>
                           {day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-"}
                         </td>
-                        {isAdmin && <td>{day.status !== "absent" && <AttendanceTimeEditor empID={selectedEmpID} day={day} onSaved={() => { setAttendanceRefresh(value => value + 1); ranking.retry(); toast.success("Attendance times updated"); }} />}</td>}
+                        {isAdmin && (
+                          <td>
+                            {day.status !== "absent" && (
+                              <AttendanceTimeEditor
+                                empID={selectedEmpID}
+                                day={day}
+                                onSaved={() => {
+                                  setAttendanceRefresh((value) => value + 1);
+                                  ranking.retry();
+                                  toast.success("Attendance times updated");
+                                }}
+                              />
+                            )}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -624,11 +690,7 @@ function AttendanceContent() {
 
 export default function EmployeeAttendance() {
   return (
-    <Suspense
-      fallback={
-        <DataSkeleton label="Loading..." />
-      }
-    >
+    <Suspense fallback={<DataSkeleton label="Loading..." />}>
       <AttendanceContent />
     </Suspense>
   );
