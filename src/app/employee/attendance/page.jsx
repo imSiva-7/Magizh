@@ -339,12 +339,12 @@ function AttendanceContent() {
             <h2>Salary Summary - {formatAttendanceMonth(month)}</h2>
             <div className={styles.summaryGrid}>
               <div className={styles.summaryItem}>
-                <div className={styles.summaryItem}>
-                  <span className={styles.summaryLabel}>Days in Month:</span>
-                  <span className={styles.summaryValue}>
-                    {attendanceData.period.daysInPeriod}
-                  </span>
-                </div>
+                <span className={styles.summaryLabel}>Days in Month:</span>
+                <span className={styles.summaryValue}>
+                  {attendanceData.period.daysInPeriod}
+                </span>
+              </div>
+              <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Days Present:</span>
                 <span className={styles.summaryValue}>
                   {attendanceData.period.daysWorked}
