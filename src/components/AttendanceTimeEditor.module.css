@@ -14,6 +14,13 @@
 .timeColumns label { display: grid; gap: 0.4rem; min-width: 0; font-size: 0.75rem; color: var(--text-muted); }
 .timeColumns select { width: 100%; min-width: 0; min-height: 52px; border: 1px solid var(--border); border-radius: 0.6rem; padding: 0.4rem; background: var(--surface); color: var(--text); font-size: 1.2rem; font-weight: 600; }
 .checkbox { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; font-size: 0.9rem; }
+:global(:root) :global(body) .picker .timeColumns select:not([multiple]):not([size]) {
+  min-height: 52px;
+  padding: 0.4rem 1.35rem 0.4rem 0.35rem;
+  background-position: right 0.2rem center;
+  background-size: 14px;
+  font-size: 1rem;
+}
 .checkbox input { width: 20px; height: 20px; accent-color: var(--brand); }
 .form small { color: var(--text-muted); }
 .error { color: #b91c1c; margin: 0; }

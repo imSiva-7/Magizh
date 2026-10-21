@@ -341,12 +341,48 @@ function AttendanceContent() {
                 </span>
               </div>
               <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Salary:</span>
+                <span className={styles.summaryLabel}>Days in Month:</span>
+                <span className={styles.summaryValue}>{attendanceData.period.daysInPeriod}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Standard Hours:</span>
+                <span className={styles.summaryValue}>{`${attendanceData.summary.standardHours}h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Total Hours:</span>
+                <span className={styles.summaryValue}>{`${attendanceData.summary.totalHoursWorked}h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Regular Hours:</span>
+                <span className={styles.summaryValue}>{`${attendanceData.summary.totalRegularHours}h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Overtime Hours:</span>
+                <span className={styles.summaryValue}>{`${attendanceData.summary.totalOvertimeHours}h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Hourly Rate:</span>
+                <span className={styles.summaryValue}>{`${formatCurrency(attendanceData.summary.hourlyRate)}/h`}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Regular Pay:</span>
+                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.regularPay)}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Overtime Pay:</span>
+                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.overtimePay)}</span>
+              </div>
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Gross Salary:</span>
                 <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.grossSalary)}</span>
               </div>
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Advances:</span>
                 <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.totalAdvances)}</span>
+              </div>
+              <div className={`${styles.summaryItem} ${styles.netSalary}`}>
+                <span className={styles.summaryLabel}>Net Salary:</span>
+                <span className={styles.summaryValue}>{formatCurrency(attendanceData.summary.netSalary)}</span>
               </div>
             </div>
           </div>
