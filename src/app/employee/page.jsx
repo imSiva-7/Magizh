@@ -97,6 +97,8 @@ export default function Employee() {
       name: "",
       empID: "",
       salary: "",
+      paidLeaveDays: "2",
+      joiningDate: "",
       mobile: "",
       gender: "",
     }),
@@ -181,6 +183,8 @@ export default function Employee() {
           return "Employee ID must be exactly 4 digits";
         return "";
 
+      case "paidLeaveDays":
+        return ![2, 4].includes(Number(value)) ? "Choose new employee (2 days) or old employee (4 days)" : "";
       case "salary":
         if (!value?.toString().trim()) return "Salary is required";
         const salary = parseFloat(value);
@@ -217,7 +221,7 @@ export default function Employee() {
   const validateFullForm = useCallback(() => {
     const errors = {};
 
-    const fieldsToValidate = ["name", "empID", "salary", "mobile", "gender"];
+    const fieldsToValidate = ["name", "empID", "salary", "paidLeaveDays", "mobile", "gender"];
 
     fieldsToValidate.forEach((field) => {
       const error = validateField(field, formData[field]);
@@ -339,6 +343,8 @@ export default function Employee() {
       name: formData.name.trim(),
       empID: formData.empID,
       salary: parseFloat(formData.salary),
+      paidLeaveDays: Number(formData.paidLeaveDays),
+      joiningDate: formData.joiningDate,
       mobile: formData.mobile.trim(),
       gender: formData.gender.trim(),
     };
@@ -406,6 +412,8 @@ export default function Employee() {
         empID: employee.empID || "",
         originalEmpID: employee.empID || "", // Store original for comparison
         salary: employee.salary?.toString() || "",
+        paidLeaveDays: String(employee.paidLeaveDays ?? 4),
+        joiningDate: employee.joiningDate || "",
         mobile: employee.mobile || "",
         gender: employee.gender || "",
       });
@@ -565,6 +573,18 @@ export default function Employee() {
               disabled={isSubmitting}
               inputMode="decimal"
             />
+
+            <FormInput id="f-joining-date" label="Joining date" type="date" value={formData.joiningDate} onChange={(value) => handleInputChange("joiningDate", value)} disabled={isSubmitting} helperText="Salary and absence counts start on this date. Leave blank for existing employees whose joining date is unknown." />
+
+            <div className={styles.inputGroup}>
+              <label htmlFor="f-paid-leave">Monthly leave allowance</label>
+              <select id="f-paid-leave" className={styles.input} value={formData.paidLeaveDays} onChange={(event) => handleInputChange("paidLeaveDays", event.target.value)} disabled={isSubmitting}>
+                <option value="2">New employee - 2 days per month</option>
+                <option value="4">Old employee - 4 days per month</option>
+              </select>
+              <span className={styles.helperText}>Please use your leave. Unused leave expires each month with no extra payment.</span>
+              {formErrors.paidLeaveDays && <span className={styles.errorText}>{formErrors.paidLeaveDays}</span>}
+            </div>
 
             <FormInput
               id="f-mobile"

@@ -49,7 +49,7 @@ export async function PATCH(request) {
       }],
     };
     const path = `attendance.${date.slice(0, 7)}.days.${date.slice(8)}`;
-    const result = await employees.updateOne({ _id: employee._id, [path]: { $eq: previous } }, { $set: { [path]: next, updatedAt: now } });
+    const result = await employees.updateOne({ _id: employee._id, [path]: { $eq: previous } }, { $set: { [path]: next, [`payroll.${date.slice(0, 7)}`]: null, updatedAt: now } });
     if (!result.matchedCount) return NextResponse.json({ error: "Attendance changed. Refresh and try again." }, { status: 409 });
     return NextResponse.json({ message: "Attendance times updated", hoursWorked: next.hoursWorked });
   } catch (error) {

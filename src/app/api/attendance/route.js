@@ -1,3 +1,4 @@
+import { buildPayroll, validMonth } from "@/lib/payroll";
 import { month as indiaMonth } from "@/lib/india-date.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
@@ -35,7 +36,7 @@ export async function GET(request) {
       );
     }
 
-    if (!month) {
+    if (!validMonth(month)) {
       return NextResponse.json(
         { error: "month is required (format: YYYY-MM)" },
         { status: 400 }
@@ -52,124 +53,7 @@ export async function GET(request) {
       );
     }
 
-    // Get attendance data for the requested month - INSTANT ACCESS!
-    const monthData = employee.attendance?.[month] || { 
-      days: {}, 
-      totalHours: 0, 
-      regularHours: 0, 
-      overtimeHours: 0, 
-      daysWorked: 0 
-    };
-    
-    // Get advances for the month - INSTANT ACCESS!
-    const advances = employee.advances?.[month] || [];
-
-    // Calculate days in the month
-    const [year, monthNum] = month.split("-");
-    const daysInPeriod = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
-
-    // Create a map of existing attendance records
-    const attendanceMap = new Map();
-    Object.keys(monthData.days || {}).forEach(dayKey => {
-      const day = monthData.days[dayKey];
-      attendanceMap.set(day.date, {
-        date: day.date,
-        checkIn: day.checkIn,
-        checkOut: day.checkOut || "",
-        hoursWorked: day.hoursWorked || 0,
-        regularHours: day.regularHours || 0,
-        overtimeHours: day.overtimeHours || 0,
-        punches: day.punches || [],
-        status: "present"
-      });
-    });
-
-    // Generate all dates in the month and mark absent days (only up to today)
-    const attendanceArray = [];
-    const [currentYear, currentMonth, currentDay] = getTodayDate().split("-").map(Number);
-    
-    // Determine the last day to show (either end of month or today, whichever is earlier)
-    let lastDayToShow = daysInPeriod;
-    if (parseInt(year) === currentYear && parseInt(monthNum) === currentMonth) {
-      lastDayToShow = currentDay; // Only show up to today for current month
-    }
-    
-    for (let day = 1; day <= lastDayToShow; day++) {
-      const dateStr = `${year}-${monthNum}-${String(day).padStart(2, '0')}`;
-      
-      if (attendanceMap.has(dateStr)) {
-        // Employee was present
-        attendanceArray.push(attendanceMap.get(dateStr));
-      } else {
-        // Employee was absent
-        attendanceArray.push({
-          date: dateStr,
-          checkIn: "-",
-          checkOut: "-",
-          hoursWorked: 0,
-          regularHours: 0,
-          overtimeHours: 0,
-          punches: [],
-          status: "absent"
-        });
-      }
-    }
-
-    // Calculate totals from daily data (only present days)
-    const presentDays = attendanceArray.filter(day => day.status === "present");
-    const totalHoursWorked = presentDays.reduce((sum, day) => sum + day.hoursWorked, 0);
-    const totalRegularHours = presentDays.reduce((sum, day) => sum + day.regularHours, 0);
-    const totalOvertimeHours = presentDays.reduce((sum, day) => sum + day.overtimeHours, 0);
-
-    const daysWorked = presentDays.length;
-
-    // Salary calculations
-    const standardHours = daysInPeriod * 10; // 10 hours per day
-    const hourlyRate = employee.salary / standardHours;
-    const overtimeRate = hourlyRate; // Same rate as regular pay
-
-    const regularPay = totalRegularHours * hourlyRate;
-    const overtimePay = totalOvertimeHours * overtimeRate;
-    const grossSalary = regularPay + overtimePay;
-
-    // Calculate total advances
-    const totalAdvances = advances.reduce((sum, adv) => sum + (adv.amount || 0), 0);
-    const netSalary = grossSalary - totalAdvances;
-
-    // Get start and end dates
-    const startDate = attendanceArray.length > 0 ? attendanceArray[0].date : `${month}-01`;
-    const endDate = attendanceArray.length > 0 ? attendanceArray[attendanceArray.length - 1].date : `${month}-${String(daysInPeriod).padStart(2, '0')}`;
-
-    return NextResponse.json({
-      employee: {
-        empID: employee.empID,
-        name: employee.name,
-        salary: employee.salary,
-        mobile: employee.mobile,
-      },
-      period: {
-        startDate,
-        endDate,
-        daysInPeriod,
-        daysWorked,
-        month,
-      },
-      attendance: attendanceArray,
-      summary: {
-        totalHoursWorked: parseFloat(totalHoursWorked.toFixed(2)),
-        totalRegularHours: parseFloat(totalRegularHours.toFixed(2)),
-        totalOvertimeHours: parseFloat(totalOvertimeHours.toFixed(2)),
-        standardHours,
-        hourlyRate: parseFloat(hourlyRate.toFixed(2)),
-        overtimeRate: parseFloat(overtimeRate.toFixed(2)),
-        regularPay: parseFloat(regularPay.toFixed(2)),
-        overtimePay: parseFloat(overtimePay.toFixed(2)),
-        grossSalary: parseFloat(grossSalary.toFixed(2)),
-        totalAdvances: parseFloat(totalAdvances.toFixed(2)),
-        netSalary: parseFloat(netSalary.toFixed(2)),
-      },
-      advances,
-    });
+    return NextResponse.json(buildPayroll(employee, month, getTodayDate()));
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json(
@@ -192,7 +76,7 @@ export async function POST(request) {
     const data = await request.json();
 
     // Validate required fields
-    if (!data.empID) {
+    if (typeof data.empID !== "string" || !data.empID) {
       return NextResponse.json(
         { error: "empID is required" },
         { status: 400 }
@@ -216,6 +100,7 @@ export async function POST(request) {
     }
 
     const month = data.month || indiaMonth(); // YYYY-MM
+    if (!validMonth(month)) return NextResponse.json({ error: "Invalid month" }, { status: 400 });
     const advanceData = {
       _id: new ObjectId().toString(),
       amount: parseFloat(data.amount),
@@ -237,7 +122,7 @@ export async function POST(request) {
       { empID: data.empID },
       { 
         $push: { [`advances.${month}`]: advanceData },
-        $set: { updatedAt: new Date() }
+        $set: { [`payroll.${month}`]: null, updatedAt: new Date() }
       }
     );
 
@@ -271,7 +156,7 @@ export async function PUT(request) {
     const empID = searchParams.get("empID");
     const month = searchParams.get("month");
 
-    if (!id || !empID || !month) {
+    if (!id || !empID || !validMonth(month)) {
       return NextResponse.json(
         { error: "id, empID, and month are required" },
         { status: 400 }
@@ -304,6 +189,7 @@ export async function PUT(request) {
       { 
         $set: { 
           [`advances.${month}`]: advances,
+          [`payroll.${month}`]: null,
           updatedAt: new Date()
         } 
       }
@@ -330,7 +216,7 @@ export async function DELETE(request) {
     const empID = searchParams.get("empID");
     const month = searchParams.get("month");
 
-    if (!id || !empID || !month) {
+    if (!id || !empID || !validMonth(month)) {
       return NextResponse.json(
         { error: "id, empID, and month are required" },
         { status: 400 }
@@ -344,7 +230,7 @@ export async function DELETE(request) {
       { empID },
       { 
         $pull: { [`advances.${month}`]: { _id: id } },
-        $set: { updatedAt: new Date() }
+        $set: { [`payroll.${month}`]: null, updatedAt: new Date() }
       }
     );
 

@@ -2,6 +2,7 @@ import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
+import { validJoiningDate } from "@/lib/payroll";
 
 const METHOD_NAMES = {
   GET: "GET /api/employee",
@@ -84,6 +85,7 @@ export async function POST(request) {
   try {
     const db = await getDatabase();
     const data = await request.json();
+    if (data.joiningDate !== undefined && data.joiningDate !== "" && !validJoiningDate(data.joiningDate)) return NextResponse.json({ error: "Enter a valid joining date" }, { status: 400 });
 
     // Validate empID format (4 digits)
     if (!data.empID || !/^\d{4}$/.test(data.empID)) {
@@ -141,11 +143,16 @@ export async function POST(request) {
       );
     }
 
+    const paidLeaveDays = data.paidLeaveDays === undefined ? 2 : Number(data.paidLeaveDays);
+    if (![2, 4].includes(paidLeaveDays)) return NextResponse.json({ error: "Monthly leave must be 2 days for new employees or 4 days for old employees" }, { status: 400 });
+
     // Insert employee data
     const employeeData = {
       name: data.name.trim(),
       empID: data.empID,
       salary: parseFloat(data.salary),
+      paidLeaveDays,
+      joiningDate: data.joiningDate || null,
       mobile: data.mobile?.trim() || "",
       gender: data.gender.trim(),
       attendance: {}, // Initialize empty attendance object
@@ -228,11 +235,15 @@ export async function PUT(request) {
       }
     }
 
+    if (data.paidLeaveDays !== undefined && (![2, 4].includes(Number(data.paidLeaveDays)))) return NextResponse.json({ error: "Monthly leave must be 2 days for new employees or 4 days for old employees" }, { status: 400 });
+
     // Prepare update data
     const updateData = { updatedAt: new Date() };
+    if (data.joiningDate !== undefined) updateData.joiningDate = data.joiningDate || null;
+    if (data.paidLeaveDays !== undefined) updateData.paidLeaveDays = Number(data.paidLeaveDays);
     if (data.name !== undefined) updateData.name = data.name.trim();
     if (data.empID !== undefined) updateData.empID = data.empID;
-    if (data.salary !== undefined) updateData.salary = parseFloat(data.salary);
+    if (data.salary !== undefined) { updateData.salary = parseFloat(data.salary); updateData.payroll = {}; }
     if (data.mobile !== undefined) updateData.mobile = data.mobile.trim();
     if (data.gender !== undefined) updateData.gender = data.gender.trim();
 

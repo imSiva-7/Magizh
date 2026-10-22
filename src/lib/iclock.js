@@ -149,6 +149,7 @@ async function saveEmployee(db, employeeId, records) {
       filter[path] =
         previous === undefined ? { $exists: false } : { $eq: previous };
       changes[path] = next;
+      changes[`payroll.${dayRecords[0].date.slice(0, 7)}`] = null;
     }
     if (!Object.keys(changes).length) return { unmatched: 0 };
     const result = await employees.updateOne(filter, {

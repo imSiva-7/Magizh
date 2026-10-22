@@ -21,7 +21,7 @@ const formatCurrency = (amount) => {
 };
 
 const formatTime = (status, time) => {
-  if (status === "Absent" || !time) return "-";
+  if (status !== "Present" || !time) return "-";
   try {
     const [hours, minutes] = time.split(":");
     const hour = parseInt(hours, 10);
@@ -33,7 +33,7 @@ const formatTime = (status, time) => {
   }
 };
 
-export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
+export const exportAttendanceToPDF = (attendanceData, month, fileName, returnBytes = false) => {
   if (!attendanceData) {
     alert("No attendance data to export");
     return;
@@ -155,7 +155,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
   const daysPresent = Number(attendanceData.period?.daysWorked || 0);
   const daysAbsent = Array.isArray(attendanceData.attendance)
     ? attendanceData.attendance.filter(
-        (day) => day.status === "absent" && day.date <= attendanceToday()
+        (day) => day.status !== "present" && day.date <= attendanceToday()
       ).length
     : 0;
   const totalHoursWorked = Number(attendanceData.summary?.totalHoursWorked || 0);
@@ -177,9 +177,13 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
   // Summary Table: Clean, modern invoice-like design with neat bottom dividers
   const summaryRows = [
     ["Days Present", `${daysPresent} days`],
-    ["Days Absent", `${daysAbsent} days`],
+    ["Absent Days (Including Leave)", `${daysAbsent} days`],
+    ["Paid Leave Used", `${attendanceData.summary.paidLeaveDays || 0} days`],
+    ["Excess Leave Days", `${attendanceData.summary.excessLeaveDays || 0} days`],
+    ["Paid Leave Remaining", `${attendanceData.summary.remainingPaidLeave || 0} days`],
+    ["Actual Hours Worked", `${totalHoursWorked}h`],
     ["Avg Hours / Day", `${avgHours}h`],
-    ["Salary", formatCurrency(salary)],
+    ["Gross Salary", formatCurrency(salary)],
     ["Advances", advances > 0 ? `- ${formatCurrency(advances)}` : formatCurrency(0)],
     ["Net Salary", formatCurrency(netSalary)],
   ];
@@ -329,7 +333,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
     currentY += 5;
 
     const attendanceRows = attendanceData.attendance.map((day) => {
-      const status = day.status === "absent" ? "Absent" : "Present";
+      const status = ({ present: "Present", paid_leave: "Paid Leave", excess_leave: "Absent", unpaid_leave: "Absent" })[day.status] || "Absent";
       return [
         formatAttendanceDate(day.date),
         status,
@@ -431,5 +435,6 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName) => {
   }
 
   // Save PDF
+  if (returnBytes) return doc.output("arraybuffer");
   doc.save(`${fileName || "attendance-report"}.pdf`);
 };
