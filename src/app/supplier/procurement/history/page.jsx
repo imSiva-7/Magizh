@@ -444,11 +444,11 @@ function ProcurementHistoryContent() {
         }`,
       );
 
-      // Reset the form but keep the same supplier selected for fast repeat entry
+      // Keep the supplier, date, and time period for consecutive entries.
       setFormData({
         ...makeInitialForm(),
         date: formData.date, // preserve the same date for consecutive entries
-        time: getCurrentTimePeriod(),
+        time: formData.time,
       });
       setFormErrors({});
 

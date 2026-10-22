@@ -574,7 +574,7 @@ function ProcurementContent() {
         editingId._id ? "Updated successfully" : "Added successfully",
       );
       await fetchAllData();
-      resetForm(formData.date);
+      resetForm(formData.date, formData.time);
     } catch (error) {
       console.error("Submit error:", error);
       toast.error(error.message || "Failed to save record");
@@ -627,10 +627,10 @@ function ProcurementContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const resetForm = (Pdate) => {
+  const resetForm = (Pdate, timePeriod = getCurrentTimePeriod()) => {
     setFormData({
       ...initialForm,
-      time: getCurrentTimePeriod(),
+      time: timePeriod,
       ...(Pdate && { date: Pdate }),
     });
     setEditingId({});
