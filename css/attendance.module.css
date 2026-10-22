@@ -1097,3 +1097,15 @@
   font-weight: 600;
   line-height: 1.7;
 }
+
+.calculationSteps {
+  padding-left: 1.5rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.calculationSteps li {
+  padding-left: 0.25rem;
+  margin-bottom: 1rem;
+  overflow-wrap: anywhere;
+}

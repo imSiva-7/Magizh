@@ -392,6 +392,31 @@ function AttendanceContent() {
             </div>
           </div>
 
+          <section className={styles.summaryCard} aria-labelledby="salary-calculation-title">
+            <h2 id="salary-calculation-title">How {attendanceData.employee.name}’s salary is calculated</h2>
+            <p>Actual figures for {formatAttendanceMonth(month)}, using attendance from {formatAttendanceDate(attendanceData.period.startDate)} to {formatAttendanceDate(attendanceData.period.endDate)}.</p>
+            <ol className={styles.calculationSteps}>
+              <li><strong>Find the hourly rate.</strong> Monthly salary ÷ days in month ÷ 10 hours per day.<br />
+                {formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 10 = ₹{(Number(attendanceData.employee.salary) / attendanceData.period.daysInPeriod / 10).toFixed(6)} per hour.
+              </li>
+              <li><strong>Count recorded hours worked.</strong> {attendanceData.summary.totalHoursWorked} hours, including {attendanceData.summary.totalOvertimeHours} overtime hours. Overtime uses the same hourly rate and is counted once.</li>
+              <li><strong>Calculate earned salary.</strong> Hours worked × hourly rate.<br />
+                {attendanceData.summary.totalHoursWorked} × ({formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 10) = <strong>{formatCurrency(attendanceData.summary.grossSalary)}</strong>.
+              </li>
+              <li><strong>Subtract advances.</strong> Earned salary − advance payments.<br />
+                {formatCurrency(attendanceData.summary.grossSalary)} − {formatCurrency(attendanceData.summary.totalAdvances)} = <strong>{formatCurrency(attendanceData.summary.netSalary)} net salary</strong>.
+              </li>
+              <li><strong>Check the daily averages.</strong><br />
+                Hours: {attendanceData.summary.totalHoursWorked} ÷ {attendanceData.summary.workedDays} worked days = {attendanceData.summary.workedDays ? (attendanceData.summary.totalHoursWorked / attendanceData.summary.workedDays).toFixed(2) : "0.00"} hours per day.<br />
+                Salary: {formatCurrency(attendanceData.summary.grossSalary)} ÷ {attendanceData.summary.workedDays} worked days = {formatCurrency(attendanceData.summary.workedDays ? attendanceData.summary.grossSalary / attendanceData.summary.workedDays : 0)} per day, before advances.
+                {attendanceData.summary.workedDays === 0 && " With no worked days, both averages are shown as zero."}
+              </li>
+            </ol>
+            <p><strong>Leave:</strong> {attendanceData.summary.paidLeaveDays} used × 10 hours × hourly rate = {formatCurrency(attendanceData.summary.paidLeavePay)} displayed leave value. This value is not added to salary. Unused leave earns no money. {attendanceData.summary.paidLeaveEligible === false ? "There is no paid leave allowance during the employee’s creation month." : "The monthly allowance is " + attendanceData.summary.paidLeaveAllowance + " days."}</p>
+            <p><strong>Joining date:</strong> {attendanceData.employee.joiningDate ? formatAttendanceDate(attendanceData.employee.joiningDate) + ". Hours before this date are excluded." : "No joining date is recorded; attendance is counted from the start of the month."} The hourly rate always uses all calendar days in the month.</p>
+            <p>Rates are shown rounded for readability; calculations use the full rate and final amounts are rounded to two decimals. A negative net salary means advances exceed earned pay.</p>
+          </section>
+
           {/* Advances Section */}
           <div className={styles.advancesSection}>
             <div className={styles.advancesHeader}>
