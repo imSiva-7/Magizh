@@ -245,6 +245,9 @@ export async function DELETE(request) {
       );
     }
 
+    const subscriptionCount = await db.collection("customer_subscriptions").countDocuments({ customerId: new ObjectId(id), status: { $in: ["active", "paused"] } });
+    if (subscriptionCount) return NextResponse.json({ error: "Cancel this customer’s subscriptions before deleting the customer" }, { status: 409 });
+
     // 2. Delete Customer
     const result = await db
       .collection("customers")

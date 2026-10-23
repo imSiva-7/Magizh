@@ -43,7 +43,8 @@ for (const path of ["/customer", "/customer/analytics", "/customer/order/history
   test(`${path} shows sales and order payments with mobile layout`, async ({ page }) => {
     await mockData(page);
     await page.goto(path);
-    if (!path.includes("analytics")) {
+    if (path.includes("history")) await expect(page.getByTestId("stat-trend")).toHaveCount(4);
+    if (!path.includes("analytics") && !path.includes("history")) {
       await expect(page.getByRole("heading").first()).toBeVisible();
       await expect(page.getByTestId("customer-trend-chart")).toHaveCount(0);
       await expect(page.getByTestId("customer-payments-chart")).toHaveCount(0);
@@ -73,7 +74,7 @@ test("analytics can retry chart failures and show an empty period", async ({ pag
   await expect(page.getByText("No orders in this date range.").first()).toBeVisible();
 });
 
-test("order history keeps four stats graphs without large analytics and uses actual receipts", async ({ page }) => {
+test("order history keeps four stats graphs alongside analytics and uses actual receipts", async ({ page }) => {
   await mockData(page);
   await page.goto("/customer/order/history");
   const summary = page.getByRole("region", { name: "Summary", exact: false });
@@ -89,8 +90,9 @@ test("order history keeps four stats graphs without large analytics and uses act
     return line.left >= card.left + card.width * .48 && line.width <= card.width * .51;
   })).toBe(true);
   await expect(summary.getByTestId("customer-trend-chart")).toHaveCount(0);
-  await expect(page.getByRole("region", { name: "Order analytics", exact: true })).toHaveCount(0);
-  await expect(page.getByTestId("customer-trend-chart")).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Order history analytics", exact: true })).toBeVisible();
+  await expect(page.getByTestId("customer-trend-chart")).toBeVisible();
+  await expect(page.getByTestId("customer-payments-chart")).toBeVisible();
   await page.getByLabel("From Date", { exact: true }).fill("2020-01-01");
   await page.getByLabel("To Date", { exact: true }).fill("2020-01-02");
   await expect(summary.getByText("Received", { exact: true }).locator("..")).toContainText("₹0");

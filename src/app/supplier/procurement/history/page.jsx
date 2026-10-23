@@ -1,5 +1,6 @@
 "use client";
 import DataSkeleton from "@/components/DataSkeleton";
+import SupplierCharts from "@/components/SupplierCharts";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -924,6 +925,10 @@ function ProcurementHistoryContent() {
         )
       )}
 
+
+      <section aria-label="Procurement history analytics">
+        <SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} />
+      </section>
 
       {/* EXPORT */}
       {!loading && summary.count > 0 && (

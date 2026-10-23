@@ -33,6 +33,7 @@ const desktopNavItems = [
     children: [
       { name: "Order History", path: "/customer/order/history" },
       { name: "Order Payments", path: "/customer/payments" },
+      // { name: "Subscriptions", path: "/customer/subscriptions" },
     ],
   },
   {
@@ -43,7 +44,6 @@ const desktopNavItems = [
       { name: "Attendance History", path: "/employee/attendance/history" },
     ],
   },
-
 ];
 
 // Mobile navigation items – must include all important pages
@@ -56,6 +56,7 @@ const mobileNavItems = [
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
   { name: "Customers", path: "/customer" },
+  // { name: "Subscriptions", path: "/customer/subscriptions" },
   { name: "Order History", path: "/customer/order/history" },
   { name: "Order Payments", path: "/customer/payments" },
   { name: "Employees", path: "/employee" },
@@ -80,7 +81,7 @@ export default function Header() {
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1100px)");
     const closeMenu = () => setMobileMenuOpen(false);
-    const handleDesktop = event => {
+    const handleDesktop = (event) => {
       if (event.matches) closeMenu();
     };
     desktop.addEventListener("change", handleDesktop);
@@ -130,12 +131,17 @@ export default function Header() {
       panel?.querySelector("button")?.focus();
       const trapFocus = (event) => {
         if (event.key !== "Tab") return;
-        const items = panel?.querySelectorAll('a[href], button:not(:disabled)');
+        const items = panel?.querySelectorAll("a[href], button:not(:disabled)");
         if (!items?.length) return;
         const first = items[0];
         const last = items[items.length - 1];
-        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       };
       document.addEventListener("keydown", trapFocus);
       return () => {
@@ -154,9 +160,13 @@ export default function Header() {
     <header className={styles.header}>
       <div className={styles.headerContainer}>
         {/* Logo */}
-        <Link href="/" className={styles.logoSection} aria-label="Magizh Dairy home">
+        <Link
+          href="/"
+          className={styles.logoSection}
+          aria-label="Magizh Dairy home"
+        >
           <Image
-            src="/favicon.ico"
+            src="/magizh-logo.png"
             alt="Magizh Dairy"
             width={120}
             height={48}
@@ -176,7 +186,8 @@ export default function Header() {
                 onMouseLeave={() => setOpenDropdown(null)}
                 onFocusCapture={() => setOpenDropdown(item.path)}
                 onBlurCapture={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) setOpenDropdown(null);
+                  if (!event.currentTarget.contains(event.relatedTarget))
+                    setOpenDropdown(null);
                 }}
                 onClick={() => setOpenDropdown(null)}
                 onKeyDown={(event) => {
@@ -188,10 +199,23 @@ export default function Header() {
               >
                 <Link
                   href={item.path}
-                  className={`${styles.navButton} ${(item.path === "/" ? pathname === "/" : pathname.startsWith(item.path)) ? styles.active : ""
-                    }`}
+                  className={`${styles.navButton} ${
+                    (
+                      item.path === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(item.path)
+                    )
+                      ? styles.active
+                      : ""
+                  }`}
                   aria-current={
-                    (item.path === "/" ? pathname === "/" : pathname.startsWith(item.path)) ? "page" : undefined
+                    (
+                      item.path === "/"
+                        ? pathname === "/"
+                        : pathname.startsWith(item.path)
+                    )
+                      ? "page"
+                      : undefined
                   }
                 >
                   {item.name}
@@ -205,7 +229,10 @@ export default function Header() {
                             href={child.path}
                             className={styles.dropdownItem}
                           >
-                            <span className={styles.arrow} aria-hidden="true">↳ </span> {child.name}
+                            <span className={styles.arrow} aria-hidden="true">
+                              ↳{" "}
+                            </span>{" "}
+                            {child.name}
                           </Link>
                         </li>
                       ))
@@ -215,7 +242,10 @@ export default function Header() {
                           href={item.children.path}
                           className={styles.dropdownItem}
                         >
-                          <span className={styles.arrow} aria-hidden="true">↳ </span> {item.children.name}
+                          <span className={styles.arrow} aria-hidden="true">
+                            ↳{" "}
+                          </span>{" "}
+                          {item.children.name}
                         </Link>
                       </li>
                     )}
@@ -233,7 +263,8 @@ export default function Header() {
               <span className={styles.userName}>
                 Hi, {session.user?.name || "User"}
               </span>
-              <button data-button="icon"
+              <button
+                data-button="icon"
                 onClick={() => signOut()}
                 className={styles.logoutButton}
                 aria-label="Sign out"
@@ -247,8 +278,11 @@ export default function Header() {
                 />
               </button>
             </div>
-          ) : status === "loading" ? <span className={styles.sessionLoading}>Connecting…</span> : (
-            <button data-button="secondary"
+          ) : status === "loading" ? (
+            <span className={styles.sessionLoading}>Connecting…</span>
+          ) : (
+            <button
+              data-button="secondary"
               onClick={() => router.push("/login")}
               className={styles.loginButton}
               aria-label="Log in"
@@ -264,7 +298,8 @@ export default function Header() {
             </button>
           )}
 
-          <button data-button="icon"
+          <button
+            data-button="icon"
             ref={menuButtonRef}
             className={styles.mobileMenuButton}
             onClick={toggleMobileMenu}
@@ -277,7 +312,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Navigation Overlay */}
-        {(
+        {
           <>
             <div
               className={`${styles.mobileBackdrop} ${mobileMenuOpen ? styles.menuVisible : ""}`}
@@ -296,7 +331,8 @@ export default function Header() {
             >
               <div className={styles.mobileNavHeader}>
                 <span className={styles.mobileNavTitle}>Your workspace</span>
-                <button data-button="icon"
+                <button
+                  data-button="icon"
                   onClick={() => setMobileMenuOpen(false)}
                   className={styles.mobileCloseBtn}
                   aria-label="Close menu"
@@ -310,8 +346,9 @@ export default function Header() {
                     <li key={item.path}>
                       <Link
                         href={item.path}
-                        className={`${styles.mobileNavButton} ${pathname === item.path ? styles.mobileActive : ""
-                          }`}
+                        className={`${styles.mobileNavButton} ${
+                          pathname === item.path ? styles.mobileActive : ""
+                        }`}
                         onClick={() => setMobileMenuOpen(false)}
                         aria-current={
                           pathname === item.path ? "page" : undefined
@@ -323,7 +360,8 @@ export default function Header() {
                   ))}
                   {session && (
                     <li>
-                      <button data-button="secondary"
+                      <button
+                        data-button="secondary"
                         onClick={() => {
                           signOut();
                           setMobileMenuOpen(false);
@@ -338,7 +376,7 @@ export default function Header() {
               </nav>
             </div>
           </>
-        )}
+        }
       </div>
     </header>
   );

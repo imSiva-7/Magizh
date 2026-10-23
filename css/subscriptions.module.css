@@ -1,0 +1,25 @@
+.page { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; color: var(--text); }
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.panel { margin: 1.25rem 0; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface, white); }
+.panel h2 { margin: 0 0 0.75rem; font-size: 1.2rem; }
+.panel p { line-height: 1.65; }
+.fields { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.fields label, .actions label { display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.9rem; font-weight: 500; }
+.fields input:not([type="checkbox"]), .fields select, .actions input { width: 100%; min-width: 0; padding: 0.65rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface, white); color: var(--text); font: inherit; }
+.weekdays { grid-column: 1 / -1; border: 1px solid var(--border); border-radius: 0.5rem; display: flex; gap: 1rem; flex-wrap: wrap; padding: 0.75rem; }
+.weekdays label, .fields .check { flex-direction: row; align-items: center; }
+.products { grid-column: 1 / -1; }
+.product { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+.total { align-self: center; font-size: 1.15rem; }
+.list { display: grid; gap: 1rem; }
+.subscription { padding: 1.25rem; border: 1px solid var(--border); border-radius: 0.75rem; }
+.subscription h3 { margin: 0; }
+.badge { padding: 0.3rem 0.75rem; background: #f1f5f9; color: #475569; border-radius: 1rem; text-transform: capitalize; font-size: 0.85rem; font-weight: 600; }
+.badge[data-status="active"] { background: #dcfce7; color: #166534; }
+.badge[data-status="paused"] { background: #fef9c3; color: #854d0e; }
+.actions { margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; }
+.skips { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; font-size: 0.9rem; }
+.error { padding: 0.75rem; background: #fef2f2; color: #991b1b; border-radius: 0.5rem; }
+.message { padding: 0.75rem; background: #f0fdf4; color: #166534; border-radius: 0.5rem; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 650px) { .fields { grid-template-columns: 1fr; } .product { grid-template-columns: 1fr 1fr; } .product strong { grid-column: 1 / -1; } .panel { padding: 1rem; } }

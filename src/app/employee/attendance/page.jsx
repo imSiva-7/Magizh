@@ -350,33 +350,89 @@ function AttendanceContent() {
           <div className={styles.summaryCard}>
             <h2>Attendance & Salary Stats — {formatAttendanceMonth(month)}</h2>
             <p className={styles.salaryFormula}>
-              Salary = hours worked × hourly rate. Hourly rate = monthly salary ÷ days in month ÷ 10. Advances are subtracted from earned pay.
+              Salary = hours worked × hourly rate. Hourly rate = monthly salary
+              ÷ days in month ÷ 10. Advances are subtracted from earned pay.
             </p>
-            {attendanceData.summary.paidLeaveEligible === false && <p>Paid leave starts the month after this employee was created.</p>}
+            {attendanceData.summary.paidLeaveEligible === false && (
+              <p>
+                Paid leave starts the month after this employee was created.
+              </p>
+            )}
             <div className={styles.summaryGrid}>
               {[
                 ["Days in Month", attendanceData.period.daysInPeriod],
-                ["Employment Days Elapsed", attendanceData.summary.elapsedDays],
+                ["Days Elapsed", attendanceData.summary.elapsedDays],
                 ["Days Remaining", attendanceData.summary.remainingDays],
-                ["Worked Days", attendanceData.summary.workedDays],
+                ["Days Pr", attendanceData.summary.workedDays],
                 ["Absent Days", attendanceData.summary.absentDays],
-                ["Attendance Rate", attendanceData.summary.attendanceRate + "%"],
-                ["Paid Leave Allowance", attendanceData.summary.paidLeaveAllowance],
+                [
+                  "Attendance Rate",
+                  attendanceData.summary.attendanceRate + "%",
+                ],
+                [
+                  "Paid Leave Allowance",
+                  attendanceData.summary.paidLeaveAllowance,
+                ],
                 ["Paid Leave Used", attendanceData.summary.paidLeaveDays],
-                ["Paid Leave Remaining", attendanceData.summary.remainingPaidLeave],
+                [
+                  "Paid Leave Remaining",
+                  attendanceData.summary.remainingPaidLeave,
+                ],
                 ["Excess Leave Days", attendanceData.summary.excessLeaveDays],
-                ["Incomplete Attendance", attendanceData.summary.incompleteDays],
+                [
+                  "Incomplete Attendance",
+                  attendanceData.summary.incompleteDays,
+                ],
                 ["Hours Worked", attendanceData.summary.totalHoursWorked + "h"],
-                ["Regular Hours", attendanceData.summary.totalRegularHours + "h"],
-                ["Overtime Hours", attendanceData.summary.totalOvertimeHours + "h"],
-                ["Avg Hours / Worked Day", (attendanceData.summary.workedDays ? attendanceData.summary.totalHoursWorked / attendanceData.summary.workedDays : 0).toFixed(2) + "h"],
-                ["Avg Salary per Day", formatCurrency(attendanceData.summary.workedDays > 0 ? attendanceData.summary.grossSalary / attendanceData.summary.workedDays : 0)],
-                ["Pay per Hour", formatCurrency(attendanceData.summary.hourlyRate) + "/h"],
-                ["Regular Hours Pay", formatCurrency(attendanceData.summary.regularPay)],
-                ["Overtime Pay", formatCurrency(attendanceData.summary.overtimePay)],
-                ["Paid Leave Value (Not Added to Salary)", formatCurrency(attendanceData.summary.paidLeavePay)],
-                ["Gross Salary", formatCurrency(attendanceData.summary.grossSalary)],
-                ["Advances", formatCurrency(attendanceData.summary.totalAdvances)],
+                // [
+                //   "Regular Hours",
+                //   attendanceData.summary.totalRegularHours + "h",
+                // ],
+                [
+                  "Overtime Hours",
+                  attendanceData.summary.totalOvertimeHours + "h",
+                ],
+                [
+                  "Avg Hours / Worked Day",
+                  (attendanceData.summary.workedDays
+                    ? attendanceData.summary.totalHoursWorked /
+                      attendanceData.summary.workedDays
+                    : 0
+                  ).toFixed(2) + "h",
+                ],
+                [
+                  "Avg Salary per Day",
+                  formatCurrency(
+                    attendanceData.summary.workedDays > 0
+                      ? attendanceData.summary.grossSalary /
+                          attendanceData.summary.workedDays
+                      : 0,
+                  ),
+                ],
+                [
+                  "Pay per Hour",
+                  formatCurrency(attendanceData.summary.hourlyRate) + "/h",
+                ],
+                // [
+                //   "Regular Hours Pay",
+                //   formatCurrency(attendanceData.summary.regularPay),
+                // ],
+                // [
+                //   "Overtime Pay",
+                //   formatCurrency(attendanceData.summary.overtimePay),
+                // ],
+                [
+                  "Paid Leave Value (Not Added)",
+                  formatCurrency(attendanceData.summary.paidLeavePay),
+                ],
+                [
+                  "Gross Salary",
+                  formatCurrency(attendanceData.summary.grossSalary),
+                ],
+                [
+                  "Advances",
+                  formatCurrency(attendanceData.summary.totalAdvances),
+                ],
               ].map(([label, value]) => (
                 <div key={label} className={styles.summaryItem}>
                   <span className={styles.summaryLabel}>{label}</span>
@@ -392,29 +448,114 @@ function AttendanceContent() {
             </div>
           </div>
 
-          <section className={styles.summaryCard} aria-labelledby="salary-calculation-title">
-            <h2 id="salary-calculation-title">How {attendanceData.employee.name}’s salary is calculated</h2>
-            <p>Actual figures for {formatAttendanceMonth(month)}, using attendance from {formatAttendanceDate(attendanceData.period.startDate)} to {formatAttendanceDate(attendanceData.period.endDate)}.</p>
+          <section
+            className={styles.summaryCard}
+            aria-labelledby="salary-calculation-title"
+          >
+            <h2 id="salary-calculation-title">
+              How {attendanceData.employee.name}’s salary is calculated
+            </h2>
+            <p>
+              Actual figures for {formatAttendanceMonth(month)}, using
+              attendance from{" "}
+              {formatAttendanceDate(attendanceData.period.startDate)} to{" "}
+              {formatAttendanceDate(attendanceData.period.endDate)}.
+            </p>
             <ol className={styles.calculationSteps}>
-              <li><strong>Find the hourly rate.</strong> Monthly salary ÷ days in month ÷ 10 hours per day.<br />
-                {formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 10 = ₹{(Number(attendanceData.employee.salary) / attendanceData.period.daysInPeriod / 10).toFixed(6)} per hour.
+              <li>
+                <strong>Find the hourly rate.</strong> Monthly salary ÷ days in
+                month ÷ 10 hours per day.
+                <br />
+                {formatCurrency(attendanceData.employee.salary)} ÷{" "}
+                {attendanceData.period.daysInPeriod} ÷ 10 = ₹
+                {(
+                  Number(attendanceData.employee.salary) /
+                  attendanceData.period.daysInPeriod /
+                  10
+                ).toFixed(6)}{" "}
+                per hour.
               </li>
-              <li><strong>Count recorded hours worked.</strong> {attendanceData.summary.totalHoursWorked} hours, including {attendanceData.summary.totalOvertimeHours} overtime hours. Overtime uses the same hourly rate and is counted once.</li>
-              <li><strong>Calculate earned salary.</strong> Hours worked × hourly rate.<br />
-                {attendanceData.summary.totalHoursWorked} × ({formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 10) = <strong>{formatCurrency(attendanceData.summary.grossSalary)}</strong>.
+              <li>
+                <strong>Count recorded hours worked.</strong>{" "}
+                {attendanceData.summary.totalHoursWorked} hours, including{" "}
+                {attendanceData.summary.totalOvertimeHours} overtime hours.
+                Overtime uses the same hourly rate and is counted once.
               </li>
-              <li><strong>Subtract advances.</strong> Earned salary − advance payments.<br />
-                {formatCurrency(attendanceData.summary.grossSalary)} − {formatCurrency(attendanceData.summary.totalAdvances)} = <strong>{formatCurrency(attendanceData.summary.netSalary)} net salary</strong>.
+              <li>
+                <strong>Calculate earned salary.</strong> Hours worked × hourly
+                rate.
+                <br />
+                {attendanceData.summary.totalHoursWorked} × (
+                {formatCurrency(attendanceData.employee.salary)} ÷{" "}
+                {attendanceData.period.daysInPeriod} ÷ 10) ={" "}
+                <strong>
+                  {formatCurrency(attendanceData.summary.grossSalary)}
+                </strong>
+                .
               </li>
-              <li><strong>Check the daily averages.</strong><br />
-                Hours: {attendanceData.summary.totalHoursWorked} ÷ {attendanceData.summary.workedDays} worked days = {attendanceData.summary.workedDays ? (attendanceData.summary.totalHoursWorked / attendanceData.summary.workedDays).toFixed(2) : "0.00"} hours per day.<br />
-                Salary: {formatCurrency(attendanceData.summary.grossSalary)} ÷ {attendanceData.summary.workedDays} worked days = {formatCurrency(attendanceData.summary.workedDays ? attendanceData.summary.grossSalary / attendanceData.summary.workedDays : 0)} per day, before advances.
-                {attendanceData.summary.workedDays === 0 && " With no worked days, both averages are shown as zero."}
+              <li>
+                <strong>Subtract advances.</strong> Earned salary − advance
+                payments.
+                <br />
+                {formatCurrency(attendanceData.summary.grossSalary)} −{" "}
+                {formatCurrency(attendanceData.summary.totalAdvances)} ={" "}
+                <strong>
+                  {formatCurrency(attendanceData.summary.netSalary)} net salary
+                </strong>
+                .
+              </li>
+              <li>
+                <strong>Check the daily averages.</strong>
+                <br />
+                Hours: {attendanceData.summary.totalHoursWorked} ÷{" "}
+                {attendanceData.summary.workedDays} worked days ={" "}
+                {attendanceData.summary.workedDays
+                  ? (
+                      attendanceData.summary.totalHoursWorked /
+                      attendanceData.summary.workedDays
+                    ).toFixed(2)
+                  : "0.00"}{" "}
+                hours per day.
+                <br />
+                Salary: {formatCurrency(
+                  attendanceData.summary.grossSalary,
+                )} ÷ {attendanceData.summary.workedDays} worked days ={" "}
+                {formatCurrency(
+                  attendanceData.summary.workedDays
+                    ? attendanceData.summary.grossSalary /
+                        attendanceData.summary.workedDays
+                    : 0,
+                )}{" "}
+                per day, before advances.
+                {attendanceData.summary.workedDays === 0 &&
+                  " With no worked days, both averages are shown as zero."}
               </li>
             </ol>
-            <p><strong>Leave:</strong> {attendanceData.summary.paidLeaveDays} used × 10 hours × hourly rate = {formatCurrency(attendanceData.summary.paidLeavePay)} displayed leave value. This value is not added to salary. Unused leave earns no money. {attendanceData.summary.paidLeaveEligible === false ? "There is no paid leave allowance during the employee’s creation month." : "The monthly allowance is " + attendanceData.summary.paidLeaveAllowance + " days."}</p>
-            <p><strong>Joining date:</strong> {attendanceData.employee.joiningDate ? formatAttendanceDate(attendanceData.employee.joiningDate) + ". Hours before this date are excluded." : "No joining date is recorded; attendance is counted from the start of the month."} The hourly rate always uses all calendar days in the month.</p>
-            <p>Rates are shown rounded for readability; calculations use the full rate and final amounts are rounded to two decimals. A negative net salary means advances exceed earned pay.</p>
+            <p>
+              <strong>Leave:</strong> {attendanceData.summary.paidLeaveDays}{" "}
+              used × 10 hours × hourly rate ={" "}
+              {formatCurrency(attendanceData.summary.paidLeavePay)} displayed
+              leave value. This value is not added to salary. Unused leave earns
+              no money.{" "}
+              {attendanceData.summary.paidLeaveEligible === false
+                ? "There is no paid leave allowance during the employee’s creation month."
+                : "The monthly allowance is " +
+                  attendanceData.summary.paidLeaveAllowance +
+                  " days."}
+            </p>
+            <p>
+              <strong>Joining date:</strong>{" "}
+              {attendanceData.employee.joiningDate
+                ? formatAttendanceDate(attendanceData.employee.joiningDate) +
+                  ". Hours before this date are excluded."
+                : "No joining date is recorded; attendance is counted from the start of the month."}{" "}
+              The hourly rate always uses all calendar days in the month.
+            </p>
+            <p>
+              Rates are shown rounded for readability; calculations use the full
+              rate and final amounts are rounded to two decimals. A negative net
+              salary means advances exceed earned pay.
+            </p>
           </section>
 
           {/* Advances Section */}
@@ -602,7 +743,11 @@ function AttendanceContent() {
                       <tr
                         key={day.date}
                         className={
-                          day.status === "paid_leave" ? styles.paidLeaveRow : day.status !== "present" ? styles.absentRow : ""
+                          day.status === "paid_leave"
+                            ? styles.paidLeaveRow
+                            : day.status !== "present"
+                              ? styles.absentRow
+                              : ""
                         }
                       >
                         <td className={styles.dateCell}>

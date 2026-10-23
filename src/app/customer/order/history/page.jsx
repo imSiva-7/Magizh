@@ -1,5 +1,6 @@
 "use client";
 import DataSkeleton from "@/components/DataSkeleton";
+import CustomerCharts from "@/components/CustomerCharts";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import NewCustomerOrder from "@/components/NewCustomerOrder";
@@ -437,6 +438,10 @@ function OrderHistoryContent() {
       )}
 
       {/* Export Section */}
+      <section aria-label="Order history analytics">
+        <CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} />
+      </section>
+
       {/* {!loading && !loadError && <CustomerLeaderboard totals={trendCustomers} orders={data.orders} startDate={filters.startDate} endDate={filters.endDate} />} */}
       {!loading && data.summary?.orderCount > 0 && (
         <div className={styles.exportSection}>

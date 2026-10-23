@@ -31,7 +31,7 @@ export default function Footer() {
           <div className={styles.footerSection}>
             <div className={styles.footerLogo}>
               <Image
-                src="/favicon.ico"
+                src="/magizh-logo.png"
                 alt="Magizh Dairy"
                 width={150}
                 height={70}
@@ -144,7 +144,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.11</span>
+            <span className={styles.version}>v1.7.12</span>
           </div>
         </div>
       </div>

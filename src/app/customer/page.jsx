@@ -461,6 +461,7 @@ export default function Customer() {
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
           <PageHeading title="Customers" section="RELATIONSHIPS" description="Keep customer details, orders, and contacts connected." />
+          {/* <Link data-button="secondary" href="/customer/subscriptions">Subscriptions</Link> */}
 
           {!createCustomer && (
             <div className={styles.createSection}>
@@ -799,6 +800,7 @@ export default function Customer() {
                       >
                         {item.customerName}
                       </Link>
+                      {/* <div><Link href={`/customer/subscriptions?customerId=${item._id}`}>Subscriptions</Link></div> */}
                     </td>
                     <td className={styles.typeCell}>
                       <CategoryBadge kind="customer" value={item.customerType} fallback="-" />
