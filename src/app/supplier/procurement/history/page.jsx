@@ -1,4 +1,5 @@
 "use client";
+import pickerStyles from "@/components/HistoryPartyPicker.module.css";
 import DataSkeleton from "@/components/DataSkeleton";
 import SupplierCharts from "@/components/SupplierCharts";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
@@ -250,7 +251,7 @@ function ProcurementHistoryContent() {
     const term = supplierSearchDebounced.toLowerCase().trim();
     return suppliers
       .filter((s) => {
-        return [s.supplierName, s.supplierType, s.supplierPhone, s.supplierPhoneNumber, s.supplierContact]
+        return [s.supplierName, s.supplierType, s.supplierNumber, s.supplierPhone, s.supplierPhoneNumber, s.supplierContact]
           .some((value) => String(value || "").toLowerCase().includes(term));
       }).slice(0, 8);
      
@@ -560,12 +561,12 @@ function ProcurementHistoryContent() {
           {/* Step 1 — supplier search */}
           {!selectedSupplier && (
             <div className={styles.supplier_picker}>
-              <label htmlFor="history-supplier-search" className={styles.form_label}>Search Supplier</label>
+              <label htmlFor="history-supplier-search" className={pickerStyles.label}>Search Supplier</label>
               <input
                 id="history-supplier-search"
                 ref={searchInputRef}
                 type="text"
-                className={styles.supplier_search_input}
+                className={pickerStyles.input}
                 placeholder="Type a supplier name, type, or phone..."
                 value={supplierSearch}
                 onChange={(e) => setSupplierSearch(e.target.value)}
@@ -581,18 +582,19 @@ function ProcurementHistoryContent() {
                     : "Start typing to find a supplier"}
                 </div>
               ) : (
-                <ul className={styles.supplier_results}>
+                <ul className={pickerStyles.list}>
                   {filteredSuppliers.map((s) => (
                     <li
                       key={s._id}
-                      className={styles.supplier_result_item}
-                      onClick={() => handlePickSupplier(s)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handlePickSupplier(s); } }}
+                      className={pickerStyles.item}
                     >
-                      <div className={styles.supplier_result_main}>
-                        <span className={styles.supplier_result_name}>
+                    <button
+                      type="button"
+                      className={pickerStyles.choice}
+                      onClick={() => handlePickSupplier(s)}
+                    >
+                      <span className={pickerStyles.name}>
+                        <span className={pickerStyles.name}>
                           {s.supplierName}
                         </span>
                         {s.isHeadSupplier && (
@@ -601,13 +603,19 @@ function ProcurementHistoryContent() {
                         {s.isChildSupplier && !s.isHeadSupplier && (
                           <CategoryBadge kind="supplierRole" value="Child" />
                         )}
-                      </div>
-                      <div className={styles.supplier_result_meta}>
+                      </span>
+                      <span className={pickerStyles.meta}>
                         {s.supplierType || "—"} ·{" "}
                         {s.supplierCustomRate
                           ? `₹${s.supplierCustomRate}/L fixed`
                           : `TSR ${s.supplierTSRate || "—"}`}
-                      </div>
+                      </span>
+                    </button>
+                    {(
+                      <Link href={`/supplier/procurement?supplierId=${encodeURIComponent(s._id)}`} className={pickerStyles.link} aria-label={`View ${s.supplierName}`}>
+                        View supplier →
+                      </Link>
+                    )}
                     </li>
                   ))}
                 </ul>
@@ -618,12 +626,12 @@ function ProcurementHistoryContent() {
           {/* Step 2 — form for selected supplier */}
           {selectedSupplier && (
             <>
-              <div className={styles.selected_supplier_bar}>
+              <div className={pickerStyles.selected}>
                 <div className={styles.selected_supplier_info}>
-                  <span className={styles.selected_supplier_name}>
+                  <span className={pickerStyles.name}>
                     {selectedSupplier.supplierName}
                   </span>
-                  <span className={styles.selected_supplier_meta}>
+                  <span className={pickerStyles.meta}>
                     {selectedSupplier.supplierType || "—"} ·{" "}
                     {selectedSupplier.supplierCustomRate
                       ? `Custom ₹${selectedSupplier.supplierCustomRate}/L`
@@ -641,11 +649,16 @@ function ProcurementHistoryContent() {
                       TSR cut → {selectedSupplier.headSupplierName || "Head"}
                     </span>
                   )}
+                  {(
+                    <Link href={`/supplier/procurement?supplierId=${encodeURIComponent(selectedSupplier._id)}`} className={pickerStyles.link}>
+                      View supplier →
+                    </Link>
+                  )}
                 </div>
                 <button data-button="ghost"
                   type="button"
                   onClick={handleChangeSupplier}
-                  className={styles.change_supplier_btn}
+                  className={pickerStyles.change}
                   disabled={submitting}
                 >
                   Change

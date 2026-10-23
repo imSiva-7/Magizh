@@ -18,7 +18,7 @@
 .checkbox { display: flex; align-items: center; gap: .6rem; min-height: 44px; font-size: .85rem; margin: .75rem 0 1rem; }
 .checkbox input { width: 20px; height: 20px; flex-shrink: 0; accent-color: var(--brand); }
 .error { border: 1px solid #fecaca; background: #fef2f2; color: #991b1b; border-radius: .6rem; padding: .8rem; }
-.footer { justify-content: flex-end; padding: 1.25rem 0 0; }
+.footer { justify-content: flex-end; margin-top: 1.25rem; padding: 1.25rem 0 0; border-top: 2px solid var(--border); }
 .actions { display: flex; gap: .6rem; }
 .save, .cancel { border: 1px solid var(--border); padding: .7rem 1rem; min-height: 44px; border-radius: .6rem; font-weight: 600; }
 .save { background: var(--brand); color: white; border-color: var(--brand); }

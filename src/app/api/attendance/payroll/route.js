@@ -4,6 +4,7 @@ import getDatabase from "@/database/connectToMongoDB";
 import { getTodayDate } from "@/lib/india-date.mjs";
 import { buildPayroll, validMonth } from "@/lib/payroll";
 import { exportAttendanceToPDF } from "../../../../../utils/exportAttendance";
+import { attendanceFilename } from "@/utils/attendanceFilename";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,8 @@ export async function GET(request) {
     if (!employee) return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     const report = buildPayroll(employee, month, getTodayDate());
     const bytes = exportAttendanceToPDF(report, month, null, true);
-    return new NextResponse(bytes, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="salary-${month}.pdf"`, "Cache-Control": "no-store" } });
+    const filename = encodeURIComponent(attendanceFilename(employee.name, month)).replace(/'/g, "%27");
+    return new NextResponse(bytes, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="salary-${month}.pdf"; filename*=UTF-8''${filename}`, "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Payroll PDF failed", error);
     return NextResponse.json({ error: "Could not generate salary PDF" }, { status: 500 });

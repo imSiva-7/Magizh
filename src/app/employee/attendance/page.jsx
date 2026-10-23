@@ -1,5 +1,6 @@
 "use client";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
+import { attendanceFilename } from "@/utils/attendanceFilename";
 import DataSkeleton from "@/components/DataSkeleton";
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
@@ -240,7 +241,7 @@ function AttendanceContent() {
       const url = URL.createObjectURL(await response.blob());
       const link = document.createElement("a");
       link.href = url;
-      link.download = "salary-" + month + ".pdf";
+      link.download = attendanceFilename(attendanceData?.employee?.name, month);
       link.click();
       URL.revokeObjectURL(url);
       toast.success("PDF exported successfully");
@@ -350,8 +351,10 @@ function AttendanceContent() {
           <div className={styles.summaryCard}>
             <h2>Attendance & Salary Stats — {formatAttendanceMonth(month)}</h2>
             <p className={styles.salaryFormula}>
-              Salary = hours worked × hourly rate. Hourly rate = monthly salary
-              ÷ days in month ÷ 10. Advances are subtracted from earned pay.
+              9 hours or more earns a full day’s salary. Below 9 hours, pay is
+              proportional. Daily salary = monthly salary ÷ days in month. Total
+              each day’s pay, then subtract advances. Extra hours do not add
+              extra pay.
             </p>
             {attendanceData.summary.paidLeaveEligible === false && (
               <p>
@@ -363,7 +366,7 @@ function AttendanceContent() {
                 ["Days in Month", attendanceData.period.daysInPeriod],
                 ["Days Elapsed", attendanceData.summary.elapsedDays],
                 ["Days Remaining", attendanceData.summary.remainingDays],
-                ["Days Pr", attendanceData.summary.workedDays],
+                ["Days Present", attendanceData.summary.workedDays],
                 ["Absent Days", attendanceData.summary.absentDays],
                 [
                   "Attendance Rate",
@@ -383,13 +386,21 @@ function AttendanceContent() {
                   "Incomplete Attendance",
                   attendanceData.summary.incompleteDays,
                 ],
-                ["Hours Worked", attendanceData.summary.totalHoursWorked + "h"],
-                // [
-                //   "Regular Hours",
-                //   attendanceData.summary.totalRegularHours + "h",
-                // ],
                 [
-                  "Overtime Hours",
+                  "Total Hours in Month",
+                  attendanceData.summary.standardHours + "h",
+                ],
+                ["Hours Worked", attendanceData.summary.totalHoursWorked + "h"],
+                [
+                  "Payable Hours (Max 9 / Day)",
+                  attendanceData.summary.payableHours + "h",
+                ],
+                [
+                  "Daily Salary",
+                  formatCurrency(attendanceData.summary.dailyRate),
+                ],
+                [
+                  "Extra Hours (No Extra Pay)",
                   attendanceData.summary.totalOvertimeHours + "h",
                 ],
                 [
@@ -413,16 +424,8 @@ function AttendanceContent() {
                   "Pay per Hour",
                   formatCurrency(attendanceData.summary.hourlyRate) + "/h",
                 ],
-                // [
-                //   "Regular Hours Pay",
-                //   formatCurrency(attendanceData.summary.regularPay),
-                // ],
-                // [
-                //   "Overtime Pay",
-                //   formatCurrency(attendanceData.summary.overtimePay),
-                // ],
                 [
-                  "Paid Leave Value (Not Added)",
+                  "Paid Leave (Not Added)",
                   formatCurrency(attendanceData.summary.paidLeavePay),
                 ],
                 [
@@ -464,30 +467,33 @@ function AttendanceContent() {
             <ol className={styles.calculationSteps}>
               <li>
                 <strong>Find the hourly rate.</strong> Monthly salary ÷ days in
-                month ÷ 10 hours per day.
+                month ÷ 9 hours per day.
                 <br />
                 {formatCurrency(attendanceData.employee.salary)} ÷{" "}
-                {attendanceData.period.daysInPeriod} ÷ 10 = ₹
+                {attendanceData.period.daysInPeriod} ÷ 9 = ₹
                 {(
                   Number(attendanceData.employee.salary) /
                   attendanceData.period.daysInPeriod /
-                  10
+                  9
                 ).toFixed(6)}{" "}
                 per hour.
               </li>
               <li>
                 <strong>Count recorded hours worked.</strong>{" "}
                 {attendanceData.summary.totalHoursWorked} hours, including{" "}
-                {attendanceData.summary.totalOvertimeHours} overtime hours.
-                Overtime uses the same hourly rate and is counted once.
+                {attendanceData.summary.totalOvertimeHours} extra hours above 9
+                per day. Only up to 9 hours per day count toward salary; extra
+                hours do not cover shorter days.
               </li>
               <li>
-                <strong>Calculate earned salary.</strong> Hours worked × hourly
-                rate.
+                <strong>Calculate earned salary.</strong> Add each day’s payable
+                hours (maximum 9), then multiply by the hourly rate. For
+                example, ₹15,000 in a 30-day month gives ₹500 for 9 or more
+                hours, and ₹333.33 for 6 hours.
                 <br />
-                {attendanceData.summary.totalHoursWorked} × (
+                {attendanceData.summary.payableHours} × (
                 {formatCurrency(attendanceData.employee.salary)} ÷{" "}
-                {attendanceData.period.daysInPeriod} ÷ 10) ={" "}
+                {attendanceData.period.daysInPeriod} ÷ 9) ={" "}
                 <strong>
                   {formatCurrency(attendanceData.summary.grossSalary)}
                 </strong>
@@ -533,7 +539,7 @@ function AttendanceContent() {
             </ol>
             <p>
               <strong>Leave:</strong> {attendanceData.summary.paidLeaveDays}{" "}
-              used × 10 hours × hourly rate ={" "}
+              used × 9 hours × hourly rate ={" "}
               {formatCurrency(attendanceData.summary.paidLeavePay)} displayed
               leave value. This value is not added to salary. Unused leave earns
               no money.{" "}

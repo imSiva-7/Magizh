@@ -1,5 +1,6 @@
 import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "./attendanceDates.mjs";
 import { jsPDF } from "jspdf";
+import { attendanceFilename } from "./attendanceFilename";
 import autoTable from "jspdf-autotable";
 import { formatNumberWithCommas } from "./formatNumberWithComma.js";
 
@@ -436,5 +437,5 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
 
   // Save PDF
   if (returnBytes) return doc.output("arraybuffer");
-  doc.save(`${fileName || "attendance-report"}.pdf`);
+  doc.save(fileName ? `${fileName}.pdf` : attendanceFilename(attendanceData.employee?.name, month));
 };

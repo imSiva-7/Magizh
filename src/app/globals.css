@@ -25,6 +25,21 @@ button, a, input, select, textarea, summary { -webkit-tap-highlight-color: trans
 button:not(:disabled), summary { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
 input, select, textarea { max-width: 100%; }
+/* Match native date/time controls to ordinary single-line fields on every page. */
+:root body input:is(:not([type]), [type="text"], [type="number"], [type="date"], [type="datetime-local"], [type="time"], [type="month"], [type="week"], [type="email"], [type="tel"], [type="url"], [type="password"], [type="search"]),
+:root body select:not([multiple]):not([size]) {
+  box-sizing: border-box;
+  height: 48px;
+  min-height: 48px;
+  min-width: 0;
+  padding-block: 0.625rem;
+  line-height: 1.4;
+}
+:root body [data-filter="card"] input:not([type="checkbox"]):not([type="radio"]),
+:root body [data-filter="card"] select:not([multiple]):not([size]) {
+  height: 44px;
+  min-height: 44px;
+}
 /* Consistent single-choice dropdowns; retain native keyboard and mobile pickers. */
 :root body :is(main, [role="dialog"], dialog) select:not([multiple]):not([size]) {
   appearance: none;

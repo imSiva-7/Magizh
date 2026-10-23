@@ -42,6 +42,7 @@ export function buildPayroll(employee, month, today) {
   const creationMonth = employee.createdAt ? indiaDate(employee.createdAt).slice(0, 7) : "";
   const paidLeaveEligible = !creationMonth || month > creationMonth;
   const paidLeaveAllowance = paidLeaveEligible ? (employee.paidLeaveDays === undefined || employee.paidLeaveDays === 4 ? 4 : 2) : 0;
+  const fullDayHours = 9;
   let absences = 0;
   const attendance = Array.from({ length: elapsedDays }, (_, i) => {
     const key = String(i + start).padStart(2, "0");
@@ -51,16 +52,10 @@ export function buildPayroll(employee, month, today) {
       date: `${month}-${key}`,
       checkIn: present ? day.checkIn : "",
       checkOut: present ? day.checkOut || "" : "",
-      hoursWorked: present ? Number(day.hoursWorked) || 0 : 0,
-      regularHours: present
-        ? Number(day.regularHours ?? Math.min(Number(day.hoursWorked) || 0, 10))
-        : 0,
-      overtimeHours: present
-        ? Number(
-            day.overtimeHours ??
-              Math.max((Number(day.hoursWorked) || 0) - 10, 0),
-          )
-        : 0,
+      hoursWorked: present ? Math.max(0, Number(day.hoursWorked) || 0) : 0,
+      // Derive payable hours from actual attendance, ignoring legacy 10-hour splits.
+      regularHours: present ? Math.min(Math.max(0, Number(day.hoursWorked) || 0), fullDayHours) : 0,
+      overtimeHours: present ? Math.max((Number(day.hoursWorked) || 0) - fullDayHours, 0) : 0,
       punches: day?.punches || [],
       status: present ? "present" : (++absences <= paidLeaveAllowance ? "paid_leave" : "excess_leave"),
     };
@@ -70,16 +65,17 @@ export function buildPayroll(employee, month, today) {
   const count = (status) =>
     attendance.filter((day) => day.status === status).length;
   const paidLeaveDays = count("paid_leave");
-  const hourlyRate = (Number(employee.salary) || 0) / (daysInPeriod * 10);
-  // Pay only recorded hours, using the unrounded rate throughout.
+  const hourlyRate = (Number(employee.salary) || 0) / (daysInPeriod * fullDayHours);
+  // Cap each day separately; extra hours cannot cover a shorter day.
+  // Use the unrounded rate until the final monetary totals.
   const regularPay = sum("regularHours") * hourlyRate;
-  const overtimePay = sum("overtimeHours") * hourlyRate;
+  const overtimePay = 0;
   const advances = employee.advances?.[month] || [];
   const totalAdvances = advances.reduce(
     (total, advance) => total + (Number(advance.amount) || 0),
     0,
   );
-  const grossSalary = sum("hoursWorked") * hourlyRate;
+  const grossSalary = regularPay;
   const fingerprint = payrollFingerprint(employee, month, today);
 
   const round = (value) => Number(value.toFixed(2));
@@ -110,7 +106,10 @@ export function buildPayroll(employee, month, today) {
       totalOvertimeHours: round(sum("overtimeHours")),
       scheduledWorkingDays: daysInPeriod,
       expectedWorkingDays: Math.max(0, employedDaysInMonth - paidLeaveAllowance),
-      payableDays: elapsedDays,
+      payableDays: round(sum("regularHours") / fullDayHours),
+      fullDayHours,
+      dailyRate: round((Number(employee.salary) || 0) / daysInPeriod),
+      payableHours: round(sum("regularHours")),
       elapsedDays,
       employedDaysInMonth,
       remainingDays: daysInPeriod - last,
@@ -126,13 +125,13 @@ export function buildPayroll(employee, month, today) {
       unpaidLeaveDeduction: 0,
       unpaidAbsenceDays: 0,
       pendingLeaveDays: count("pending"),
-      paidLeaveHours: paidLeaveDays * 10,
-      standardHours: daysInPeriod * 10,
+      paidLeaveHours: paidLeaveDays * fullDayHours,
+      standardHours: daysInPeriod * fullDayHours,
       hourlyRate: round(hourlyRate),
-      overtimeRate: round(hourlyRate),
+      overtimeRate: 0,
       regularPay: round(regularPay),
       overtimePay: round(overtimePay),
-      paidLeavePay: round(paidLeaveDays * 10 * hourlyRate),
+      paidLeavePay: round(paidLeaveDays * fullDayHours * hourlyRate),
       unusedLeavePay: 0,
       grossSalary: round(grossSalary),
       totalAdvances: round(totalAdvances),
