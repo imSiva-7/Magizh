@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -103,6 +104,7 @@ export default function Supplier() {
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -389,6 +391,7 @@ export default function Supplier() {
       supplierAddress: formData.supplierAddress.trim(),
     };
 
+    const notification = toast.loading(isEditing ? "Updating supplier…" : "Adding supplier…");
     try {
       const url = isEditing
         ? `/api/supplier?id=${formData.supplierId}`
@@ -411,18 +414,12 @@ export default function Supplier() {
         );
       }
 
-      toast.success(
-        isEditing
-          ? "Supplier updated successfully"
-          : "Supplier added successfully",
-      );
+      toast.update(notification, { render: isEditing ? "Supplier updated successfully" : "Supplier added successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error(
-        error.message || "Failed to save supplier. Please try again.",
-      );
+      toast.update(notification, { render: error.message || "Failed to save supplier. Please try again.", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
     } finally {
       setIsSubmitting(false);
     }
@@ -477,15 +474,8 @@ export default function Supplier() {
   );
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this supplier?\nThis action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     setDeleteLoading(id);
+    const notification = toast.loading("Deleting supplier…");
     try {
       const res = await fetch(`/api/supplier?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -494,12 +484,13 @@ export default function Supplier() {
         throw new Error(data.error || data.message || `Delete failed`);
       }
 
-      toast.success("Supplier deleted successfully");
+      toast.update(notification, { render: "Supplier deleted successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
+      setDeleteTarget(null);
       if (formData.supplierId === id) resetForm();
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.error(error.message || "Failed to delete supplier");
+      toast.update(notification, { render: error.message || "Failed to delete supplier", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
     } finally {
       setDeleteLoading(null);
     }
@@ -580,9 +571,13 @@ export default function Supplier() {
 
   return (
     <div className={styles.container}>
+      {deleteTarget && <ConfirmDialog title="Delete supplier?" onCancel={() => setDeleteTarget(null)} onConfirm={() => handleDelete(deleteTarget._id)}>
+        Delete {deleteTarget.supplierName || "this supplier"}? This action cannot be undone.
+      </ConfirmDialog>}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
+        newestOnTop
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
@@ -1082,7 +1077,7 @@ export default function Supplier() {
                               </button>
                               <button data-button="menu-danger"
                                 onClick={() => {
-                                  handleDelete(item._id);
+                                  setDeleteTarget(item);
                                   setOpenActionMenuId(null);
                                 }}
                                 className={styles.actionDeleteButton}

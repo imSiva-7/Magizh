@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 import { formatNumberWithCommas } from "./formatNumberWithComma";
@@ -215,6 +216,7 @@ export const exportInvoiceToPDF = async (
 
   if (customer?.customerName) {
     autoTable(doc, {
+      rowPageBreak: "avoid",
       startY: tableStartY,
       margin: { left: margin, right: margin, bottom: 25 },
       head: [["Date", "Product", "Quantity", "Rate", "Amount"]],
@@ -243,13 +245,18 @@ export const exportInvoiceToPDF = async (
         3: { cellWidth: 32, halign: "right" },
         4: { cellWidth: 36, halign: "right", fontStyle: "bold" },
       },
+      didParseCell: ({ section, column, cell }) => {
+        if (section === "head") cell.styles.halign = column.index < (customer?.customerName ? 2 : 3) ? "left" : column.index === (customer?.customerName ? 2 : 3) ? "center" : "right";
+      },
       styles: {
+        valign: "middle",
         lineColor: DIVIDER,
         lineWidth: { bottom: 0.15 },
       },
     });
   } else {
     autoTable(doc, {
+      rowPageBreak: "avoid",
       startY: tableStartY,
       margin: { left: margin, right: margin, bottom: 25 },
       head: [["Date", "Customer", "Product", "Qty", "Rate", "Amount"]],
@@ -279,7 +286,11 @@ export const exportInvoiceToPDF = async (
         4: { cellWidth: 28, halign: "right" },
         5: { cellWidth: 32, halign: "right", fontStyle: "bold" },
       },
+      didParseCell: ({ section, column, cell }) => {
+        if (section === "head") cell.styles.halign = column.index < (customer?.customerName ? 2 : 3) ? "left" : column.index === (customer?.customerName ? 2 : 3) ? "center" : "right";
+      },
       styles: {
+        valign: "middle",
         lineColor: DIVIDER,
         lineWidth: { bottom: 0.15 },
       },
@@ -462,5 +473,5 @@ export const exportInvoiceToPDF = async (
   );
 
   // Save PDF
-  doc.save(`${fileName || "invoice"}.pdf`);
+  doc.save(reportFilename("Invoice", customer?.customerName || "All Customers", orders.map(order => order.date)));
 };

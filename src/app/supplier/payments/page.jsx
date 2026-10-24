@@ -136,11 +136,13 @@ export default function Payments() {
   }, [fetchSupplierProcurements]);
 
   const handleBulkUpdateStatus = async (status) => {
-    if (!isAdmin || checkedIds.length === 0) return;
+    if (!isAdmin || submitting || checkedIds.length === 0) return;
     if (!window.confirm(`Mark ${checkedIds.length} records as ${status}?`))
       return;
 
     setSubmitting(true);
+    const selectedIds = new Set(checkedIds);
+    const notification = toast.loading(`Updating ${selectedIds.size} payment records…`);
     try {
       const res = await fetch("/api/supplier/procurement", {
         method: "PATCH",
@@ -155,25 +157,21 @@ export default function Payments() {
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || "Bulk update failed");
 
-      toast.success(
-        `Successfully marked ${checkedIds.length} records as ${status}`,
-      );
+      toast.update(notification, { render: `Successfully marked ${selectedIds.size} records as ${status}`, type: "success", isLoading: false, autoClose: 5000 });
 
       setProcurementRecords((prevRecords) =>
         prevRecords.map((record) =>
-          checkedIds.includes(record._id)
+          selectedIds.has(record._id)
             ? { ...record, paymentStatus: status }
             : record,
         ),
       );
       setCheckedIds([]);
       setCheckedSupplierId("");
-      setCheckedIds([]);
-      setCheckedSupplierId("");
       // await fetchSupplierProcurements();
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Failed to process bulk payment");
+      toast.update(notification, { render: error.message || "Failed to process bulk payment", type: "error", isLoading: false, autoClose: 5000 });
     } finally {
       setSubmitting(false);
     }
@@ -554,6 +552,20 @@ export default function Payments() {
       </div>
 
       {/* Global Summary (All Suppliers) */}
+      {statusFilter && (
+        <div className={styles.status_notice} role="status">
+          <p>
+            <strong>{statusFilter === "Not Paid" ? "Showing due payments only." : "Showing paid payments only."}</strong>{" "}
+            {statusFilter === "Not Paid"
+              ? "Paid records are excluded, so Paid shows ₹0 in this view. This does not mean no payments were made."
+              : "Unpaid records are excluded, so Due shows ₹0 in this view. This does not mean there is no outstanding balance."}
+            {" "}Stats and graphs reflect the selected filter.
+          </p>
+          <button type="button" data-button="secondary" onClick={() => handleStatusChange("")} disabled={isLoading}>
+            Show all payments
+          </button>
+        </div>
+      )}
       {!isLoading && globalStats.totalMilk > 0 && (
         <div className={styles.global_summary_card}>
           <div className={styles.global_header}>

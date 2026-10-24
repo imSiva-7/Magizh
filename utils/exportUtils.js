@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 
@@ -69,7 +70,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   // Company name with modern typography
   doc.setTextColor(...BRAND_GREEN);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(26);
+  doc.setFontSize(20);
   doc.text("MAGIZH AGRO PRODUCT", margin, 18);
 
   // Tagline with elegant style
@@ -95,8 +96,12 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
 
   // ========== SUPPLIER & BILL DETAILS (CLEAN GRID - MATCHING INVOICE) ==========
   const infoStartY = 56;
-  const boxHeight = 40;
   const boxWidth = (pageWidth - margin * 3) / 2;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  const nameLines = doc.splitTextToSize(supplier?.supplierName || "All Suppliers", boxWidth - 10);
+  const nameExtra = (nameLines.length - 1) * 4.5;
+  const boxHeight = Math.max(40, 33 + nameExtra);
 
   // Left box - Supplier Details
   doc.setDrawColor(...DIVIDER);
@@ -112,7 +117,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   doc.setFontSize(11);
   doc.setTextColor(...TEXT_PRIMARY);
   doc.text(
-    supplier?.supplierName || "All Suppliers",
+    nameLines,
     margin + 5,
     infoStartY + 16
   );
@@ -121,7 +126,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   doc.setFontSize(9);
   doc.setTextColor(...TEXT_SECONDARY);
 
-  let detailY = infoStartY + 23;
+  let detailY = infoStartY + 23 + nameExtra;
   
   if (supplier?.supplierCustomRate) {
     doc.text(`Custom Rate: Rs. ${supplier.supplierCustomRate}/L`, margin + 5, detailY);
@@ -217,11 +222,12 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   });
 
   autoTable(doc, {
+      rowPageBreak: "avoid",
     head: supplier?.supplierName ? headers : headersWithSupplierName,
     body: tableData,
-    startY: infoStartY + 44,
+    startY: infoStartY + boxHeight + 6,
     theme: "plain",
-    margin: { bottom: marginBottom },
+    margin: { top: 20, left: margin, right: margin, bottom: marginBottom },
     styles: {
       fontSize: 9,
       cellPadding: 3,
@@ -240,6 +246,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     },
     bodyStyles: {
       cellPadding: { top: 3, bottom: 3, left: 3, right: 3 },
+    },
+    didParseCell: ({ section, column, cell }) => {
+      if (section === "head") cell.styles.halign = column.index < 2 ? "center" : !supplier?.supplierName && column.index === 2 ? "left" : "right";
     },
     columnStyles: supplier?.supplierName
       ? {
@@ -270,9 +279,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
 
   // ========== SUMMARY & TOTALS SECTION (MODERN CARD - MATCHING INVOICE) ==========
   let finalY = doc.lastAutoTable.finalY + 10;
-  const requiredSpace = 80;
+  const requiredSpace = 90;
 
-  if (finalY + requiredSpace > pageHeight) {
+  if (finalY + requiredSpace > pageHeight - marginBottom) {
     doc.addPage();
     finalY = 20;
   }
@@ -376,10 +385,11 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   );
 
   // ========== SIGNATURE & FOOTER SECTION (MATCHING INVOICE STYLE) ==========
-  const sigY = finalY + 80;
+  let sigY = finalY + 80;
 
-  if (sigY > pageHeight - 20) {
+  if (sigY + 6 > pageHeight - 20) {
     doc.addPage();
+    sigY = 25;
   }
 
   // Signature line (matching invoice)
@@ -406,7 +416,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     { align: "center" }
   );
 
-  doc.save(`${fileName || "procurement_bill"}.pdf`);
+  doc.save(reportFilename("Procurement Bill", supplier?.supplierName || "All Suppliers", procurements.map(record => record.date)));
 };
 
 // ========== CSV EXPORT (PRESERVED AS IS) ==========

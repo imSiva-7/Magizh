@@ -150,7 +150,7 @@
   line-height: 1;
 }
 
-main > div:has([data-button-placement="floating"]) { padding-bottom: 6rem; }
+/* The footer provides scroll clearance below the final content for fixed actions. */
 
 :root body:has([data-entry-form], [role="dialog"], dialog[open]) [data-button][data-button][data-button-placement="floating"] { display: none; }
 

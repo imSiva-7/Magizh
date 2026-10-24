@@ -19,7 +19,13 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: var(--page-bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
-body > main { min-height: 65vh; }
+/* Let the footer follow the content instead of reserving an empty viewport. */
+body > main { min-height: 0; }
+:root body > main > div {
+  min-height: 0;
+  padding-bottom: 1.5rem;
+}
+:root body > main > div > :last-child { margin-bottom: 0; }
 button, input, select, textarea { font-family: inherit; }
 button, a, input, select, textarea, summary { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), summary { cursor: pointer; }

@@ -9,6 +9,8 @@ import {
 import {
   commissionFromProcurement,
   findHeadEntry,
+  findHeadEntries,
+  mutateHeadEntries,
   mutateHeadEntry,
   withProcurementTransaction,
 } from "@/lib/head-supplier-entries.mjs";
@@ -254,17 +256,25 @@ export async function PATCH(request) {
           409,
         );
       const now = new Date();
-      for (const procurement of procurements) {
-        const head = await findHeadEntry(tx, procurement);
-        if (head?.entry)
-          await mutateHeadEntry(tx, head.headId, procurement._id, {
+      const heads = await findHeadEntries(tx, procurements);
+      const headChanges = new Map();
+      for (const [index, procurement] of procurements.entries()) {
+        const head = heads[index];
+        if (head?.entry) {
+          const key = String(head.headId);
+          if (!headChanges.has(key)) headChanges.set(key, []);
+          headChanges.get(key).push({ procurementId: procurement._id, entry: {
             ...head.entry,
             paymentStatus: status,
             paymentReviewRequired: false,
             paymentUpdatedOn: now,
             paymentRecordDoneBy: actionDoneBy || "",
             updatedAt: now,
-          });
+          } });
+        }
+      }
+      for (const [headId, changes] of headChanges) {
+        await mutateHeadEntries(tx, headId, changes);
       }
       return store.updateMany(
         { _id: { $in: ids } },

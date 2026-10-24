@@ -85,6 +85,11 @@ async function hydratedEntries(db, document) {
 export async function findHeadEntry(db, procurement) {
   const key = String(procurement._id);
   const matches = await db.collection(HEAD_ENTRIES).find({ $or: [{ entryIds: procurement._id }, { [`byProcurement.${key}`]: { $exists: true } }, { [`legacyReferences.${key}`]: { $exists: true } }, ...(procurement.headSupplierId ? [{ _id: asId(procurement.headSupplierId) }] : [])] }).toArray();
+  return resolveHeadEntry(procurement, matches);
+}
+
+function resolveHeadEntry(procurement, matches) {
+  const key = String(procurement._id);
   if (matches.length > 1) throw Object.assign(new Error("Commission is linked to multiple heads; review the historical references before editing"), { status: 409 });
   const document = matches[0];
   const headId = document?._id || (procurement.headSupplierId ? asId(procurement.headSupplierId) : null);
@@ -93,15 +98,38 @@ export async function findHeadEntry(db, procurement) {
   return { headId, document, entry };
 }
 
+export async function findHeadEntries(db, procurements) {
+  if (!procurements.length) return [];
+  const conditions = [{ entryIds: { $in: procurements.map(record => record._id) } }];
+  for (const record of procurements) {
+    const key = String(record._id);
+    conditions.push({ [`byProcurement.${key}`]: { $exists: true } }, { [`legacyReferences.${key}`]: { $exists: true } });
+    if (record.headSupplierId) conditions.push({ _id: asId(record.headSupplierId) });
+  }
+  const documents = await db.collection(HEAD_ENTRIES).find({ $or: conditions }).toArray();
+  return procurements.map(record => {
+    const key = String(record._id);
+    const matches = documents.filter(doc => doc.entryIds?.some(id => String(id) === key)
+      || Object.hasOwn(doc.byProcurement || {}, key) || Object.hasOwn(doc.legacyReferences || {}, key)
+      || (record.headSupplierId && String(doc._id) === String(record.headSupplierId)));
+    return resolveHeadEntry(record, matches);
+  });
+}
+
 export async function mutateHeadEntry(db, headId, procurementId, entry, headName) {
+  return mutateHeadEntries(db, headId, [{ procurementId, entry }], headName);
+}
+
+export async function mutateHeadEntries(db, headId, changes, headName) {
+  const changedIds = new Set(changes.map(change => String(change.procurementId)));
   const collection = db.collection(HEAD_ENTRIES);
   for (let retry = 0; retry < 8; retry++) {
     const previous = await collection.findOne({ _id: asId(headId) });
-    const entries = (await hydratedEntries(db, previous)).filter((record) => String(record.procurementId) !== String(procurementId));
-    if (entry) entries.push(entry);
-    if (!previous && !entry) return;
+    const entries = (await hydratedEntries(db, previous)).filter((record) => !changedIds.has(String(record.procurementId)));
+    entries.push(...changes.map(change => change.entry).filter(Boolean));
+    if (!previous && !entries.length) return;
     const next = buildHeadDocument(headId, entries, previous || {});
-    delete next.legacyReferences[String(procurementId)];
+    for (const id of changedIds) delete next.legacyReferences[id];
     if (headName) next.headSupplierName = headName;
     if (!previous) {
       try { await collection.insertOne(next); return; }

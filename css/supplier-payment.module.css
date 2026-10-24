@@ -947,3 +947,17 @@
 
 
 
+.status_notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  background: var(--brand-soft);
+  color: var(--text);
+}
+.status_notice p { flex: 1 1 280px; margin: 0; font-size: .875rem; line-height: 1.6; }

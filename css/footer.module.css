@@ -1,4 +1,4 @@
-.footer { background: var(--brand-dark); color: #dcebe1; margin-top: 3rem; }
+.footer { background: var(--brand-dark); color: #dcebe1; margin-top: 0; }
 .footerContainer { max-width: 1400px; margin: 0 auto; padding: 3rem var(--page-gutter) 1.5rem; }
 .footerMain { display: grid; grid-template-columns: 1.8fr repeat(3, 1fr); gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #35594a; }
 .footerSection { min-width: 0; }

@@ -1,0 +1,7 @@
+.dialog { width: min(440px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: 0; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface); color: var(--text); box-shadow: var(--shadow-raised); }
+.dialog::backdrop { background: rgb(11 31 24 / 48%); }
+.body { padding: 1.5rem; }
+.icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: #fff1f2; color: #b91c1c; font-size: 1.4rem; font-weight: 700; }
+.body h2 { margin: 1rem 0 .5rem; font-size: 1.25rem; }
+.body p { margin: 0; color: var(--text-secondary); overflow-wrap: anywhere; }
+.actions { display: flex; justify-content: flex-end; gap: .75rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border); }

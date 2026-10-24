@@ -27,6 +27,7 @@ function AttendanceContent() {
   const isAdmin = session?.user?.role === "admin";
 
   const [loading, setLoading] = useState(false);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
   const [attendanceRefresh, setAttendanceRefresh] = useState(0);
   const [employees, setEmployees] = useState([]);
   const [selectedEmpID, setSelectedEmpID] = useState("");
@@ -55,6 +56,8 @@ function AttendanceContent() {
     } catch (error) {
       console.error("Fetch employees error:", error);
       toast.error("Failed to load employees");
+    } finally {
+      setEmployeesLoading(false);
     }
   }, []);
 
@@ -94,6 +97,8 @@ function AttendanceContent() {
     const empIDFromURL = searchParams.get("empID");
     if (empIDFromURL) {
       setSelectedEmpID(empIDFromURL);
+    } else if (employees.length) {
+      setSelectedEmpID((current) => current || String(employees[0].empID));
     }
     const monthFromURL = searchParams.get("month");
     if (
@@ -101,7 +106,7 @@ function AttendanceContent() {
       monthFromURL <= currentMonth
     )
       setMonth(monthFromURL);
-  }, [searchParams, currentMonth]);
+  }, [searchParams, currentMonth, employees]);
 
   useEffect(() => {
     if (selectedEmpID && month) {
@@ -280,9 +285,9 @@ function AttendanceContent() {
               value={selectedEmpID}
               onChange={(e) => handleEmployeeChange(e.target.value)}
               className={styles.selectInput}
-              disabled={isSubmitting}
+              disabled={isSubmitting || employeesLoading}
             >
-              <option value="">-- Choose Employee --</option>
+              <option value="">{employeesLoading ? "Loading employees…" : "-- Choose Employee --"}</option>
               {employees.map((emp) => (
                 <option key={emp._id} value={emp.empID}>
                   {emp.empID} - {emp.name}
@@ -291,7 +296,7 @@ function AttendanceContent() {
             </select>
           </div>
 
-          {selectedEmpID && (
+          {(selectedEmpID || employeesLoading) && (
             <div className={styles.inputGroup}>
               <label htmlFor="month-select">Select Month</label>
               <input
@@ -309,10 +314,10 @@ function AttendanceContent() {
       </div>
 
       {/* Loading State */}
-      {loading && <DataSkeleton label="Loading attendance data..." />}
+      {(employeesLoading || loading) && <DataSkeleton label="Loading attendance data..." />}
 
       {/* Attendance Data Display */}
-      {!loading && attendanceData && (
+      {!employeesLoading && !loading && attendanceData && (
         <>
           {/* Employee Info Card */}
           <div className={styles.infoCard}>
@@ -823,14 +828,14 @@ function AttendanceContent() {
       )}
 
       {/* Empty State */}
-      {!loading && !attendanceData && selectedEmpID && (
+      {!employeesLoading && !loading && !attendanceData && selectedEmpID && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📊</div>
           <p>No attendance data available for the selected period</p>
         </div>
       )}
 
-      {!loading && !selectedEmpID && (
+      {!employeesLoading && !loading && !selectedEmpID && (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>👥</div>
           <p>Please select an employee to view attendance data</p>

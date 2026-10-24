@@ -83,8 +83,12 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
 
   // ========== EMPLOYEE & PERIOD DETAILS (Clean Cards) ==========
   const drawDetailsGrid = (startY) => {
-    const boxHeight = 36;
     const boxWidth = (contentWidth - margin) / 2;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    const nameLines = doc.splitTextToSize(attendanceData.employee?.name || "-", boxWidth - 12);
+    const nameExtra = (nameLines.length - 1) * 4.5;
+    const boxHeight = 36 + nameExtra;
 
     // Left Card - Employee Information
     doc.setFillColor(...CARD_BG);
@@ -101,16 +105,16 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...TEXT_PRIMARY);
-    doc.text(attendanceData.employee?.name || "-", margin + 6, startY + 16);
+    doc.text(nameLines, margin + 6, startY + 16);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...TEXT_SECONDARY);
-    doc.text(`Employee ID: ${attendanceData.employee?.empID || "-"}`, margin + 6, startY + 22.5);
+    doc.text(`Employee ID: ${attendanceData.employee?.empID || "-"}`, margin + 6, startY + 22.5 + nameExtra);
     doc.text(
       `Monthly Salary: ${formatCurrency(attendanceData.employee?.salary)}`,
       margin + 6,
-      startY + 29
+      startY + 29 + nameExtra
     );
 
     // Right Card - Statement Period
@@ -146,11 +150,12 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...TEXT_PRIMARY);
     doc.text(`${attendanceData.period?.daysInPeriod || 0} days`, rightBoxX + 32, startY + 29);
+    return startY + boxHeight;
   };
 
   // ========== RENDER HEADER & INFO ==========
   drawHeader();
-  drawDetailsGrid(50);
+  const detailsBottom = drawDetailsGrid(50);
 
   // ========== METRICS CALCULATIONS ==========
   const daysPresent = Number(attendanceData.period?.daysWorked || 0);
@@ -165,7 +170,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
   const advances = Number(attendanceData.summary?.totalAdvances || 0);
   const netSalary = Number(attendanceData.summary?.netSalary || 0);
 
-  let currentY = 94;
+  let currentY = detailsBottom + 8;
 
   // Section Heading
   doc.setFont("helvetica", "bold");
@@ -190,12 +195,13 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
   ];
 
   autoTable(doc, {
+      rowPageBreak: "avoid",
     startY: currentY,
     head: [["Particulars", "Details / Amount"]],
     body: summaryRows,
     theme: "plain",
     tableWidth: contentWidth,
-    margin: { left: margin, right: margin },
+    margin: { top: 20, left: margin, right: margin, bottom: 25 },
     headStyles: {
       fillColor: BRAND_GREEN,
       textColor: WHITE,
@@ -221,6 +227,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
       lineWidth: { bottom: 0.2 },
     },
     didParseCell: function (data) {
+      if (data.section === "head" && data.column.index === 1) data.cell.styles.halign = "right";
       if (data.row.index === summaryRows.length - 1) {
         data.cell.styles.fillColor = BRAND_LIGHT;
         data.cell.styles.textColor = BRAND_GREEN;
@@ -283,12 +290,16 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
     ]);
 
     autoTable(doc, {
+      rowPageBreak: "avoid",
       startY: currentY,
       head: [["Date", "Reason", "Amount"]],
+      didParseCell: ({ section, column, cell }) => {
+        if (section === "head" && column.index === 2) cell.styles.halign = "right";
+      },
       body: advancesData,
       theme: "plain",
       tableWidth: contentWidth,
-      margin: { left: margin, right: margin },
+      margin: { top: 20, left: margin, right: margin, bottom: 25 },
       headStyles: {
         fillColor: BRAND_GREEN,
         textColor: WHITE,
@@ -311,6 +322,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
         2: { cellWidth: 45, halign: "right", fontStyle: "bold" },
       },
       styles: {
+        valign: "middle",
         lineColor: DIVIDER,
         lineWidth: { bottom: 0.2 },
       },
@@ -345,6 +357,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
     });
 
     autoTable(doc, {
+      rowPageBreak: "avoid",
       startY: currentY,
       head: [["Date", "Status", "Check In (IST)", "Check Out (IST)", "Hours Worked"]],
       body: attendanceRows,
@@ -375,10 +388,12 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
         4: { cellWidth: "auto", halign: "center", fontStyle: "bold" },
       },
       styles: {
+        valign: "middle",
         lineColor: DIVIDER,
         lineWidth: { bottom: 0.2 },
       },
       didParseCell: function (data) {
+        if (data.section === "head" && data.column.index === 0) data.cell.styles.halign = "left";
         if (data.column.index === 1 && data.cell.text[0] === "Absent") {
           data.cell.styles.textColor = ACCENT_RED;
           data.cell.styles.fillColor = ACCENT_RED_LIGHT;

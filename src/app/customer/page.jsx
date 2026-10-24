@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -111,6 +112,7 @@ export default function Customer() {
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Close action menu when clicking outside
   useEffect(() => {
@@ -321,6 +323,7 @@ export default function Customer() {
       actionDoneBy: session?.user?.email, // <-- added
     };
 
+    const notification = toast.loading(isEditing ? "Updating customer…" : "Adding customer…");
     try {
       const url = isEditing
         ? `/api/customer?id=${formData.customerId}`
@@ -343,19 +346,13 @@ export default function Customer() {
         );
       }
 
-      toast.success(
-        isEditing
-          ? "Customer updated successfully"
-          : "Customer added successfully",
-      );
+      toast.update(notification, { render: isEditing ? "Customer updated successfully" : "Customer added successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
 
       resetForm();
       fetchData();
     } catch (error) {
       console.error("Submit error:", error);
-      toast.error(
-        error.message || "Failed to save customer. Please try again.",
-      );
+      toast.update(notification, { render: error.message || "Failed to save customer. Please try again.", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
     } finally {
       setIsSubmitting(false);
     }
@@ -408,17 +405,10 @@ export default function Customer() {
   );
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this customer?\nThis action cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
     setDeleteLoading(id);
     setOpenActionMenuId(null); // close any open menu
 
+    const notification = toast.loading("Deleting customer…");
     try {
       const res = await fetch(`/api/customer?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -427,8 +417,9 @@ export default function Customer() {
         throw new Error(data.error || data.message || `Delete failed`);
       }
 
-      toast.success("Customer deleted successfully");
+      toast.update(notification, { render: "Customer deleted successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
 
+      setDeleteTarget(null);
       if (formData.customerId === id) {
         resetForm();
       }
@@ -436,7 +427,7 @@ export default function Customer() {
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.error(error.message || "Failed to delete customer");
+      toast.update(notification, { render: error.message || "Failed to delete customer", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
     } finally {
       setDeleteLoading(null);
     }
@@ -449,9 +440,13 @@ export default function Customer() {
 
   return (
     <div className={styles.container}>
+      {deleteTarget && <ConfirmDialog title="Delete customer?" onCancel={() => setDeleteTarget(null)} onConfirm={() => handleDelete(deleteTarget._id)}>
+        Delete {deleteTarget.customerName || "this customer"}? This action cannot be undone.
+      </ConfirmDialog>}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
+        newestOnTop
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
@@ -866,7 +861,7 @@ export default function Customer() {
                               </button>
                               <button data-button="menu-danger"
                                 onClick={() => {
-                                  handleDelete(item._id);
+                                  setDeleteTarget(item);
                                   setOpenActionMenuId(null);
                                 }}
                                 className={styles.actionDeleteButton}
