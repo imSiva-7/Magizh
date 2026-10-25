@@ -1,4 +1,5 @@
 "use client";
+import { formatAttendanceHours, completedAttendanceAverage } from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import { attendanceFilename } from "@/utils/attendanceFilename";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -258,6 +259,8 @@ function AttendanceContent() {
     }
   };
 
+  const completedHours = completedAttendanceAverage(attendanceData?.attendance);
+
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -393,12 +396,12 @@ function AttendanceContent() {
                 ],
                 [
                   "Total Hours in Month",
-                  attendanceData.summary.standardHours + "h",
+                  formatAttendanceHours(attendanceData.summary.standardHours),
                 ],
-                ["Hours Worked", attendanceData.summary.totalHoursWorked + "h"],
+                ["Hours Worked", formatAttendanceHours(attendanceData.summary.totalHoursWorked)],
                 [
                   "Payable Hours (Max 9 / Day)",
-                  attendanceData.summary.payableHours + "h",
+                  formatAttendanceHours(attendanceData.summary.payableHours),
                 ],
                 [
                   "Daily Salary",
@@ -406,15 +409,11 @@ function AttendanceContent() {
                 ],
                 [
                   "Extra Hours (No Extra Pay)",
-                  attendanceData.summary.totalOvertimeHours + "h",
+                  formatAttendanceHours(attendanceData.summary.totalOvertimeHours),
                 ],
                 [
-                  "Avg Hours / Worked Day",
-                  (attendanceData.summary.workedDays
-                    ? attendanceData.summary.totalHoursWorked /
-                      attendanceData.summary.workedDays
-                    : 0
-                  ).toFixed(2) + "h",
+                  "Avg Hours / Completed Day",
+                  completedHours.average === null ? "—" : formatAttendanceHours(completedHours.average),
                 ],
                 [
                   "Avg Salary per Day",
@@ -518,15 +517,9 @@ function AttendanceContent() {
               <li>
                 <strong>Check the daily averages.</strong>
                 <br />
-                Hours: {attendanceData.summary.totalHoursWorked} ÷{" "}
-                {attendanceData.summary.workedDays} worked days ={" "}
-                {attendanceData.summary.workedDays
-                  ? (
-                      attendanceData.summary.totalHoursWorked /
-                      attendanceData.summary.workedDays
-                    ).toFixed(2)
-                  : "0.00"}{" "}
-                hours per day.
+                Hours: {formatAttendanceHours(completedHours.hours)} ÷ {completedHours.days} completed days ={" "}
+                {completedHours.average === null ? "—" : formatAttendanceHours(completedHours.average)} per day.
+                Days without a checkout are excluded from this average.
                 <br />
                 Salary: {formatCurrency(
                   attendanceData.summary.grossSalary,
@@ -539,7 +532,7 @@ function AttendanceContent() {
                 )}{" "}
                 per day, before advances.
                 {attendanceData.summary.workedDays === 0 &&
-                  " With no worked days, both averages are shown as zero."}
+                  " With no completed days, the hours average is unavailable."}
               </li>
             </ol>
             <p>
@@ -796,7 +789,9 @@ function AttendanceContent() {
                             : formatTime(day.checkOut)}
                         </td>
                         <td className={styles.hoursCell}>
-                          {day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-"}
+                          {day.status === "present" && !day.checkOut
+                            ? (day.date === attendanceToday() ? "In progress" : "Missing checkout")
+                            : day.hoursWorked > 0 ? formatAttendanceHours(day.hoursWorked) : "-"}
                         </td>
                         {isAdmin && (
                           <td>
