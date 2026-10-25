@@ -369,6 +369,11 @@ function AttendanceContent() {
                 Paid leave starts the month after this employee was created.
               </p>
             )}
+            <p>
+              Hours are shown as hours and minutes. The average includes {completedHours.days} completed
+              {completedHours.days === 1 ? " day" : " days"}, including extra hours.
+              In-progress days and missing checkouts are excluded. Salary is calculated separately for each day.
+            </p>
             <div className={styles.summaryGrid}>
               {[
                 ["Days in Month", attendanceData.period.daysInPeriod],
