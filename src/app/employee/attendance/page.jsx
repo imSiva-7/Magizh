@@ -359,10 +359,10 @@ function AttendanceContent() {
           <div className={styles.summaryCard}>
             <h2>Attendance & Salary Stats — {formatAttendanceMonth(month)}</h2>
             <p className={styles.salaryFormula}>
-              9 hours or more earns a full day’s salary. Below 9 hours, pay is
-              proportional. Daily salary = monthly salary ÷ days in month. Total
-              each day’s pay, then subtract advances. Extra hours do not add
-              extra pay.
+              Monthly pay uses actual hours worked plus 9 hours per eligible paid leave day taken.
+              With no more than 4 leave days, a shortfall of up to 9 hours earns the full eligible salary; otherwise pay is calculated
+              proportionally. Pay is capped at the monthly salary, prorated for mid-month joiners.
+              Advances are subtracted afterward.
             </p>
             {attendanceData.summary.paidLeaveEligible === false && (
               <p>
@@ -371,8 +371,8 @@ function AttendanceContent() {
             )}
             <p>
               Hours are shown as hours and minutes. The average includes {completedHours.days} completed
-              {completedHours.days === 1 ? " day" : " days"}, including extra hours.
-              In-progress days and missing checkouts are excluded. Salary is calculated separately for each day.
+              {completedHours.days === 1 ? " day" : " days"}.
+              In-progress days and missing checkouts are excluded. Salary uses the monthly total.
             </p>
             <div className={styles.summaryGrid}>
               {[
@@ -404,17 +404,21 @@ function AttendanceContent() {
                   formatAttendanceHours(attendanceData.summary.standardHours),
                 ],
                 ["Hours Worked", formatAttendanceHours(attendanceData.summary.totalHoursWorked)],
+                ["Overtime Hours (Included in Hours Worked)", formatAttendanceHours(attendanceData.summary.totalOvertimeHours)],
+                ["Paid Leave Hours", formatAttendanceHours(attendanceData.summary.paidLeaveHours)],
+                ["Counted Hours (Work + Leave)", formatAttendanceHours(attendanceData.summary.countedHours)],
+                ["Hours Target for Employment Period", formatAttendanceHours(attendanceData.summary.targetHours)],
+                ["Full Pay From", formatAttendanceHours(attendanceData.summary.fullSalaryThresholdHours)],
+                ["Shortfall Before Grace", formatAttendanceHours(attendanceData.summary.shortfallHours)],
+                ["Grace Hours Applied", formatAttendanceHours(attendanceData.summary.graceHours)],
+                ["Grace Pay (Included)", formatCurrency(attendanceData.summary.gracePay)],
                 [
-                  "Payable Hours (Max 9 / Day)",
+                  "Payable Hours (Including Grace)",
                   formatAttendanceHours(attendanceData.summary.payableHours),
                 ],
                 [
                   "Daily Salary",
                   formatCurrency(attendanceData.summary.dailyRate),
-                ],
-                [
-                  "Extra Hours (No Extra Pay)",
-                  formatAttendanceHours(attendanceData.summary.totalOvertimeHours),
                 ],
                 [
                   "Avg Hours / Completed Day",
@@ -434,7 +438,7 @@ function AttendanceContent() {
                   formatCurrency(attendanceData.summary.hourlyRate) + "/h",
                 ],
                 [
-                  "Paid Leave (Not Added)",
+                  "Paid Leave Pay (Included)",
                   formatCurrency(attendanceData.summary.paidLeavePay),
                 ],
                 [
@@ -488,25 +492,24 @@ function AttendanceContent() {
                 per hour.
               </li>
               <li>
-                <strong>Count recorded hours worked.</strong>{" "}
-                {attendanceData.summary.totalHoursWorked} hours, including{" "}
-                {attendanceData.summary.totalOvertimeHours} extra hours above 9
-                per day. Only up to 9 hours per day count toward salary; extra
-                hours do not cover shorter days.
+                <strong>Add work and paid leave hours.</strong>{" "}
+                {attendanceData.summary.totalHoursWorked} worked hours + {attendanceData.summary.paidLeaveHours} paid leave hours
+                = {attendanceData.summary.countedHours} counted hours. Worked hours already include {attendanceData.summary.totalOvertimeHours} overtime hours; these are counted once.
               </li>
               <li>
-                <strong>Calculate earned salary.</strong> Add each day’s payable
-                hours (maximum 9), then multiply by the hourly rate. For
-                example, ₹15,000 in a 30-day month gives ₹500 for 9 or more
-                hours, and ₹333.33 for 6 hours.
+                <strong>Apply the monthly target and 9-hour grace.</strong>{" "}
+                {!attendanceData.summary.graceEligible && "More than 4 leave days: the 9-hour grace does not apply. "}
+                Target: {attendanceData.summary.targetHours} hours; full eligible pay from {attendanceData.summary.fullSalaryThresholdHours} hours.
+                Current shortfall: {attendanceData.summary.shortfallHours} hours.
+                {attendanceData.summary.fullSalaryEligible ? " The full-pay threshold is met." : " Pay is proportional to counted hours until the threshold is met."}
+                {" "}Grace applied: {attendanceData.summary.graceHours} hours.
                 <br />
-                {attendanceData.summary.payableHours} × (
-                {formatCurrency(attendanceData.employee.salary)} ÷{" "}
-                {attendanceData.period.daysInPeriod} ÷ 9) ={" "}
-                <strong>
-                  {formatCurrency(attendanceData.summary.grossSalary)}
-                </strong>
-                .
+                For example, ₹15,000 in a 30-day month has a 270-hour target: with no more than 4 leave days, 261 hours including paid leave earns ₹15,000;
+                260 hours earns ₹14,444.44 before advances. Unused leave does not count.
+                <br />
+                {attendanceData.summary.payableHours} payable hours × (
+                {formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 9)
+                = <strong>{formatCurrency(attendanceData.summary.grossSalary)}</strong>.
               </li>
               <li>
                 <strong>Subtract advances.</strong> Earned salary − advance
@@ -543,9 +546,8 @@ function AttendanceContent() {
             <p>
               <strong>Leave:</strong> {attendanceData.summary.paidLeaveDays}{" "}
               used × 9 hours × hourly rate ={" "}
-              {formatCurrency(attendanceData.summary.paidLeavePay)} displayed
-              leave value. This value is not added to salary. Unused leave earns
-              no money.{" "}
+              {formatCurrency(attendanceData.summary.paidLeaveHours * Number(attendanceData.employee.salary) / attendanceData.period.daysInPeriod / 9)} leave value before the salary cap.
+              Counted hours include leave actually taken within the allowance. Unused leave earns no money.{" "}
               {attendanceData.summary.paidLeaveEligible === false
                 ? "There is no paid leave allowance during the employee’s creation month."
                 : "The monthly allowance is " +
@@ -558,7 +560,7 @@ function AttendanceContent() {
                 ? formatAttendanceDate(attendanceData.employee.joiningDate) +
                   ". Hours before this date are excluded."
                 : "No joining date is recorded; attendance is counted from the start of the month."}{" "}
-              The hourly rate always uses all calendar days in the month.
+              The hourly rate always uses all calendar days in the month. The hours target and salary ceiling use only days employed in that month.
             </p>
             <p>
               Rates are shown rounded for readability; calculations use the full

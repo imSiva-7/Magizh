@@ -66,16 +66,26 @@ export function buildPayroll(employee, month, today) {
     attendance.filter((day) => day.status === status).length;
   const paidLeaveDays = count("paid_leave");
   const hourlyRate = (Number(employee.salary) || 0) / (daysInPeriod * fullDayHours);
-  // Cap each day separately; extra hours cannot cover a shorter day.
-  // Use the unrounded rate until the final monetary totals.
-  const regularPay = sum("regularHours") * hourlyRate;
+  // Monthly hours include extra hours once and only paid leave actually used.
+  // Preserve the calendar-day rate and prorate the ceiling for mid-month joiners.
+  const targetHours = employedDaysInMonth * fullDayHours;
+  const paidLeaveHours = paidLeaveDays * fullDayHours;
+  const countedHours = Math.round((sum("hoursWorked") + paidLeaveHours) * 100) / 100;
+  const shortfallHours = Math.max(0, targetHours - countedHours);
+  const graceEligible = absences <= 4;
+  const fullSalaryEligible = targetHours > 0 && countedHours > 0 &&
+    (shortfallHours === 0 || (graceEligible && shortfallHours <= 9));
+  const payableHours = fullSalaryEligible ? targetHours : Math.min(countedHours, targetHours);
+  const regularPay = Math.min(sum("hoursWorked"), targetHours) * hourlyRate;
+  const paidLeavePay = Math.min(paidLeaveHours, Math.max(0, targetHours - sum("hoursWorked"))) * hourlyRate;
+  const graceHours = Math.max(0, payableHours - countedHours);
   const overtimePay = 0;
   const advances = employee.advances?.[month] || [];
   const totalAdvances = advances.reduce(
     (total, advance) => total + (Number(advance.amount) || 0),
     0,
   );
-  const grossSalary = regularPay;
+  const grossSalary = payableHours * hourlyRate;
   const fingerprint = payrollFingerprint(employee, month, today);
 
   const round = (value) => Number(value.toFixed(2));
@@ -106,10 +116,19 @@ export function buildPayroll(employee, month, today) {
       totalOvertimeHours: round(sum("overtimeHours")),
       scheduledWorkingDays: daysInPeriod,
       expectedWorkingDays: Math.max(0, employedDaysInMonth - paidLeaveAllowance),
-      payableDays: round(sum("regularHours") / fullDayHours),
+      payableDays: round(payableHours / fullDayHours),
       fullDayHours,
       dailyRate: round((Number(employee.salary) || 0) / daysInPeriod),
-      payableHours: round(sum("regularHours")),
+      payableHours: round(payableHours),
+      countedHours: round(countedHours),
+      targetHours,
+      shortfallHours: round(shortfallHours),
+      fullSalaryEligible,
+      graceEligible,
+      fullSalaryThresholdHours: Math.max(0, targetHours - (graceEligible ? 9 : 0)),
+      salaryCeiling: round(targetHours * hourlyRate),
+      graceHours: round(graceHours),
+      gracePay: round(graceHours * hourlyRate),
       elapsedDays,
       employedDaysInMonth,
       remainingDays: daysInPeriod - last,
@@ -125,13 +144,13 @@ export function buildPayroll(employee, month, today) {
       unpaidLeaveDeduction: 0,
       unpaidAbsenceDays: 0,
       pendingLeaveDays: count("pending"),
-      paidLeaveHours: paidLeaveDays * fullDayHours,
+      paidLeaveHours,
       standardHours: daysInPeriod * fullDayHours,
       hourlyRate: round(hourlyRate),
       overtimeRate: 0,
       regularPay: round(regularPay),
       overtimePay: round(overtimePay),
-      paidLeavePay: round(paidLeaveDays * fullDayHours * hourlyRate),
+      paidLeavePay: round(paidLeavePay),
       unusedLeavePay: 0,
       grossSalary: round(grossSalary),
       totalAdvances: round(totalAdvances),
