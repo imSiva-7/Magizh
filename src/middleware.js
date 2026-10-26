@@ -10,6 +10,7 @@ const rolePermissions = {
 
 const isPathAllowed = (path, userRole) => {
   if (!userRole) return false;
+  if (path === "/" || /\/(analytics)(\/|$)/.test(path)) return userRole === "admin";
   if (userRole === "admin" || userRole === "dev") return true;
   const allowed = rolePermissions[userRole];
   return allowed?.some((prefix) => path.startsWith(prefix));
@@ -51,6 +52,9 @@ export default withAuth(
     }
 
     if (!isPathAllowed(path, role)) {
+      if (path === "/" && ["employee", "dev"].includes(role)) {
+        return NextResponse.redirect(new URL("/productions", req.url));
+      }
       
       if (path.startsWith("/api/")) {
         console.log(`[Middleware] API route ${path} - Forbidden for role ${role}`);
@@ -75,6 +79,7 @@ export default withAuth(
 export const config = {
   matcher: [
     "/productions/:path*",
+    "/",
     "/stock/:path*",
     "/supplier/:path*",
     "/customer/:path*",

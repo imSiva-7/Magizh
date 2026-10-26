@@ -1,3 +1,4 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth";
@@ -6,6 +7,8 @@ import getDatabase from "@/database/connectToMongoDB";
 import { SUMMARY_COLLECTION, getAllTimeProcurementTotals } from "@/lib/flat-procurements.mjs";
 
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   try {
     if (!await getServerSession(authOptions)) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     const id = new URL(request.url).searchParams.get("supplierId");

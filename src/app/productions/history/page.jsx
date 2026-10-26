@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay } from "@/lib/india-date.mjs";
 
@@ -329,7 +330,7 @@ export default function ProductionHistoryPage() {
       </div>
 
       {/* Filter Form */}
-      <form data-filter="card" onSubmit={handleSubmit} className={styles.filterForm}>
+      <AdminSummary><form data-filter="card" onSubmit={handleSubmit} className={styles.filterForm}>
         <div data-filter="title" className={styles.filterHeader}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -391,7 +392,7 @@ export default function ProductionHistoryPage() {
             </div>
           </div>
         </div>
-      </form>
+      </form></AdminSummary>
 
       {/* Error Display */}
       {error && (
@@ -414,7 +415,7 @@ export default function ProductionHistoryPage() {
       {/* Summary Stats */}
       {entries.length > 0 && (
         <>
-          <div className={styles.statsCard}>
+          <AdminSummary><div className={styles.statsCard}>
             <h3>
               Summary
               <div className={styles.dateRange}>{getDateRangeLabel()}</div>
@@ -430,10 +431,10 @@ export default function ProductionHistoryPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </div></AdminSummary>
 
           {/* Export Section */}
-          <div className={styles.exportSection}>
+          <AdminSummary><div className={styles.exportSection}>
             <span className={styles.entryCount}>
               {entries.length} {entries.length === 1 ? "entry" : "entries"}{" "}
               found
@@ -446,7 +447,7 @@ export default function ProductionHistoryPage() {
             >
               Export as CSV
             </button>
-          </div>
+          </div></AdminSummary>
         </>
       )}
 
@@ -472,12 +473,12 @@ export default function ProductionHistoryPage() {
                     : "Start by adding production entries"}
                 </p>
                 {(filters.fromDate || filters.toDate) && (
-                  <button data-button="secondary"
+                  <AdminSummary><button data-button="secondary"
                     onClick={clearFilters}
                     className={styles.clearFilterLink}
                   >
                     View All Records
-                  </button>
+                  </button></AdminSummary>
                 )}
               </>
             )}

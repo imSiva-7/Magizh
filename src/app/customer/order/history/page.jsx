@@ -1,4 +1,6 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
+import { totalCustomerDue } from "@/lib/customer-account-due.mjs";
 import DataSkeleton from "@/components/DataSkeleton";
 import CustomerCharts from "@/components/CustomerCharts";
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -115,6 +117,7 @@ function OrderHistoryContent() {
   const newOrderButtonRef = useRef(null);
   const historyRequestRef = useRef(null);
   const { data: session } = useSession();
+  const canViewSummary = session?.user?.role === "admin";
 
   const fetchHistory = useCallback(async () => {
     historyRequestRef.current?.abort();
@@ -134,7 +137,7 @@ function OrderHistoryContent() {
         throw new Error("From date must be before the to date.");
       const [res, payments] = await Promise.all([
         fetch(`/api/customer/order/history?${params}`, { cache: "no-store", signal: controller.signal }),
-        fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store", signal: controller.signal }),
+        (canViewSummary ? fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store", signal: controller.signal }) : Promise.resolve({ ok: true, json: async () => ({ customers: [] }) })),
       ]);
       if (!res.ok || !payments.ok)
         throw new Error("History could not be loaded. Please retry.");
@@ -153,7 +156,7 @@ function OrderHistoryContent() {
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [filters]);
+  }, [filters, canViewSummary]);
 
   useEffect(() => {
     fetchHistory();
@@ -302,7 +305,7 @@ function OrderHistoryContent() {
       {showGstExport && <Gstr1Export initialMonth={filters.startDate?.slice(0, 7)} onClose={() => setShowGstExport(false)} />} */}
 
       {/* Filter Card */}
-      <div data-filter="card" className={styles.filter_card}>
+      <AdminSummary><div data-filter="card" className={styles.filter_card}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -372,10 +375,10 @@ function OrderHistoryContent() {
             </div>
           </div>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {!loading && !loadError && (
-        <section
+        <AdminSummary><section
           className={styles.stats_card}
           aria-labelledby="order-history-summary"
         >
@@ -399,7 +402,7 @@ function OrderHistoryContent() {
                 `₹${formatStat(paymentPeriod?.receivedAmount || 0)}`,
                 "receivedAmount",
               ],
-              // ["Net Change", `₹${formatStat(paymentPeriod?.netChange || 0)}`, "netChange"],
+              ["Due", `₹${formatStat(totalCustomerDue(trendCustomers))}`, "currentDue"],
               [
                 "AOV",
                 `₹${formatStat(data.summary?.orderCount ? data.summary.totalAmount / data.summary.orderCount : 0)}`,
@@ -429,25 +432,21 @@ function OrderHistoryContent() {
               </div>
             ))}
           </div>
-          {/* <p>
-            Net received includes receipts and corrections dated in this period.
-            Net change is sales minus receipts, excluding opening balances.
-            Current due and credit are on Customer Payments.
-          </p> */}
-        </section>
+          <p>Due is the current unpaid account balance for customers with activity in this period, including earlier sales. Sales and received amounts follow the selected dates.</p>
+        </section></AdminSummary>
       )}
 
       {/* Export Section */}
       <section aria-label="Order history analytics">
-        <CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} />
+        <AdminSummary><CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} /></AdminSummary>
       </section>
 
       {/* {!loading && !loadError && <CustomerLeaderboard totals={trendCustomers} orders={data.orders} startDate={filters.startDate} endDate={filters.endDate} />} */}
-      {!loading && data.summary?.orderCount > 0 && (
-        <div className={styles.exportSection}>
+      {!loading && data.orders.length > 0 && (
+        <AdminSummary><div className={styles.exportSection}>
           <span className={styles.entryCount}>
-            {data.summary.orderCount} order
-            {data.summary.orderCount !== 1 ? "s" : ""} found
+            {data.orders.length} order
+            {data.orders.length !== 1 ? "s" : ""} found
           </span>
 
           <button data-button="secondary"
@@ -457,7 +456,7 @@ function OrderHistoryContent() {
           >
             Export as PDF
           </button>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* Table */}
@@ -467,13 +466,13 @@ function OrderHistoryContent() {
         ) : loadError ? (
           <div className={styles.empty_state} role="alert">
             <p>{loadError}</p>
-            <button data-button="secondary"
+            <AdminSummary><button data-button="secondary"
               type="button"
               className={styles.clear_filter_btn}
               onClick={fetchHistory}
             >
               Retry history
-            </button>
+            </button></AdminSummary>
           </div>
         ) : data.orders.length === 0 ? (
           <div className={styles.empty_state}>
@@ -482,13 +481,13 @@ function OrderHistoryContent() {
             <p className={styles.empty_message}>
               No orders found for the selected date range.
             </p>
-            <button data-button="secondary"
+            <AdminSummary><button data-button="secondary"
               onClick={clearFilters}
               className={styles.clear_filter_btn}
               disabled={loading}
             >
               Clear filters
-            </button>
+            </button></AdminSummary>
           </div>
         ) : (
           <div className={styles.table_container}>
@@ -499,7 +498,7 @@ function OrderHistoryContent() {
                   <th>Customer</th>
                   <th>Total (₹)</th>
                   <th>Status</th>
-                  <th>Invoice</th>
+                  <AdminSummary><th>Invoice</th></AdminSummary>
                   <th>Comment</th>
                 </tr>
               </thead>
@@ -537,7 +536,7 @@ function OrderHistoryContent() {
                         {order.paymentStatus === "Paid" ? "Paid" : "Due"}
                       </span>
                     </td>
-                    <td className={styles.invoice_cell}>
+                    <AdminSummary><td className={styles.invoice_cell}>
                       <button data-button="table-icon"
                         onClick={() => handleSingleInvoice(order)}
                         className={styles.export_btn_table}
@@ -551,7 +550,7 @@ function OrderHistoryContent() {
                           height={20}
                         />
                       </button>
-                    </td>
+                    </td></AdminSummary>
                     <td className={styles.comment_cell}>
                       <CommentEditor
                         canEdit={session?.user?.role === "admin"}

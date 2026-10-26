@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireStaff } from "@/lib/mutation-auth";
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import getDatabase from "@/database/connectToMongoDB";
 import { getTodayDate } from "@/lib/india-date.mjs";
 import { buildPayroll, validMonth } from "@/lib/payroll";
@@ -9,7 +9,7 @@ import { attendanceFilename } from "@/utils/attendanceFilename";
 export const runtime = "nodejs";
 
 export async function GET(request) {
-  const denied = await requireStaff();
+  const denied = await requireSummaryAdmin();
   if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);

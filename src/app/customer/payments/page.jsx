@@ -1,4 +1,6 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
+import { totalCustomerDue } from "@/lib/customer-account-due.mjs";
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
@@ -127,6 +129,7 @@ export default function CustomerPayments() {
   const [periodTotals, setPeriodTotals] = useState([]);
   const [periodError, setPeriodError] = useState("");
   const { data: session } = useSession();
+  const canViewSummary = session?.user?.role === "admin";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState(getInitialFilters);
@@ -170,7 +173,7 @@ export default function CustomerPayments() {
 
         const [res, summaryRes] = await Promise.all([
           fetch(`/api/customer/order/history?${queryParams}`, { cache: "no-store", signal }),
-          fetch(`/api/customer/payment-summary?${queryParams}`, { cache: "no-store", signal }),
+          (canViewSummary ? fetch(`/api/customer/payment-summary?${queryParams}`, { cache: "no-store", signal }) : Promise.resolve({ ok: true, json: async () => ({ customers: [] }) })),
         ]);
         if (!res.ok || !summaryRes.ok) throw new Error("Could not load data for this period. Please retry.");
         const [data, summary] = await Promise.all([res.json(), summaryRes.json()]);
@@ -186,7 +189,7 @@ export default function CustomerPayments() {
         if (!signal?.aborted) setIsLoading(false);
       }
     },
-    [filters],
+    [filters, canViewSummary],
   );
 
   useEffect(() => {
@@ -274,18 +277,21 @@ export default function CustomerPayments() {
   // in the receipt dialog, where opening debts and credits must remain intact.
   const customerTotalsMap = useMemo(() => {
     const totals = Object.fromEntries(periodTotals.map(row => [row.customerId, { ...row, orders: [], uniqueDates: new Set() }]));
-    for (const order of ordersData) if (totals[order.customerId]) {
+    for (const order of ordersData) {
+      if (!canViewSummary && !totals[order.customerId]) totals[order.customerId] = { totalOrders: 0, orders: [], uniqueDates: new Set() };
+      if (!totals[order.customerId]) continue;
+      if (!canViewSummary) totals[order.customerId].totalOrders += 1;
       totals[order.customerId].orders.push(order);
       totals[order.customerId].uniqueDates.add(order.date);
     }
     return totals;
-  }, [ordersData, periodTotals]);
+  }, [ordersData, periodTotals, canViewSummary]);
 
   const filteredCustomerList = useMemo(() => {
     const term = searchQuery.trim().toLowerCase();
-    return customerList.filter(customer => (!term || customer.customerName?.toLowerCase().includes(term)) && matchesPeriodActivity(customerTotalsMap[customer._id], statusFilter))
+    return customerList.filter(customer => (!term || customer.customerName?.toLowerCase().includes(term)) && (canViewSummary ? matchesPeriodActivity(customerTotalsMap[customer._id], statusFilter) : customerTotalsMap[customer._id]?.totalOrders > 0))
       .sort((a, b) => customerTotalsMap[b._id].totalOrders - customerTotalsMap[a._id].totalOrders);
-  }, [customerList, searchQuery, customerTotalsMap, statusFilter]);
+  }, [customerList, searchQuery, customerTotalsMap, statusFilter, canViewSummary]);
 
   const globalStats = useMemo(() => sumPaymentPeriod(filteredCustomerList.map(customer => customerTotalsMap[customer._id])), [filteredCustomerList, customerTotalsMap]);
   const cardTrends = useMemo(() => paymentCardTrends(filteredCustomerList.map(customer => customerTotalsMap[customer._id])), [filteredCustomerList, customerTotalsMap]);
@@ -341,7 +347,7 @@ export default function CustomerPayments() {
 
       {/* <label className={styles.search_label}>Period activity <select value={statusFilter} onChange={event => setStatusFilter(event.target.value)}><option value="">All activity</option><option value="receipts">With receipts or corrections</option><option value="sales-only">Sales without receipts</option><option value="increase">Receivables increased</option><option value="decrease">Receivables decreased</option></select></label> */}
       {/* Search Section */}
-      <div data-filter="card" className={styles.filter_section}>
+      <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div className={styles.search_wrapper}>
           <label htmlFor="searchInput" className={styles.search_label}>
             Search Customers:
@@ -385,10 +391,10 @@ export default function CustomerPayments() {
             )}
           </div>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {/* Date & Status Filters */}
-      <div data-filter="card" className={styles.filter_section}>
+      <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
           <span>Applies to orders, receipts and summary cards</span>
@@ -450,13 +456,14 @@ export default function CustomerPayments() {
             Today
           </button>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {periodError && <div className={styles.account_hint} role="alert">{periodError} <button data-button="secondary" type="button" onClick={() => fetchOrders()}>Retry period data</button></div>}
       {!isLoading && !periodError && (
-        <div className={styles.global_summary_card}>
+        <AdminSummary><div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Customers Summary</h2>
+            <p>Sales and receipts follow the selected dates. Due is the current unpaid account balance for these customers, including earlier sales. Customer credits do not reduce another customer’s due.</p>
             <span className={styles.date_range_badge}>{formatDateForDisplay(filters.startDate) || "First record"} to {formatDateForDisplay(filters.endDate) || "Latest record"}</span>
           </div>
           <div className={styles.global_stats_grid}>
@@ -480,19 +487,18 @@ export default function CustomerPayments() {
               colorClass={styles.text_green}
             />
             <StatItem
-              label="Net Change"
-              trend={cardTrends.netChange}
+              label="Due"
               tone="amount"
-              value={`₹${formatStat(globalStats.netChange)}`}
-              colorClass={globalStats.netChange < 0 ? styles.text_green : styles.text_red}
+              value={`₹${formatStat(totalCustomerDue(filteredCustomerList.map(customer => customerTotalsMap[customer._id])))}`}
+              colorClass={styles.text_red}
             />
 
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* Customer Cards Grid */}
-      {!isLoading && !isLoadingCustomers && !periodError && <CustomerLeaderboard totals={periodTotals} customers={customerList} orders={ordersData} startDate={filters.startDate} endDate={filters.endDate} />}
+      {!isLoading && !isLoadingCustomers && !periodError && <AdminSummary><CustomerLeaderboard totals={periodTotals} customers={customerList} orders={ordersData} startDate={filters.startDate} endDate={filters.endDate} /></AdminSummary>}
       {isLoading || isLoadingCustomers ? (
         <div className={styles.supplier_card}>
           <LoadingSpinner />
@@ -545,7 +551,7 @@ export default function CustomerPayments() {
                 </div>
 
                 {/* Quick Stats Row - Data from total_orders API */}
-                <div className={styles.quick_stats}>
+                <AdminSummary><div className={styles.quick_stats}>
                   <StatItem
                     label="Orders"
                     value={stats.totalOrders}
@@ -564,13 +570,13 @@ export default function CustomerPayments() {
                     colorClass={styles.text_green}
                   />
                   <StatItem
-                    label="Net Change"
+                    label="Due"
                     value={`₹${formatStat(
-                      stats.netChange,
+                      stats.currentDue,
                     )}`}
-                    colorClass={stats.netChange < 0 ? styles.text_green : styles.text_red}
+                    colorClass={styles.text_red}
                   />
-                </div>
+                </div></AdminSummary>
 
                 {/* Orders Table */}
                 <div className={styles.table_wrapper}>
@@ -581,7 +587,7 @@ export default function CustomerPayments() {
                         <th className={styles.table_header_cell}>
                           Order Total (₹)
                         </th>
-                        <th>Invoice</th>
+                        <AdminSummary><th>Invoice</th></AdminSummary>
 
                         <th className={styles.table_header_cell}>Comment</th>
                       </tr>
@@ -610,7 +616,7 @@ export default function CustomerPayments() {
                                 order.totalAmount,
                               )}
                             </td>
-                            <td className={styles.table_cell}>
+                            <AdminSummary><td className={styles.table_cell}>
                               <button data-button="table-icon"
                                 onClick={() =>
                                   handleSingleInvoice(order, customer)
@@ -625,7 +631,7 @@ export default function CustomerPayments() {
                                   height={20}
                                 />
                               </button>
-                            </td>
+                            </td></AdminSummary>
 
                             <td
                               className={`${styles.table_cell} ${styles.cell_comment}`}

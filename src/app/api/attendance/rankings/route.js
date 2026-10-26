@@ -1,3 +1,4 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -6,6 +7,8 @@ import { getEmployeeRankings } from "@/lib/employee-rankings";
 import { month as currentMonth } from "@/lib/india-date.mjs";
 
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });

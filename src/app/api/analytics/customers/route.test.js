@@ -1,3 +1,4 @@
+jest.mock("@/lib/summary-auth", () => ({ requireSummaryAdmin: async () => null }));
 import { GET } from "./route";
 import getDatabase from "@/database/connectToMongoDB";
 

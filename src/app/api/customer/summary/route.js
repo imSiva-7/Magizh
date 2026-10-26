@@ -1,3 +1,4 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getServerSession } from "next-auth";
@@ -6,6 +7,8 @@ import getDatabase from "@/database/connectToMongoDB";
 import { buildCustomerSummary, CUSTOMER_SUMMARIES } from "@/lib/customer-summaries.mjs";
 
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   if (!await getServerSession(authOptions)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const id = new URL(request.url).searchParams.get("customerId");
   if (!id || !ObjectId.isValid(id)) return NextResponse.json({ error: "Valid customerId required" }, { status: 400 });

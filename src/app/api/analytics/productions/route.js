@@ -1,3 +1,4 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 
@@ -16,6 +17,8 @@ const VALID_PRODUCTS = [
 const PERCENTAGE_FIELDS = ["fat", "snf"];
 
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");

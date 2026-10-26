@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -655,7 +656,7 @@ export default function Employee() {
         </form>
       )}
 
-      <div data-filter="card" className={styles.searchSection}>
+      <AdminSummary><div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Employees:
@@ -695,7 +696,7 @@ export default function Employee() {
             </span>
           )}
         </div>
-      </div>
+      </div></AdminSummary>
 
       {loadError && <div data-filter="card" role="alert"><p>{loadError}</p><button data-button="secondary" type="button" onClick={fetchData} disabled={loading}>Try again</button></div>}
       {/* Employees Table */}

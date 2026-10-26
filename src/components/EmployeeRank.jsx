@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { formatAttendanceMonth } from "@/utils/attendanceDates.mjs";
 import styles from "./Leaderboard.module.css";
 
 export function useEmployeeRankings(month, refresh = 0, enabled = true) {
+  const { data: session } = useSession();
+  enabled = enabled && session?.user?.role === "admin";
   const [state, setState] = useState({ month: null, rankings: [], loading: true, error: "" });
   const [retry, setRetry] = useState(0);
   useEffect(() => {

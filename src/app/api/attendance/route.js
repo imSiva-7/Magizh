@@ -1,3 +1,4 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { buildPayroll, validMonth } from "@/lib/payroll";
 import { month as indiaMonth } from "@/lib/india-date.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
@@ -20,6 +21,8 @@ const METHOD_NAMES = {
  * - month: Get data for specific month (YYYY-MM) - REQUIRED
  */
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   const METHOD = METHOD_NAMES.GET;
 
   try {

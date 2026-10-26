@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -103,7 +104,7 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid, trends }) => {
   const dateRangeLabel = "All Time";
 
   return (
-    <div className={styles.summary_box}>
+    <AdminSummary><div className={styles.summary_box}>
       <div className={styles.summary_header}>
         <h3>
           Summary{" "}
@@ -141,7 +142,7 @@ const SummaryStats = ({ summary, customerBalance, onEditPaid, trends }) => {
           colorClass={summary.dueAmount < 0 ? styles.text_green : styles.text_red}
         />
       </div>
-    </div>
+    </div></AdminSummary>
   );
 };
 
@@ -646,7 +647,7 @@ function OrdersContent() {
 
       {/* Filter Section */}
       {data.orders.length > 0 && (
-        <div data-filter="card" className={styles.filter_section}>
+        <AdminSummary><div data-filter="card" className={styles.filter_section}>
           <div className={styles.form_header}>
             <h2>Filter by Date Range</h2>
           </div>
@@ -697,12 +698,12 @@ function OrdersContent() {
               </button>
             </div>
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* Export & Bulk Actions */}
       {filteredOrders.length > 0 && (
-        <div className={styles.export_section}>
+        <AdminSummary><div className={styles.export_section}>
           <div className={styles.entry_count}>
             {filteredOrders.length} order(s) found
           </div>
@@ -714,7 +715,7 @@ function OrdersContent() {
               DOWNLOAD INVOICE
             </button>
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
 
@@ -737,7 +738,7 @@ function OrdersContent() {
                   ))}
                   <th>Order Total</th>
                   <th>Comment</th>
-                  <th>Invoice</th>
+                  <AdminSummary><th>Invoice</th></AdminSummary>
                   {isAdmin && <th>Actions</th>}
                 </tr>
               </thead>
@@ -779,7 +780,7 @@ function OrdersContent() {
                           "-"
                         )}
                       </td>
-                      <td className={styles.invoice_cell}>
+                      <AdminSummary><td className={styles.invoice_cell}>
                         <button data-button="table-icon"
                           onClick={() =>
                             handleExport(
@@ -798,7 +799,7 @@ function OrdersContent() {
                             height={20}
                           />
                         </button>
-                      </td>
+                      </td></AdminSummary>
                       {isAdmin && (
                         <td className={styles.actions_cell}>
                           <div className={styles.actionMenuWrapper}>

@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -320,7 +321,7 @@ export default function Home() {
         <div><span className={styles.eyebrow}>AT A GLANCE</span><h2>Business overview</h2></div>
       </div>
       {/* Date Filters */}
-      <div data-filter="card" className={styles.filter_form}>
+      <AdminSummary><div data-filter="card" className={styles.filter_form}>
         <div data-filter="title" className={styles.filter_header}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -390,7 +391,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {loading ? (
         <div className={styles.dataStatus} role="status">
@@ -404,13 +405,13 @@ export default function Home() {
         </div>
       ) : (
       <>
-      <HomeCharts
+      <AdminSummary><HomeCharts
         orders={customerData.orders}
         procurements={supplierData.procurements}
         customerSummary={customerData.summary}
         supplierSummary={supplierData.summary}
         filters={filters}
-      />
+      /></AdminSummary>
       {!(supplierData.summary.totalAmount > 0) && !(customerData.summary.totalAmount > 0) && (
         <div className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
       )}
@@ -450,7 +451,7 @@ export default function Home() {
           </div>
         </div>
       )}  */}
- <div className={styles.global_summary_card} hidden={!(supplierData.summary.totalAmount > 0)}>
+ <AdminSummary><div className={styles.global_summary_card} hidden={!(supplierData.summary.totalAmount > 0)}>
       {supplierData.summary.totalAmount > 0 && (
         <div>
           <div className={styles.global_header}>
@@ -522,8 +523,8 @@ export default function Home() {
         </div>
       )}
 
-      </div>
-      <div className={styles.global_summary_card} hidden={!(customerData.summary.totalAmount > 0) && customerDueList.length === 0}>
+      </div></AdminSummary>
+      <AdminSummary><div className={styles.global_summary_card} hidden={!(customerData.summary.totalAmount > 0) && customerDueList.length === 0}>
         {customerData.summary.totalAmount > 0 && (
           <div>
             <div className={styles.global_header}>
@@ -593,7 +594,7 @@ export default function Home() {
             </div>
           </div>
         )}
-      </div>
+      </div></AdminSummary>
       </>
       )}
       </div>

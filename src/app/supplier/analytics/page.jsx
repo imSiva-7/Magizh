@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -37,7 +38,7 @@ export default function AnalyticsPage() {
   }, [dateRange, reload]);
   return <div className={styles.page_container}>
     <div className={styles.header}><PageHeading title="Supplier Analytics" section="BUSINESS INSIGHTS" description="Explore milk procurement, quality trends, and supplier performance." /></div>
-    <div data-filter="card" className={styles.filter_section}>
+    <AdminSummary><div data-filter="card" className={styles.filter_section}>
       <div data-filter="title" className={styles.filter_title}><h2>Filter by Date Range</h2></div>
       <div data-filter="grid" className={styles.date_input_group}>
         <div data-filter="field" className={styles.date_field}><label htmlFor="startDate">From Date</label><input type="date" id="startDate" name="startDate" value={dateRange.startDate} onChange={(event) => setDateRange((previous) => ({ ...previous, startDate: event.target.value }))} max={dateRange.endDate || getTodayDate()} className={styles.date_input} /></div>
@@ -48,8 +49,8 @@ export default function AnalyticsPage() {
         <button data-button="secondary" type="button" onClick={() => setDateRange({ startDate: "", endDate: "" })} className={`${styles.btn} ${styles.btn_primary}`}>Clear</button>
         <button data-button="secondary" type="button" onClick={() => { const today = getTodayDate(); setDateRange({ startDate: today, endDate: today }); }} className={`${styles.btn} ${styles.btn_primary}`}>Today</button>
       </div>
-    </div>
-    {!loading && !error && <div className={styles.summary_card}><div className={styles.summary_header}><h2>Summary</h2><span className={styles.date_range_badge}>{periodLabel(dateRange)}</span></div><div className={styles.stats_grid}>{[["Milk", `${formatNumberWithCommas(data.overall?.totalMilk || 0, 2)} L`], ["Value", `₹${formatStat(data.overall?.totalAmount || 0)}`], ["Entries", formatStat(data.overall?.totalRecords || 0)], ["Paid", `₹${formatStat(data.overall?.paidAmount || 0)}`], ["Due", `₹${formatStat(data.overall?.dueAmount || 0)}`]].map(([name, value]) => <div className={styles.stat_item} key={name}><div className={styles.stat_label}>{name}</div><div data-stat-tone={statNumberTone(name, value)} className={styles.stat_value}>{value}</div></div>)}</div></div>}
-    <SupplierCharts daily={data.daily} filters={dateRange} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} />
+    </div></AdminSummary>
+    {!loading && !error && <AdminSummary><div className={styles.summary_card}><div className={styles.summary_header}><h2>Summary</h2><span className={styles.date_range_badge}>{periodLabel(dateRange)}</span></div><div className={styles.stats_grid}>{[["Milk", `${formatNumberWithCommas(data.overall?.totalMilk || 0, 2)} L`], ["Value", `₹${formatStat(data.overall?.totalAmount || 0)}`], ["Entries", formatStat(data.overall?.totalRecords || 0)], ["Paid", `₹${formatStat(data.overall?.paidAmount || 0)}`], ["Due", `₹${formatStat(data.overall?.dueAmount || 0)}`]].map(([name, value]) => <div className={styles.stat_item} key={name}><div className={styles.stat_label}>{name}</div><div data-stat-tone={statNumberTone(name, value)} className={styles.stat_value}>{value}</div></div>)}</div></div></AdminSummary>}
+    <AdminSummary><SupplierCharts daily={data.daily} filters={dateRange} loading={loading} error={error} onRetry={() => setReload((value) => value + 1)} /></AdminSummary>
   </div>;
 }

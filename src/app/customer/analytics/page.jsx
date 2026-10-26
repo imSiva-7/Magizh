@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -94,7 +95,7 @@ export default function CustomerAnalyticsPage() {
       </div>
 
       {/* Filter Section */}
-      <div data-filter="card" className={styles.filter_section}>
+      <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -154,15 +155,15 @@ export default function CustomerAnalyticsPage() {
             Today
           </button>
         </div>
-      </div>
+      </div></AdminSummary>
 
-      <CustomerCharts
+      <AdminSummary><CustomerCharts
         daily={data.daily}
         filters={dateRange}
         loading={loading}
         error={error}
         onRetry={() => setReload((value) => value + 1)}
-      />
+      /></AdminSummary>
 
       {error ? null : loading ? (
         <DataSkeleton label="Loading analytics..." />
@@ -209,7 +210,7 @@ export default function CustomerAnalyticsPage() {
           )} */}
 
           {productSales.products.length > 0 && (
-            <section className={styles.summary_card} aria-label="Products sold">
+            <AdminSummary><section className={styles.summary_card} aria-label="Products sold">
               <div className={styles.summary_header}>
                 <h2>Products sold</h2>
                 <span className={styles.date_range_badge}>
@@ -232,9 +233,9 @@ export default function CustomerAnalyticsPage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </section></AdminSummary>
           )}
-          <CustomerProductSales products={productSales.products} />
+          <AdminSummary><CustomerProductSales products={productSales.products} /></AdminSummary>
           {data.payment?.length > 0 && (
             <CustomerOrderStatus payment={data.payment} />
           )}

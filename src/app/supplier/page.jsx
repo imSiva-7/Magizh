@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -906,7 +907,7 @@ export default function Supplier() {
       )}
 
       {/* ---------- Search ---------- */}
-      <div data-filter="card" className={styles.searchSection}>
+      <AdminSummary><div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Suppliers:
@@ -946,7 +947,7 @@ export default function Supplier() {
             </span>
           )}
         </div>
-      </div>
+      </div></AdminSummary>
 
       {loadError && (
         <div data-filter="card" className={styles.searchSection} role="alert">

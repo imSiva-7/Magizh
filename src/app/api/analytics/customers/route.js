@@ -1,9 +1,12 @@
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { productSalesSummary } from "@/lib/customer-products";
 import { paymentPeriodRange } from "@/lib/customer-payment-period.mjs";
 
 export async function GET(request) {
+  const denied = await requireSummaryAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");

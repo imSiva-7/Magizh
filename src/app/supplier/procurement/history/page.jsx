@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import pickerStyles from "@/components/HistoryPartyPicker.module.css";
 import DataSkeleton from "@/components/DataSkeleton";
 import SupplierCharts from "@/components/SupplierCharts";
@@ -799,7 +800,7 @@ function ProcurementHistoryContent() {
       )}
 
       {/* FILTER SECTION */}
-      <form data-filter="card" onSubmit={handleFilterSubmit} className={styles.filter_card}>
+      <AdminSummary><form data-filter="card" onSubmit={handleFilterSubmit} className={styles.filter_card}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -868,7 +869,7 @@ function ProcurementHistoryContent() {
             </div>
           </div>
         </div>
-      </form>
+      </form></AdminSummary>
 
       {/* SUMMARY */}
 
@@ -879,7 +880,7 @@ function ProcurementHistoryContent() {
         </div>
       ) : (
         summary.count > 0 && (
-          <div className={styles.stats_card}>
+          <AdminSummary><div className={styles.stats_card}>
             <h3 className={styles.stats_header}>
               Summary
               <span className={styles.date_range_badge}>
@@ -934,18 +935,18 @@ function ProcurementHistoryContent() {
 
               />
             </div>
-          </div>
+          </div></AdminSummary>
         )
       )}
 
 
       <section aria-label="Procurement history analytics">
-        <SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} />
+        <AdminSummary><SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} /></AdminSummary>
       </section>
 
       {/* EXPORT */}
       {!loading && summary.count > 0 && (
-        <div className={styles.exportSection}>
+        <AdminSummary><div className={styles.exportSection}>
           <span className={styles.entryCount}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
           </span>
@@ -965,11 +966,11 @@ function ProcurementHistoryContent() {
               Export as PDF
             </button>
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* TABLE */}
-      {loadError && <div className={styles.error_alert} role="alert"><span>{loadError}</span><button data-button="secondary" type="button" onClick={fetchAllData} className={styles.clear_filter_btn}>Try again</button></div>}
+      {loadError && <div className={styles.error_alert} role="alert"><span>{loadError}</span><AdminSummary><button data-button="secondary" type="button" onClick={fetchAllData} className={styles.clear_filter_btn}>Try again</button></AdminSummary></div>}
       <div className={styles.table_wrapper}>
         {!loading && !loadError && summary.count === 0 ? (
           <div className={styles.empty_state}>
@@ -978,13 +979,13 @@ function ProcurementHistoryContent() {
             <p className={styles.empty_message}>
               No procurement records found for the selected date range
             </p>
-            <button data-button="secondary"
+            <AdminSummary><button data-button="secondary"
               onClick={clearFilters}
               className={styles.clear_filter_btn}
               disabled={loading}
             >
               clear filters
-            </button>
+            </button></AdminSummary>
           </div>
         ) : (
           !loading && (

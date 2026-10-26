@@ -1,11 +1,11 @@
 import { GET } from "./route";
-import { requireStaff } from "@/lib/mutation-auth";
+import { requireSummaryAdmin } from "@/lib/summary-auth";
 import getDatabase from "@/database/connectToMongoDB";
-jest.mock("@/lib/mutation-auth", () => ({ requireStaff: jest.fn() }));
+jest.mock("@/lib/summary-auth", () => ({ requireSummaryAdmin: jest.fn() }));
 jest.mock("@/database/connectToMongoDB", () => ({ __esModule: true, default: jest.fn() }));
 jest.mock("@/lib/india-date.mjs", () => ({ getTodayDate: () => "2026-02-01" }));
 jest.mock("../../../../../utils/exportAttendance", () => ({ exportAttendanceToPDF: () => new ArrayBuffer(1) }));
 const request = { url: "https://example.test/api/attendance/payroll?empID=0001&month=2026-01" };
-beforeEach(() => { jest.clearAllMocks(); requireStaff.mockResolvedValue(null); getDatabase.mockResolvedValue({ collection: () => ({ findOne: async () => ({ empID: "0001", salary: 31000, paidLeaveDays: 2 }) }) }); });
+beforeEach(() => { jest.clearAllMocks(); requireSummaryAdmin.mockResolvedValue(null); getDatabase.mockResolvedValue({ collection: () => ({ findOne: async () => ({ empID: "0001", salary: 31000, paidLeaveDays: 2 }) }) }); });
 test("salary PDF is available without approval", async () => { expect((await GET(request)).status).toBe(200); });
-test("staff authorization is still required", async () => { requireStaff.mockResolvedValue(new Response(null, { status: 403 })); expect((await GET(request)).status).toBe(403); expect(getDatabase).not.toHaveBeenCalled(); });
+test("admin authorization is still required", async () => { requireSummaryAdmin.mockResolvedValue(new Response(null, { status: 403 })); expect((await GET(request)).status).toBe(403); expect(getDatabase).not.toHaveBeenCalled(); });

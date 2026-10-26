@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import { useSession } from "next-auth/react";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -98,7 +99,7 @@ export default function AttendanceHistoryPage() {
         <Link data-button="secondary" href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
       </div>
 
-      <div data-filter="card" className={styles.historyControls}>
+      <AdminSummary><div data-filter="card" className={styles.historyControls}>
         <div className={styles.inputGroup}>
           <label htmlFor="history-month">Month</label>
           <input id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} max={getCurrentMonth()} className={styles.input} required />
@@ -119,7 +120,7 @@ export default function AttendanceHistoryPage() {
           <button data-button="secondary" type="button" onClick={reset} className={styles.secondaryButton}>Reset</button>
           <button data-button="primary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton} disabled={loading} aria-label="Refresh attendance">Refresh</button>
         </div>
-      </div>
+      </div></AdminSummary>
 
       <EmployeeLeaderboard month={month} state={ranking} />
 
@@ -131,11 +132,11 @@ export default function AttendanceHistoryPage() {
         <div className={styles.emptyState}><p>{!month ? "Choose a month to view attendance." : searchDebounced ? `No attendance found for “${searchDebounced}”.` : "No attendance found for these filters."}</p></div>
       ) : (
         <>
-          {data.summary && <div className={styles.historyOverview} aria-label="Attendance summary">
+          {data.summary && <AdminSummary><div className={styles.historyOverview} aria-label="Attendance summary">
             <span><strong>{data.summary.uniqueEmployees}</strong> employees</span>
             <span><strong>{Number(data.summary.totalHours || 0).toFixed(2)}h</strong> worked</span>
             {data.summary.incompleteCount > 0 && <span className={styles.historyAttention}><strong>{data.summary.incompleteCount}</strong> missing checkout</span>}
-          </div>}
+          </div></AdminSummary>}
           <div className={styles.historyGroups}>
             {groups.map(([date, records]) => (
               <section key={date} className={styles.historyGroup} aria-label={formatAttendanceDate(date)}>

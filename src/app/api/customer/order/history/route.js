@@ -1,7 +1,11 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb"
 
 export async function GET(request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");
@@ -57,6 +61,7 @@ export async function GET(request) {
       }
     };
 
+    if (session.user.role !== "admin") delete responseData.summary;
     return NextResponse.json(responseData, {
       status: 200,
       headers: { "Cache-Control": "no-store" }

@@ -178,7 +178,7 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className={styles.desktopNav} aria-label="Main navigation">
           <ul className={styles.navList}>
-            {desktopNavItems.map((item) => (
+            {desktopNavItems.filter(item => item.path !== "/" || session?.user?.role === "admin").map((item) => (
               <li
                 key={item.path}
                 className={`${styles.navItem} ${openDropdown === item.path ? styles.dropdownOpen : ""}`}
@@ -342,7 +342,7 @@ export default function Header() {
               </div>
               <nav className={styles.mobileNav}>
                 <ul className={styles.mobileNavList}>
-                  {mobileNavItems.map((item) => (
+                  {mobileNavItems.filter(item => item.path !== "/" || session?.user?.role === "admin").map((item) => (
                     <li key={item.path}>
                       <Link
                         href={item.path}

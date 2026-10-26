@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -101,7 +102,7 @@ export default function ProductionAnalyticsPage() {
       </div>
 
       {/* Filter Section */}
-      <div data-filter="card" className={styles.filter_section}>
+      <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
         </div>
@@ -160,7 +161,7 @@ export default function ProductionAnalyticsPage() {
             Today
           </button>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {error ? (
         <div className={styles.empty_state} role="alert">
@@ -173,7 +174,7 @@ export default function ProductionAnalyticsPage() {
         <>
           {/* Summary Cards */}
           {data.totals && (
-            <div className={styles.summary_card}>
+            <AdminSummary><div className={styles.summary_card}>
               <div className={styles.summary_header}>
                 <h2>Summary</h2>
                 <span className={styles.date_range_badge}>
@@ -206,7 +207,7 @@ export default function ProductionAnalyticsPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div></AdminSummary>
           )}
 
           {/* Daily Milk Production Line Chart */}

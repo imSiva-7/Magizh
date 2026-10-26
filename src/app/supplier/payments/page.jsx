@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -401,7 +402,7 @@ export default function Payments() {
       </div>
 
       {/* Search Section */}
-      <div data-filter="card" className={styles.filter_section}>
+      <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div className={styles.search_wrapper}>
           <label htmlFor="searchInput" className={styles.search_label}>
             Search Suppliers:
@@ -445,10 +446,10 @@ export default function Payments() {
             )}
           </div>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {/* Date & Status Filters */}
-      <div data-filter="card" className={`${styles.filter_section} ${styles.status_filters}`}>
+      <AdminSummary><div data-filter="card" className={`${styles.filter_section} ${styles.status_filters}`}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range & Status</h2>
         </div>
@@ -549,7 +550,7 @@ export default function Payments() {
             Today
           </button>
         </div>
-      </div>
+      </div></AdminSummary>
 
       {/* Global Summary (All Suppliers) */}
       {statusFilter && (
@@ -567,7 +568,7 @@ export default function Payments() {
         </div>
       )}
       {!isLoading && globalStats.totalMilk > 0 && (
-        <div className={styles.global_summary_card}>
+        <AdminSummary><div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
@@ -608,7 +609,7 @@ export default function Payments() {
               </div>
             </div>
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* Supplier Grid (Cards) */}
@@ -659,7 +660,7 @@ export default function Payments() {
                 </div>
 
                 {/* Quick Stats Row */}
-                <div className={styles.quick_stats}>
+                <AdminSummary><div className={styles.quick_stats}>
                   <div className={styles.stat_card}>
                     <div className={styles.stat_card_label}>Milk</div>
                     <div data-stat-tone={statNumberTone("Milk", formatNumberWithCommas(stats.totalMilk, 2))} className={styles.stat_card_value}>
@@ -689,7 +690,7 @@ export default function Payments() {
                       ₹{formatStat(stats.dueAmount)}
                     </div>
                   </div>
-                </div>
+                </div></AdminSummary>
 
                 {/* Bulk Action Banner for Active Supplier */}
                 {isAdmin && checkedIds.length > 0 &&
@@ -713,7 +714,7 @@ export default function Payments() {
                         >
                           {submitting ? "Processing..." : "Mark  as Unpaid"}
                         </button>
-                        <button data-button="secondary"
+                        <AdminSummary><button data-button="secondary"
                           onClick={() => {
                             setCheckedIds([]);
                             setCheckedSupplierId("");
@@ -722,7 +723,7 @@ export default function Payments() {
                           className={styles.clear_filter_link}
                         >
                           Cancel
-                        </button>
+                        </button></AdminSummary>
                       </div>
                     </div>
                   )}

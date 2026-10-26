@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import { formatAttendanceHours, completedAttendanceAverage } from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import { attendanceFilename } from "@/utils/attendanceFilename";
@@ -279,7 +280,7 @@ function AttendanceContent() {
       </div>
 
       {/* Employee Selection */}
-      <div data-filter="card" className={styles.filterSection}>
+      <AdminSummary><div data-filter="card" className={styles.filterSection}>
         <div data-filter="grid" className={styles.filterGrid}>
           <div className={styles.inputGroup}>
             <label htmlFor="employee-select">Select Employee</label>
@@ -314,7 +315,7 @@ function AttendanceContent() {
             </div>
           )}
         </div>
-      </div>
+      </div></AdminSummary>
 
       {/* Loading State */}
       {(employeesLoading || loading) && <DataSkeleton label="Loading attendance data..." />}
@@ -356,7 +357,7 @@ function AttendanceContent() {
           </div>
 
           {/* Salary Summary Card */}
-          <div className={styles.summaryCard}>
+          <AdminSummary><div className={styles.summaryCard}>
             <h2>Attendance & Salary Stats — {formatAttendanceMonth(month)}</h2>
             <p className={styles.salaryFormula}>
               Monthly pay uses actual hours worked plus 9 hours per eligible paid leave day taken.
@@ -462,9 +463,9 @@ function AttendanceContent() {
                 </span>
               </div>
             </div>
-          </div>
+          </div></AdminSummary>
 
-          <section
+          <AdminSummary><section
             className={styles.summaryCard}
             aria-labelledby="salary-calculation-title"
           >
@@ -567,7 +568,7 @@ function AttendanceContent() {
               rate and final amounts are rounded to two decimals. A negative net
               salary means advances exceed earned pay.
             </p>
-          </section>
+          </section></AdminSummary>
 
           {/* Advances Section */}
           <div className={styles.advancesSection}>
@@ -715,7 +716,7 @@ function AttendanceContent() {
 
           {/* Export Section */}
           {attendanceData && (
-            <div className={styles.exportSection}>
+            <AdminSummary><div className={styles.exportSection}>
               <span className={styles.entryCount}>
                 Attendance data for {attendanceData.employee.name} (
                 {formatAttendanceMonth(month)})
@@ -731,7 +732,7 @@ function AttendanceContent() {
                   Export as PDF
                 </button>
               </div>
-            </div>
+            </div></AdminSummary>
           )}
           {/* Attendance Records Table */}
           <div className={styles.attendanceSection}>

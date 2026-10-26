@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -47,7 +48,7 @@ function StockLoadingState() {
         Loading inventory…
       </p>
       <div aria-hidden="true">
-        <div className={styles.summaryGrid}>
+        <AdminSummary><div className={styles.summaryGrid}>
           {["Stock value", "In stock", "Attention"].map((label, index) => (
             <div
               key={label}
@@ -58,7 +59,7 @@ function StockLoadingState() {
               <Skeleton />
             </div>
           ))}
-        </div>
+        </div></AdminSummary>
         <section className={styles.inventorySection}>
           <div className={styles.sectionHeading}>
             <h2>Product inventory</h2>
@@ -415,7 +416,7 @@ export default function StockPage() {
               </div>
             )}
 
-            <div className={styles.summaryGrid}>
+            <AdminSummary><div className={styles.summaryGrid}>
               <div className={`${styles.summaryCard} ${styles.valueSummary}`}>
                 <span>Stock value</span>
                 <strong>
@@ -442,7 +443,7 @@ export default function StockPage() {
                 </strong>
                 <small>Low, empty, or negative balances</small>
               </div>
-            </div>
+            </div></AdminSummary>
 
             {isAdmin && panel && (
               <section
@@ -638,7 +639,7 @@ export default function StockPage() {
             >
               <div className={styles.sectionHeading}>
                 <h2 id="inventory-title">Product inventory</h2>
-                <div
+                <AdminSummary><div
                   className={styles.segmented}
                   role="group"
                   aria-label="Inventory filter"
@@ -659,7 +660,7 @@ export default function StockPage() {
                   >
                     Needs attention ({attention.length})
                   </button>
-                </div>
+                </div></AdminSummary>
               </div>
               <div className={styles.productGrid}>
                 {items
@@ -722,7 +723,7 @@ export default function StockPage() {
               )}
             </section>
 
-            <StockCharts items={items} />
+            <AdminSummary><StockCharts items={items} /></AdminSummary>
 
             <section className={styles.panel} aria-labelledby="movement-title">
               <div className={styles.sectionHeading}>

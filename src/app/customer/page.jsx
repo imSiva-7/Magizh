@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -696,7 +697,7 @@ export default function Customer() {
         </form>
       )}
 
-      <div data-filter="card" className={styles.searchSection}>
+      <AdminSummary><div data-filter="card" className={styles.searchSection}>
         <div className={styles.searchWrapper}>
           <label htmlFor="searchInput" className={styles.searchLabel}>
             Search Customers:
@@ -737,7 +738,7 @@ export default function Customer() {
             </>
           )}
         </div>
-      </div>
+      </div></AdminSummary>
 
       {loadError && <div data-filter="card" role="alert"><p>{loadError}</p><button data-button="secondary" type="button" onClick={fetchData} disabled={loading}>Try again</button></div>}
       {/* Customers Table */}

@@ -1,4 +1,5 @@
 "use client";
+import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
 
@@ -109,7 +110,7 @@ const StatItem = ({ label, value, unit, prefix = "", trend, tone = "milk" }) => 
 );
 
 const SummaryStats = ({ summary, filters, trends }) => (
-  <div className={styles.summary_box}>
+  <AdminSummary><div className={styles.summary_box}>
     <h3>
       Summary{" "}
       <span className={styles.date_range_badge}>
@@ -149,7 +150,7 @@ const SummaryStats = ({ summary, filters, trends }) => (
 
       />
     </div>
-  </div>
+  </div></AdminSummary>
 );
 
 // ========== HELPER FUNCTIONS ==========
@@ -956,7 +957,7 @@ function ProcurementContent() {
       </div>
 
       {data.allProcurements.length > 0 && (
-        <form data-filter="card" className={styles.filter_form}>
+        <AdminSummary><form data-filter="card" className={styles.filter_form}>
           <div data-filter="title" className={styles.filter_header}>
             <h2>Filter by Date Range</h2>
           </div>
@@ -1017,7 +1018,7 @@ function ProcurementContent() {
               </button>
             </div>
           </div>
-        </form>
+        </form></AdminSummary>
       )}
 
       {/* SUMMARY SECTION */}
@@ -1028,7 +1029,7 @@ function ProcurementContent() {
       {/* EXPORT SECTION */}
 
       {summary.count > 0 && (
-        <div className={styles.export_section}>
+        <AdminSummary><div className={styles.export_section}>
           <span className={styles.entry_count}>
             {summary.count} record{summary.count !== 1 ? "s" : ""} found
           </span>
@@ -1050,7 +1051,7 @@ function ProcurementContent() {
               Export as PDF
             </button>
           </div>
-        </div>
+        </div></AdminSummary>
       )}
 
       {/* BULK ACTIONS BANNER */}
@@ -1074,13 +1075,13 @@ function ProcurementContent() {
             >
               {submitting ? "Processing..." : "Mark as Unpaid"}
             </button>
-            <button data-button="secondary"
+            <AdminSummary><button data-button="secondary"
               onClick={() => setCheckedIds([])}
               disabled={submitting}
               className={styles.clear_filter_link}
             >
               Cancel
-            </button>
+            </button></AdminSummary>
           </div>
         </div>
       )}
@@ -1281,12 +1282,12 @@ function ProcurementContent() {
               <>
                 <span className={styles.empty_icon}>📊</span>
                 <p>No procurement records found for the selected date range</p>
-                <button data-button="secondary"
+                <AdminSummary><button data-button="secondary"
                   onClick={clearFilters}
                   className={styles.clear_filter_link}
                 >
                   clear filters to see all {data.allProcurements.length} records
-                </button>
+                </button></AdminSummary>
               </>
             )}
           </div>
