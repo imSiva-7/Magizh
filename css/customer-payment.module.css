@@ -1080,6 +1080,22 @@
   font-size: 1rem;
 }
 
+.received_number,
+.due_number,
+.credit_number {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.received_number,
+.credit_number {
+  color: #166534;
+}
+
+.due_number {
+  color: #991b1b;
+}
+
 .modal_content label {
   display: block;
   color: var(--text-secondary);
@@ -1213,6 +1229,8 @@
 .payment_form { display: grid; gap: 1rem; }
 .payment_form label { display: grid; gap: .4rem; font-weight: 600; }
 .payment_form input, .payment_form select { width: 100%; padding: .7rem; border: 1px solid var(--border); border-radius: .5rem; font: inherit; background: white; color: var(--text); }
+.payment_form .amount_input { color: var(--brand); font-weight: 700; font-variant-numeric: tabular-nums; }
+.payment_form .amount_input::placeholder { color: #94a3b8; font-weight: 400; }
 .balance_preview { background: var(--brand-soft); padding: 1rem; border-radius: .5rem; }
 .account_hint { color: var(--text-secondary); margin: 0 0 1rem; line-height: 1.6; }
 .modal_content_large {
@@ -1265,6 +1283,108 @@
 .ledger_table_wrapper {
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+}
+
+.history_dialog {
+  width: min(1100px, calc(100vw - 2rem));
+  max-height: min(82vh, 800px);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.history_dialog::backdrop {
+  background: rgb(15 23 42 / 55%);
+  backdrop-filter: blur(2px);
+}
+
+.history_customer {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.history_dialog .ledger_table th,
+.history_dialog .ledger_table td {
+  padding: 0.8rem 1rem;
+}
+
+.history_caption {
+  caption-side: top;
+  padding: 0.85rem 1rem;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.history_dialog .modal_header {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.history_summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.history_summary > div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface-muted);
+}
+
+.history_summary span {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.history_summary strong {
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.history_dialog .ledger_table tbody tr:nth-child(even) {
+  background: var(--surface-muted);
+}
+
+.history_dialog .ledger_table td {
+  vertical-align: top;
+}
+
+.history_dialog .ledger_table td:nth-child(2),
+.history_dialog .ledger_table td:nth-child(3),
+.history_dialog .ledger_table td:nth-child(4) {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledger_positive { color: #166534 !important; font-weight: 700; }
+.ledger_negative { color: #991b1b !important; font-weight: 700; }
+.history_state { padding: 1.5rem; text-align: center; color: var(--text-secondary); }
+
+.history_dialog .modal_actions {
+  margin-top: 0;
+  padding-top: 1rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .history_dialog { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); padding: 1rem; }
+  .history_summary { grid-template-columns: 1fr; }
+  .history_summary > div { display: flex; justify-content: space-between; align-items: center; }
+  .history_dialog .ledger_table { min-width: 720px; }
 }
 
 .ledger_table {

@@ -141,6 +141,7 @@ export default function CustomerPayments() {
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [openingCustomerId, setOpeningCustomerId] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [paymentDialogView, setPaymentDialogView] = useState("payment");
   const paymentTriggerRef = useRef(null);
 
   // Load the directory only. Period summaries do not depend on lifetime totals.
@@ -317,9 +318,10 @@ export default function CustomerPayments() {
   };
 
   // Handle opening payment popup
-  const handleOpenPayment = async (customer, trigger) => {
+  const handleOpenPayment = async (customer, trigger, view = "payment") => {
     if (openingCustomerId) return;
     paymentTriggerRef.current = trigger;
+    setPaymentDialogView(view);
     setOpeningCustomerId(customer._id);
     try {
       const response = await fetch(`/api/customer/total_orders?customerId=${encodeURIComponent(customer._id)}`, { cache: "no-store" });
@@ -533,6 +535,11 @@ export default function CustomerPayments() {
                     {/* <span className={styles.date_range_badge}>{stats.receiptCount ? "Receipts / corrections in period" : "Sales in period"}</span> */}
                   </div>
                   <div className={styles.header_right}>
+                    <AdminSummary><button data-button="secondary" type="button"
+                      onClick={(event) => handleOpenPayment(customer, event.currentTarget, "history")}
+                      className={styles.edit_payment_btn}
+                      disabled={isLoadingCustomers || Boolean(openingCustomerId)}
+                    >View payment history</button></AdminSummary>
                     <button data-button="primary"
                       onClick={(event) => handleOpenPayment(customer, event.currentTarget)}
                       className={styles.edit_payment_btn}
@@ -690,6 +697,7 @@ export default function CustomerPayments() {
             setSelectedCustomer(null);
           }}
           onSuccess={handlePaymentSuccess}
+          initialView={paymentDialogView}
         />
       )}
     </div>

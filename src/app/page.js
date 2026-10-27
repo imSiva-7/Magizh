@@ -69,8 +69,14 @@ export default function Home() {
             fetch(`/api/stock/balance`, { signal: controller.signal }),
           ]);
 
-        if (!customerRes.ok) throw new Error("Failed to fetch customer data");
-        if (!supplierRes.ok) throw new Error("Failed to fetch supplier data");
+        if (!customerRes.ok) {
+          const details = await customerRes.json().catch(() => ({}));
+          throw new Error(`Customer orders could not be loaded (${customerRes.status}): ${details.error || customerRes.statusText || "Request failed"}`);
+        }
+        if (!supplierRes.ok) {
+          const details = await supplierRes.json().catch(() => ({}));
+          throw new Error(`Supplier procurements could not be loaded (${supplierRes.status}): ${details.error || supplierRes.statusText || "Request failed"}`);
+        }
         const customerJson = await customerRes.json();
         setCustomerData({
           orders: customerJson.orders || [],
@@ -548,13 +554,7 @@ export default function Home() {
                 value={`₹${formatStat(customerData.summary.totalAmount)}`}
               />
               <StatItem
-                label="Received"
-                trend={cardTrends.customers.paid}
-                value={`₹${formatStat(customerData.summary.paidAmount)}`}
-                colorClass={styles.text_green}
-              />
-              <StatItem
-                label="Outstanding"
+                label="Due"
                 trend={cardTrends.customers.due}
                 tone="amount"
                 value={`₹${formatStat(customerData.summary.dueAmount)}`}
