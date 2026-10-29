@@ -22,7 +22,6 @@ export default function Footer() {
   const { data: session } = useSession();
   const isAdmin =
     session?.user?.role === "admin" || session?.user?.role === "dev";
-  if (session?.user?.role === "employee") return null;
 
   return (
     <footer className={styles.footer}>
@@ -113,11 +112,11 @@ export default function Footer() {
           <div className={styles.footerSection}>
             <h4 className={styles.sectionTitle}>OPERATIONS</h4>
             <ul className={styles.footerLinks}>
-              {/* <li>
+              <li>
                 <Link href="/productions/history" className={styles.footerLink}>
                  Stock
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link
                   href="/supplier/procurement/history"

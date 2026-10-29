@@ -73,7 +73,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
-  const isEmployee = session?.user?.role === "employee";
+  const isAdmin = session?.user?.role === "admin";
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -157,8 +157,6 @@ export default function Header() {
     setMobileMenuOpen((prev) => !prev);
   }, []);
 
-  if (isEmployee) return null;
-
   return (
     <header className={styles.header}>
       <div className={styles.headerContainer}>
@@ -181,7 +179,7 @@ export default function Header() {
         {/* Desktop Navigation */}
         <nav className={styles.desktopNav} aria-label="Main navigation">
           <ul className={styles.navList}>
-            {desktopNavItems.filter(item => item.path !== "/" || session?.user?.role === "admin").map((item) => (
+            {desktopNavItems.filter(item => (item.path !== "/" || isAdmin) && (item.path !== "/employee" || isAdmin)).map((item) => (
               <li
                 key={item.path}
                 className={`${styles.navItem} ${openDropdown === item.path ? styles.dropdownOpen : ""}`}
@@ -345,7 +343,7 @@ export default function Header() {
               </div>
               <nav className={styles.mobileNav}>
                 <ul className={styles.mobileNavList}>
-                  {mobileNavItems.filter(item => item.path !== "/" || session?.user?.role === "admin").map((item) => (
+                  {mobileNavItems.filter(item => (item.path !== "/" || isAdmin) && (item.path !== "/employee" || isAdmin) && (item.path !== "/employee/attendance/history" || isAdmin)).map((item) => (
                     <li key={item.path}>
                       <Link
                         href={item.path}
