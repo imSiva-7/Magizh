@@ -1,11 +1,11 @@
 import { getTodayDate } from "@/lib/india-date.mjs";
-import { requireAdmin } from "@/lib/mutation-auth";
+import { requireStaff } from "@/lib/mutation-auth";
 
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 
 export async function POST(request) {
-  const denied = await requireAdmin();
+  const denied = await requireStaff();
   if (denied) return denied;
   const db = await getDatabase();
   const { product, quantity, comment } = await request.json();

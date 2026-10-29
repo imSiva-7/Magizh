@@ -22,6 +22,7 @@ export default function Footer() {
   const { data: session } = useSession();
   const isAdmin =
     session?.user?.role === "admin" || session?.user?.role === "dev";
+  if (session?.user?.role === "employee") return null;
 
   return (
     <footer className={styles.footer}>
@@ -144,7 +145,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.20</span>
+            <span className={styles.version}>v1.7.21</span>
           </div>
         </div>
       </div>

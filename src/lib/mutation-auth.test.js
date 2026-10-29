@@ -35,7 +35,10 @@ const changes = [
 ];
 
 for (const [name, routes, methods] of changes) for (const method of methods) {
-  test.each([null, "employee", "dev", "supplier", "customer"])(`${method} ${name} blocks %s before reading data`, async role => {
+  const blockedRoles = name === "stock adjustments"
+    ? [null, "dev", "supplier", "customer"]
+    : [null, "employee", "dev", "supplier", "customer"];
+  test.each(blockedRoles)(`${method} ${name} blocks %s before reading data`, async role => {
     getServerSession.mockResolvedValue(role ? { user: { role } } : null);
     const json = jest.fn();
     const response = await routes[method]({ url: "http://localhost/api/test", json });
@@ -44,6 +47,21 @@ for (const [name, routes, methods] of changes) for (const method of methods) {
     expect(getDatabase).not.toHaveBeenCalled();
   });
 }
+
+test("employees can create stock adjustments", async () => {
+  getServerSession.mockResolvedValue({ user: { role: "employee" } });
+  const db = {
+    collection: jest.fn(() => ({
+      insertOne: jest.fn().mockResolvedValue({}),
+      updateOne: jest.fn().mockResolvedValue({}),
+    })),
+  };
+  getDatabase.mockResolvedValue(db);
+  const response = await adjustments.POST({
+    json: async () => ({ product: "butter", quantity: 2 }),
+  });
+  expect(response.status).toBe(200);
+});
 
 test.each(["admin", "employee", "dev"])("%s can add records; only admin can change them", async role => {
   getServerSession.mockResolvedValue({ user: { role } });

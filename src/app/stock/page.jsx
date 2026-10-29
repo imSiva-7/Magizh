@@ -153,6 +153,7 @@ async function loadStockPart(url, signal) {
 export default function StockPage() {
   const { data: session } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const canAdjustStock = ["admin", "dev", "employee"].includes(session?.user?.role);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -365,7 +366,7 @@ export default function StockPage() {
             onClick={() =>
               panel === "adjustment" ? setPanel(null) : openAdjustment()
             }
-            disabled={!isAdmin || !data || loading || saving}
+            disabled={!canAdjustStock || !data || loading || saving}
             aria-expanded={panel === "adjustment"}
             aria-controls="stock-editor"
           >
@@ -445,7 +446,8 @@ export default function StockPage() {
               </div>
             </div></AdminSummary>
 
-            {isAdmin && panel && (
+            {((panel === "adjustment" && canAdjustStock) ||
+              (panel === "thresholds" && isAdmin)) && (
               <section
                 ref={formRef}
                 id="stock-editor"
@@ -708,7 +710,7 @@ export default function StockPage() {
                         type="button"
                         className={styles.textButton}
                         onClick={() => openAdjustment(item.field)}
-                        disabled={!isAdmin || saving || loading}
+                        disabled={!canAdjustStock || saving || loading}
                         aria-label={`Adjust ${item.name}`}
                       >
                         Adjust stock <span aria-hidden="true">↗</span>

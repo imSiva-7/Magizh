@@ -73,6 +73,7 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
+  const isEmployee = session?.user?.role === "employee";
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -155,6 +156,8 @@ export default function Header() {
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
   }, []);
+
+  if (isEmployee) return null;
 
   return (
     <header className={styles.header}>

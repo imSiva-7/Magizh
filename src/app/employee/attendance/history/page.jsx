@@ -133,9 +133,9 @@ export default function AttendanceHistoryPage() {
       ) : (
         <>
           {data.summary && <AdminSummary><div className={styles.historyOverview} aria-label="Attendance summary">
-            <span><strong>{data.summary.uniqueEmployees}</strong> employees</span>
-            <span><strong>{Number(data.summary.totalHours || 0).toFixed(2)}h</strong> worked</span>
-            {data.summary.incompleteCount > 0 && <span className={styles.historyAttention}><strong>{data.summary.incompleteCount}</strong> missing checkout</span>}
+            <div className={styles.historyStat}><span>Employees</span><strong>{data.summary.uniqueEmployees}</strong><small>with attendance</small></div>
+            <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{Number(data.summary.totalHours || 0).toFixed(2)}<small> h</small></strong><small>recorded this month</small></div>
+            <div className={`${styles.historyStat} ${data.summary.incompleteCount > 0 ? styles.historyStatAttention : ""}`}><span>Missing checkout</span><strong>{data.summary.incompleteCount || 0}</strong><small>{data.summary.incompleteCount ? "needs attention" : "all checkouts recorded"}</small></div>
           </div></AdminSummary>}
           <div className={styles.historyGroups}>
             {groups.map(([date, records]) => (
