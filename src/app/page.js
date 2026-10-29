@@ -20,11 +20,12 @@ import trendStyles from "@/css/stat-trend.module.css";
 import { customerDaily } from "@/lib/customer-charts";
 import { procurementDaily } from "@/lib/supplier-charts";
 
-const StatItem = ({ label, value, colorClass = "", className = "", trend, tone = "milk" }) => (
+const StatItem = ({ label, metric = label, value, hint, colorClass = "", className = "", trend, tone = "milk" }) => (
   <div className={`${styles.global_stat_item} ${trendStyles.card} ${className}`}>
     <StatTrendBackground points={trend} tone={tone} />
     <div className={styles.global_stat_label}>{label}</div>
-    <div data-stat-tone={statNumberTone(label, value)} className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
+    <div data-stat-tone={statNumberTone(metric, value)} className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
+    {hint && <div className={styles.global_stat_hint}>{hint}</div>}
   </div>
 );
 
@@ -39,6 +40,9 @@ export default function Home() {
   const [customerData, setCustomerData] = useState({
     orders: [],
     summary: {},
+  });
+  const [customerAccounts, setCustomerAccounts] = useState({
+    paidAmount: 0, dueAmount: 0, customers: [],
   });
   const [supplierData, setSupplierData] = useState({
     procurements: [],
@@ -61,9 +65,10 @@ export default function Home() {
         if (filters.startDate) queryParams.append("startDate", filters.startDate);
         if (filters.endDate) queryParams.append("endDate", filters.endDate);
 
-        const [customerRes, supplierRes, productionRes, stockRes] =
+        const [customerRes, customerPaymentRes, supplierRes, productionRes, stockRes] =
           await Promise.all([
             fetch(`/api/customer/order/history?${queryParams}`, { signal: controller.signal }),
+            fetch("/api/customer/account-summary", { signal: controller.signal, cache: "no-store" }),
             fetch(`/api/supplier/procurement/history?${queryParams}`, { signal: controller.signal }),
             fetch(`/api/production/history?${queryParams}`, { signal: controller.signal }),
             fetch(`/api/stock/balance`, { signal: controller.signal }),
@@ -73,11 +78,17 @@ export default function Home() {
           const details = await customerRes.json().catch(() => ({}));
           throw new Error(`Customer orders could not be loaded (${customerRes.status}): ${details.error || customerRes.statusText || "Request failed"}`);
         }
+        if (!customerPaymentRes.ok) {
+          const details = await customerPaymentRes.json().catch(() => ({}));
+          throw new Error(`Customer payments could not be loaded (${customerPaymentRes.status}): ${details.error || customerPaymentRes.statusText || "Request failed"}`);
+        }
         if (!supplierRes.ok) {
           const details = await supplierRes.json().catch(() => ({}));
           throw new Error(`Supplier procurements could not be loaded (${supplierRes.status}): ${details.error || supplierRes.statusText || "Request failed"}`);
         }
         const customerJson = await customerRes.json();
+        const customerPaymentJson = await customerPaymentRes.json();
+        setCustomerAccounts(customerPaymentJson);
         setCustomerData({
           orders: customerJson.orders || [],
           summary: customerJson.summary || {
@@ -165,21 +176,7 @@ export default function Home() {
     return () => controller.abort();
   }, [filters]);
 
-  const customerDueList = useMemo(() => {
-    const dueMap = new Map();
-    customerData.orders.forEach((order) => {
-      if (order.paymentStatus === "Not Paid") {
-        const existing = dueMap.get(order.customerId) || {
-          id: order.customerId,
-          name: order.customerName,
-          due: 0,
-        };
-        existing.due += order.totalAmount;
-        dueMap.set(order.customerId, existing);
-      }
-    });
-    return Array.from(dueMap.values()).sort((a, b) => b.due - a.due);
-  }, [customerData.orders]);
+  const customerDueList = customerAccounts.customers;
 
   const supplierDueList = useMemo(() => {
     const dueMap = new Map();
@@ -530,39 +527,49 @@ export default function Home() {
       )}
 
       </div></AdminSummary>
-      <AdminSummary><div className={styles.global_summary_card} hidden={!(customerData.summary.totalAmount > 0) && customerDueList.length === 0}>
-        {customerData.summary.totalAmount > 0 && (
+      <AdminSummary><div className={styles.global_summary_card}>
           <div>
             <div className={styles.global_header}>
               <h2 className={styles.global_title}>Customers Summary</h2>
               <span className={styles.date_range_badge}>
                 {filters.startDate && filters.endDate
                   ? `${formatDateForDisplay(filters.startDate)} to ${formatDateForDisplay(filters.endDate)}`
-                  : "All Time"}
+                  : filters.startDate ? `From ${formatDateForDisplay(filters.startDate)}`
+                  : filters.endDate ? `Through ${formatDateForDisplay(filters.endDate)}` : "All Time"}
               </span>
             </div>
             <div className={styles.global_stats_grid}>
               <StatItem
                 label="Orders"
+                hint="Selected dates"
                 trend={cardTrends.customers.orders}
                 value={customerData.summary.orderCount}
               />
               <StatItem
-                label="Sales"
+                label="Total Sales"
+                metric="Sales"
+                hint="Selected dates"
                 trend={cardTrends.customers.amount}
                 tone="amount"
                 value={`₹${formatStat(customerData.summary.totalAmount)}`}
               />
               <StatItem
-                label="Due"
-                trend={cardTrends.customers.due}
+                label="Paid (overall)"
+                metric="Paid"
+                hint="All customer payments · all time"
+                value={`₹${formatStat(customerAccounts.paidAmount)}`}
+                colorClass={styles.text_green}
+              />
+              <StatItem
+                label="Due (overall)"
+                metric="Due"
+                hint="Outstanding now · all customers"
                 tone="amount"
-                value={`₹${formatStat(customerData.summary.dueAmount)}`}
+                value={`₹${formatStat(customerAccounts.dueAmount)}`}
                 colorClass={styles.text_red}
               />
             </div>
           </div>
-        )}
         {customerDueList.length > 0 && (
           <div>
             <div className={styles.tableWrapper}>
@@ -570,7 +577,7 @@ export default function Home() {
                 <thead>
                   <tr>
                     <th>Customer Name</th>
-                    <th>Total Due (₹)</th>
+                    <th>Due (overall) (₹)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -585,7 +592,7 @@ export default function Home() {
                         </Link>
                       </td>
                       <td className={styles.text_red}>
-                        ₹{formatNumberWithCommasNoDecimal(customer.due)}
+                        ₹{formatNumberWithCommasNoDecimal(customer.currentDue)}
                       </td>
                     </tr>
                   ))}

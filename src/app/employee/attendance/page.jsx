@@ -443,8 +443,12 @@ function AttendanceContent() {
                   formatCurrency(attendanceData.summary.paidLeavePay),
                 ],
                 [
-                  "Gross Salary",
-                  formatCurrency(attendanceData.summary.grossSalary),
+                  "Salary Without Paid Leave",
+                  formatCurrency(attendanceData.summary.salaryWithoutLeavePay),
+                ],
+                [
+                  "Salary Including Paid Leave",
+                  formatCurrency(attendanceData.summary.salaryIncludingLeavePay),
                 ],
                 [
                   "Advances",
@@ -511,6 +515,14 @@ function AttendanceContent() {
                 {attendanceData.summary.payableHours} payable hours × (
                 {formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 9)
                 = <strong>{formatCurrency(attendanceData.summary.grossSalary)}</strong>.
+              </li>
+              <li>
+                <strong>See the effect of paid leave.</strong> Salary including paid leave − paid leave pay = salary without paid leave.
+                <br />
+                {formatCurrency(attendanceData.summary.salaryIncludingLeavePay)} −{" "}
+                {formatCurrency(attendanceData.summary.paidLeavePay)} ={" "}
+                <strong>{formatCurrency(attendanceData.summary.salaryWithoutLeavePay)}</strong>.
+                Any grace pay already earned stays in both salary figures.
               </li>
               <li>
                 <strong>Subtract advances.</strong> Earned salary − advance

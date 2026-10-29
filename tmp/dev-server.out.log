@@ -1,0 +1,53 @@
+▲ Next.js 16.2.1 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://172.30.219.197:3001
+- Environments: .env.local
+✓ Ready in 1087ms
+- Experiments (use with caution):
+  · cpus: 1
+
+○ Compiling /login ...
+ GET /login 200 in 11.2s (next.js: 10.8s, application-code: 385ms)
+ GET /api/auth/session 200 in 8.1s
+ GET /login 200 in 177ms (next.js: 43ms, application-code: 133ms)
+ GET /api/auth/session 200 in 40ms (next.js: 12ms, application-code: 28ms)
+[Middleware] Path: /, Token exists: true, Role: admin
+○ Compiling / ...
+ GET / 500 in 12.5s (next.js: 12.0s, proxy.ts: 210ms, application-code: 274ms)
+[Middleware] Path: /, Token exists: true, Role: admin
+ GET / 500 in 41ms (next.js: 7ms, proxy.ts: 16ms, application-code: 18ms)
+[Middleware] Path: /, Token exists: true, Role: admin
+ GET / 200 in 450ms (next.js: 178ms, proxy.ts: 14ms, application-code: 257ms)
+ GET /api/auth/session 200 in 2.3s (next.js: 1604ms, application-code: 739ms)
+ GET /api/production/history?startDate=2026-10-01&endDate=2026-10-29 200 in 2.4s (next.js: 1592ms, application-code: 809ms)
+ GET /api/stock/balance 200 in 2.4s (next.js: 1591ms, application-code: 820ms)
+ GET /api/supplier/procurement/history?startDate=2026-10-01&endDate=2026-10-29 200 in 2.5s (next.js: 1592ms, application-code: 883ms)
+ GET /api/customer/account-summary 200 in 2.7s (next.js: 1626ms, application-code: 1029ms)
+ GET /api/customer/order/history?startDate=2026-10-01&endDate=2026-10-29 200 in 2.7s (next.js: 1596ms, application-code: 1117ms)
+ GET /api/auth/session 200 in 326ms (next.js: 19ms, application-code: 307ms)
+[Middleware] Path: /customer, Token exists: true, Role: admin
+ GET /customer 200 in 3.3s (next.js: 3.2s, proxy.ts: 19ms, application-code: 97ms)
+ GET /api/customer 200 in 1052ms (next.js: 958ms, application-code: 95ms)
+[Middleware] Path: /customer/payments, Token exists: true, Role: admin
+○ Compiling /customer/payments ...
+ GET /customer/payments 200 in 5.2s (next.js: 5.1s, proxy.ts: 16ms, application-code: 70ms)
+ GET /api/customer 200 in 2.1s (next.js: 1987ms, application-code: 121ms)
+ GET /api/customer/order/history?startDate=2026-10-01&endDate=2026-10-29 200 in 2.5s (next.js: 2.0s, application-code: 455ms)
+ GET /api/customer/payment-summary?startDate=2026-10-01&endDate=2026-10-29 200 in 2.5s (next.js: 1985ms, application-code: 479ms)
+[Middleware] Path: /employee, Token exists: true, Role: admin
+ GET /employee 200 in 1202ms (next.js: 1134ms, proxy.ts: 16ms, application-code: 52ms)
+ GET /api/employee 200 in 1302ms (next.js: 1140ms, application-code: 162ms)
+ GET /api/attendance/rankings?month=2026-10 200 in 1063ms (next.js: 937ms, application-code: 126ms)
+[Middleware] Path: /employee, Token exists: true, Role: admin
+ GET /employee 200 in 190ms (next.js: 94ms, proxy.ts: 20ms, application-code: 75ms)
+ GET /api/auth/session 200 in 1881ms (next.js: 1546ms, application-code: 335ms)
+[Middleware] Path: /employee/attendance, Token exists: true, Role: admin
+ GET /employee/attendance?empID=2205 200 in 2.4s (next.js: 2.3s, proxy.ts: 13ms, application-code: 96ms)
+ GET /api/employee 200 in 2.7s (next.js: 2.6s, application-code: 193ms)
+ GET /api/attendance/rankings?month=2026-10 200 in 3.0s (next.js: 2.6s, application-code: 398ms)
+ GET /api/attendance?empID=2205&month=2026-10 200 in 3.0s (next.js: 2.6s, application-code: 415ms)
+ GET /api/attendance/payroll?empID=2205&month=2026-10 200 in 5.5s (next.js: 5.3s, application-code: 193ms)
+ GET /api/auth/session 200 in 95ms (next.js: 22ms, application-code: 72ms)
+ GET /api/auth/session 200 in 321ms (next.js: 24ms, application-code: 297ms)
+ GET /api/auth/session 200 in 312ms (next.js: 19ms, application-code: 293ms)
+ GET /api/auth/session 200 in 67ms (next.js: 14ms, application-code: 54ms)

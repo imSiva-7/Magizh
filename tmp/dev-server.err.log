@@ -1,0 +1,65 @@
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+⨯ ./src/app/page.module.css:790:1
+Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5;
+⨯ ./src/app/page.module.css:790:1
+Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5;
+⨯ ./src/app/page.module.css:790:1
+Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5;
+[browser] ./src/app/page.module.css:790:1
+Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5; 
+[browser] Uncaught Error: Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5;
+
+[browser] Uncaught Error: Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5;
+
+[browser] ./src/app/page.module.css:790:1
+Syntax error: Selector "input[type="date"]::-webkit-datetime-edit" is not pure (pure selectors must contain at least one local class or id)
+
+  788 | }
+  789 | 
+> 790 | input[type="date"]::-webkit-datetime-edit {
+      | ^
+  791 |   padding: 0;
+  792 |   line-height: 1.5; 
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

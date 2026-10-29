@@ -342,6 +342,13 @@
   gap: 0.25rem;
 }
 
+.global_stat_hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
 /* Text color helpers */
 .text_green {
   color: #059669 !important;
@@ -780,12 +787,12 @@ input[type="date"].filter_input {
   justify-content: center;
 }
 
-input[type="date"]::-webkit-datetime-edit {
+.filter_input[type="date"]::-webkit-datetime-edit {
   padding: 0;
   line-height: 1.5;
 }
 
-input[type="date"]::-webkit-date-and-time-value {
+.filter_input[type="date"]::-webkit-date-and-time-value {
   text-align: left;
 }
 

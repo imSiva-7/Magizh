@@ -14,7 +14,7 @@ test.each([[260, 14444.44], [260.99, 14499.44], [261, 15000], [270, 15000], [300
   expect(report(person({ workedHours: hours })).grossSalary).toBe(expected);
 });
 test("paid leave taken counts toward the threshold", () => {
-  expect(report(person({ leave: 4, workedHours: 225 }))).toMatchObject({ countedHours: 261, paidLeaveHours: 36, graceHours: 9, grossSalary: 15000, unusedLeavePay: 0 });
+  expect(report(person({ leave: 4, workedHours: 225 }))).toMatchObject({ countedHours: 261, paidLeaveHours: 36, graceHours: 9, paidLeavePay: 2000, salaryWithoutLeavePay: 13000, salaryIncludingLeavePay: 15000, grossSalary: 15000, unusedLeavePay: 0 });
 });
 test("five leave days disable grace but preserve four eligible paid leave days", () => {
   expect(report(person({ leave: 5, workedHours: 225 }))).toMatchObject({ countedHours: 261, paidLeaveDays: 4, graceEligible: false, graceHours: 0, grossSalary: 14500, fullSalaryThresholdHours: 270 });
@@ -26,7 +26,7 @@ test("new employee allowance counts only two paid leave days", () => {
   expect(report(person({ leave: 4, allowance: 2, workedHours: 225 }))).toMatchObject({ paidLeaveDays: 2, paidLeaveHours: 18, countedHours: 243, grossSalary: 13500 });
 });
 test("unused leave adds no hours or payout", () => {
-  expect(report(person({ workedHours: 250 }))).toMatchObject({ paidLeaveHours: 0, countedHours: 250, unusedLeavePay: 0, grossSalary: 13888.89 });
+  expect(report(person({ workedHours: 250 }))).toMatchObject({ paidLeaveHours: 0, countedHours: 250, unusedLeavePay: 0, salaryWithoutLeavePay: 13888.89, salaryIncludingLeavePay: 13888.89, grossSalary: 13888.89 });
 });
 test("creation month excludes paid leave and uses India time", () => {
   const p = person({ month: "2026-04", leave: 4, workedHours: 225, createdAt: "2026-03-31T20:00:00Z" });

@@ -50,11 +50,11 @@ const INITIAL_VISIBLE_COUNT = 20;
 // ========== REUSABLE COMPONENTS ==========
 const LoadingSpinner = () => <DataSkeleton label="Loading customer orders..." />;
 
-const StatItem = ({ label, value, unit = "", colorClass = "", trend, tone }) => (
+const StatItem = ({ label, metric = label, value, unit = "", colorClass = "", trend, tone }) => (
   <div className={`${styles.stat_card} ${trend?.length ? trendStyles.card : ""}`}>
     {trend?.length > 0 && <StatTrendBackground points={trend} tone={tone} />}
     <div className={styles.stat_card_label}>{label}</div>
-    <div data-stat-tone={statNumberTone(label, value)} className={`${styles.stat_card_value} ${colorClass}`}>
+    <div data-stat-tone={statNumberTone(metric, value)} className={`${styles.stat_card_value} ${colorClass}`}>
       {value}
       {unit && <span className={styles.stat_unit}>{unit}</span>}
     </div>
@@ -127,6 +127,7 @@ export default function CustomerPayments() {
   const [ordersData, setOrdersData] = useState([]);
   const [customerTotals, setCustomerTotals] = useState({}); // Dialog balances only
   const [periodTotals, setPeriodTotals] = useState([]);
+  const [accountSummary, setAccountSummary] = useState({ paidAmount: 0, dueAmount: 0 });
   const [periodError, setPeriodError] = useState("");
   const { data: session } = useSession();
   const canViewSummary = session?.user?.role === "admin";
@@ -172,15 +173,16 @@ export default function CustomerPayments() {
           queryParams.append("startDate", filters.startDate);
         if (filters.endDate) queryParams.append("endDate", filters.endDate);
 
-        const [res, summaryRes] = await Promise.all([
+        const [res, summaryRes, accountRes] = await Promise.all([
           fetch(`/api/customer/order/history?${queryParams}`, { cache: "no-store", signal }),
           (canViewSummary ? fetch(`/api/customer/payment-summary?${queryParams}`, { cache: "no-store", signal }) : Promise.resolve({ ok: true, json: async () => ({ customers: [] }) })),
+          (canViewSummary ? fetch("/api/customer/account-summary", { cache: "no-store", signal }) : Promise.resolve({ ok: true, json: async () => ({ paidAmount: 0, dueAmount: 0 }) })),
         ]);
-        if (!res.ok || !summaryRes.ok) throw new Error("Could not load data for this period. Please retry.");
-        const [data, summary] = await Promise.all([res.json(), summaryRes.json()]);
+        if (!res.ok || !summaryRes.ok || !accountRes.ok) throw new Error("Could not load customer payments. Please retry.");
+        const [data, summary, accounts] = await Promise.all([res.json(), summaryRes.json(), accountRes.json()]);
         if (!Array.isArray(summary.customers)) throw new Error("Could not read payment totals for this period.");
         const orders = Array.isArray(data.orders) ? data.orders : [];
-        if (!signal?.aborted) { setOrdersData(orders); setPeriodTotals(summary.customers); }
+        if (!signal?.aborted) { setOrdersData(orders); setPeriodTotals(summary.customers); setAccountSummary(accounts); }
       } catch (error) {
         if (error.name !== "AbortError" && !signal?.aborted) {
           console.error(error);
@@ -399,7 +401,7 @@ export default function CustomerPayments() {
       <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
-          <span>Applies to orders, receipts and summary cards</span>
+          <span>Applies to period sales and receipts; overall balances stay all time</span>
         </div>
 
         <div data-filter="grid" className={styles.date_input_group}>
@@ -465,7 +467,7 @@ export default function CustomerPayments() {
         <AdminSummary><div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Customers Summary</h2>
-            <p>Sales and receipts follow the selected dates. Due is the current unpaid account balance for these customers, including earlier sales. Customer credits do not reduce another customer’s due.</p>
+            <p>Orders, sales and receipts follow the selected dates and search. Due for shown customers is their current unpaid balance. Overall paid and due include every customer and all dates.</p>
             <span className={styles.date_range_badge}>{formatDateForDisplay(filters.startDate) || "First record"} to {formatDateForDisplay(filters.endDate) || "Latest record"}</span>
           </div>
           <div className={styles.global_stats_grid}>
@@ -489,9 +491,23 @@ export default function CustomerPayments() {
               colorClass={styles.text_green}
             />
             <StatItem
-              label="Due"
+              label="Due (shown customers)"
+              metric="Due"
               tone="amount"
               value={`₹${formatStat(totalCustomerDue(filteredCustomerList.map(customer => customerTotalsMap[customer._id])))}`}
+              colorClass={styles.text_red}
+            />
+            <StatItem
+              label="Paid (overall)"
+              metric="Paid"
+              value={`₹${formatStat(accountSummary.paidAmount)}`}
+              colorClass={styles.text_green}
+            />
+            <StatItem
+              label="Due (overall)"
+              metric="Due"
+              tone="amount"
+              value={`₹${formatStat(accountSummary.dueAmount)}`}
               colorClass={styles.text_red}
             />
 

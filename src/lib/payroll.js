@@ -89,6 +89,8 @@ export function buildPayroll(employee, month, today) {
   const fingerprint = payrollFingerprint(employee, month, today);
 
   const round = (value) => Number(value.toFixed(2));
+  const salaryIncludingLeavePay = round(grossSalary);
+  const paidLeavePayRounded = round(paidLeavePay);
   return {
     employee: {
       empID: employee.empID,
@@ -150,9 +152,11 @@ export function buildPayroll(employee, month, today) {
       overtimeRate: 0,
       regularPay: round(regularPay),
       overtimePay: round(overtimePay),
-      paidLeavePay: round(paidLeavePay),
+      paidLeavePay: paidLeavePayRounded,
+      salaryWithoutLeavePay: round(salaryIncludingLeavePay - paidLeavePayRounded),
+      salaryIncludingLeavePay,
       unusedLeavePay: 0,
-      grossSalary: round(grossSalary),
+      grossSalary: salaryIncludingLeavePay,
       totalAdvances: round(totalAdvances),
       netSalary: round(grossSalary - totalAdvances),
     },
