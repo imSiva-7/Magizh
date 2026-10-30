@@ -1461,3 +1461,9 @@
     font-size: 1.1rem;
   }
 }
+
+.all_time_summary { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid var(--border); }
+.supplier_card .all_time_summary { padding-bottom: 1.5rem; }
+.summary_note { margin: 0.75rem 0 0; font-size: 0.8rem; color: var(--text-muted); }
+
+.customer_summary_title { margin: 0 0 1rem; color: var(--brand); font-size: 1rem; font-weight: 600; }

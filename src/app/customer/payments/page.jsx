@@ -1,6 +1,6 @@
 "use client";
 import AdminSummary from "@/components/AdminSummary";
-import { totalCustomerDue } from "@/lib/customer-account-due.mjs";
+
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
@@ -467,7 +467,7 @@ export default function CustomerPayments() {
         <AdminSummary><div className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Customers Summary</h2>
-            <p>Orders, sales and receipts follow the selected dates and search. Due for shown customers is their current unpaid balance. Overall paid and due include every customer and all dates.</p>
+            {/* <p>Orders, sales and average order value follow the selected dates and customer filters.</p> */}
             <span className={styles.date_range_badge}>{formatDateForDisplay(filters.startDate) || "First record"} to {formatDateForDisplay(filters.endDate) || "Latest record"}</span>
           </div>
           <div className={styles.global_stats_grid}>
@@ -484,34 +484,20 @@ export default function CustomerPayments() {
               tone="amount"
               value={`₹${formatStat(globalStats.totalAmount)}`}
             />
-            <StatItem
-              label="Received"
-              trend={cardTrends.receivedAmount}
-              value={`₹${formatStat(globalStats.receivedAmount)}`}
-              colorClass={styles.text_green}
-            />
-            <StatItem
-              label="Due (shown customers)"
-              metric="Due"
-              tone="amount"
-              value={`₹${formatStat(totalCustomerDue(filteredCustomerList.map(customer => customerTotalsMap[customer._id])))}`}
-              colorClass={styles.text_red}
-            />
-            <StatItem
-              label="Paid (overall)"
-              metric="Paid"
-              value={`₹${formatStat(accountSummary.paidAmount)}`}
-              colorClass={styles.text_green}
-            />
-            <StatItem
-              label="Due (overall)"
-              metric="Due"
-              tone="amount"
-              value={`₹${formatStat(accountSummary.dueAmount)}`}
-              colorClass={styles.text_red}
-            />
-
+            <StatItem label="AOV" value={`₹${formatStat(globalStats.totalOrders > 0 ? globalStats.totalAmount / globalStats.totalOrders : 0)}`} />
           </div>
+          {/* <p className={styles.summary_note}>AOV (average order value) = sales ÷ orders.</p> */}
+          <section className={styles.all_time_summary} aria-labelledby="all-time-totals">
+            <div className={styles.global_header}>
+              <h2 id="all-time-totals" className={styles.global_title}>Totals — All time</h2>
+              {/* <p>All customers and all dates, independent of the filters above.</p> */}
+            </div>
+            <div className={styles.global_stats_grid}>
+              <StatItem label="Sales" value={`₹${formatStat(accountSummary.totalAmount || 0)}`} tone="amount" />
+              <StatItem label="Received" value={`₹${formatStat(accountSummary.paidAmount)}`} colorClass={styles.text_green} />
+              <StatItem label="Due" value={`₹${formatStat(accountSummary.dueAmount)}`} colorClass={styles.text_red} tone="amount" />
+            </div>
+          </section>
         </div></AdminSummary>
       )}
 
@@ -573,33 +559,25 @@ export default function CustomerPayments() {
                   </div>
                 </div>
 
-                {/* Quick Stats Row - Data from total_orders API */}
-                <AdminSummary><div className={styles.quick_stats}>
-                  <StatItem
-                    label="Orders"
-                    value={stats.totalOrders}
-                  />
-                  <StatItem
-                    label="Sales"
-                    value={`₹${formatStat(
-                      stats.totalAmount,
-                    )}`}
-                  />
-                  <StatItem
-                    label="Received"
-                    value={`₹${formatStat(
-                      stats.receivedAmount,
-                    )}`}
-                    colorClass={styles.text_green}
-                  />
-                  <StatItem
-                    label="Due"
-                    value={`₹${formatStat(
-                      stats.currentDue,
-                    )}`}
-                    colorClass={styles.text_red}
-                  />
-                </div></AdminSummary>
+                <AdminSummary>
+                  <section aria-label="Filtered customer summary">
+                    <h3 className={styles.customer_summary_title}>Selected dates</h3>
+                    <div className={styles.global_stats_grid}>
+                      <StatItem label="Orders" value={stats.totalOrders} />
+                      <StatItem label="Sales" value={`₹${formatStat(stats.totalAmount)}`} />
+                      <StatItem label="AOV" value={`₹${formatStat(stats.totalOrders > 0 ? stats.totalAmount / stats.totalOrders : 0)}`} />
+                    </div>
+                    {/* <p className={styles.summary_note}>AOV (average order value) = sales ÷ orders.</p> */}
+                  </section>
+                  <section className={styles.all_time_summary} aria-label="Customer all-time totals">
+                    <h3 className={styles.customer_summary_title}>Totals — All time</h3>
+                    <div className={styles.global_stats_grid}>
+                      <StatItem label="Sales" value={`₹${formatStat(stats.allTimeSales)}`} />
+                      <StatItem label="Received" value={`₹${formatStat(stats.allTimeReceived)}`} colorClass={styles.text_green} />
+                      <StatItem label="Due" value={`₹${formatStat(stats.currentDue)}`} colorClass={styles.text_red} />
+                    </div>
+                  </section>
+                </AdminSummary>
 
                 {/* Orders Table */}
                 <div className={styles.table_wrapper}>

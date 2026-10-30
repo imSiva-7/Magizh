@@ -27,10 +27,11 @@ test("overall balances include older accounts and partial payments without count
     { _id: "credit", totalAmount: 100, paidAmount: 150 },
     { _id: "global", totalAmount: 1600, paidAmount: 850 },
   ], [{ _id: "old", customerName: "Updated name" }]);
+  assert.equal(summary.totalAmount, 1600);
   assert.equal(summary.paidAmount, 850);
   assert.equal(summary.dueAmount, 800);
   assert.deepEqual(summary.customers, [
-    { id: "old", name: "Updated name", paidAmount: 700, currentDue: 800 },
+    { id: "old", name: "Updated name", totalAmount: 1500, paidAmount: 700, currentDue: 800 },
   ]);
 });
 
@@ -41,5 +42,5 @@ test("overall paid reflects corrected account balances and sums cents accurately
   ]);
   assert.equal(summary.paidAmount, 0.3);
   assert.equal(summary.dueAmount, 0.7);
-  assert.deepEqual(summarizeCustomerAccounts([]), { paidAmount: 0, dueAmount: 0, customers: [] });
+  assert.deepEqual(summarizeCustomerAccounts([]), { totalAmount: 0, paidAmount: 0, dueAmount: 0, customers: [] });
 });

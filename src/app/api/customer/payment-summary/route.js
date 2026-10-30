@@ -37,6 +37,8 @@ export async function GET(request) {
     const accountById = new Map(accounts.map(account => [String(account._id), account]));
     period.customers = period.customers.map(customer => ({
       ...customer,
+      allTimeSales: Number(accountById.get(customer.customerId)?.totalAmount) || 0,
+      allTimeReceived: Number(accountById.get(customer.customerId)?.paidAmount) || 0,
       currentDue: customerAccountDue(accountById.get(customer.customerId)),
     }));
     return NextResponse.json(period, {
