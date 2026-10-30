@@ -73,8 +73,12 @@ export function buildPayroll(employee, month, today) {
   const countedHours = Math.round((sum("hoursWorked") + paidLeaveHours) * 100) / 100;
   const shortfallHours = Math.max(0, targetHours - countedHours);
   const graceEligible = absences <= 4;
-  const fullSalaryEligible = targetHours > 0 && countedHours > 0 &&
-    (shortfallHours === 0 || (graceEligible && shortfallHours <= 9));
+  // Paid leave and grace share one 45-hour allowance; never add leave again
+  // when comparing actual worked hours with the full-pay threshold.
+  const leaveAndGraceAllowance = graceEligible ? 5 * fullDayHours : paidLeaveHours;
+  const fullSalaryThresholdHours = Math.max(0, targetHours - leaveAndGraceAllowance);
+  const fullSalaryEligible = targetHours > 0 && sum("hoursWorked") > 0 &&
+    sum("hoursWorked") >= fullSalaryThresholdHours;
   const payableHours = fullSalaryEligible ? targetHours : Math.min(countedHours, targetHours);
   const regularPay = Math.min(sum("hoursWorked"), targetHours) * hourlyRate;
   const paidLeavePay = Math.min(paidLeaveHours, Math.max(0, targetHours - sum("hoursWorked"))) * hourlyRate;
@@ -127,7 +131,8 @@ export function buildPayroll(employee, month, today) {
       shortfallHours: round(shortfallHours),
       fullSalaryEligible,
       graceEligible,
-      fullSalaryThresholdHours: Math.max(0, targetHours - (graceEligible ? 9 : 0)),
+      fullSalaryThresholdHours,
+      leaveAndGraceAllowance,
       salaryCeiling: round(targetHours * hourlyRate),
       graceHours: round(graceHours),
       gracePay: round(graceHours * hourlyRate),

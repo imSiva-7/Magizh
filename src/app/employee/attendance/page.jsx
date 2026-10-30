@@ -361,7 +361,7 @@ function AttendanceContent() {
             <h2>Attendance & Salary Stats — {formatAttendanceMonth(month)}</h2>
             <p className={styles.salaryFormula}>
               Monthly pay uses actual hours worked plus 9 hours per eligible paid leave day taken.
-              With no more than 4 leave days, a shortfall of up to 9 hours earns the full eligible salary; otherwise pay is calculated
+              With no more than 4 leave days, worked hours reaching the monthly target minus 45 hours earn full eligible salary. Those 45 hours cover leave and grace together; otherwise pay is calculated
               proportionally. Pay is capped at the monthly salary, prorated for mid-month joiners.
               Advances are subtracted afterward.
             </p>
@@ -409,7 +409,7 @@ function AttendanceContent() {
                 ["Paid Leave Hours", formatAttendanceHours(attendanceData.summary.paidLeaveHours)],
                 ["Counted Hours (Work + Leave)", formatAttendanceHours(attendanceData.summary.countedHours)],
                 ["Hours Target for Employment Period", formatAttendanceHours(attendanceData.summary.targetHours)],
-                ["Full Pay From", formatAttendanceHours(attendanceData.summary.fullSalaryThresholdHours)],
+                ["Full Pay From (Worked Hours)", formatAttendanceHours(attendanceData.summary.fullSalaryThresholdHours)],
                 ["Shortfall Before Grace", formatAttendanceHours(attendanceData.summary.shortfallHours)],
                 ["Grace Hours Applied", formatAttendanceHours(attendanceData.summary.graceHours)],
                 ["Grace Pay (Included)", formatCurrency(attendanceData.summary.gracePay)],
@@ -502,15 +502,14 @@ function AttendanceContent() {
                 = {attendanceData.summary.countedHours} counted hours. Worked hours already include {attendanceData.summary.totalOvertimeHours} overtime hours; these are counted once.
               </li>
               <li>
-                <strong>Apply the monthly target and 9-hour grace.</strong>{" "}
-                {!attendanceData.summary.graceEligible && "More than 4 leave days: the 9-hour grace does not apply. "}
-                Target: {attendanceData.summary.targetHours} hours; full eligible pay from {attendanceData.summary.fullSalaryThresholdHours} hours.
+                <strong>Apply the shared 45-hour leave and grace allowance.</strong>{" "}
+                {!attendanceData.summary.graceEligible && "More than 4 leave days: the shared grace allowance does not apply. "}
+                Target: {attendanceData.summary.targetHours} hours; full eligible pay from {attendanceData.summary.fullSalaryThresholdHours} actual worked hours.
                 Current shortfall: {attendanceData.summary.shortfallHours} hours.
                 {attendanceData.summary.fullSalaryEligible ? " The full-pay threshold is met." : " Pay is proportional to counted hours until the threshold is met."}
                 {" "}Grace applied: {attendanceData.summary.graceHours} hours.
                 <br />
-                For example, ₹15,000 in a 30-day month has a 270-hour target: with no more than 4 leave days, 261 hours including paid leave earns ₹15,000;
-                260 hours earns ₹14,444.44 before advances. Unused leave does not count.
+                For example, ₹15,000 in a 30-day month has a 270-hour target: with no more than 4 leave days, 225 worked hours earns ₹15,000. The 45-hour allowance covers leave and grace together; paid leave is not added again to meet this threshold. Below the threshold, pay uses worked hours plus eligible paid leave actually used.
                 <br />
                 {attendanceData.summary.payableHours} payable hours × (
                 {formatCurrency(attendanceData.employee.salary)} ÷ {attendanceData.period.daysInPeriod} ÷ 9)
