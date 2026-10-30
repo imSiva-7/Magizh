@@ -1,4 +1,5 @@
-import { createCustomerOrder, applyOrderToTotals, applyStockChanges, productToStockField } from "@/lib/customer-order-write";
+import { createCustomerOrder, applyOrderToTotals, applyStockChanges, productToStockField, normalizeOrderItems, orderAffectedStock } from "@/lib/customer-order-write";
+import { roundStockQuantity } from "@/lib/stock-movements.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
@@ -44,7 +45,7 @@ export async function GET(request) {
       if (!order) {
         return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
-      return NextResponse.json(order);
+      return NextResponse.json({ ...order, affectStockValue: await orderAffectedStock(db, order) });
     }
 
     if (!customerId) {
@@ -67,7 +68,7 @@ export async function GET(request) {
       .sort({ date: -1, createdAt: -1 })
       .toArray();
 
-    return NextResponse.json(orders);
+    return NextResponse.json(await Promise.all(orders.map(async order => ({ ...order, affectStockValue: await orderAffectedStock(db, order) }))));
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
@@ -141,23 +142,17 @@ export async function PUT(request) {
       if (data.actionDoneBy !== undefined) updateData.actionDoneBy = data.actionDoneBy?.trim() || "";
 
       // New affectStockValue flag
-      const newAffectStock = data.affectStockValue !== undefined ? data.affectStockValue !== false : oldOrder.affectStockValue !== false;
+      if (data.affectStockValue !== undefined && typeof data.affectStockValue !== "boolean") {
+        return NextResponse.json({ error: "Affect stock must be true or false" }, { status: 400 });
+      }
+      const oldAffected = await orderAffectedStock(db, oldOrder);
+      const newAffectStock = data.affectStockValue !== undefined ? data.affectStockValue === true : oldAffected;
       updateData.affectStockValue = newAffectStock;
 
       let newItems = null;
       if (data.items !== undefined) {
-        if (!Array.isArray(data.items) || data.items.length === 0) {
-          return NextResponse.json(
-            { error: "Items array cannot be empty" },
-            { status: 400 }
-          );
-        }
-        newItems = data.items.map((item) => ({
-          product: item.product.trim(),
-          quantity: parseFloat(item.quantity) || 0,
-          ratePerUnit: parseFloat(item.ratePerUnit) || 0,
-          totalAmount: parseFloat(item.totalAmount) || 0,
-        }));
+        try { newItems = normalizeOrderItems(data.items); }
+        catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
         updateData.items = newItems;
         updateData.totalAmount = newItems.reduce((sum, item) => sum + item.totalAmount, 0);
       }
@@ -169,17 +164,16 @@ export async function PUT(request) {
       );
 
       // --- stock adjustment logic (unchanged) ---
-      const oldAffected = oldOrder.affectStockValue !== false;
       if (oldAffected && (newItems || newAffectStock === false)) {
         const reversalEntries = [];
         const reversalInc = {};
 
         for (const item of (oldOrder.items || [])) {
-          const stockField = productToStockField[item.product];
+          const stockField = Object.hasOwn(productToStockField, item.product) ? productToStockField[item.product] : null;
           if (!stockField) continue;
 
           const qty = parseFloat(item.quantity);
-          if (qty <= 0) continue;
+          if (!Number.isFinite(qty) || qty <= 0) continue;
 
           reversalEntries.push({
             type: "reversal",
@@ -204,11 +198,11 @@ export async function PUT(request) {
         const deductionInc = {};
 
         for (const item of (newItems || oldOrder.items || [])) {
-          const stockField = productToStockField[item.product];
+          const stockField = Object.hasOwn(productToStockField, item.product) ? productToStockField[item.product] : null;
           if (!stockField) continue;
 
           const qty = parseFloat(item.quantity);
-          if (qty <= 0) continue;
+          if (!Number.isFinite(qty) || qty <= 0) continue;
 
           deductionEntries.push({
             type: "order",
@@ -227,7 +221,7 @@ export async function PUT(request) {
           const currentBalance = await db.collection("stock_balance").findOne({ _id: "current" });
           for (const [field, delta] of Object.entries(deductionInc)) {
             const current = currentBalance?.[field] || 0;
-            if (current + delta < 0) {
+            if (roundStockQuantity(Number(current) + delta) < 0) {
               return NextResponse.json(
                 { error: `Insufficient stock for ${field} after update. Available: ${current}` },
                 { status: 400 }
@@ -290,20 +284,22 @@ export async function DELETE(request) {
       }
 
       // Delete the order
-      await db.collection("orders").deleteOne({ _id: new ObjectId(id) });
+      const deletion = await db.collection("orders").deleteOne({ _id: new ObjectId(id) });
+      if (!deletion.deletedCount) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
       // Restore stock only if the order affected stock
-      if (order.affectStockValue !== false) {
+      const affectedStock = await orderAffectedStock(db, order);
+      if (affectedStock) {
         const reversalEntries = [];
         const incFields = {};
 
         if (order.items && Array.isArray(order.items)) {
           for (const item of order.items) {
-            const stockField = productToStockField[item.product];
+            const stockField = Object.hasOwn(productToStockField, item.product) ? productToStockField[item.product] : null;
             if (!stockField) continue;
 
             const quantity = parseFloat(item.quantity);
-            if (quantity <= 0) continue;
+            if (!Number.isFinite(quantity) || quantity <= 0) continue;
 
             reversalEntries.push({
               type: "reversal",
@@ -331,7 +327,7 @@ export async function DELETE(request) {
       return NextResponse.json({
         message: "Order deleted successfully",
         deletedId: id,
-        stockRestored: order.affectStockValue !== false,
+        stockRestored: affectedStock,
       });
     });
   } catch (error) {

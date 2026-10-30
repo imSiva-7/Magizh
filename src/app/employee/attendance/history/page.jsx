@@ -3,6 +3,7 @@ import AdminSummary from "@/components/AdminSummary";
 import { useSession } from "next-auth/react";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import DataSkeleton from "@/components/DataSkeleton";
+import { formatAttendanceHours } from "@/utils/attendanceHours";
 
 import { useState, useEffect, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
@@ -134,7 +135,7 @@ export default function AttendanceHistoryPage() {
         <>
           {data.summary && <AdminSummary><div className={styles.historyOverview} aria-label="Attendance summary">
             <div className={styles.historyStat}><span>Employees</span><strong>{data.summary.uniqueEmployees}</strong><small>with attendance</small></div>
-            <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{Number(data.summary.totalHours || 0).toFixed(2)}<small> h</small></strong><small>recorded this month</small></div>
+            <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{formatAttendanceHours(data.summary.totalHours)}</strong><small>recorded this month</small></div>
             <div className={`${styles.historyStat} ${data.summary.incompleteCount > 0 ? styles.historyStatAttention : ""}`}><span>Missing checkout</span><strong>{data.summary.incompleteCount || 0}</strong><small>{data.summary.incompleteCount ? "needs attention" : "all checkouts recorded"}</small></div>
           </div></AdminSummary>}
           <div className={styles.historyGroups}>
@@ -152,7 +153,7 @@ export default function AttendanceHistoryPage() {
                         </td>
                         <td className={styles.timeCell}>{formatTime(record.checkIn)}</td>
                         <td className={styles.timeCell}>{record.checkOut ? formatTime(record.checkOut) : <span className={styles.missingBadge}>Missing</span>}</td>
-                        <td className={styles.hoursCell}>{Number(record.hoursWorked || 0).toFixed(2)}h</td>
+                        <td className={styles.hoursCell}>{formatAttendanceHours(record.hoursWorked)}</td>
                         {isAdmin && <td><AttendanceTimeEditor empID={record.empID} day={record} onSaved={() => { setRefresh(value => value + 1); toast.success("Attendance times updated"); }} /></td>}
                       </tr>
                     ))}</tbody>

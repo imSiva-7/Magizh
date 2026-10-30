@@ -1,6 +1,8 @@
 import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
+import { getTodayDate } from "@/lib/india-date.mjs";
+import { attendanceDayHours } from "../../../../../utils/attendanceHours";
 
 /**
  * GET /api/attendance/history
@@ -30,7 +32,7 @@ export async function GET(request) {
         { status: 400 },
       );
     }
-    if (!/^\d{4}-\d{2}$/.test(month)) {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
       return NextResponse.json(
         { error: "Invalid month format. Use YYYY-MM" },
         { status: 400 },
@@ -46,6 +48,7 @@ export async function GET(request) {
         $project: {
           empID: 1,
           name: 1,
+          joiningDate: 1,
           daysArray: {
             $objectToArray: { $ifNull: [`$attendance.${month}.days`, {}] },
           },
@@ -57,6 +60,7 @@ export async function GET(request) {
           _id: 0,
           empID: 1,
           name: 1,
+          joiningDate: 1,
           date: "$daysArray.v.date",
           checkIn: "$daysArray.v.checkIn",
           checkOut: "$daysArray.v.checkOut",
@@ -96,9 +100,11 @@ export async function GET(request) {
           { checkOut: { $exists: false } },
         ],
       });
-      andConditions.push({ punchCount: { $gt: 0 } });
+      // Manual and migrated records can have a check-in without raw punches.
+      andConditions.push({ checkIn: { $exists: true, $nin: [null, ""] } });
     } else if (statusFilter === "complete") {
       andConditions.push({ checkOut: { $nin: [null, ""] } });
+      andConditions.push({ checkIn: { $exists: true, $nin: [null, ""] } });
     }
 
     if (andConditions.length) {
@@ -107,7 +113,22 @@ export async function GET(request) {
 
     stages.push({ $sort: { date: -1, empID: 1 } });
 
-    const records = await db.collection("employee").aggregate(stages).toArray();
+    const rawRecords = await db.collection("employee").aggregate(stages).toArray();
+    const today = getTodayDate();
+    const records = rawRecords.filter(record => {
+      const date = record.date;
+      if (typeof date !== "string" || !date.startsWith(`${month}-`) || date > today) return false;
+      const calendar = new Date(`${date}T00:00:00Z`);
+      if (!Number.isFinite(calendar.getTime()) || calendar.toISOString().slice(0, 10) !== date) return false;
+      const joining = record.joiningDate;
+      const validJoining = typeof joining === "string" && /^\d{4}-\d{2}-\d{2}$/.test(joining) &&
+        Number.isFinite(Date.parse(`${joining}T00:00:00Z`)) && new Date(`${joining}T00:00:00Z`).toISOString().slice(0, 10) === joining;
+      return !validJoining || date >= joining;
+    }).map(record => {
+      const { joiningDate: _joiningDate, ...publicRecord } = record;
+      const hours = attendanceDayHours(record);
+      return { ...publicRecord, hoursWorked: hours, regularHours: Math.min(hours, 9), overtimeHours: Math.max(hours - 9, 0) };
+    });
 
     // --- Summary ---
     const uniqueEmployees = new Set();

@@ -243,6 +243,19 @@
   gap: 1rem;
 }
 
+.summarySection + .summarySection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.summarySection h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--brand);
+}
+
 .summaryItem {
   display: flex;
   flex-direction: column;

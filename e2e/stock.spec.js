@@ -14,7 +14,7 @@ test.beforeEach(async ({ context, baseURL }) => {
 });
 
 async function mockStock(page, { failBalance = false, failExtras = false, balanceGate } = {}) {
-  const balance = { butter: "12", cream: 0, curd: 60, ghee: 8, soft_paneer: -2, premium_paneer: 15 };
+  const balance = { butter: "12", cream: 0, curd: 60, ghee: 8, soft_paneer: -2, premium_paneer: 15, milk: 20 };
   let thresholds = { butter: 20, cream: 10, curd: 10, ghee: 5 };
   const adjustments = [];
   await page.route("**/api/**", async (route) => {
@@ -123,7 +123,7 @@ test("slow stock requests show card placeholders and refresh retains loaded inve
   const loading = page.getByTestId("stock-loading");
   await expect(loading).toBeVisible();
   await expect(page.getByRole("status")).toHaveText("Loading inventory…");
-  await expect(page.getByTestId("stock-product-skeleton")).toHaveCount(6);
+  await expect(page.getByTestId("stock-product-skeleton")).toHaveCount(7);
   await expect(page.getByRole("button", { name: "+ Adjust stock", exact: true })).toBeDisabled();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();

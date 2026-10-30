@@ -88,7 +88,7 @@ test("ignores operation/enrollment tables and empty attendance uploads", async (
 test("accepts CRLF, sorts records, calculates regular/overtime hours, and uses India time", async () => {
   const response = await POST(request([punch("19:30:00"), punch("08:00:00"), punch("08:00:00")].join("\r\n")));
   expect(await response.text()).toBe("OK");
-  expect(day(db)).toMatchObject({ checkIn: "08:00:00", checkOut: "19:30:00", hoursWorked: 11.5, regularHours: 10, overtimeHours: 1.5 });
+  expect(day(db)).toMatchObject({ checkIn: "08:00:00", checkOut: "19:30:00", hoursWorked: 11.5, regularHours: 9, overtimeHours: 2.5 });
   expect(day(db).punches).toHaveLength(2);
   expect(day(db).punches[0].timestamp.toISOString()).toBe("2026-10-15T02:30:00.000Z");
   expect(db.employees.updateOne).toHaveBeenCalledTimes(1);

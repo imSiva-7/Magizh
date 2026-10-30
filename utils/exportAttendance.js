@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import { attendanceFilename } from "./attendanceFilename";
 import autoTable from "jspdf-autotable";
 import { formatNumberWithCommas } from "./formatNumberWithComma.js";
+import { completedAttendanceAverage, formatAttendanceAverage } from "./attendanceHours.js";
 
 // Brand Colors - Clean, Modern & Professional
 const BRAND_GREEN = [39, 121, 93];
@@ -161,11 +162,12 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
   const daysPresent = Number(attendanceData.period?.daysWorked || 0);
   const daysAbsent = Array.isArray(attendanceData.attendance)
     ? attendanceData.attendance.filter(
-        (day) => day.status !== "present" && day.date <= attendanceToday()
+        (day) => day.status !== "present" && day.status !== "pending" && day.date <= attendanceToday()
       ).length
     : 0;
   const totalHoursWorked = Number(attendanceData.summary?.totalHoursWorked || 0);
-  const avgHours = daysPresent > 0 ? (totalHoursWorked / daysPresent).toFixed(2) : "0.00";
+  const completed = completedAttendanceAverage(attendanceData.attendance || []);
+  const avgHours = completed.average === null ? "-" : formatAttendanceAverage(completed.average);
   const salary = Number(attendanceData.summary?.grossSalary || 0);
   const advances = Number(attendanceData.summary?.totalAdvances || 0);
   const netSalary = Number(attendanceData.summary?.netSalary || 0);
@@ -188,7 +190,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
     ["Excess Leave Days", `${attendanceData.summary.excessLeaveDays || 0} days`],
     ["Paid Leave Remaining", `${attendanceData.summary.remainingPaidLeave || 0} days`],
     ["Actual Hours Worked", `${totalHoursWorked}h`],
-    ["Avg Hours / Day", `${avgHours}h`],
+    ["Avg Hours / Completed Day", avgHours],
     ["Gross Salary", formatCurrency(salary)],
     ["Advances", advances > 0 ? `- ${formatCurrency(advances)}` : formatCurrency(0)],
     ["Net Salary", formatCurrency(netSalary)],

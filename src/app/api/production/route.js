@@ -2,6 +2,8 @@ import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
+import { withCustomerTransaction } from "@/lib/customer-transaction.mjs";
+import { applyStockMovement } from "@/lib/stock-movements.mjs";
 
 const VALID_PRODUCTS = [
   "milk",
@@ -43,8 +45,9 @@ const productToStockField = {
 // ---------- Helpers ----------
 const parseQuantity = (val, isPercentage = false) => {
   if (val === "" || val === null || val === undefined) return null;
-  const num = parseFloat(val);
-  if (isNaN(num) || num < 0) return null;
+  if (!["number", "string"].includes(typeof val)) return null;
+  const num = Number(val);
+  if (!Number.isFinite(num) || num < 0) return null;
   if (isPercentage) {
     return num <= 100 ? parseFloat(num.toFixed(1)) : null;
   } else {
@@ -60,14 +63,8 @@ const validateRequiredFields = (data, fields) => {
 };
 
 const validateAtLeastOneProduct = (data) => {
-  const hasProduct = VALID_PRODUCTS.some((product) => {
-    const suffix = PERCENTAGE_FIELDS.includes(product)
-      ? "_percentage"
-      : "_quantity";
-    const key = `${product}${suffix}`;
-    const value = data[key];
-    return value !== null && value !== undefined && value !== "" && value > 0;
-  });
+  const hasProduct = Object.keys(productToStockField).some(product =>
+    parseQuantity(data[`${product}_quantity`]) > 0);
   return hasProduct ? null : "At least one product quantity is required";
 };
 
@@ -116,17 +113,7 @@ const generateUniqueBatchName = async (db, batch, date) => {
  * @param {Object} incFields - Fields to $inc on stock_balance (e.g., { milk: 100 })
  */
 async function applyStockChanges(db, entries, incFields) {
-  if (entries.length === 0) return;
-
-  // 1. Insert one ledger entry per product movement
-  await db.collection("stock_ledger").insertMany(entries);
-
-  // 2. Update the live stock balance (create document if not exists)
-  await db.collection("stock_balance").updateOne(
-    { _id: "current" },
-    { $inc: incFields, $set: { updatedAt: new Date() } },
-    { upsert: true }
-  );
+  await applyStockMovement(db, entries, incFields);
 }
 
 // ========== API HANDLERS ==========
@@ -181,6 +168,17 @@ export async function POST(request) {
     const data = await request.json();
     logger(METHOD, "Request received", data);
 
+    if (data.affectStockValue !== undefined && typeof data.affectStockValue !== "boolean") {
+      return NextResponse.json({ error: "Affect stock must be true or false" }, { status: 400 });
+    }
+    for (const product of VALID_PRODUCTS) {
+      const percentage = PERCENTAGE_FIELDS.includes(product);
+      const key = `${product}${percentage ? "_percentage" : "_quantity"}`;
+      if (data[key] !== undefined && data[key] !== null && data[key] !== "" && parseQuantity(data[key], percentage) === null) {
+        return NextResponse.json({ error: `Invalid ${key}` }, { status: 400 });
+      }
+    }
+
     // Validation
     const requiredError = validateRequiredFields(data, ["date", "batch"]);
     if (requiredError) {
@@ -200,7 +198,8 @@ export async function POST(request) {
       return NextResponse.json({ error: percentageError }, { status: 400 });
     }
 
-    const db = await getDatabase();
+    const database = await getDatabase();
+    return await withCustomerTransaction(database, async db => {
 
     // Generate unique batch name
     const finalBatchName = await generateUniqueBatchName(
@@ -216,7 +215,7 @@ export async function POST(request) {
     const productionData = {
       date: data.date,
       batch: finalBatchName,
-      affectStockValue: data.affectStockValue,
+      affectStockValue: data.affectStockValue === true,
       actionDoneBy: data.actionDoneBy,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -291,6 +290,7 @@ export async function POST(request) {
       },
       { status: 201 }
     );
+    });
   } catch (error) {
     logger(METHOD, "CRITICAL ERROR", error.message);
     return NextResponse.json(
@@ -311,14 +311,15 @@ export async function DELETE(request) {
 
     logger(METHOD, "Request received", { id });
 
-    if (!id) {
+    if (!id || !ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "Entry ID is required" },
+        { error: "Valid entry ID is required" },
         { status: 400 }
       );
     }
 
-    const db = await getDatabase();
+    const database = await getDatabase();
+    return await withCustomerTransaction(database, async db => {
 
     // Check if entry exists
     const entry = await db.collection("entries").findOne({
@@ -334,6 +335,9 @@ export async function DELETE(request) {
     const result = await db.collection("entries").deleteOne({
       _id: new ObjectId(id),
     });
+    if (result.deletedCount !== 1) {
+      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    }
 
     // ============= Reverse stock if previously affected =============
     if (entry.affectStockValue === true) {
@@ -378,6 +382,7 @@ export async function DELETE(request) {
       success: true,
       message: "Entry deleted successfully",
       stockReversed: entry.affectStockValue === true,
+    });
     });
   } catch (error) {
     logger(METHOD, "CRITICAL ERROR", error.message);

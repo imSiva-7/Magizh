@@ -43,3 +43,8 @@ test("invalid balance data is marked unavailable and product units are retained"
   expect(items.find((item) => item.field === "ghee").unit).toBe("L");
   expect(items.filter((item) => item.unit === "kg")).toHaveLength(5);
 });
+
+test("milk stock used by production and orders is visible in litres", () => {
+  const milk = buildInventory({ milk: 25 }, { milk: 10 }, [{ milkPrice: 50 }]).find(product => product.field === "milk");
+  expect(milk).toMatchObject({ name: "Milk", unit: "L", quantity: 25, averagePrice: 50, estimatedValue: 1250, status: "Healthy" });
+});

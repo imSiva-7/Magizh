@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { getTodayDate as indiaDate } from "./india-date.mjs";
+import { attendanceDayHours, completedAttendanceAverage } from "../../utils/attendanceHours.js";
 
 export const validMonth = (month) =>
   typeof month === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(month);
@@ -14,6 +15,8 @@ export function payrollFingerprint(employee, month, today) {
       JSON.stringify({
         salary: employee.salary,
         joiningDate: employee.joiningDate,
+        paidLeaveDays: employee.paidLeaveDays,
+        createdAt: employee.createdAt,
         name: employee.name,
         empID: employee.empID,
         attendance: employee.attendance?.[month] || null,
@@ -48,16 +51,17 @@ export function buildPayroll(employee, month, today) {
     const key = String(i + start).padStart(2, "0");
     const day = days[key];
     const present = Boolean(day);
+    const hoursWorked = attendanceDayHours(day);
     return {
       date: `${month}-${key}`,
       checkIn: present ? day.checkIn : "",
       checkOut: present ? day.checkOut || "" : "",
-      hoursWorked: present ? Math.max(0, Number(day.hoursWorked) || 0) : 0,
+      hoursWorked,
       // Derive payable hours from actual attendance, ignoring legacy 10-hour splits.
-      regularHours: present ? Math.min(Math.max(0, Number(day.hoursWorked) || 0), fullDayHours) : 0,
-      overtimeHours: present ? Math.max((Number(day.hoursWorked) || 0) - fullDayHours, 0) : 0,
+      regularHours: Math.min(hoursWorked, fullDayHours),
+      overtimeHours: Math.max(hoursWorked - fullDayHours, 0),
       punches: day?.punches || [],
-      status: present ? "present" : (++absences <= paidLeaveAllowance ? "paid_leave" : "excess_leave"),
+      status: present ? "present" : `${month}-${key}` === today ? "pending" : (++absences <= paidLeaveAllowance ? "paid_leave" : "excess_leave"),
     };
   });
   const sum = (field) =>
@@ -70,19 +74,23 @@ export function buildPayroll(employee, month, today) {
   // Preserve the calendar-day rate and prorate the ceiling for mid-month joiners.
   const targetHours = employedDaysInMonth * fullDayHours;
   const paidLeaveHours = paidLeaveDays * fullDayHours;
-  const countedHours = Math.round((sum("hoursWorked") + paidLeaveHours) * 100) / 100;
+  const completed = completedAttendanceAverage(attendance);
+  const workedHours = completed.hours;
+  const countedHours = workedHours + paidLeaveHours;
   const shortfallHours = Math.max(0, targetHours - countedHours);
-  const graceEligible = absences <= 4;
-  // Paid leave and grace share one 45-hour allowance; never add leave again
-  // when comparing actual worked hours with the full-pay threshold.
-  const leaveAndGraceAllowance = graceEligible ? 5 * fullDayHours : paidLeaveHours;
+  const allocatedLeaveHours = paidLeaveAllowance * fullDayHours;
+  const graceAllowanceHours = fullDayHours;
+  // Full pay depends on worked hours against the employee's allocated allowance.
+  const leaveAndGraceAllowance = allocatedLeaveHours + graceAllowanceHours;
   const fullSalaryThresholdHours = Math.max(0, targetHours - leaveAndGraceAllowance);
-  const fullSalaryEligible = targetHours > 0 && sum("hoursWorked") > 0 &&
-    sum("hoursWorked") >= fullSalaryThresholdHours;
+  const fullSalaryEligible = targetHours > 0 && workedHours > 0 && workedHours >= fullSalaryThresholdHours;
+  const graceEligible = fullSalaryEligible;
   const payableHours = fullSalaryEligible ? targetHours : Math.min(countedHours, targetHours);
-  const regularPay = Math.min(sum("hoursWorked"), targetHours) * hourlyRate;
-  const paidLeavePay = Math.min(paidLeaveHours, Math.max(0, targetHours - sum("hoursWorked"))) * hourlyRate;
-  const graceHours = Math.max(0, payableHours - countedHours);
+  const regularPay = Math.min(workedHours, targetHours) * hourlyRate;
+  const paidLeavePay = Math.min(paidLeaveHours, Math.max(0, targetHours - workedHours)) * hourlyRate;
+  const topUpHours = Math.max(0, payableHours - countedHours);
+  const graceHours = Math.min(graceAllowanceHours, topUpHours);
+  const fullSalaryAdjustmentHours = Math.max(0, topUpHours - graceHours);
   const overtimePay = 0;
   const advances = employee.advances?.[month] || [];
   const totalAdvances = advances.reduce(
@@ -117,7 +125,7 @@ export function buildPayroll(employee, month, today) {
       status: "automatic",
     },
     summary: {
-      totalHoursWorked: round(sum("hoursWorked")),
+      totalHoursWorked: round(workedHours),
       totalRegularHours: round(sum("regularHours")),
       totalOvertimeHours: round(sum("overtimeHours")),
       scheduledWorkingDays: daysInPeriod,
@@ -131,19 +139,25 @@ export function buildPayroll(employee, month, today) {
       shortfallHours: round(shortfallHours),
       fullSalaryEligible,
       graceEligible,
+      allocatedLeaveHours,
+      graceAllowanceHours,
+      completedDays: completed.days,
+      averageHoursPerCompletedDay: completed.average,
       fullSalaryThresholdHours,
       leaveAndGraceAllowance,
       salaryCeiling: round(targetHours * hourlyRate),
       graceHours: round(graceHours),
       gracePay: round(graceHours * hourlyRate),
+      fullSalaryAdjustmentHours: round(fullSalaryAdjustmentHours),
+      fullSalaryAdjustmentPay: round(fullSalaryAdjustmentHours * hourlyRate),
       elapsedDays,
       employedDaysInMonth,
       remainingDays: daysInPeriod - last,
       workedDays: count("present"),
-      absentDays: elapsedDays - count("present"),
+      absentDays: absences,
       excessLeaveDays: count("excess_leave"),
       attendanceRate: elapsedDays ? round(count("present") / elapsedDays * 100) : 0,
-      incompleteDays: attendance.filter(day => day.status === "present" && !day.checkOut).length,
+      incompleteDays: count("present") - completed.days,
       paidLeaveDays,
       paidLeaveAllowance,
       paidLeaveEligible,
@@ -175,6 +189,9 @@ export function payrollGuard(employee, month) {
     "salary",
     "name",
     "empID",
+    "joiningDate",
+    "paidLeaveDays",
+    "createdAt",
     `attendance.${month}`,
     `leaves.${month}`,
     `advances.${month}`,

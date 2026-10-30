@@ -5,6 +5,7 @@ export const STOCK_PRODUCTS = [
   { name: "Ghee", field: "ghee", unit: "L", priceField: "gheePrice" },
   { name: "Soft Paneer", field: "soft_paneer", unit: "kg", priceField: "softPaneerPrice" },
   { name: "Premium Paneer", field: "premium_paneer", unit: "kg", priceField: "premiumPaneerPrice" },
+  { name: "Milk", field: "milk", unit: "L", priceField: "milkPrice" },
 ];
 
 export function stockNumber(value) {

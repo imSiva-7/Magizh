@@ -39,8 +39,8 @@ export async function PATCH(request) {
     const next = {
       ...previous, checkIn, checkOut,
       hoursWorked: Number(hours.toFixed(2)),
-      regularHours: Number(Math.min(hours, 10).toFixed(2)),
-      overtimeHours: Number(Math.max(hours - 10, 0).toFixed(2)),
+      regularHours: Number(Math.min(hours, 9).toFixed(2)),
+      overtimeHours: Number(Math.max(hours - 9, 0).toFixed(2)),
       manualTimes: { checkIn, checkOut },
       corrections: [...(previous.corrections || []), {
         previousCheckIn: previous.checkIn, previousCheckOut: previous.checkOut || null,

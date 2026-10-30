@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTodayDate } from "@/lib/india-date.mjs";
 import { updateCustomerSummaries } from "@/lib/customer-summaries.mjs";
+import { applyStockMovement, roundStockQuantity } from "@/lib/stock-movements.mjs";
 
 export const productToStockField = {
   "Milk": "milk",
@@ -107,17 +108,31 @@ export async function applyOrderToTotals(db, order, operation) {
 // Helper: insert stock ledger entries and update balance atomically
 // -------------------------------------------------------------------
 export async function applyStockChanges(db, entries, incFields) {
-  if (entries.length === 0) return;
+  await applyStockMovement(db, entries, incFields);
+}
 
-  // 1. Insert ledger records (per‑product movements)
-  await db.collection("stock_ledger").insertMany(entries);
+export function normalizeOrderItems(items) {
+  if (!Array.isArray(items) || !items.length) throw new Error("At least one order item is required");
+  return items.map(item => {
+    if (!item || typeof item.product !== "string" || !Object.hasOwn(productToStockField, item.product.trim())) {
+      throw new Error("Select a valid order product");
+    }
+    const numeric = value => ["number", "string"].includes(typeof value) && String(value).trim() !== "" && Number.isFinite(Number(value));
+    if (!numeric(item.quantity) || Number(item.quantity) <= 0 ||
+        !numeric(item.ratePerUnit) || Number(item.ratePerUnit) <= 0 ||
+        !numeric(item.totalAmount) || Number(item.totalAmount) < 0) {
+      throw new Error("Order quantities and rates must be positive; amounts cannot be negative");
+    }
+    const quantity = roundStockQuantity(item.quantity);
+    if (quantity <= 0 || Math.abs(quantity - Number(item.quantity)) > 1e-8) throw new Error("Use at most four decimal places for quantities");
+    return { product: item.product.trim(), quantity, ratePerUnit: Number(item.ratePerUnit), totalAmount: Number(item.totalAmount) };
+  });
+}
 
-  // 2. Update the live balance document (upsert = create if missing)
-  await db.collection("stock_balance").updateOne(
-    { _id: "current" },
-    { $inc: incFields, $set: { updatedAt: new Date() } },
-    { upsert: true }
-  );
+export async function orderAffectedStock(db, order) {
+  if (typeof order.affectStockValue === "boolean") return order.affectStockValue;
+  // Legacy orders without a checkbox flag must have evidence of a deduction.
+  return Boolean(await db.collection("stock_ledger").findOne({ referenceId: order._id, type: "order" }));
 }
 
 
@@ -153,27 +168,14 @@ export async function createCustomerOrder(db, data, metadata = {}) {
         return NextResponse.json({ error: "Invalid GST option" }, { status: 400 });
       }
 
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        return NextResponse.json(
-          { error: "At least one order item is required" },
-          { status: 400 }
-        );
+      if (affectStockValue !== undefined && typeof affectStockValue !== "boolean") {
+        return NextResponse.json({ error: "Affect stock must be true or false" }, { status: 400 });
       }
+      let normalizedItems;
+      try { normalizedItems = normalizeOrderItems(items); }
+      catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }
 
-      for (const item of items) {
-        if (!item.product || !item.quantity || !item.ratePerUnit) {
-          return NextResponse.json(
-            { error: "Each item must have product, quantity, and ratePerUnit" },
-            { status: 400 }
-          );
-        }
-        if (!Number.isFinite(Number(item.quantity)) || Number(item.quantity) <= 0 ||
-            !Number.isFinite(Number(item.ratePerUnit)) || Number(item.ratePerUnit) <= 0 ||
-            !Number.isFinite(Number(item.totalAmount)) || Number(item.totalAmount) < 0) {
-          return NextResponse.json({ error: "Order quantities and rates must be positive; amounts cannot be negative" }, { status: 400 });
-        }
-      }
-      if (!Number.isFinite(Number(totalAmount)) || Number(totalAmount) < 0) {
+      if (!["number", "string"].includes(typeof totalAmount) || String(totalAmount).trim() === "" || !Number.isFinite(Number(totalAmount)) || Number(totalAmount) < 0) {
         return NextResponse.json({ error: "Order amount cannot be negative" }, { status: 400 });
       }
 
@@ -184,19 +186,14 @@ export async function createCustomerOrder(db, data, metadata = {}) {
         customerName: customerName?.trim() || "",
         customerType: customerType?.trim() || "",
         date: date || getTodayDate(),
-        items: items.map((item) => ({
-          product: item.product.trim(),
-          quantity: parseFloat(item.quantity) || 0,
-          ratePerUnit: parseFloat(item.ratePerUnit) || 0,
-          totalAmount: parseFloat(item.totalAmount) || 0,
-        })),
-        totalAmount: parseFloat(totalAmount) || 0,
+        items: normalizedItems,
+        totalAmount: Number(totalAmount),
         gstType: data.gstType || "inclusive",
         gstRate: 5,
         paymentStatus: paymentStatus || "Not Paid",
         comment: comment?.trim() || "",
         actionDoneBy: actionDoneBy?.trim() || "",
-        affectStockValue: affectStockValue !== false,
+        affectStockValue: affectStockValue === true,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -235,7 +232,7 @@ export async function createCustomerOrder(db, data, metadata = {}) {
           const currentBalance = await db.collection("stock_balance").findOne({ _id: "current" });
           for (const [field, delta] of Object.entries(incFields)) {
             const current = currentBalance?.[field] || 0;
-            if (current + delta < 0) {
+            if (roundStockQuantity(Number(current) + delta) < 0) {
               return NextResponse.json(
                 { error: `Insufficient stock for ${field}. Available: ${current}` },
                 { status: 400 }

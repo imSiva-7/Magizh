@@ -30,7 +30,7 @@ test("preserves punches and records history while recomputing regular and overti
   const [filter, update] = updateOne.mock.calls[0];
   expect(filter["attendance.2026-01.days.15"]).toEqual({ $eq: previous });
   const day = update.$set["attendance.2026-01.days.15"];
-  expect(day).toMatchObject({ checkIn: "08:30:00", checkOut: "19:45:00", hoursWorked: 11.25, regularHours: 10, overtimeHours: 1.25, punches: previous.punches });
+  expect(day).toMatchObject({ checkIn: "08:30:00", checkOut: "19:45:00", hoursWorked: 11.25, regularHours: 9, overtimeHours: 2.25, punches: previous.punches });
   expect(day.corrections[0]).toMatchObject({ previousCheckIn: "08:00:00", editedBy: "admin@example.test" });
   const merged = mergeDay(day, [{ date: previous.date, time: "20:00:00", deviceId: "clock" }]);
   expect(merged.hoursWorked).toBe(11.25);

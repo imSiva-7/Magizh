@@ -268,7 +268,7 @@ function OrdersContent() {
       ...prev,
       gstType: order.gstType || "inclusive",
       affectStockValue:
-        order.affectStockValue !== undefined ? order.affectStockValue : true,
+        order.affectStockValue === true,
     }));
   }, []);
 
@@ -425,7 +425,10 @@ function OrdersContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Submission failed");
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        throw new Error(result.error || "Could not save order");
+      }
       toast.success(editingId._id ? "Order updated" : "Order created");
       await fetchAllData(); // this now also refreshes balance
       resetForm();
@@ -468,7 +471,7 @@ function OrdersContent() {
       comment: order.comment || "",
       gstType: order.gstType || "inclusive",
       affectStockValue:
-        order.affectStockValue !== undefined ? order.affectStockValue : true,
+        order.affectStockValue === true,
     });
     populateQuantitiesFromOrder(order);
     window.scrollTo({ top: 0, behavior: "smooth" });

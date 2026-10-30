@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 import { getTodayDate } from "@/utils/dateUtils";
+import { moneyCents } from "@/lib/customer-payments.mjs";
 
 const METHOD_NAMES = {
   GET: "GET /api/attendance",
@@ -86,7 +87,11 @@ export async function POST(request) {
       );
     }
 
-    if (!data.amount || isNaN(parseFloat(data.amount)) || parseFloat(data.amount) <= 0) {
+    let amount;
+    try { amount = moneyCents(data.amount) / 100; } catch {
+      return NextResponse.json({ error: "Enter a valid positive amount with at most two decimal places" }, { status: 400 });
+    }
+    if (amount <= 0) {
       return NextResponse.json(
         { error: "Valid amount is required" },
         { status: 400 }
@@ -106,7 +111,7 @@ export async function POST(request) {
     if (!validMonth(month)) return NextResponse.json({ error: "Invalid month" }, { status: 400 });
     const advanceData = {
       _id: new ObjectId().toString(),
-      amount: parseFloat(data.amount),
+      amount,
       date: data.date || getTodayDate(),
       reason: data.reason?.trim() || "",
       createdAt: new Date(),
@@ -169,6 +174,14 @@ export async function PUT(request) {
     const db = await getDatabase();
     const data = await request.json();
 
+    let amount;
+    if (data.amount !== undefined) {
+      try { amount = moneyCents(data.amount) / 100; } catch {
+        return NextResponse.json({ error: "Enter a valid positive amount with at most two decimal places" }, { status: 400 });
+      }
+      if (amount <= 0) return NextResponse.json({ error: "Advance amount must be greater than zero" }, { status: 400 });
+    }
+
     // Find the employee and update the specific advance
     const employee = await db.collection("employee").findOne({ empID });
     if (!employee) {
@@ -183,7 +196,7 @@ export async function PUT(request) {
     }
 
     // Update the advance
-    if (data.amount !== undefined) advances[advanceIndex].amount = parseFloat(data.amount);
+    if (amount !== undefined) advances[advanceIndex].amount = amount;
     if (data.date !== undefined) advances[advanceIndex].date = data.date;
     if (data.reason !== undefined) advances[advanceIndex].reason = data.reason.trim();
 
