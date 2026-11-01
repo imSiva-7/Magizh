@@ -9,6 +9,8 @@ import trendStyles from "@/css/stat-trend.module.css";
 import { customerAccountTrends } from "@/lib/history-card-trends";
 import CategoryBadge from "@/components/CategoryBadge";
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
+import { buildInventory, STOCK_PRODUCTS } from "@/lib/stock";
+import { customerPricePlaceholder } from "@/lib/customer-price-placeholder";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -157,6 +159,16 @@ function OrdersContent() {
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ customer: null, orders: [] });
+  const [priceCustomers, setPriceCustomers] = useState([]);
+  const averagePrices = useMemo(() => Object.fromEntries(buildInventory({}, {}, priceCustomers).map(product => [product.name, product.averagePrice])), [priceCustomers]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/customer", { signal: controller.signal, cache: "no-store" })
+      .then(response => response.ok ? response.json() : [])
+      .then(rows => { if (!controller.signal.aborted) setPriceCustomers(Array.isArray(rows) ? rows : []); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   const [editingId, setEditingId] = useState({});
   const [errors, setErrors] = useState({});
   const [orderForm, setOrderForm] = useState(initialOrder);
@@ -542,6 +554,7 @@ function OrdersContent() {
             {PRODUCT_FIELDS.map((product) => (
               <InputGroup
                 key={product.name}
+                className={`${styles.input} ${styles.price_hint}`}
                 label={product.name}
                 name={product.name}
                 type="text"
@@ -550,13 +563,15 @@ function OrdersContent() {
                 onChange={(e) =>
                   handleQuantityChange(product.name, e.target.value)
                 }
-                placeholder={`Enter ${product.name} quantity`}
+                placeholder={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], STOCK_PRODUCTS.find(item => item.name === product.name).unit)}
+                title={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], STOCK_PRODUCTS.find(item => item.name === product.name).unit)}
                 error={errors[product.name]}
                 disabled={submitting || loading}
               />
             ))}
           </div>
 
+          {/* <p>Enter quantities in L or kg. Avg is the average saved customer price, before any extra GST.</p> */}
           <div className={styles.form_grid_orders_comment}>
             <InputGroup
               label="Comment"

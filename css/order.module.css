@@ -383,6 +383,12 @@
 }
 
 /* Base Input Styles */
+.price_hint::placeholder {
+  color: #89978f;
+  opacity: 1;
+  font-weight: 400;
+}
+
 .input,
 .select_input,
 .filter_input {

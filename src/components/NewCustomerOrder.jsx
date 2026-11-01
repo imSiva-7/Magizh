@@ -9,6 +9,8 @@ import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "./NewCustomerOrder.module.css";
 import pickerStyles from "./HistoryPartyPicker.module.css";
 import orderStyles from "@/css/order.module.css";
+import { buildInventory } from "@/lib/stock";
+import { customerPricePlaceholder } from "@/lib/customer-price-placeholder";
 
 const PRODUCTS = [
   { name: "Milk", price: "milkPrice", unit: "L" },
@@ -93,6 +95,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
       .slice(0, 8);
   }, [customers, query]);
 
+  const averagePrices = useMemo(() => Object.fromEntries(buildInventory({}, {}, customers).map(product => [product.name, product.averagePrice])), [customers]);
   const lines = PRODUCTS.map((product) => {
     const rate = Number(customer?.[product.price]);
     const quantity = Number(quantities[product.name] || 0);
@@ -338,7 +341,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                       </label>
                       <input
                         id={`new-order-${line.price}`}
-                        className={orderStyles.input}
+                        className={`${orderStyles.input} ${orderStyles.price_hint}`}
                         aria-label={`${line.name} quantity (${line.unit})`}
                         type="number"
                         min="0"
@@ -352,11 +355,13 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                           }))
                         }
                         disabled={!line.priced}
-                        placeholder={`Enter ${line.name} quantity`}
+                        placeholder={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name], line.unit)}
+                        title={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name], line.unit)}
                       />
                     </div>
                   ))}
                 </div>
+                <p className={styles.hint}>Enter quantities in L or kg. Avg is the average saved customer price, before any extra GST.</p>
                 {lines.some((line) => !line.priced) && (
                   <p className={styles.hint}>
                     Products without a price are unavailable. Ask an admin to

@@ -19,7 +19,10 @@ Generation uses Asia/Kolkata calendar dates and never creates future orders.
 1. Configure a strong random `CRON_SECRET` in the deployment environment. Never use
    `NEXT_PUBLIC_` for this value or commit the actual value to source control.
 2. Deploy on Vercel with the included `vercel.json`: the cron path runs daily at
-   `00:30 UTC` (about **6:00 AM IST**). Actual timing depends on the hosting plan.
+   `23:30 UTC` (**5:00 AM IST the following day**), using `30 23 * * *`.
+   Actual timing depends on the hosting plan; Vercel Hobby does not guarantee
+   an exact-minute start. Use a plan or scheduler with minute precision if
+   orders must start generating at 5:00 AM sharp.
    The configuration is not active until deployed. Verify successful runs in the
    hosting dashboard; setting the secret alone does not prove the scheduler runs.
 3. On another host, schedule `GET /api/cron/customer-subscriptions` with
