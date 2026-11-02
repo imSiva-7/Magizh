@@ -15,6 +15,12 @@ test("supplier summaries calculate weighted quality, active-day milk, rate and p
   assert.equal(summary.activeDays, 2); assert.equal(summary.avgMilkPerDay, 20);
   assert.equal(summary._metrics.overall.fatMilkUnits.toString(), "19000000000");
 });
+test("supplier summary average rate truncates to one decimal", () => {
+  const summary = buildFlatSummary(supplierId, [
+    entry({ milkQuantity: 10, totalAmount: 442.9 }),
+  ]);
+  assert.equal(summary.overall.avgRate, 44.2);
+});
 test("payment transitions, repeated requests and reversal preserve overall counters exactly", () => {
   const original = entry({ milkQuantity: .1, totalAmount: .1 });
   const paid = { ...original, paymentStatus: "Paid" };

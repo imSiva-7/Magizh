@@ -1,6 +1,7 @@
 import { procurementDaily } from "./supplier-charts";
 import { paymentCardTrends } from "./customer-payment-period.mjs";
 import { customerDaily } from "./customer-charts";
+import { truncateCalculatedRate } from "./procurement-pricing.mjs";
 
 export function procurementCardTrends(records) {
   const days = procurementDaily(records);
@@ -8,7 +9,7 @@ export function procurementCardTrends(records) {
     milk: row => row.milk,
     amount: row => row.amount,
     quality: row => row.milk ? row.fatMilk / row.milk : 0,
-    rate: row => row.milk ? row.amount / row.milk : 0,
+    rate: row => truncateCalculatedRate(row.milk ? row.amount / row.milk : 0),
   };
   return Object.fromEntries(Object.entries(values).map(([key, value]) => [key, days.map(row => ({ date: row.date, value: value(row) }))]));
 }

@@ -38,8 +38,13 @@ function roundedRatio(numerator, denominator, digits) {
   const rounded = remainder * 2n > denominator || (remainder * 2n === denominator && quotient % 2n !== 0n) ? quotient + 1n : quotient;
   return Number(rounded) / Number(scale);
 }
+function truncatedRatio(numerator, denominator, digits) {
+  if (!denominator) return 0;
+  const scale = 10n ** BigInt(digits);
+  return Number((numerator * scale) / denominator) / Number(scale);
+}
 function publicBucket(metrics) {
-  return { count: Number(metrics.count), milkQuantity: Number(metrics.milkUnits) / 10000, totalAmount: Number(metrics.amountCents) / 100, avgFat: roundedRatio(metrics.fatMilkUnits, metrics.milkUnits * 10000n, 4), avgSnf: roundedRatio(metrics.snfMilkUnits, metrics.milkUnits * 10000n, 4), avgRate: roundedRatio(metrics.amountCents * 100n, metrics.milkUnits, 4) };
+  return { count: Number(metrics.count), milkQuantity: Number(metrics.milkUnits) / 10000, totalAmount: Number(metrics.amountCents) / 100, avgFat: roundedRatio(metrics.fatMilkUnits, metrics.milkUnits * 10000n, 4), avgSnf: roundedRatio(metrics.snfMilkUnits, metrics.milkUnits * 10000n, 4), avgRate: truncatedRatio(metrics.amountCents * 100n, metrics.milkUnits, 1) };
 }
 export function buildFlatSummary(supplierId, entries, previous = {}) {
   const metrics = emptyMetrics(), dates = new Set();
@@ -66,7 +71,7 @@ export function summaryUpdatePipeline(supplierId, delta, activeDayDelta = 0) {
       milkQuantity: divide(metric("milkUnits"), 10000), totalAmount: divide(metric("amountCents"), 100, 2),
       avgFat: divide(metric("fatMilkUnits"), { $multiply: [metric("milkUnits"), 10000] }),
       avgSnf: divide(metric("snfMilkUnits"), { $multiply: [metric("milkUnits"), 10000] }),
-      avgRate: divide({ $multiply: [metric("amountCents"), 100] }, metric("milkUnits")),
+      avgRate: { $convert: { input: { $trunc: [{ $cond: [{ $gt: [metric("milkUnits"), 0] }, { $divide: [{ $multiply: [metric("amountCents"), 100] }, metric("milkUnits")] }, 0] }, 1] }, to: "double" } },
     };
   }
   views.avgMilkPerDay = divide("$_metrics.overall.milkUnits", { $multiply: ["$activeDays", 10000] });

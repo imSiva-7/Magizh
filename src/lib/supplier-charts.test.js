@@ -33,3 +33,17 @@ test("empty and out-of-range inputs return an honest empty state", () => {
   expect(supplierChartSeries([]).rows).toEqual([]);
   expect(supplierChartSeries([{ date: "2025-01-01", milk: 10 }], { startDate: "2026-01-01" }).rows).toEqual([]);
 });
+
+test("procurement trends use amounts recalculated from truncated legacy rates", () => {
+  const daily = procurementDaily([
+    {
+      date: "2026-10-15",
+      milkQuantity: 10,
+      rate: 44.98,
+      totalAmount: 449.8,
+      customRate: false,
+      paymentStatus: "Not Paid",
+    },
+  ]);
+  expect(daily[0]).toMatchObject({ milk: 10, amount: 449, due: 449 });
+});

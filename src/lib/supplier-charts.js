@@ -1,3 +1,5 @@
+import { procurementPricing } from "./procurement-pricing.mjs";
+
 const numeric = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
 export function procurementDaily(records = []) {
   const days = new Map();
@@ -5,7 +7,7 @@ export function procurementDaily(records = []) {
     const date = String(record.date || "").slice(0, 10);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) continue;
     if (!days.has(date)) days.set(date, { date, milk: 0, amount: 0, paid: 0, due: 0, fatMilk: 0, snfMilk: 0 });
-    const row = days.get(date), milk = numeric(record.milkQuantity), amount = numeric(record.totalAmount);
+    const row = days.get(date), milk = numeric(record.milkQuantity), amount = numeric(procurementPricing(record).totalAmount);
     row.milk += milk; row.amount += amount; row[record.paymentStatus === "Paid" ? "paid" : "due"] += amount;
     row.fatMilk += milk * numeric(record.fatPercentage); row.snfMilk += milk * numeric(record.snfPercentage);
   }

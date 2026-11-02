@@ -1,3 +1,8 @@
+import {
+  procurementPricing,
+  truncateCalculatedRate,
+} from "../src/lib/procurement-pricing.mjs";
+
 const validNumber = (value) => {
   if (value === null || value === undefined || value === "" || typeof value === "boolean") return 0;
   const number = Number(value);
@@ -13,7 +18,7 @@ export function getProcurementSummary(records = []) {
   for (const record of rows) {
     const quantity = validNumber(record?.milkQuantity);
     milk += quantity;
-    amount += validNumber(record?.totalAmount);
+    amount += validNumber(procurementPricing(record).totalAmount);
     weightedFat += quantity * validNumber(record?.fatPercentage);
     weightedSnf += quantity * validNumber(record?.snfPercentage);
     const date = typeof record?.date === "string" ? record.date.slice(0, 10) : "";
@@ -24,7 +29,7 @@ export function getProcurementSummary(records = []) {
     milk,
     amount,
     count: rows.length,
-    avgRate: (milk ? amount / milk : 0).toFixed(2),
+    avgRate: truncateCalculatedRate(milk ? amount / milk : 0).toFixed(1),
     avgRateDaily: (daysWithData ? amount / daysWithData : 0).toFixed(0),
     avgMilkDaily: (daysWithData ? milk / daysWithData : 0).toFixed(2),
     avgFat: (Math.round((milk ? weightedFat / milk : 0) * 10) / 10).toFixed(1),

@@ -12,6 +12,7 @@ import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementCardTrends } from "@/lib/history-card-trends";
+import { truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
 
 import {
   useState,
@@ -289,11 +290,11 @@ function ProcurementHistoryContent() {
     if (selectedSupplier.supplierCustomRate) {
       rate = parseFloat(selectedSupplier.supplierCustomRate);
     } else {
-      rate = (totalSolids * effectiveTSRate) / 100;
+      rate = truncateCalculatedRate((totalSolids * effectiveTSRate) / 100);
     }
 
     return {
-      rate: rate.toFixed(2),
+      rate: selectedSupplier.supplierCustomRate ? rate.toFixed(2) : rate.toFixed(1),
       totalAmount: (rate * q).toFixed(2),
     };
   }, [
@@ -912,7 +913,7 @@ function ProcurementHistoryContent() {
                 label="Avg Rate"
                 trend={cardTrends.rate}
                 tone="amount"
-                value={formatNumberWithCommas(summary.avgRate, 2)}
+                value={formatNumberWithCommas(summary.avgRate, 1)}
                 unit="/L"
                 prefix="₹"
               />

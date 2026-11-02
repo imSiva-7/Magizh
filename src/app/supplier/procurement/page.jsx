@@ -9,6 +9,7 @@ import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementCardTrends } from "@/lib/history-card-trends";
+import { truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
 import CategoryBadge from "@/components/CategoryBadge";
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -133,7 +134,7 @@ const SummaryStats = ({ summary, filters, trends }) => (
         value={formatStat(summary.avgRateDaily)}
         prefix="₹"
       />
-      <StatItem label="Avg Rate" trend={trends.rate} tone="amount" value={formatNumberWithCommas(summary.avgRate, 2)} unit="/L" prefix="₹" />
+      <StatItem label="Avg Rate" trend={trends.rate} tone="amount" value={formatNumberWithCommas(summary.avgRate, 1)} unit="/L" prefix="₹" />
       <StatItem
         label="Milk" trend={trends.milk}
         value={formatNumberWithCommas(summary.milk, 2)}
@@ -232,6 +233,7 @@ function ProcurementContent() {
 
       let calculatedRate = 0;
       let calculatedTotal = 0;
+      let isCustomRate = false;
 
       if (f > 0 && s > 0 && q > 0) {
         const totalSolids = f + s;
@@ -239,16 +241,18 @@ function ProcurementContent() {
         if (editingId && editingId.customRate) {
           calculatedRate = editingId.rate;
           calculatedTotal = calculatedRate * q;
+          isCustomRate = true;
         } else if (custom) {
           calculatedRate = custom;
           calculatedTotal = custom * q;
+          isCustomRate = true;
         } else {
-          calculatedRate = (totalSolids * tsRate) / 100;
+          calculatedRate = truncateCalculatedRate((totalSolids * tsRate) / 100);
           calculatedTotal = calculatedRate * q;
         }
 
         return {
-          rate: calculatedRate.toFixed(2),
+          rate: calculatedRate.toFixed(isCustomRate ? 2 : 1),
           totalAmount: calculatedTotal.toFixed(2),
         };
       }
