@@ -1,6 +1,6 @@
 import {
+  procurementAggregatePricing,
   procurementPricing,
-  truncateCalculatedRate,
 } from "../src/lib/procurement-pricing.mjs";
 
 const validNumber = (value) => {
@@ -25,11 +25,13 @@ export function getProcurementSummary(records = []) {
     if (/^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(Date.parse(`${date}T00:00:00Z`)) && new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date) dates.add(date);
   }
   const daysWithData = dates.size;
+  const aggregatePricing = procurementAggregatePricing(amount, milk);
+  amount = aggregatePricing.totalAmount;
   return {
     milk,
     amount,
     count: rows.length,
-    avgRate: truncateCalculatedRate(milk ? amount / milk : 0).toFixed(1),
+    avgRate: aggregatePricing.avgRate.toFixed(1),
     avgRateDaily: (daysWithData ? amount / daysWithData : 0).toFixed(0),
     avgMilkDaily: (daysWithData ? milk / daysWithData : 0).toFixed(2),
     avgFat: (Math.round((milk ? weightedFat / milk : 0) * 10) / 10).toFixed(1),

@@ -21,6 +21,14 @@ test("supplier summary average rate truncates to one decimal", () => {
   ]);
   assert.equal(summary.overall.avgRate, 44.2);
 });
+test("supplier summary total uses truncated average rate times total milk", () => {
+  const summary = buildFlatSummary(supplierId, [
+    entry({ milkQuantity: 1, totalAmount: 44.29 }),
+    entry({ milkQuantity: 1, totalAmount: 44.28 }),
+  ]);
+  assert.equal(summary.overall.avgRate, 44.2);
+  assert.equal(summary.overall.totalAmount, 88.4);
+});
 test("payment transitions, repeated requests and reversal preserve overall counters exactly", () => {
   const original = entry({ milkQuantity: .1, totalAmount: .1 });
   const paid = { ...original, paymentStatus: "Paid" };

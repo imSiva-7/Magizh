@@ -54,3 +54,12 @@ test("average rate truncates instead of rounding", () => {
   ]);
   expect(summary.avgRate).toBe("44.2");
 });
+
+test("summary total uses truncated aggregate average rate times total milk", () => {
+  const summary = getProcurementSummary([
+    { date: "2026-10-01", milkQuantity: 1, rate: 44.2, totalAmount: 44.2 },
+    { date: "2026-10-01", milkQuantity: 1, rate: 44.3, totalAmount: 44.3 },
+  ]);
+  expect(summary.avgRate).toBe("44.2");
+  expect(summary.amount).toBe(88.4);
+});

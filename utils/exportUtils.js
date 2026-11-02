@@ -3,8 +3,8 @@ import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
 import {
+  procurementAggregatePricing,
   procurementPricing,
-  truncateCalculatedRate,
 } from "../src/lib/procurement-pricing.mjs";
 
 // ========== UTILITY FUNCTIONS ==========
@@ -37,14 +37,16 @@ const calculateTotals = (procurements) => {
     { totalMilk: 0, totalAmount: 0, totalFat: 0, totalSnf: 0 },
   );
 
+  const aggregatePricing = procurementAggregatePricing(
+    totals.totalAmount,
+    totals.totalMilk,
+  );
   return {
     totalMilk: totals.totalMilk,
-    totalAmount: totals.totalAmount,
+    totalAmount: aggregatePricing.totalAmount,
     avgFat: totals.totalFat / procurements.length,
     avgSnf: totals.totalSnf / procurements.length,
-    avgRate: truncateCalculatedRate(
-      totals.totalMilk > 0 ? totals.totalAmount / totals.totalMilk : 0,
-    ),
+    avgRate: aggregatePricing.avgRate,
   };
 };
 
@@ -230,6 +232,8 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     totalSnf += record.snfPercentage;
     uniqueDates.add(record.date);
   });
+  const aggregatePricing = procurementAggregatePricing(totalAmount, totalMilkLtr);
+  totalAmount = aggregatePricing.totalAmount;
 
   autoTable(doc, {
       rowPageBreak: "avoid",
@@ -299,9 +303,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   // Calculate Averages
   const avgFat = (totalFat / procurements.length).toFixed(2);
   const avgSnf = (totalSnf / procurements.length).toFixed(2);
-  const avgRate = truncateCalculatedRate(
-    totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0,
-  );
+  const avgRate = aggregatePricing.avgRate;
 
   // Summary card on the right (matching invoice style)
   const summaryWidth = 92;
@@ -488,15 +490,15 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
     totalFat += record.fatPercentage;
     totalSnf += record.snfPercentage;
   });
+  const aggregatePricing = procurementAggregatePricing(totalAmount, totalMilkLtr);
+  totalAmount = aggregatePricing.totalAmount;
   
   csvRows.push("");
   csvRows.push("SUMMARY");
   csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
   csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
   csvRows.push(
-    `Average Rate/L,Rs ${truncateCalculatedRate(
-      totalMilkLtr > 0 ? totalAmount / totalMilkLtr : 0,
-    ).toFixed(1)}`,
+    `Average Rate/L,Rs ${aggregatePricing.avgRate.toFixed(1)}`,
   );
   csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
   csvRows.push(`Total Amount,Rs ${totalAmount.toFixed(2)}`);

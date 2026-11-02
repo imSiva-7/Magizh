@@ -20,6 +20,10 @@ import Link from "next/link";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementDaily } from "@/lib/supplier-charts";
+import {
+  procurementAggregatePricing,
+  procurementPricing,
+} from "@/lib/procurement-pricing.mjs";
 
 
 const getInitialFilters = () => ({
@@ -253,7 +257,7 @@ export default function Payments() {
       const milk = parseFloat(record.milkQuantity) || 0;
       const fat = parseFloat(record.fatPercentage) || 0;
       const snf = parseFloat(record.snfPercentage) || 0;
-      const amount = parseFloat(record.totalAmount) || 0;
+      const amount = procurementPricing(record).totalAmount;
       const date = record.date;
       const isPaid = record.paymentStatus === "Paid";
 
@@ -291,6 +295,14 @@ export default function Payments() {
         totals.all.dueAmount += amount;
       }
     });
+
+    for (const [id, supplierTotals] of Object.entries(totals)) {
+      if (id === "all") continue;
+      supplierTotals.totalAmount = procurementAggregatePricing(
+        supplierTotals.totalAmount,
+        supplierTotals.totalMilk,
+      ).totalAmount;
+    }
 
     const totalCount = procurementRecords.length;
     totals.all.avgFat =
@@ -372,11 +384,28 @@ export default function Payments() {
     toast.info("Loaded today's records.");
   };
 
-  const globalStats = useMemo(() => filteredSupplierList.reduce((totals, supplier) => {
-    const stats = supplierTotalsMap[supplier._id];
-    for (const field of ["totalMilk", "totalAmount", "paidAmount", "dueAmount"]) totals[field] += stats[field] || 0;
+  const globalStats = useMemo(() => {
+    const records = filteredSupplierList.flatMap(
+      (supplier) => supplierTotalsMap[supplier._id].procurements,
+    );
+    const totals = records.reduce(
+      (result, record) => {
+        const quantity = parseFloat(record.milkQuantity) || 0;
+        const amount = procurementPricing(record).totalAmount;
+        result.totalMilk += quantity;
+        result.totalAmount += amount;
+        if (record.paymentStatus === "Paid") result.paidAmount += amount;
+        else result.dueAmount += amount;
+        return result;
+      },
+      { totalMilk: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0 },
+    );
+    totals.totalAmount = procurementAggregatePricing(
+      totals.totalAmount,
+      totals.totalMilk,
+    ).totalAmount;
     return totals;
-  }, { totalMilk: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0 }), [filteredSupplierList, supplierTotalsMap]);
+  }, [filteredSupplierList, supplierTotalsMap]);
   const cardTrends = useMemo(() => {
     const daily = procurementDaily(filteredSupplierList.flatMap(supplier => supplierTotalsMap[supplier._id].procurements));
     return Object.fromEntries(["milk", "amount", "paid", "due"].map(field => [field, daily.map(day => ({ date: day.date, value: day[field] }))]));

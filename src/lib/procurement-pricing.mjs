@@ -10,6 +10,12 @@ export function truncateCalculatedRate(rate) {
   );
 }
 
+export function procurementAggregatePricing(amount, quantity) {
+  const totalMilk = Number.isFinite(quantity) && quantity > 0 ? quantity : 0;
+  const avgRate = truncateCalculatedRate(totalMilk ? amount / totalMilk : 0);
+  return { avgRate, totalAmount: r2(avgRate * totalMilk) };
+}
+
 export function procurementPricing(record) {
   const quantity = Number(record?.milkQuantity);
   const savedRate = Number(record?.rate);
