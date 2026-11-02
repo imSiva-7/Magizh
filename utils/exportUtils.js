@@ -371,7 +371,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.setTextColor(...TEXT_PRIMARY);
-  doc.text("GST (0%)", summaryX + 5, currentY);
+  doc.text("GST (5%)", summaryX + 5, currentY);
   doc.setTextColor(...TEXT_SECONDARY);
   doc.text("Not Applicable", pageWidth - margin - 5, currentY, {
     align: "right",
