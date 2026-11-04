@@ -159,7 +159,7 @@ export default function Supplier() {
         const customRate = Number(value);
         if (!Number.isFinite(customRate)) return "Please enter a valid number";
         if (customRate < 30) return `Custom Rate must be at least 30`;
-        if (customRate > 40) return `Custom Rate cannot exceed 40`;
+        if (customRate > 50) return `Custom Rate cannot exceed 40`;
         if (!/^\d+(\.\d{0,2})?$/.test(value)) return "Enter up to 2 decimal places";
         return "";
       }
