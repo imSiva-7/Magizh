@@ -197,13 +197,13 @@ export default function ProductionAnalyticsPage() {
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg Fat</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.totals.avgFat || 0, 1)}<span className={styles.stat_unit}>%</span>
+                    {formatNumberWithCommas(data.totals.avgFat || 0, 2)}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
                 <div className={styles.stat_item}>
                   <div className={styles.stat_label}>Avg SNF</div>
                   <div className={styles.stat_value}>
-                    {formatNumberWithCommas(data.totals.avgSnf || 0, 1)}<span className={styles.stat_unit}>%</span>
+                    {formatNumberWithCommas(data.totals.avgSnf || 0, 2)}<span className={styles.stat_unit}>%</span>
                   </div>
                 </div>
               </div>

@@ -9,7 +9,7 @@ import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementCardTrends } from "@/lib/history-card-trends";
-import { truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
+import { procurementPricing, truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
 import CategoryBadge from "@/components/CategoryBadge";
 
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -126,7 +126,7 @@ const SummaryStats = ({ summary, filters, trends }) => (
       />
       <StatItem
         label="Fat / SNF" trend={trends.quality}
-        value={`${formatNumberWithCommas(summary.avgFat, 1)} / ${formatNumberWithCommas(summary.avgSnf, 1)}`}
+        value={`${formatNumberWithCommas(summary.avgFat, 2)} / ${formatNumberWithCommas(summary.avgSnf, 2)}`}
         unit="%"
       />
       <StatItem
@@ -167,7 +167,7 @@ const getDateRangeLabel = (startDate, endDate) => {
   return "All Records";
 };
 
-const sanitizeNumericInput = (value, fieldName) => {
+const sanitizeNumericInput = (value) => {
   let sanitized = value.replace(/[^\d.]/g, "");
   const parts = sanitized.split(".");
 
@@ -176,7 +176,7 @@ const sanitizeNumericInput = (value, fieldName) => {
   }
 
   if (parts[1]) {
-    const maxDecimals = fieldName === "milkQuantity" ? 2 : 1;
+    const maxDecimals = 2;
     sanitized = parts[0] + "." + parts[1].substring(0, maxDecimals);
   }
 
@@ -388,7 +388,7 @@ function ProcurementContent() {
 
     let sanitizedValue = value;
     if (["milkQuantity", "fatPercentage", "snfPercentage"].includes(name)) {
-      sanitizedValue = sanitizeNumericInput(value, name);
+      sanitizedValue = sanitizeNumericInput(value);
     }
 
     setFormData((prev) => ({ ...prev, [name]: sanitizedValue }));
@@ -665,6 +665,7 @@ function ProcurementContent() {
 
       return {
         ...row,
+        ...procurementPricing(row),
         isFirstOfDate: dateCounts[dateKey] === 1,
         occurrenceCount: dateCounts[dateKey],
       };
@@ -825,7 +826,7 @@ function ProcurementContent() {
               label="Fat %"
               name="fatPercentage"
               type="number"
-              step="0.1"
+              step="0.01"
               inputMode="decimal"
               placeholder="3.5"
               value={formData.fatPercentage}
@@ -837,7 +838,7 @@ function ProcurementContent() {
               label="SNF %"
               name="snfPercentage"
               type="number"
-              step="0.1"
+              step="0.01"
               inputMode="decimal"
               placeholder="8.5"
               value={formData.snfPercentage}
@@ -1223,10 +1224,10 @@ function ProcurementContent() {
                           {parseFloat(row.milkQuantity).toFixed(2)}
                         </td>
                         <td className={styles.fat_cell}>
-                          {parseFloat(row.fatPercentage).toFixed(1)}
+                          {parseFloat(row.fatPercentage).toFixed(2)}
                         </td>
                         <td className={styles.snf_cell}>
-                          {parseFloat(row.snfPercentage).toFixed(1)}
+                          {parseFloat(row.snfPercentage).toFixed(2)}
                         </td>
                         <td className={styles.rate_cell}>{row.parentTsr}</td>
                         <td className={styles.cut_cell}>
@@ -1358,16 +1359,16 @@ function ProcurementContent() {
                       {parseFloat(row.milkQuantity).toFixed(2)}
                     </td>
                     <td className={styles.fat_cell}>
-                      {parseFloat(row.fatPercentage).toFixed(1)}
+                      {parseFloat(row.fatPercentage).toFixed(2)}
                     </td>
                     <td className={styles.snf_cell}>
-                      {parseFloat(row.snfPercentage).toFixed(1)}
+                      {parseFloat(row.snfPercentage).toFixed(2)}
                     </td>
                     <td className={styles.rate_cell}>
                       {row.supplierTSRate || "N/A"}
                     </td>
                     <td className={styles.rate_cell}>
-                      ₹{parseFloat(row.rate).toFixed(1)}
+                      ₹{Number(row.rate).toFixed(row.customRate ? 2 : 1)}
                     </td>
                     <td className={styles.total_cell}>
                       ₹{formatNumberWithCommasNoDecimal(row.totalAmount)}

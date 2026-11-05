@@ -5,6 +5,7 @@ import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
 import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
+
 import CategoryBadge from "@/components/CategoryBadge";
 
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
@@ -20,10 +21,8 @@ import Link from "next/link";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementDaily } from "@/lib/supplier-charts";
-import {
-  procurementAggregatePricing,
-  procurementPricing,
-} from "@/lib/procurement-pricing.mjs";
+import { procurementPricing } from "@/lib/procurement-pricing.mjs";
+import { getProcurementPaymentSummary } from "@/utils/procurementSummary";
 
 
 const getInitialFilters = () => ({
@@ -219,98 +218,19 @@ export default function Payments() {
   };
 
   const supplierTotalsMap = useMemo(() => {
-    const totals = {
-      all: {
-        totalMilk: 0,
-        totalFat: 0,
-        totalSnf: 0,
-        uniqueDates: new Set(),
-        totalAmount: 0,
-        paidAmount: 0,
-        dueAmount: 0,
-        procurements: [],
-      },
-    };
-
-    if (procurementRecords.length === 0) return totals;
-
-    let globalFat = 0;
-    let globalSnf = 0;
-
-    procurementRecords.forEach((record) => {
-      if ((statusFilter === "Paid" && record.paymentStatus !== "Paid") || (statusFilter === "Not Paid" && record.paymentStatus === "Paid")) return;
-      const id = record.supplierId;
-
-      if (!totals[id]) {
-        totals[id] = {
-          totalMilk: 0,
-          totalFatSum: 0,
-          totalSnfSum: 0,
-          uniqueDates: new Set(),
-          totalAmount: 0,
-          paidAmount: 0,
-          dueAmount: 0,
-          procurements: [],
-        };
-      }
-
-      const milk = parseFloat(record.milkQuantity) || 0;
-      const fat = parseFloat(record.fatPercentage) || 0;
-      const snf = parseFloat(record.snfPercentage) || 0;
-      const amount = procurementPricing(record).totalAmount;
-      const date = record.date;
-      const isPaid = record.paymentStatus === "Paid";
-
-      totals[id].totalMilk += milk;
-      totals[id].totalFatSum += fat;
-      totals[id].totalSnfSum += snf;
-      totals[id].uniqueDates.add(date);
-      totals[id].totalAmount += amount;
-
-      if (isPaid) {
-        totals[id].paidAmount += amount;
-      } else {
-        totals[id].dueAmount += amount;
-      }
-
-      // Filter by statusFilter
-      if (statusFilter === "Paid" && isPaid) {
-        totals[id].procurements.push(record);
-      } else if (statusFilter === "Not Paid" && !isPaid) {
-        totals[id].procurements.push(record);
-      } else if (statusFilter === "") {
-        totals[id].procurements.push(record);
-      }
-
-      // global totals
-      totals.all.totalMilk += milk;
-      globalFat += fat;
-      globalSnf += snf;
-      totals.all.uniqueDates.add(date);
-      totals.all.totalAmount += amount;
-
-      if (isPaid) {
-        totals.all.paidAmount += amount;
-      } else {
-        totals.all.dueAmount += amount;
-      }
-    });
-
-    for (const [id, supplierTotals] of Object.entries(totals)) {
-      if (id === "all") continue;
-      supplierTotals.totalAmount = procurementAggregatePricing(
-        supplierTotals.totalAmount,
-        supplierTotals.totalMilk,
-      ).totalAmount;
+    const grouped = { all: [] };
+    for (const record of procurementRecords) {
+      if (statusFilter === "Paid" && record.paymentStatus !== "Paid") continue;
+      if (statusFilter === "Not Paid" && record.paymentStatus === "Paid") continue;
+      const row = { ...record, ...procurementPricing(record) };
+      (grouped[record.supplierId] ||= []).push(row);
+      grouped.all.push(row);
     }
-
-    const totalCount = procurementRecords.length;
-    totals.all.avgFat =
-      totalCount > 0 ? (globalFat / totalCount).toFixed(1) : "0.0";
-    totals.all.avgSnf =
-      totalCount > 0 ? (globalSnf / totalCount).toFixed(1) : "0.0";
-
-    return totals;
+    return Object.fromEntries(Object.entries(grouped).map(([id, rows]) => [id, {
+      ...getProcurementPaymentSummary(rows),
+      procurements: rows,
+      uniqueDates: new Set(rows.map(row => row.date)),
+    }]));
   }, [procurementRecords, statusFilter]);
 
   // Filtered supplier list (by search) - sorted by total milk quantity
@@ -388,23 +308,7 @@ export default function Payments() {
     const records = filteredSupplierList.flatMap(
       (supplier) => supplierTotalsMap[supplier._id].procurements,
     );
-    const totals = records.reduce(
-      (result, record) => {
-        const quantity = parseFloat(record.milkQuantity) || 0;
-        const amount = procurementPricing(record).totalAmount;
-        result.totalMilk += quantity;
-        result.totalAmount += amount;
-        if (record.paymentStatus === "Paid") result.paidAmount += amount;
-        else result.dueAmount += amount;
-        return result;
-      },
-      { totalMilk: 0, totalAmount: 0, paidAmount: 0, dueAmount: 0 },
-    );
-    totals.totalAmount = procurementAggregatePricing(
-      totals.totalAmount,
-      totals.totalMilk,
-    ).totalAmount;
-    return totals;
+    return getProcurementPaymentSummary(records);
   }, [filteredSupplierList, supplierTotalsMap]);
   const cardTrends = useMemo(() => {
     const daily = procurementDaily(filteredSupplierList.flatMap(supplier => supplierTotalsMap[supplier._id].procurements));
@@ -824,20 +728,14 @@ export default function Payments() {
                             </td>
                             <td className={styles.table_cell}>
                               {formatNumberWithCommas(
-                                (parseFloat(row.milkQuantity) || 0).toFixed(1),
+                                (parseFloat(row.milkQuantity) || 0),
                               )}
                             </td>
                             <td className={styles.table_cell}>
-                              {(parseFloat(row.fatPercentage) || 0).toFixed(1)}{" "}
+                              {(parseFloat(row.fatPercentage) || 0).toFixed(2)}{" "}
                               /{" "}
-                              {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
+                              {(parseFloat(row.snfPercentage) || 0).toFixed(2)}
                             </td>
-                            {/* <td className={styles.table_cell}>
-                              ₹
-                              {formatNumberWithCommas(
-                                (parseFloat(row.rate) || 0).toFixed(2),
-                              )}
-                            </td> */}
                             <td
                               className={`${styles.table_cell} ${styles.cell_total}`}
                             >

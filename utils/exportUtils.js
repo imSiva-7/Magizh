@@ -2,10 +2,8 @@ import { jsPDF } from "jspdf";
 import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
 import { formatDateForDisplay } from "./dateUtils";
-import {
-  procurementAggregatePricing,
-  procurementPricing,
-} from "../src/lib/procurement-pricing.mjs";
+import { procurementPricing } from "../src/lib/procurement-pricing.mjs";
+import { getProcurementSummary } from "./procurementSummary";
 
 // ========== UTILITY FUNCTIONS ==========
 const formatNumberWithCommas = (value, decimals = 2) => {
@@ -20,33 +18,13 @@ const formatNumberWithCommas = (value, decimals = 2) => {
 const formatDateForCSV = formatDateForDisplay;
 
 const calculateTotals = (procurements) => {
-  if (!procurements.length) {
-    return { totalMilk: 0, totalAmount: 0, avgFat: 0, avgSnf: 0, avgRate: 0 };
-  }
-
-  const totals = procurements.reduce(
-    (acc, record) => {
-      const pricing = procurementPricing(record);
-      return {
-        totalMilk: acc.totalMilk + (record.milkQuantity || 0),
-        totalAmount: acc.totalAmount + pricing.totalAmount,
-        totalFat: acc.totalFat + (record.fatPercentage || 0),
-        totalSnf: acc.totalSnf + (record.snfPercentage || 0),
-      };
-    },
-    { totalMilk: 0, totalAmount: 0, totalFat: 0, totalSnf: 0 },
-  );
-
-  const aggregatePricing = procurementAggregatePricing(
-    totals.totalAmount,
-    totals.totalMilk,
-  );
+  const summary = getProcurementSummary(procurements);
   return {
-    totalMilk: totals.totalMilk,
-    totalAmount: aggregatePricing.totalAmount,
-    avgFat: totals.totalFat / procurements.length,
-    avgSnf: totals.totalSnf / procurements.length,
-    avgRate: aggregatePricing.avgRate,
+    totalMilk: summary.milk,
+    totalAmount: summary.amount,
+    avgFat: Number(summary.avgFat),
+    avgSnf: Number(summary.avgSnf),
+    avgRate: Number(summary.avgRate),
   };
 };
 
@@ -185,10 +163,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   ];
 
   const tableData = [];
-  let totalMilkLtr = 0;
-  let totalAmount = 0;
-  let totalFat = 0;
-  let totalSnf = 0;
+  const totals = calculateTotals(procurements);
+  const totalMilkLtr = totals.totalMilk;
+  const totalAmount = totals.totalAmount;
 
   // Sort procurements
   const sortedProcurements = [...procurements].sort((a, b) => {
@@ -206,8 +183,8 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         !uniqueDates.has(record.date) ? formatDateForCSV(record.date) : "",
         record.time || "AM",
         formatNumberWithCommas(record.milkQuantity, 2),
-        parseFloat(record.fatPercentage).toFixed(1),
-        parseFloat(record.snfPercentage).toFixed(1),
+        parseFloat(record.fatPercentage).toFixed(2),
+        parseFloat(record.snfPercentage).toFixed(2),
         record.supplierTSRate || "N/A",
         formatNumberWithCommas(pricing.rate, record.customRate ? 2 : 1),
         formatNumberWithCommas(pricing.totalAmount, 2),
@@ -218,22 +195,17 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
         record.time || "AM",
         record.supplierName || "Unknown",
         formatNumberWithCommas(record.milkQuantity, 2),
-        parseFloat(record.fatPercentage).toFixed(1),
-        parseFloat(record.snfPercentage).toFixed(1),
+        parseFloat(record.fatPercentage).toFixed(2),
+        parseFloat(record.snfPercentage).toFixed(2),
         record.supplierTSRate || "N/A",
         formatNumberWithCommas(pricing.rate, record.customRate ? 2 : 1),
         formatNumberWithCommas(pricing.totalAmount, 2),
       ]);
     }
 
-    totalMilkLtr += record.milkQuantity;
-    totalAmount += pricing.totalAmount;
-    totalFat += record.fatPercentage;
-    totalSnf += record.snfPercentage;
     uniqueDates.add(record.date);
   });
-  const aggregatePricing = procurementAggregatePricing(totalAmount, totalMilkLtr);
-  totalAmount = aggregatePricing.totalAmount;
+
 
   autoTable(doc, {
       rowPageBreak: "avoid",
@@ -301,9 +273,9 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
   }
 
   // Calculate Averages
-  const avgFat = (totalFat / procurements.length).toFixed(2);
-  const avgSnf = (totalSnf / procurements.length).toFixed(2);
-  const avgRate = aggregatePricing.avgRate;
+  const avgFat = totals.avgFat.toFixed(2);
+  const avgSnf = totals.avgSnf.toFixed(2);
+  const avgRate = totals.avgRate;
 
   // Summary card on the right (matching invoice style)
   const summaryWidth = 92;
@@ -468,37 +440,31 @@ export const exportToCSV = (procurements, supplier, dateRange, fileName) => {
   csvRows.push("");
   csvRows.push(headers.join(","));
   
-  let totalMilkLtr = 0;
-  let totalAmount = 0;
-  let totalFat = 0;
-  let totalSnf = 0;
+  const totals = calculateTotals(procurements);
+  const totalMilkLtr = totals.totalMilk;
+  const totalAmount = totals.totalAmount;
   
   sortedProcurements.forEach((record) => {
     const pricing = procurementPricing(record);
     const row = [
       formatDateForCSV(record.date),
       record.time || "AM",
-      record.milkQuantity.toFixed(2),
-      record.fatPercentage.toFixed(2),
-      record.snfPercentage.toFixed(2),
+      Number(record.milkQuantity || 0).toFixed(2),
+      Number(record.fatPercentage || 0).toFixed(2),
+      Number(record.snfPercentage || 0).toFixed(2),
       pricing.rate.toFixed(record.customRate ? 2 : 1),
       pricing.totalAmount.toFixed(2),
     ];
     csvRows.push(row.join(","));
-    totalMilkLtr += record.milkQuantity;
-    totalAmount += pricing.totalAmount;
-    totalFat += record.fatPercentage;
-    totalSnf += record.snfPercentage;
   });
-  const aggregatePricing = procurementAggregatePricing(totalAmount, totalMilkLtr);
-  totalAmount = aggregatePricing.totalAmount;
+
   
   csvRows.push("");
   csvRows.push("SUMMARY");
-  csvRows.push(`Average FAT,${(totalFat / procurements.length).toFixed(2)}%`);
-  csvRows.push(`Average SNF,${(totalSnf / procurements.length).toFixed(2)}%`);
+  csvRows.push(`Average FAT,${totals.avgFat.toFixed(2)}%`);
+  csvRows.push(`Average SNF,${totals.avgSnf.toFixed(2)}%`);
   csvRows.push(
-    `Average Rate/L,Rs ${aggregatePricing.avgRate.toFixed(1)}`,
+    `Average Rate/L,Rs ${totals.avgRate.toFixed(1)}`,
   );
   csvRows.push(`Total Milk (Ltr),${totalMilkLtr.toFixed(2)}`);
   csvRows.push(`Total Amount,Rs ${totalAmount.toFixed(2)}`);

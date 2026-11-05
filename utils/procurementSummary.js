@@ -34,8 +34,33 @@ export function getProcurementSummary(records = []) {
     avgRate: aggregatePricing.avgRate.toFixed(1),
     avgRateDaily: (daysWithData ? amount / daysWithData : 0).toFixed(0),
     avgMilkDaily: (daysWithData ? milk / daysWithData : 0).toFixed(2),
-    avgFat: (Math.round((milk ? weightedFat / milk : 0) * 10) / 10).toFixed(1),
-    avgSnf: (Math.round((milk ? weightedSnf / milk : 0) * 10) / 10).toFixed(1),
+    avgFat: (milk ? weightedFat / milk : 0).toFixed(2),
+    avgSnf: (milk ? weightedSnf / milk : 0).toFixed(2),
     daysWithData,
+  };
+}
+
+// Payment status refers to individual collections; the summary's average-rate
+// adjustment is reported separately and never changes a recorded payment.
+export function getProcurementPaymentSummary(records = []) {
+  const rows = Array.isArray(records) ? records : [];
+  const summary = getProcurementSummary(rows);
+  let paidAmount = 0, dueAmount = 0;
+  for (const row of rows) {
+    const amount = procurementPricing(row).totalAmount;
+    if (row.paymentStatus === "Paid") paidAmount += amount;
+    else dueAmount += amount;
+  }
+  const round = value => Math.round(value * 100) / 100;
+  return {
+    totalMilk: summary.milk,
+    totalAmount: summary.amount,
+    avgFat: summary.avgFat,
+    avgSnf: summary.avgSnf,
+    avgRate: summary.avgRate,
+    paidAmount: round(paidAmount),
+    dueAmount: round(dueAmount),
+    collectionAmount: round(paidAmount + dueAmount),
+    rateAdjustment: round(paidAmount + dueAmount - summary.amount),
   };
 }

@@ -12,7 +12,7 @@ import { formatStat } from "@/utils/formatNumberWithComma";
 import StatTrendBackground from "@/components/StatTrendBackground";
 import trendStyles from "@/css/stat-trend.module.css";
 import { procurementCardTrends } from "@/lib/history-card-trends";
-import { truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
+import { procurementPricing, truncateCalculatedRate } from "@/lib/procurement-pricing.mjs";
 
 import {
   useState,
@@ -78,12 +78,12 @@ const formatTimeBadge = (time) => {
   return time.toUpperCase() === "PM" ? "PM" : "AM";
 };
 
-const sanitizeNumericInput = (value, fieldName) => {
+const sanitizeNumericInput = (value) => {
   let sanitized = value.replace(/[^\d.]/g, "");
   const parts = sanitized.split(".");
   if (parts.length > 2) sanitized = parts[0] + "." + parts.slice(1).join("");
   if (parts[1]) {
-    const maxDecimals = fieldName === "milkQuantity" ? 2 : 1;
+    const maxDecimals = 2;
     sanitized = parts[0] + "." + parts[1].substring(0, maxDecimals);
   }
   return sanitized;
@@ -360,7 +360,7 @@ function ProcurementHistoryContent() {
     }
     let sanitized = value;
     if (["milkQuantity", "fatPercentage", "snfPercentage"].includes(name)) {
-      sanitized = sanitizeNumericInput(value, name);
+      sanitized = sanitizeNumericInput(value);
     }
     setFormData((prev) => ({ ...prev, [name]: sanitized }));
     if (formErrors[name]) {
@@ -480,7 +480,7 @@ function ProcurementHistoryContent() {
         ? formatDateForDisplay(row.date)
         : `(${dateCounts[dateKey]})`;
 
-      return { ...row, displayDate };
+      return { ...row, ...procurementPricing(row), displayDate };
     });
   }, [procurementData]);
 
@@ -717,7 +717,7 @@ function ProcurementHistoryContent() {
                     label="Fat %"
                     name="fatPercentage"
                     type="number"
-                    step="0.1"
+                    step="0.01"
                     inputMode="decimal"
                     placeholder="3.5"
                     value={formData.fatPercentage}
@@ -731,7 +731,7 @@ function ProcurementHistoryContent() {
                     label="SNF %"
                     name="snfPercentage"
                     type="number"
-                    step="0.1"
+                    step="0.01"
                     inputMode="decimal"
                     placeholder="8.5"
                     value={formData.snfPercentage}
@@ -898,7 +898,7 @@ function ProcurementHistoryContent() {
               <StatItem
                 label="Fat / SNF"
                 trend={cardTrends.quality}
-                value={`${formatNumberWithCommas(summary.avgFat, 1)} / ${formatNumberWithCommas(summary.avgSnf, 1)}`}
+                value={`${formatNumberWithCommas(summary.avgFat, 2)} / ${formatNumberWithCommas(summary.avgSnf, 2)}`}
                 unit="%"
               />
               <StatItem
@@ -1039,10 +1039,10 @@ function ProcurementHistoryContent() {
                           {(parseFloat(row.milkQuantity) || 0).toFixed(2)}
                         </td>
                         <td className={styles.fat_cell}>
-                          {(parseFloat(row.fatPercentage) || 0).toFixed(1)}
+                          {(parseFloat(row.fatPercentage) || 0).toFixed(2)}
                         </td>
                         <td className={styles.snf_cell}>
-                          {(parseFloat(row.snfPercentage) || 0).toFixed(1)}
+                          {(parseFloat(row.snfPercentage) || 0).toFixed(2)}
                         </td>
                         <td className={styles.tsRate_cell}>
                           {row.supplierTSRate
@@ -1050,7 +1050,7 @@ function ProcurementHistoryContent() {
                             : "N/A"}
                         </td>
                         <td className={styles.rate_cell}>
-                          ₹{(parseFloat(row.rate) || 0).toFixed(1)}
+                          ₹{Number(row.rate || 0).toFixed(row.customRate ? 2 : 1)}
                         </td>
                         <td className={styles.total_cell}>
                           ₹

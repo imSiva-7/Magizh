@@ -45,12 +45,12 @@ const ProductionFormInput = ({
 );
 
 const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
-  const formatValue = (value) => {
+  const formatValue = (value, minimumFractionDigits = 0) => {
     if (value === null || value === undefined || value === "" || value === 0)
       return "-";
     return new Intl.NumberFormat("en-IN", {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 0,
+      minimumFractionDigits,
     }).format(value);
   };
 
@@ -61,8 +61,8 @@ const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
       </td>
       <td className={styles.batchCell}>{entry.batch}</td>
       <td>{formatValue(entry.milk_quantity)}</td>
-      <td>{formatValue(entry.fat_percentage)}</td>
-      <td>{formatValue(entry.snf_percentage)}</td>
+      <td>{formatValue(entry.fat_percentage, 2)}</td>
+      <td>{formatValue(entry.snf_percentage, 2)}</td>
       <td>{formatValue(entry.curd_quantity)}</td>
       <td>{formatValue(entry.cream_quantity)}</td>
       <td>{formatValue(entry.soft_paneer_quantity)}</td>
@@ -174,8 +174,8 @@ export default function ProductionPage() {
       date: dateStr,
       batch: batchNo,
       milk_quantity: parseDecimal(formData.milk_quantity, 2),
-      fat_percentage: parseDecimal(formData.fat_percentage, 1),
-      snf_percentage: parseDecimal(formData.snf_percentage, 1),
+      fat_percentage: parseDecimal(formData.fat_percentage, 2),
+      snf_percentage: parseDecimal(formData.snf_percentage, 2),
       curd_quantity: parseDecimal(formData.curd_quantity),
       premium_paneer_quantity: parseDecimal(formData.premium_paneer_quantity),
       soft_paneer_quantity: parseDecimal(formData.soft_paneer_quantity),
@@ -295,7 +295,7 @@ export default function ProductionPage() {
                 placeholder="6.5"
                 min="0"
                 max="7.0"
-                step="0.1"
+                step="0.01"
               />
               <ProductionFormInput
                 label="SNF Percentage"
@@ -305,7 +305,7 @@ export default function ProductionPage() {
                 placeholder="8.5"
                 min="0"
                 max="12"
-                step="0.1"
+                step="0.01"
               />
             </div>
           </section>

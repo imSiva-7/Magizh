@@ -20,7 +20,7 @@ const records = [
   { _id: "record-2", supplierId: "another", supplierName: "Hilltop Dairy", date, time: "PM", milkQuantity: 10, fatPercentage: 3.5, snfPercentage: 8.5, supplierTSRate: 300, rate: 36, totalAmount: 360, paymentRecord: true, paymentStatus: "Not Paid" },
 ];
 
-async function mockProcurements(page, { head = false, fail = false } = {}) {
+async function mockProcurements(page, { head = false, fail = false, rows = records } = {}) {
   const headRequests = [];
   await page.route("**/api/**", async (route) => {
     const request = route.request();
@@ -35,7 +35,7 @@ async function mockProcurements(page, { head = false, fail = false } = {}) {
       const detail = head ? { ...supplier, _id: "head", supplierName: "River Society", isHeadSupplier: true, isChildSupplier: false, supplierType: "Society" } : supplier;
       return route.fulfill({ json: url.searchParams.has("supplierId") ? detail : [detail] });
     }
-    if (url.pathname.startsWith("/api/supplier/procurement")) return route.fulfill({ status: fail ? 503 : 200, json: fail ? { error: "Preview storage unavailable" } : records });
+    if (url.pathname.startsWith("/api/supplier/procurement")) return route.fulfill({ status: fail ? 503 : 200, json: fail ? { error: "Preview storage unavailable" } : rows });
     return route.fulfill({ json: {} });
   });
   return headRequests;
@@ -47,7 +47,7 @@ test("history shows daily milk and weighted quality averages and fits desktop an
   const table = page.getByRole("table", { name: "All procurement history" });
   await expect(table.locator("tbody tr")).toHaveCount(2);
   await expect(page.getByText("Milk / day", { exact: true }).locator("..")).toContainText("35.50");
-  await expect(page.getByText("Fat / SNF", { exact: true }).locator("..")).toContainText("3.5 / 8.5");
+  await expect(page.getByText("Fat / SNF", { exact: true }).locator("..")).toContainText("3.50 / 8.50");
   await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
   await page.screenshot({ path: "test-results/procurement-history-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -111,4 +111,22 @@ test("history supplier picker can be used with the keyboard", async ({ page }) =
   await page.keyboard.press("Enter");
   await expect(page.getByLabel("Milk Quantity (L)", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Change", exact: true })).toBeVisible();
+});
+
+test("supplier detail, history and payments agree on calculated collection and summary amounts", async ({ page }) => {
+  const rows = [
+    { ...records[0], milkQuantity: "10", fatPercentage: "4.25", snfPercentage: "8.56", rate: 44.98, totalAmount: 449.8 },
+    { ...records[0], _id: "record-2", time: "PM", milkQuantity: 90, fatPercentage: 3.75, snfPercentage: 8.10, rate: 45.67, totalAmount: 4110.3, paymentStatus: "Not Paid" },
+  ];
+  await mockProcurements(page, { rows });
+  for (const path of ["/supplier/procurement?supplierId=child", "/supplier/procurement/history", "/supplier/payments"]) {
+    await page.goto(path);
+    await expect(page.getByRole("cell", { name: "₹449", exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Value", { exact: true }).first().locator("..")).toContainText("4,550");
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.setViewportSize({ width: 1280, height: 844 });
+  }
+  await page.getByRole("radio", { name: "Paid", exact: true }).check();
+  await expect(page.getByText("Value", { exact: true }).first().locator("..")).toContainText("449");
 });

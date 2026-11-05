@@ -34,6 +34,12 @@ let mockDb;
 beforeEach(()=>{jest.clearAllMocks();jest.spyOn(console,"log").mockImplementation(()=>{});mockDb=database();getDatabase.mockResolvedValue(mockDb.db);});
 afterEach(()=>jest.restoreAllMocks());
 
+test("production preserves two decimal places for FAT and SNF", async () => {
+ const response = await POST(request({ fat_percentage: 4.25, snf_percentage: 8.56 }));
+ expect(response.status).toBe(201);
+ expect(mockDb.state().entries[0]).toMatchObject({ fat_percentage: 4.25, snf_percentage: 8.56 });
+});
+
 test.each([false,undefined])("production with affectStockValue %s never changes stock on create or delete",async affectStockValue=>{
  const response=await POST(request({affectStockValue}));expect(response.status).toBe(201);const {id}=await response.json();
  expect(mockDb.state().stock_ledger).toHaveLength(0);expect(mockDb.state().stock_balance).toEqual({_id:"current"});

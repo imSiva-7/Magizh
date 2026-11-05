@@ -49,7 +49,7 @@ const parseQuantity = (val, isPercentage = false) => {
   const num = Number(val);
   if (!Number.isFinite(num) || num < 0) return null;
   if (isPercentage) {
-    return num <= 100 ? parseFloat(num.toFixed(1)) : null;
+    return num <= 100 ? parseFloat(num.toFixed(2)) : null;
   } else {
     return parseFloat(num.toFixed(2));
   }

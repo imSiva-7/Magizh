@@ -44,8 +44,8 @@ for (const [path, name] of [["/supplier/analytics", "analytics"], ["/supplier", 
       await expect(page.getByTestId("supplier-payments-chart")).toHaveCount(0);
       await expect(page.getByTestId("stat-trend")).toHaveCount(name === "history" || name === "supplier-detail" ? 6 : 0);
       if (name === "history" || name === "supplier-detail") {
-        await expect(page.getByText("Fat / SNF", { exact: true }).locator("..")).toContainText("4.8 / 8.8");
-        await expect(page.getByText("Avg Rate", { exact: true }).locator("..")).toContainText("₹47.50");
+        await expect(page.getByText("Fat / SNF", { exact: true }).locator("..")).toContainText("4.75 / 8.75");
+        await expect(page.getByText("Avg Rate", { exact: true }).locator("..")).toContainText("₹47.5");
         await expect(page.getByText("Milk", { exact: true }).locator("..")).toContainText("40.00");
       }
       return;
