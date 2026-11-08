@@ -2,7 +2,7 @@ import { requireSummaryAdmin } from "@/lib/summary-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { getTodayDate } from "@/lib/india-date.mjs";
-import { attendanceDayHours } from "../../../../../utils/attendanceHours";
+import { buildPayroll, validMonth } from "@/lib/payroll";
 
 /**
  * GET /api/attendance/history
@@ -32,7 +32,7 @@ export async function GET(request) {
         { status: 400 },
       );
     }
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+    if (!validMonth(month)) {
       return NextResponse.json(
         { error: "Invalid month format. Use YYYY-MM" },
         { status: 400 },
@@ -41,95 +41,29 @@ export async function GET(request) {
 
     const db = await getDatabase();
 
-    const stages = [
-      // Only employees who have attendance for this month
-      { $match: { [`attendance.${month}.days`]: { $exists: true } } },
-      {
-        $project: {
-          empID: 1,
-          name: 1,
-          joiningDate: 1,
-          daysArray: {
-            $objectToArray: { $ifNull: [`$attendance.${month}.days`, {}] },
-          },
-        },
-      },
-      { $unwind: "$daysArray" },
-      {
-        $project: {
-          _id: 0,
-          empID: 1,
-          name: 1,
-          joiningDate: 1,
-          date: "$daysArray.v.date",
-          checkIn: "$daysArray.v.checkIn",
-          checkOut: "$daysArray.v.checkOut",
-          checkOutNextDay: { $ifNull: ["$daysArray.v.checkOutNextDay", false] },
-          hoursWorked: { $ifNull: ["$daysArray.v.hoursWorked", 0] },
-          regularHours: { $ifNull: ["$daysArray.v.regularHours", 0] },
-          overtimeHours: { $ifNull: ["$daysArray.v.overtimeHours", 0] },
-          punchCount: { $size: { $ifNull: ["$daysArray.v.punches", []] } },
-        },
-      },
-    ];
-
-    // --- Post-unwind filters ---
-    const andConditions = [];
-
-    if (startDate || endDate) {
-      const dateMatch = {};
-      if (startDate) dateMatch.$gte = startDate;
-      if (endDate) dateMatch.$lte = endDate;
-      andConditions.push({ date: dateMatch });
-    }
-
-    if (search && search.trim()) {
-      const term = search.trim();
-      andConditions.push({
-        $or: [
-          { name: { $regex: term, $options: "i" } },
-          { empID: { $regex: term, $options: "i" } },
-        ],
-      });
-    }
-
-    if (statusFilter === "incomplete") {
-      andConditions.push({
-        $or: [
-          { checkOut: null },
-          { checkOut: "" },
-          { checkOut: { $exists: false } },
-        ],
-      });
-      // Manual and migrated records can have a check-in without raw punches.
-      andConditions.push({ checkIn: { $exists: true, $nin: [null, ""] } });
-    } else if (statusFilter === "complete") {
-      andConditions.push({ checkOut: { $nin: [null, ""] } });
-      andConditions.push({ checkIn: { $exists: true, $nin: [null, ""] } });
-    }
-
-    if (andConditions.length) {
-      stages.push({ $match: { $and: andConditions } });
-    }
-
-    stages.push({ $sort: { date: -1, empID: 1 } });
-
-    const rawRecords = await db.collection("employee").aggregate(stages).toArray();
     const today = getTodayDate();
-    const records = rawRecords.filter(record => {
-      const date = record.date;
-      if (typeof date !== "string" || !date.startsWith(`${month}-`) || date > today) return false;
-      const calendar = new Date(`${date}T00:00:00Z`);
-      if (!Number.isFinite(calendar.getTime()) || calendar.toISOString().slice(0, 10) !== date) return false;
-      const joining = record.joiningDate;
-      const validJoining = typeof joining === "string" && /^\d{4}-\d{2}-\d{2}$/.test(joining) &&
-        Number.isFinite(Date.parse(`${joining}T00:00:00Z`)) && new Date(`${joining}T00:00:00Z`).toISOString().slice(0, 10) === joining;
-      return !validJoining || date >= joining;
-    }).map(record => {
-      const { joiningDate: _joiningDate, ...publicRecord } = record;
-      const hours = attendanceDayHours(record);
-      return { ...publicRecord, hoursWorked: hours, regularHours: Math.min(hours, 9), overtimeHours: Math.max(hours - 9, 0) };
-    });
+    const term = search?.trim().toLowerCase();
+    const employees = await db.collection("employee").find(
+      { empID: { $exists: true, $nin: [null, ""] } },
+      { projection: { empID: 1, name: 1, joiningDate: 1, createdAt: 1, paidLeaveDays: 1, [`attendance.${month}`]: 1 } },
+    ).toArray();
+
+    const records = [];
+    for (const employee of employees) {
+      const { empID, name } = employee;
+      if (term && !String(empID).toLowerCase().includes(term) && !name?.toLowerCase().includes(term)) continue;
+
+      // Classify the full month first so date and status filters cannot change which days use paid leave.
+      const { attendance } = buildPayroll(employee, month, today);
+      for (const { punches, ...day } of attendance) {
+        if ((startDate && day.date < startDate) || (endDate && day.date > endDate)) continue;
+        if (statusFilter === "complete" && !(day.checkIn && day.checkOut)) continue;
+        if (statusFilter === "incomplete" && !(day.checkIn && !day.checkOut)) continue;
+        if (["paid_leave", "excess_leave"].includes(statusFilter) && day.status !== statusFilter) continue;
+        records.push({ ...day, empID, name, punchCount: punches.length });
+      }
+    }
+    records.sort((a, b) => b.date.localeCompare(a.date) || String(a.empID).localeCompare(String(b.empID)));
 
     // --- Summary ---
     const uniqueEmployees = new Set();
@@ -139,7 +73,7 @@ export async function GET(request) {
     for (const r of records) {
       uniqueEmployees.add(r.empID);
       totalHours += Number(r.hoursWorked) || 0;
-      if (!r.checkOut) incompleteCount++;
+      if (r.checkIn && !r.checkOut) incompleteCount++;
     }
 
     return NextResponse.json({

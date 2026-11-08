@@ -38,11 +38,14 @@ export function buildPayroll(employee, month, today) {
         ? Number(today.slice(8))
         : daysInPeriod;
   const joiningDate = validJoiningDate(employee.joiningDate) ? employee.joiningDate : null;
-  const start = joiningDate && joiningDate.slice(0, 7) === month ? Number(joiningDate.slice(8)) : 1;
-  const elapsedDays = joiningDate && joiningDate.slice(0, 7) > month ? 0 : Math.max(0, last - start + 1);
-  const employedDaysInMonth = joiningDate && joiningDate.slice(0, 7) > month ? 0 : daysInPeriod - start + 1;
+  const creationDate = indiaDate(employee.createdAt ?? null);
+  const firstWorkDate = joiningDate || creationDate;
+  const start = firstWorkDate?.slice(0, 7) === month ? Number(firstWorkDate.slice(8)) : 1;
+  const startsAfterMonth = firstWorkDate > `${month}-${daysInPeriod}`;
+  const elapsedDays = startsAfterMonth ? 0 : Math.max(0, last - start + 1);
+  const employedDaysInMonth = startsAfterMonth ? 0 : daysInPeriod - start + 1;
   const days = employee.attendance?.[month]?.days || {};
-  const creationMonth = employee.createdAt ? indiaDate(employee.createdAt).slice(0, 7) : "";
+  const creationMonth = creationDate.slice(0, 7);
   const paidLeaveEligible = !creationMonth || month > creationMonth;
   const paidLeaveAllowance = paidLeaveEligible ? (employee.paidLeaveDays === undefined || employee.paidLeaveDays === 4 ? 4 : 2) : 0;
   const fullDayHours = 9;

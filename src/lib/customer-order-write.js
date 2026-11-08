@@ -4,15 +4,9 @@ import { getTodayDate } from "@/lib/india-date.mjs";
 import { updateCustomerSummaries } from "@/lib/customer-summaries.mjs";
 import { applyStockMovement, roundStockQuantity } from "@/lib/stock-movements.mjs";
 
-export const productToStockField = {
-  "Milk": "milk",
-  "Butter": "butter",
-  "Fresh Cream": "cream",
-  "Curd": "curd",
-  "Ghee": "ghee",
-  "Soft Paneer": "soft_paneer",
-  "Premium Paneer": "premium_paneer",
-};
+import { STOCK_PRODUCTS } from "@/lib/stock";
+
+export const productToStockField = Object.fromEntries(STOCK_PRODUCTS.map(({ name, field }) => [name, field]));
 
 // New mapping for total_orders fields
 const productToTotalField = {
@@ -114,7 +108,7 @@ export async function applyStockChanges(db, entries, incFields) {
 export function normalizeOrderItems(items) {
   if (!Array.isArray(items) || !items.length) throw new Error("At least one order item is required");
   return items.map(item => {
-    if (!item || typeof item.product !== "string" || !Object.hasOwn(productToStockField, item.product.trim())) {
+    if (!item || typeof item.product !== "string" || !Object.hasOwn(productToTotalField, item.product.trim())) {
       throw new Error("Select a valid order product");
     }
     const numeric = value => ["number", "string"].includes(typeof value) && String(value).trim() !== "" && Number.isFinite(Number(value));

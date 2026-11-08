@@ -9,7 +9,7 @@ export async function GET(request) {
     const db = await getDatabase();
     const ledger = await db
       .collection("stock_ledger")
-      .find({})
+      .find({ product: { $ne: "milk" } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .toArray();

@@ -1,6 +1,6 @@
-import { STOCK_PRODUCTS } from "./stock.js";
+import { DAIRY_PRODUCTS } from "./stock.js";
 
-const catalog = STOCK_PRODUCTS;
+const catalog = DAIRY_PRODUCTS;
 const byName = new Map(catalog.map(product => [product.name.toLowerCase(), product]));
 const numeric = value => Number.isFinite(Number(value)) ? Number(value) : 0;
 

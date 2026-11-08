@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
 import { ObjectId } from "mongodb";
 import { withCustomerTransaction } from "@/lib/customer-transaction.mjs";
+import { STOCK_PRODUCTS } from "@/lib/stock";
 import { applyStockMovement } from "@/lib/stock-movements.mjs";
 
 const VALID_PRODUCTS = [
@@ -32,15 +33,7 @@ const logger = (method, message, data = null) => {
 };
 
 // ---------- Product to stock field mapping (must match order route) ----------
-const productToStockField = {
-  milk: "milk",
-  curd: "curd",
-  cream: "cream",
-  soft_paneer: "soft_paneer",
-  premium_paneer: "premium_paneer",
-  butter: "butter",
-  ghee: "ghee",
-};
+const stockFields = new Set(STOCK_PRODUCTS.map(product => product.field));
 
 // ---------- Helpers ----------
 const parseQuantity = (val, isPercentage = false) => {
@@ -63,7 +56,7 @@ const validateRequiredFields = (data, fields) => {
 };
 
 const validateAtLeastOneProduct = (data) => {
-  const hasProduct = Object.keys(productToStockField).some(product =>
+  const hasProduct = VALID_PRODUCTS.some(product => !PERCENTAGE_FIELDS.includes(product) &&
     parseQuantity(data[`${product}_quantity`]) > 0);
   return hasProduct ? null : "At least one product quantity is required";
 };
@@ -110,7 +103,7 @@ const generateUniqueBatchName = async (db, batch, date) => {
  * Helper: Insert ledger entries and update stock balance.
  * @param {Object} db - Database instance
  * @param {Array} entries - Array of ledger documents (type, product, quantity, ...)
- * @param {Object} incFields - Fields to $inc on stock_balance (e.g., { milk: 100 })
+ * @param {Object} incFields - Fields to $inc on stock_balance (e.g., { curd: 100 })
  */
 async function applyStockChanges(db, entries, incFields) {
   await applyStockMovement(db, entries, incFields);
@@ -252,7 +245,7 @@ export async function POST(request) {
         const qty = productionData[key];
 
         if (qty && qty > 0) {
-          const stockField = productToStockField[product]; // e.g., "milk"
+          const stockField = stockFields.has(product) ? product : null;
           if (stockField) {
             ledgerEntries.push({
               type: "production",
@@ -354,7 +347,7 @@ export async function DELETE(request) {
         const qty = entry[key];
 
         if (qty && qty > 0) {
-          const stockField = productToStockField[product];
+          const stockField = stockFields.has(product) ? product : null;
           if (stockField) {
             reversalEntries.push({
               type: "reversal",

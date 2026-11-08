@@ -9,7 +9,7 @@ import trendStyles from "@/css/stat-trend.module.css";
 import { customerAccountTrends } from "@/lib/history-card-trends";
 import CategoryBadge from "@/components/CategoryBadge";
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
-import { buildInventory, STOCK_PRODUCTS } from "@/lib/stock";
+import { averageProductPrice, DAIRY_PRODUCTS } from "@/lib/stock";
 import { customerPricePlaceholder } from "@/lib/customer-price-placeholder";
 
 import { useSession } from "next-auth/react";
@@ -160,7 +160,7 @@ function OrdersContent() {
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ customer: null, orders: [] });
   const [priceCustomers, setPriceCustomers] = useState([]);
-  const averagePrices = useMemo(() => Object.fromEntries(buildInventory({}, {}, priceCustomers).map(product => [product.name, product.averagePrice])), [priceCustomers]);
+  const averagePrices = useMemo(() => Object.fromEntries(DAIRY_PRODUCTS.map(product => [product.name, averageProductPrice(priceCustomers, product.priceField)])), [priceCustomers]);
   useEffect(() => {
     const controller = new AbortController();
     fetch("/api/customer", { signal: controller.signal, cache: "no-store" })
@@ -563,8 +563,8 @@ function OrdersContent() {
                 onChange={(e) =>
                   handleQuantityChange(product.name, e.target.value)
                 }
-                placeholder={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], STOCK_PRODUCTS.find(item => item.name === product.name).unit)}
-                title={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], STOCK_PRODUCTS.find(item => item.name === product.name).unit)}
+                placeholder={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], DAIRY_PRODUCTS.find(item => item.name === product.name).unit)}
+                title={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], DAIRY_PRODUCTS.find(item => item.name === product.name).unit)}
                 error={errors[product.name]}
                 disabled={submitting || loading}
               />

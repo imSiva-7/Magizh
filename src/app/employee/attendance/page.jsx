@@ -621,12 +621,12 @@ function AttendanceContent() {
                         <td className={styles.timeCell}>
                           {day.status !== "present"
                             ? "-"
-                            : formatTime(day.checkIn)}
+                            : day.checkIn ? <span className={styles.checkInTime}>{formatTime(day.checkIn)}</span> : "—"}
                         </td>
                         <td className={styles.timeCell}>
                           {day.status !== "present"
                             ? "-"
-                            : `${formatTime(day.checkOut)}${day.checkOutNextDay ? " (+1 day)" : ""}`}
+                            : day.checkOut ? <span className={styles.checkOutTime}>{formatTime(day.checkOut)}{day.checkOutNextDay && " (+1 day)"}</span> : "—"}
                         </td>
                         <td className={styles.hoursCell}>
                           {day.status === "present" && !day.checkOut

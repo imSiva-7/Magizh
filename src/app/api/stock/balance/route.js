@@ -3,6 +3,6 @@ import getDatabase from "@/database/connectToMongoDB";
 
 export async function GET() {
   const db = await getDatabase();
-  const balance = await db.collection("stock_balance").findOne({ _id: "current" });
+  const balance = await db.collection("stock_balance").findOne({ _id: "current" }, { projection: { milk: 0 } });
   return NextResponse.json(balance || {});
 }
