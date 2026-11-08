@@ -56,6 +56,7 @@ export function buildPayroll(employee, month, today) {
       date: `${month}-${key}`,
       checkIn: present ? day.checkIn : "",
       checkOut: present ? day.checkOut || "" : "",
+      checkOutNextDay: day?.checkOutNextDay === true,
       hoursWorked,
       // Derive payable hours from actual attendance, ignoring legacy 10-hour splits.
       regularHours: Math.min(hoursWorked, fullDayHours),

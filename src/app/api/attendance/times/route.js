@@ -4,6 +4,8 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import getDatabase from "@/database/connectToMongoDB";
 import { getTodayDate } from "@/lib/india-date.mjs";
 
+import { attendanceDayHours } from "../../../../../utils/attendanceHours";
+
 const normalizeTime = value => typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/.test(value)
   ? (value.length === 5 ? `${value}:00` : value) : null;
 
@@ -16,13 +18,14 @@ export async function PATCH(request) {
   const { empID, date, expectedCheckIn, expectedCheckOut } = data || {};
   const checkIn = normalizeTime(data?.checkIn);
   const checkOut = data?.checkOut === "" ? null : normalizeTime(data?.checkOut);
+  const checkOutNextDay = data?.checkOutNextDay === true;
   const calendar = typeof date === "string" ? new Date(`${date}T00:00:00Z`) : null;
   if (typeof empID !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(empID) ||
       !/^\d{4}-\d{2}-\d{2}$/.test(date || "") || !Number.isFinite(calendar?.getTime()) ||
       calendar.toISOString().slice(0, 10) !== date || date > getTodayDate() ||
-      !checkIn || (data.checkOut !== "" && !checkOut) || (checkOut && checkOut <= checkIn) ||
+      !checkIn || (data.checkOut !== "" && !checkOut) || (data.checkOutNextDay !== undefined && typeof data.checkOutNextDay !== "boolean") || (checkOutNextDay && !checkOut) || (checkOut && attendanceDayHours({ checkIn, checkOut, checkOutNextDay }) === 0) ||
       typeof expectedCheckIn !== "string" || typeof expectedCheckOut !== "string") {
-    return NextResponse.json({ error: "Enter a valid date and times. Check out must be later than check in on the same day." }, { status: 400 });
+    return NextResponse.json({ error: "Enter a valid date and times. Check out must follow check in within 24 hours. Select next day for overnight shifts." }, { status: 400 });
   }
   try {
     const db = await getDatabase();
@@ -33,18 +36,18 @@ export async function PATCH(request) {
     if ((previous.checkIn || "") !== expectedCheckIn || (previous.checkOut || "") !== expectedCheckOut) {
       return NextResponse.json({ error: "Attendance changed. Refresh the page before editing again." }, { status: 409 });
     }
-    const seconds = time => time.split(":").reduce((sum, part) => sum * 60 + Number(part), 0);
-    const hours = checkOut ? (seconds(checkOut) - seconds(checkIn)) / 3600 : 0;
+    const hours = attendanceDayHours({ checkIn, checkOut, checkOutNextDay });
     const now = new Date();
     const next = {
-      ...previous, checkIn, checkOut,
+      ...previous, checkIn, checkOut, checkOutNextDay,
       hoursWorked: Number(hours.toFixed(2)),
       regularHours: Number(Math.min(hours, 9).toFixed(2)),
       overtimeHours: Number(Math.max(hours - 9, 0).toFixed(2)),
-      manualTimes: { checkIn, checkOut },
+      manualTimes: { checkIn, checkOut, checkOutNextDay },
       corrections: [...(previous.corrections || []), {
         previousCheckIn: previous.checkIn, previousCheckOut: previous.checkOut || null,
-        checkIn, checkOut, editedAt: now,
+        previousCheckOutNextDay: previous.checkOutNextDay === true,
+        checkIn, checkOut, checkOutNextDay, editedAt: now,
         editedBy: session.user.id || session.user.email || session.user.name || "admin",
       }],
     };

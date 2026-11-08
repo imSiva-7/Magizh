@@ -626,7 +626,7 @@ function AttendanceContent() {
                         <td className={styles.timeCell}>
                           {day.status !== "present"
                             ? "-"
-                            : formatTime(day.checkOut)}
+                            : `${formatTime(day.checkOut)}${day.checkOutNextDay ? " (+1 day)" : ""}`}
                         </td>
                         <td className={styles.hoursCell}>
                           {day.status === "present" && !day.checkOut

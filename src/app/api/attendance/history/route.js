@@ -64,6 +64,7 @@ export async function GET(request) {
           date: "$daysArray.v.date",
           checkIn: "$daysArray.v.checkIn",
           checkOut: "$daysArray.v.checkOut",
+          checkOutNextDay: { $ifNull: ["$daysArray.v.checkOutNextDay", false] },
           hoursWorked: { $ifNull: ["$daysArray.v.hoursWorked", 0] },
           regularHours: { $ifNull: ["$daysArray.v.regularHours", 0] },
           overtimeHours: { $ifNull: ["$daysArray.v.overtimeHours", 0] },

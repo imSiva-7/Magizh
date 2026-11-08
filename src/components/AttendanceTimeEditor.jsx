@@ -30,6 +30,7 @@ export default function AttendanceTimeEditor({ empID, day, onSaved }) {
   const [open, setOpen] = useState(false);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [checkOutNextDay, setCheckOutNextDay] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const busy = useRef(false);
@@ -52,7 +53,7 @@ export default function AttendanceTimeEditor({ empID, day, onSaved }) {
     try {
       const response = await fetch("/api/attendance/times", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ empID, date: day.date, checkIn, checkOut, expectedCheckIn: day.checkIn || "", expectedCheckOut: day.checkOut || "" }),
+        body: JSON.stringify({ empID, date: day.date, checkIn, checkOut, checkOutNextDay: Boolean(checkOut) && checkOutNextDay, expectedCheckIn: day.checkIn || "", expectedCheckOut: day.checkOut || "" }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not save attendance");
@@ -65,6 +66,7 @@ export default function AttendanceTimeEditor({ empID, day, onSaved }) {
     <button ref={triggerRef} type="button" data-button="icon" aria-label={`Attendance actions for ${empID} on ${day.date}`} aria-expanded={menuOpen} aria-haspopup="true" disabled={saving} onClick={() => setMenuOpen(value => !value)}>⋮</button>
     {menuOpen && <RowActionPopup className={styles.menu} onClose={closeMenu}>
       <button type="button" onClick={() => {
+        setCheckOutNextDay(day.checkOutNextDay === true);
         setCheckIn(day.checkIn || "09:00:00"); setCheckOut(day.checkOut || ""); setError(""); setOpen(true);
       }}>Edit times</button>
     </RowActionPopup>}
@@ -74,7 +76,8 @@ export default function AttendanceTimeEditor({ empID, day, onSaved }) {
         <TimePicker label="Check in" value={checkIn} disabled={saving} onChange={setCheckIn} />
         <label className={styles.checkbox}><input type="checkbox" checked={Boolean(checkOut)} disabled={saving} onChange={event => setCheckOut(event.target.checked ? (day.checkOut || "18:00:00") : "")} />Check out recorded</label>
         {checkOut && <TimePicker label="Check out" value={checkOut} disabled={saving} onChange={setCheckOut} />}
-        <small>Choose times on the same day. Hours and salary update automatically.</small>
+        {checkOut && <label className={styles.checkbox}><input type="checkbox" checked={checkOutNextDay} disabled={saving} onChange={event => setCheckOutNextDay(event.target.checked)} />Checkout is next day (night shift)</label>}
+        <small>For shifts crossing midnight, select next day. Shifts up to 24 hours count under the check-in date. Hours and salary update automatically.</small>
         {error && <p role="alert" className={styles.error}>{error}</p>}
         <div className={styles.actions}><button data-button="secondary" type="button" disabled={saving} onClick={() => setOpen(false)}>Cancel</button><button data-button="primary" disabled={saving}>{saving ? "Saving…" : "Save times"}</button></div>
       </form>

@@ -152,7 +152,7 @@ export default function AttendanceHistoryPage() {
                           <span className={styles.historyEmployeeId}>{record.empID}</span>
                         </td>
                         <td className={styles.timeCell}>{formatTime(record.checkIn)}</td>
-                        <td className={styles.timeCell}>{record.checkOut ? formatTime(record.checkOut) : <span className={styles.missingBadge}>Missing</span>}</td>
+                        <td className={styles.timeCell}>{record.checkOut ? `${formatTime(record.checkOut)}${record.checkOutNextDay ? " (+1 day)" : ""}` : <span className={styles.missingBadge}>Missing</span>}</td>
                         <td className={styles.hoursCell}>{formatAttendanceHours(record.hoursWorked)}</td>
                         {isAdmin && <td><AttendanceTimeEditor empID={record.empID} day={record} onSaved={() => { setRefresh(value => value + 1); toast.success("Attendance times updated"); }} /></td>}
                       </tr>

@@ -100,3 +100,11 @@ test.each([["2026-10",4,234,234], ["2026-10",2,252,252], ["2026-04",4,225,225], 
   expect(below.fullSalaryEligible).toBe(false);
   expect(below.grossSalary).toBeLessThan(15000);
 });
+
+test("month-end night shift counts entirely in the starting month", () => {
+  const employee = { salary: 15000, attendance: { "2026-01": { days: { "31": { checkIn: "22:00", checkOut: "06:00", checkOutNextDay: true } } } } };
+  const january = buildPayroll(employee, "2026-01", "2026-02-02");
+  expect(january.attendance[30]).toMatchObject({ date: "2026-01-31", checkOutNextDay: true, hoursWorked: 8 });
+  expect(january.summary.totalHoursWorked).toBe(8);
+  expect(buildPayroll(employee, "2026-02", "2026-02-02").summary.totalHoursWorked).toBe(0);
+});

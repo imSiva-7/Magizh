@@ -17,7 +17,9 @@ export function attendanceDayHours(day) {
     return hour * 3600 + minute * 60 + second;
   };
   const start = seconds(day?.checkIn), end = seconds(day?.checkOut);
-  return start !== null && end !== null && end > start ? (end - start) / 3600 : 0;
+  if (start === null || end === null) return 0;
+  const duration = end - start + (day?.checkOutNextDay === true ? 86400 : 0);
+  return duration > 0 && duration <= 86400 ? duration / 3600 : 0;
 }
 
 export function completedAttendanceAverage(attendance = []) {

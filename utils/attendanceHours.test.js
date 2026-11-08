@@ -26,3 +26,13 @@ test("incomplete attendance does not reduce the completed-day average", () => {
   ])).toEqual({ days: 2, hours: 19, average: 9.5 });
   expect(completedAttendanceAverage()).toEqual({ days: 0, hours: 0, average: null });
 });
+
+ test("overnight hours require an explicit next-day flag and stay within 24 hours", () => {
+  const day = { status: "present", checkIn: "22:00", checkOut: "06:00", checkOutNextDay: true };
+  expect(attendanceDayHours(day)).toBe(8);
+  expect(completedAttendanceAverage([day])).toEqual({ days: 1, hours: 8, average: 8 });
+  expect(attendanceDayHours({ ...day, checkOutNextDay: false })).toBe(0);
+  expect(attendanceDayHours({ ...day, checkOut: null })).toBe(0);
+  expect(attendanceDayHours({ ...day, checkOut: "23:00" })).toBe(0);
+  expect(attendanceDayHours({ ...day, checkOut: "22:00" })).toBe(24);
+});

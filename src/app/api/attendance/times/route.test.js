@@ -49,3 +49,15 @@ test("rejects concurrent device changes", async () => {
   updateOne.mockResolvedValue({ matchedCount: 0 });
   expect((await PATCH(request())).status).toBe(409);
 });
+
+test("saves an overnight correction under the starting date and preserves it on upload", async () => {
+  expect((await PATCH(request({ checkIn: "22:00", checkOut: "06:00", checkOutNextDay: true }))).status).toBe(200);
+  const day = updateOne.mock.calls[0][1].$set["attendance.2026-01.days.15"];
+  expect(day).toMatchObject({ checkOutNextDay: true, hoursWorked: 8, regularHours: 8, overtimeHours: 0 });
+  expect(day.manualTimes.checkOutNextDay).toBe(true);
+  expect(mergeDay(day, [{ date: previous.date, time: "23:00:00", deviceId: "clock" }])).toMatchObject({ checkOutNextDay: true, hoursWorked: 8 });
+});
+test.each([{ checkOutNextDay: "true" }, { checkOutNextDay: true }, { checkOutNextDay: true, checkOut: "" }])("rejects invalid overnight correction %j", async extra => {
+  expect((await PATCH(request(extra))).status).toBe(400);
+  expect(updateOne).not.toHaveBeenCalled();
+});
