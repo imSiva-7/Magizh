@@ -10,7 +10,7 @@ jest.mock("@/database/connectToMongoDB", () => ({ __esModule: true, default: jes
 jest.mock("next/server", () => ({ NextResponse: { json: (data, options) => ({ data, status: options?.status || 200 }) } }));
 
 function database(stock, retry = false) {
-  let state = { orders: [], stock_ledger: [], stock_balance: [{ _id: "current", milk: stock }], total_orders: [], customer_summaries: [] };
+  let state = { orders: [], stock_ledger: [], stock_balance: [{ _id: "current", butter: stock }], total_orders: [], customer_summaries: [] };
   const clone = value => {
     if (value === null || typeof value !== "object" || value instanceof ObjectId || value instanceof Date) return value;
     if (Array.isArray(value)) return value.map(clone);
@@ -55,7 +55,7 @@ function database(stock, retry = false) {
   return db;
 }
 
-const request = () => ({ json: async () => ({ customerId: new ObjectId().toHexString(), date: "2026-10-16", affectStockValue: true, items: [{ product: "Milk", quantity: 2, ratePerUnit: 50, totalAmount: 100 }], totalAmount: 100 }) });
+const request = () => ({ json: async () => ({ customerId: new ObjectId().toHexString(), date: "2026-10-16", affectStockValue: true, items: [{ product: "Butter", quantity: 2, ratePerUnit: 50, totalAmount: 100 }], totalAmount: 100 }) });
 
 test("insufficient stock rolls back the order inserted before stock validation", async () => {
   const db = database(1);
@@ -65,7 +65,7 @@ test("insufficient stock rolls back the order inserted before stock validation",
   expect(db.state().orders).toHaveLength(0);
   expect(db.state().customer_summaries).toHaveLength(0);
   expect(db.state().total_orders).toHaveLength(0);
-  expect(db.state().stock_balance[0].milk).toBe(1);
+  expect(db.state().stock_balance[0].butter).toBe(1);
 });
 
 test("a saved order updates stock, account totals and customer summary together", async () => {
@@ -74,9 +74,9 @@ test("a saved order updates stock, account totals and customer summary together"
   expect((await POST(request())).status).toBe(201);
   expect(db.state().orders).toHaveLength(1);
   expect(db.state().stock_ledger).toHaveLength(1);
-  expect(db.state().stock_balance[0].milk).toBe(8);
+  expect(db.state().stock_balance[0].butter).toBe(8);
   expect(db.state().total_orders).toHaveLength(2);
-  expect(db.state().customer_summaries[0]).toMatchObject({ totalOrders: 1, totalAmount: 100, orderDueAmount: 100, quantities: { milk: 2 } });
+  expect(db.state().customer_summaries[0]).toMatchObject({ totalOrders: 1, totalAmount: 100, orderDueAmount: 100, quantities: { butter: 2 } });
 });
 
 test("transaction retries reuse the parsed request and commit a single order", async () => {
@@ -87,7 +87,7 @@ test("transaction retries reuse the parsed request and commit a single order", a
   expect((await POST({ json })).status).toBe(201);
   expect(json).toHaveBeenCalledTimes(1);
   expect(db.state().orders).toHaveLength(1);
-  expect(db.state().stock_balance[0].milk).toBe(8);
+  expect(db.state().stock_balance[0].butter).toBe(8);
 });
 
 test("creation cannot disguise a balance reduction as a negative order", async () => {
@@ -112,7 +112,7 @@ test("new orders retain the GST option for later editing", async () => {
 });
 
 const change = (id, details) => ({ url: `http://localhost/api/customer/order?id=${id}`, json: async () => details });
-const item = (quantity, product = "Milk") => ({ product, quantity, ratePerUnit: 50, totalAmount: Number(quantity) * 50 });
+const item = (quantity, product = "Butter") => ({ product, quantity, ratePerUnit: 50, totalAmount: Number(quantity) * 50 });
 async function create(db, details = {}) {
   getDatabase.mockResolvedValue(db);
   const payload = await request().json();
@@ -128,32 +128,32 @@ test.each([false, undefined])("unchecked or missing stock selection %s leaves st
   expect(db.state().orders[0].affectStockValue).toBe(false);
   expect((await PUT(change(id, { items: [item(6)] }))).status).toBe(200);
   expect((await DELETE(change(id))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
   expect(db.state().stock_ledger).toHaveLength(0);
 });
 
 test("checked order quantity edits and checkbox toggles apply exact reversals", async () => {
   const db = database(10);
   const id = await create(db);
-  expect(db.state().stock_balance[0].milk).toBe(8);
+  expect(db.state().stock_balance[0].butter).toBe(8);
   expect((await PUT(change(id, { items:[item(5)] }))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(5);
+  expect(db.state().stock_balance[0].butter).toBe(5);
   expect((await PUT(change(id, { items:[item(3)] }))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(7);
+  expect(db.state().stock_balance[0].butter).toBe(7);
   expect((await PUT(change(id, { affectStockValue:false }))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
   expect((await PUT(change(id, { items:[item(4)] }))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
   expect((await PUT(change(id, { affectStockValue:true }))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(6);
-  expect(ledgerTotal(db, "milk")).toBe(-4);
+  expect(db.state().stock_balance[0].butter).toBe(6);
+  expect(ledgerTotal(db, "butter")).toBe(-4);
   expect((await DELETE(change(id))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(10);
-  expect(ledgerTotal(db, "milk")).toBe(0);
+  expect(db.state().stock_balance[0].butter).toBe(10);
+  expect(ledgerTotal(db, "butter")).toBe(0);
   const length=db.state().stock_ledger.length;
   expect((await DELETE(change(id))).status).toBe(404);
   expect(db.state().stock_ledger).toHaveLength(length);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
 });
 
 test("changing products restores old products and deducts new duplicate product lines together", async () => {
@@ -161,16 +161,16 @@ test("changing products restores old products and deducts new duplicate product 
   db.state().stock_balance[0].curd=20;
   const id=await create(db);
   expect((await PUT(change(id,{items:[item(3,"Curd"),item(2,"Curd")]}))).status).toBe(200);
-  expect(db.state().stock_balance[0]).toMatchObject({milk:10,curd:15});
+  expect(db.state().stock_balance[0]).toMatchObject({butter:10,curd:15});
   expect((await DELETE(change(id))).status).toBe(200);
-  expect(db.state().stock_balance[0]).toMatchObject({milk:10,curd:20});
+  expect(db.state().stock_balance[0]).toMatchObject({butter:10,curd:20});
 });
 
 test("date, comment and status-only edits do not change stock twice", async () => {
   const db=database(10), id=await create(db);
   expect((await PUT(change(id,{date:"2026-10-17",comment:"Updated",paymentStatus:"Paid"}))).status).toBe(200);
   expect(db.state().stock_ledger).toHaveLength(1);
-  expect(db.state().stock_balance[0].milk).toBe(8);
+  expect(db.state().stock_balance[0].butter).toBe(8);
   expect(db.state().total_orders[0]).toMatchObject({totalOrders:1,totalAmount:100});
 });
 
@@ -185,7 +185,7 @@ test("enabling stock for an oversized order fails without changing the checkbox"
   const db=database(1), id=await create(db,{affectStockValue:false});
   expect((await PUT(change(id,{affectStockValue:true}))).status).toBe(400);
   expect(db.state().orders[0].affectStockValue).toBe(false);
-  expect(db.state().stock_balance[0].milk).toBe(1);
+  expect(db.state().stock_balance[0].butter).toBe(1);
   expect(db.state().stock_ledger).toHaveLength(0);
 });
 
@@ -206,7 +206,7 @@ test.each([null,"false",0,1])("non-boolean stock selection %s is rejected for cr
   expect((await POST({json:async()=>({...payload,affectStockValue})})).status).toBe(400);
   expect((await PUT(change(id,{affectStockValue}))).status).toBe(400);
   expect(db.state().orders).toHaveLength(1);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
 });
 
 test.each([false,true])("legacy missing stock flag only restores stock when there is ledger evidence: %s", async affected => {
@@ -215,15 +215,26 @@ test.each([false,true])("legacy missing stock flag only restores stock when ther
   const response=await GET({url:`http://localhost/api/customer/order?id=${id}`});
   expect(response.data.affectStockValue).toBe(affected);
   expect((await DELETE(change(id))).data.stockRestored).toBe(affected);
-  expect(db.state().stock_balance[0].milk).toBe(10);
+  expect(db.state().stock_balance[0].butter).toBe(10);
 });
 
 test("fractional quantities can exactly exhaust and restore stock", async () => {
   const db=database(0.3);
   const first=await create(db,{items:[item(0.1)],totalAmount:5});
   const second=await create(db,{items:[item(0.2)],totalAmount:10});
-  expect(db.state().stock_balance[0].milk).toBe(0);
+  expect(db.state().stock_balance[0].butter).toBe(0);
   expect((await DELETE(change(first))).status).toBe(200);
   expect((await DELETE(change(second))).status).toBe(200);
-  expect(db.state().stock_balance[0].milk).toBe(0.3);
+  expect(db.state().stock_balance[0].butter).toBe(0.3);
+});
+
+test("milk remains orderable and leaves stock unchanged on create, edit and delete", async () => {
+  const db = database(10);
+  db.state().stock_balance[0].milk = 1;
+  const id = await create(db, { items: [item(2, "Milk")] });
+  expect(db.state().customer_summaries[0].quantities.milk).toBe(2);
+  expect((await PUT(change(id, { items: [item(3, "Milk")] }))).status).toBe(200);
+  expect((await DELETE(change(id))).status).toBe(200);
+  expect(db.state().stock_balance[0].milk).toBe(1);
+  expect(db.state().stock_ledger).toHaveLength(0);
 });

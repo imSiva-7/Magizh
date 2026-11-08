@@ -7,8 +7,8 @@ function database(stock = 20) {
   const customerId = new ObjectId(), subscriptionId = new ObjectId();
   let state = {
     customers: [{ _id: customerId, customerName: "Test Customer" }],
-    customer_subscriptions: [{ _id: subscriptionId, customerId, customerName: "Test Customer", status: "active", startDate: "2026-10-23", nextDate: "2026-10-23", weekdays: [0,1,2,3,4,5,6], items: [{ product: "Milk", quantity: 2, ratePerUnit: 50 }], gstType: "inclusive", affectStockValue: true }],
-    stock_balance: [{ _id: "current", milk: stock }],
+    customer_subscriptions: [{ _id: subscriptionId, customerId, customerName: "Test Customer", status: "active", startDate: "2026-10-23", nextDate: "2026-10-23", weekdays: [0,1,2,3,4,5,6], items: [{ product: "Butter", quantity: 2, ratePerUnit: 50 }], gstType: "inclusive", affectStockValue: true }],
+    stock_balance: [{ _id: "current", butter: stock }],
   };
   const db = { subscriptionId, state: () => state, client: { startSession: () => ({
     async withTransaction(action) { const previous = clone(state); try { return await action(); } catch (error) { state = previous; throw error; } },
@@ -43,7 +43,7 @@ test("generated order updates stock and balances once across repeated runs", asy
   expect((await generateSubscriptionDate(db, db.subscriptionId, "2026-10-23")).outcome).toBe("created");
   expect((await generateSubscriptionDate(db, db.subscriptionId, "2026-10-23")).outcome).toBe("idle");
   expect(db.state().orders).toHaveLength(1);
-  expect(db.state().stock_balance[0].milk).toBe(18);
+  expect(db.state().stock_balance[0].butter).toBe(18);
   expect(db.state().customer_summaries[0]).toMatchObject({ totalAmount: 100, orderDueAmount: 100 });
   expect(db.state().orders[0]).toMatchObject({ subscriptionId: db.subscriptionId, date: "2026-10-23", paymentStatus: "Not Paid" });
 });
@@ -53,7 +53,7 @@ test("stock failure rolls back claim, order, balance and cursor; retry then succ
   expect(db.state().orders || []).toHaveLength(0);
   expect(db.state().subscription_runs || []).toHaveLength(0);
   expect(db.state().customer_subscriptions[0].nextDate).toBe("2026-10-23");
-  db.state().stock_balance[0].milk = 10;
+  db.state().stock_balance[0].butter = 10;
   expect((await generateSubscriptionDate(db, db.subscriptionId, "2026-10-23")).outcome).toBe("created");
 });
 test("a processed delivery is never recreated after its order is removed", async () => {
@@ -61,7 +61,7 @@ test("a processed delivery is never recreated after its order is removed", async
   db.state().orders = []; db.state().customer_subscriptions[0].nextDate = "2026-10-23";
   expect((await generateSubscriptionDate(db, db.subscriptionId, "2026-10-23")).outcome).toBe("existing");
   expect(db.state().orders).toHaveLength(0);
-  expect(db.state().stock_balance[0].milk).toBe(18);
+  expect(db.state().stock_balance[0].butter).toBe(18);
 });
 test.each(["paused", "cancelled", "completed"])("%s subscriptions do not generate orders", async status => {
   const db = database(); db.state().customer_subscriptions[0].status = status;
