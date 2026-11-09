@@ -1106,15 +1106,16 @@
 .compactHistory .historyGroupHeader { padding: 0.85rem 1.25rem; background: var(--brand-soft); border-bottom: 1px solid var(--border); }
 .compactHistory .historyGroup .attendanceTable { min-width: 760px; table-layout: fixed; width: 100%; }
 .compactHistory .historyGroup .attendanceTable th { text-transform: none; letter-spacing: 0; font-size: 0.8rem; font-weight: 600; }
-.compactHistory .historyGroup .attendanceTable th:first-child { width: 38%; }
-.compactHistory .historyGroup .attendanceTable th:nth-child(2),
-.compactHistory .historyGroup .attendanceTable th:nth-child(3) { width: 19%; }
-.compactHistory .historyGroup .attendanceTable th:nth-child(4) { width: 12%; }
-.compactHistory .historyGroup .attendanceTable th:last-child:not(:nth-child(4)) { width: 12%; }
-.compactHistory .timeCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.compactHistory .historyGroup .attendanceTable th:first-child { width: 12rem; }
+.compactHistory .historyGroup .attendanceTable th:nth-child(5),
+.compactHistory .historyGroup .attendanceTable th:nth-child(6) { width: 5rem; }
+.compactHistory .historyGroup .attendanceTable th:not(:first-child),
+.compactHistory .historyGroup .attendanceTable td:not(:first-child) { text-align: right; }
+.compactHistory .historyGroup abbr { text-decoration: none; white-space: nowrap; }
+.compactHistory .historyTimeCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .compactHistory .hoursCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .compactHistory .historyGroup .attendanceTable th, .compactHistory .historyGroup .attendanceTable td { padding: 0.85rem 1rem; }
-.historyEmployee { color: var(--brand-dark); text-decoration: none; font-weight: 650; overflow-wrap: anywhere; }
+.historyEmployee { display: block; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--brand-dark); text-decoration: none; font-weight: 650; }
 .historyEmployee:hover { color: var(--brand); text-decoration: underline; }
 .historyEmployeeId { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-top: 0.2rem; }
 @media (max-width: 1000px) { .historyControls { grid-template-columns: repeat(2, minmax(0, 1fr)); } .historyControlActions { align-self: end; } }

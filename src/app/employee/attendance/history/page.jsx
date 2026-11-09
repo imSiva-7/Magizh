@@ -146,21 +146,21 @@ export default function AttendanceHistoryPage() {
                 <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatAttendanceDate(date)}</time></h2></div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.attendanceTable}>
-                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in (IST)</th><th scope="col">Check out (IST)</th><th scope="col">Hours</th><th scope="col">Status</th>{isAdmin && <th scope="col">Actions</th>}</tr></thead>
+                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in</th><th scope="col">Check out</th><th scope="col">Hours</th><th scope="col">Status</th>{isAdmin && <th scope="col">Actions</th>}</tr></thead>
                     <tbody>{records.map((record, index) => (
                       <tr key={`${record.empID}-${date}-${index}`}>
                         <td className={styles.nameCell}>
-                          <Link href={`/employee/attendance?empID=${encodeURIComponent(record.empID)}&month=${month}`} className={styles.historyEmployee}>{record.name || record.empID}</Link>
+                          <Link href={`/employee/attendance?empID=${encodeURIComponent(record.empID)}&month=${month}`} className={styles.historyEmployee} title={record.name || record.empID}>{record.name || record.empID}</Link>
                           <span className={styles.historyEmployeeId}>{record.empID}</span>
                         </td>
-                        <td className={styles.timeCell}>{record.checkIn ? <span className={styles.checkInTime}>{formatTime(record.checkIn)}</span> : "—"}</td>
-                        <td className={styles.timeCell}>{record.checkOut ? <span className={styles.checkOutTime}>{formatTime(record.checkOut)}{record.checkOutNextDay && " (+1 day)"}</span> : record.checkIn ? <span className={styles.missingBadge}>Missing</span> : "—"}</td>
+                        <td className={styles.historyTimeCell}>{record.checkIn ? <span className={styles.checkInTime}>{formatTime(record.checkIn)}</span> : "—"}</td>
+                        <td className={styles.historyTimeCell}>{record.checkOut ? <span className={styles.checkOutTime}>{formatTime(record.checkOut)}{record.checkOutNextDay && " (+1 day)"}</span> : record.checkIn ? <span className={styles.missingBadge}>Missing</span> : "—"}</td>
                         <td className={styles.hoursCell}>{formatAttendanceHours(record.hoursWorked)}</td>
                         <td>
-                          {record.status === "paid_leave" && <span className={styles.paidLeaveBadge}>Paid leave</span>}
-                          {record.status === "excess_leave" && <span className={styles.absentBadge}>Absent</span>}
-                          {record.status === "pending" && <span className={styles.missingBadge}>Not recorded yet</span>}
-                          {record.status === "present" && <span className={styles.presentBadge}>Present</span>}
+                          {record.status === "paid_leave" && <abbr className={styles.paidLeaveBadge} title="Paid leave">PL</abbr>}
+                          {record.status === "excess_leave" && <abbr className={styles.absentBadge} title="Absent">ABS</abbr>}
+                          {record.status === "pending" && <abbr className={styles.missingBadge} title="Not recorded yet">NRY</abbr>}
+                          {record.status === "present" && <abbr className={styles.presentBadge} title="Present">PRT</abbr>}
                         </td>
                         {isAdmin && <td>{record.status === "present" && <AttendanceTimeEditor empID={record.empID} day={record} onSaved={() => { setRefresh(value => value + 1); toast.success("Attendance times updated"); }} />}</td>}
                       </tr>
