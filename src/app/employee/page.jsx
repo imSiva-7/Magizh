@@ -287,6 +287,27 @@ export default function Employee() {
     fetchData();
   }, [fetchData]);
 
+  function openCreateEmployee() {
+    const assigned = new Set(entries
+      .map(({ empID }) => String(empID ?? ""))
+      .filter(empID => /^\d{4}$/.test(empID))
+      .map(Number));
+    let next = Math.max(0, ...assigned) + 1;
+    if (next > 9999) {
+      next = 1;
+      while (next <= 9999 && assigned.has(next)) next++;
+    }
+
+    setCreateEmployee(true);
+    setIsEditing(false);
+    setFormData({
+      ...initialFormState,
+      empID: !loadError && next <= 9999 ? String(next).padStart(4, "0") : "",
+    });
+    setFormErrors({});
+    setEmpIDAvailable(null);
+  }
+
   const handleInputChange = useCallback(
     (field, value) => {
       let processedValue = value;
@@ -495,13 +516,7 @@ export default function Employee() {
           {!createEmployee && (
             <div className={styles.createSection}>
               <button data-button="primary"
-                onClick={() => {
-                  setCreateEmployee(true);
-                  setIsEditing(false);
-                  setFormData(initialFormState);
-                  setFormErrors({});
-                  setEmpIDAvailable(null);
-                }}
+                onClick={openCreateEmployee}
                 className={styles.createButton}
                 disabled={loading}
                 aria-label="Create new employee"
@@ -736,11 +751,7 @@ export default function Employee() {
                       </p>
                       {!loadError && !searchDebounced && !createEmployee && isAdmin && (
                         <button data-button="primary"
-                          onClick={() => {
-                            setCreateEmployee(true);
-                            setIsEditing(false);
-                            setFormData(initialFormState);
-                          }}
+                          onClick={openCreateEmployee}
                           className={styles.createEmptyButton}
                         >
                           Create Your First Employee

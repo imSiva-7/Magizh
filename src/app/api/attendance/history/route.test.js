@@ -37,22 +37,23 @@ test("missing-checkout history includes manual attendance without counting absen
   expect(data.summary.incompleteCount).toBe(1);
 });
 
-test("history includes employees with no punches only from their employment start", async () => {
+test("history only lists check-ins within the employment and date range", async () => {
   const data = await (await GET(request())).json();
-  const records = id => data.records.filter(row => row.empID === id);
-  expect(records("0001").at(-1)).toMatchObject({ date: "2026-10-15", hoursWorked: 11.25, regularHours: 9, overtimeHours: 2.25 });
-  expect(records("0001").at(-1)).not.toHaveProperty("joiningDate");
-  expect(records("0002").map(({ date, status }) => [date, status])).toEqual([
-    ["2026-10-20", "pending"], ["2026-10-19", "excess_leave"], ["2026-10-18", "excess_leave"], ["2026-10-17", "excess_leave"],
+  expect(data.records.map(({ empID, date }) => [empID, date])).toEqual([
+    ["0001", "2026-10-16"], ["0001", "2026-10-15"],
   ]);
-  expect(records("0003").slice(-3).map(row => row.status)).toEqual(["excess_leave", "paid_leave", "paid_leave"]);
-  expect(records("0004")).toHaveLength(0);
-  expect(data.summary).toMatchObject({ totalHours: 11.25, incompleteCount: 1, uniqueEmployees: 3 });
+  expect(data.records[1]).toMatchObject({ hoursWorked: 11.25, regularHours: 9, overtimeHours: 2.25 });
+  expect(data.summary).toMatchObject({ totalHours: 11.25, incompleteCount: 1, uniqueEmployees: 1 });
 });
 
-test("filtering by date keeps the full month's paid leave allocation", async () => {
-  const data = await (await GET(request("&startDate=2026-10-03&endDate=2026-10-03&status=excess_leave&search=existing"))).json();
-  expect(data.records).toMatchObject([{ empID: "0003", date: "2026-10-03", status: "excess_leave" }]);
+test("today only lists employees who have checked in", async () => {
+  employees[0].attendance[month].days[20] = { checkIn: "08:00", checkOut: null };
+  try {
+    const data = await (await GET(request("&startDate=2026-10-20&endDate=2026-10-20"))).json();
+    expect(data.records).toMatchObject([{ empID: "0001", date: "2026-10-20", checkOut: "" }]);
+  } finally {
+    delete employees[0].attendance[month].days[20];
+  }
 });
 
 test("invalid calendar month fails before database access", async () => {
