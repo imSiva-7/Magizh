@@ -12,7 +12,7 @@ import { buildPayroll, validMonth } from "@/lib/payroll";
  *   &search=ravi           (optional — matches name or empID, case-insensitive)
  *   &status=complete|incomplete  (optional)
  *
- * Returns a flattened list of every (employee, day) pair for the month,
+ * Returns a flattened list of recorded check-ins for the month,
  * plus a summary of the whole result set.
  */
 export async function GET(request) {
@@ -44,8 +44,8 @@ export async function GET(request) {
     const today = getTodayDate();
     const term = search?.trim().toLowerCase();
     const employees = await db.collection("employee").find(
-      { empID: { $exists: true, $nin: [null, ""] } },
-      { projection: { empID: 1, name: 1, joiningDate: 1, createdAt: 1, paidLeaveDays: 1, [`attendance.${month}`]: 1 } },
+      { empID: { $exists: true, $nin: [null, ""] }, [`attendance.${month}.days`]: { $exists: true } },
+      { projection: { empID: 1, name: 1, joiningDate: 1, createdAt: 1, [`attendance.${month}`]: 1 } },
     ).toArray();
 
     const records = [];
@@ -53,13 +53,12 @@ export async function GET(request) {
       const { empID, name } = employee;
       if (term && !String(empID).toLowerCase().includes(term) && !name?.toLowerCase().includes(term)) continue;
 
-      // Classify the full month first so date and status filters cannot change which days use paid leave.
       const { attendance } = buildPayroll(employee, month, today);
       for (const { punches, ...day } of attendance) {
+        if (!day.checkIn) continue;
         if ((startDate && day.date < startDate) || (endDate && day.date > endDate)) continue;
-        if (statusFilter === "complete" && !(day.checkIn && day.checkOut)) continue;
-        if (statusFilter === "incomplete" && !(day.checkIn && !day.checkOut)) continue;
-        if (["paid_leave", "excess_leave"].includes(statusFilter) && day.status !== statusFilter) continue;
+        if (statusFilter === "complete" && !day.checkOut) continue;
+        if (statusFilter === "incomplete" && day.checkOut) continue;
         records.push({ ...day, empID, name, punchCount: punches.length });
       }
     }

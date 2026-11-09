@@ -1107,11 +1107,9 @@
 .compactHistory .historyGroup .attendanceTable { min-width: 760px; table-layout: fixed; width: 100%; }
 .compactHistory .historyGroup .attendanceTable th { text-transform: none; letter-spacing: 0; font-size: 0.8rem; font-weight: 600; }
 .compactHistory .historyGroup .attendanceTable th:first-child { width: 12rem; }
-.compactHistory .historyGroup .attendanceTable th:nth-child(5),
-.compactHistory .historyGroup .attendanceTable th:nth-child(6) { width: 5rem; }
+.compactHistory .historyGroup .attendanceTable th:nth-child(5) { width: 5rem; }
 .compactHistory .historyGroup .attendanceTable th:not(:first-child),
 .compactHistory .historyGroup .attendanceTable td:not(:first-child) { text-align: right; }
-.compactHistory .historyGroup abbr { text-decoration: none; white-space: nowrap; }
 .compactHistory .historyTimeCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .compactHistory .hoursCell { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .compactHistory .historyGroup .attendanceTable th, .compactHistory .historyGroup .attendanceTable td { padding: 0.85rem 1rem; }
