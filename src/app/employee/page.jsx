@@ -110,6 +110,11 @@ export default function Employee() {
   const [searchByName, setSearchByName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  const closeActionMenu = useCallback(() => {
+    setOpenActionMenuId(null);
+    setConfirmingDeleteId(null);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -118,6 +123,7 @@ export default function Employee() {
         !event.target.closest(`.${styles.actionMenuWrapper}`)
       ) {
         setOpenActionMenuId(null);
+        setConfirmingDeleteId(null);
       }
     };
     document.addEventListener("click", handleClickOutside);
@@ -454,13 +460,11 @@ export default function Employee() {
   );
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this employee?\nThis action cannot be undone.",
-      )
-    ) {
+    if (confirmingDeleteId !== id) {
+      setConfirmingDeleteId(id);
       return;
     }
+    setConfirmingDeleteId(null);
 
     setDeleteLoading(id);
 
@@ -800,11 +804,12 @@ export default function Employee() {
                         <div className={styles.actionMenuWrapper}>
                           <button data-button="icon"
                             className={styles.actionMenuButton}
-                            onClick={() =>
+                            onClick={() => {
+                              setConfirmingDeleteId(null);
                               setOpenActionMenuId(
                                 openActionMenuId === item._id ? null : item._id,
-                              )
-                            }
+                              );
+                            }}
                             disabled={
                               loading || deleteLoading === item._id || isEditing
                             }
@@ -813,7 +818,7 @@ export default function Employee() {
                             ⋮
                           </button>
                           {openActionMenuId === item._id && (
-                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={closeActionMenu}>
                               <button data-button="menu"
                                 onClick={() => {
                                   handleEdit(item);
@@ -832,9 +837,9 @@ export default function Employee() {
                                   : "Edit"}
                               </button>
                               <button data-button="menu-danger"
-                                onClick={() => {
+                                onClick={(event) => {
+                                  if (confirmingDeleteId !== item._id) event.stopPropagation();
                                   handleDelete(item._id);
-                                  setOpenActionMenuId(null);
                                 }}
                                 className={styles.actionDeleteButton}
                                 disabled={
@@ -847,7 +852,7 @@ export default function Employee() {
                                 {deleteLoading === item._id ? (
                                   <span className={styles.deleteSpinner}></span>
                                 ) : (
-                                  "Delete"
+                                  confirmingDeleteId === item._id ? "Confirm" : "Delete"
                                 )}
                               </button>
                             </RowActionPopup>

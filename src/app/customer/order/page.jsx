@@ -157,6 +157,11 @@ function OrdersContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  const closeActionMenu = useCallback(() => {
+    setOpenActionMenuId(null);
+    setConfirmingDeleteId(null);
+  }, []);
   const [filters, setFilters] = useState(initialFilters);
   const [data, setData] = useState({ customer: null, orders: [] });
   const [priceCustomers, setPriceCustomers] = useState([]);
@@ -452,7 +457,11 @@ function OrdersContent() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this order?")) return;
+    if (confirmingDeleteId !== id) {
+      setConfirmingDeleteId(id);
+      return;
+    }
+    setConfirmingDeleteId(null);
     setDeleteLoading(id);
     try {
       const res = await fetch(`/api/customer/order?id=${id}`, {
@@ -823,13 +832,14 @@ function OrdersContent() {
                           <div className={styles.actionMenuWrapper}>
                             <button data-button="icon"
                               className={styles.actionMenuButton}
-                              onClick={() =>
+                              onClick={() => {
+                                setConfirmingDeleteId(null);
                                 setOpenActionMenuId(
                                   openActionMenuId === order._id
                                     ? null
                                     : order._id,
-                                )
-                              }
+                                );
+                              }}
                               disabled={
                                 loading ||
                                 deleteLoading === order._id ||
@@ -839,7 +849,7 @@ function OrdersContent() {
                               ⋮
                             </button>
                             {openActionMenuId === order._id && (
-                              <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
+                              <RowActionPopup className={styles.actionMenuPopup} onClose={closeActionMenu}>
                                 <button data-button="menu"
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
@@ -850,13 +860,16 @@ function OrdersContent() {
                                   Edit
                                 </button>
                                 <button data-button="menu-danger"
-                                  onClick={() => handleDelete(order._id)}
+                                  onClick={(event) => {
+                                    if (confirmingDeleteId !== order._id) event.stopPropagation();
+                                    handleDelete(order._id);
+                                  }}
                                   className={styles.actionDeleteButton}
                                   disabled={
                                     loading || deleteLoading === order._id
                                   }
                                 >
-                                  Delete
+                                  {confirmingDeleteId === order._id ? "Confirm" : "Delete"}
                                 </button>
                               </RowActionPopup>
                             )}

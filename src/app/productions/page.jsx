@@ -44,7 +44,7 @@ const ProductionFormInput = ({
   </div>
 );
 
-const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
+const ProductionTableRow = ({ entry, onDelete, isAdmin, confirmingDelete }) => {
   const formatValue = (value, minimumFractionDigits = 0) => {
     if (value === null || value === undefined || value === "" || value === 0)
       return "-";
@@ -76,7 +76,7 @@ const ProductionTableRow = ({ entry, onDelete, isAdmin }) => {
             className={styles.deleteBtn}
             title={"Delete entry"}
           >
-            Delete
+            {confirmingDelete ? "Confirm" : "Delete"}
           </button>
         </td>
       )}
@@ -92,6 +92,7 @@ export default function ProductionPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateStr, setDateStr] = useState(getTodayDate());
   const [batchNo, setBatchNo] = useState("");
@@ -210,7 +211,11 @@ export default function ProductionPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this entry?")) return;
+    if (confirmingDeleteId !== id) {
+      setConfirmingDeleteId(id);
+      return;
+    }
+    setConfirmingDeleteId(null);
 
     const previousEntries = [...entries];
     setEntries((prev) => prev.filter((item) => item._id !== id));
@@ -445,6 +450,7 @@ export default function ProductionPage() {
                       key={item._id}
                       entry={item}
                       onDelete={handleDelete}
+                      confirmingDelete={confirmingDeleteId === item._id}
                       isAdmin={isAdmin}
                     />
                   ))}

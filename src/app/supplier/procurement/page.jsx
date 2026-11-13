@@ -202,6 +202,11 @@ function ProcurementContent() {
   const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState(initialForm);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  const closeActionMenu = useCallback(() => {
+    setOpenActionMenuId(null);
+    setConfirmingDeleteId(null);
+  }, []);
 
   // NEW: head supplier entries
   const [headData, setHeadData] = useState(null);
@@ -589,12 +594,11 @@ function ProcurementContent() {
   };
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this record? This action cannot be undone.",
-      )
-    )
+    if (confirmingDeleteId !== id) {
+      setConfirmingDeleteId(id);
       return;
+    }
+    setConfirmingDeleteId(null);
 
     try {
       const res = await fetch(`/api/supplier/procurement?id=${id}`, {
@@ -1412,11 +1416,12 @@ function ProcurementContent() {
                         <div className={styles.actionMenuWrapper}>
                           <button data-button="icon"
                             className={styles.actionMenuButton}
-                            onClick={() =>
+                            onClick={() => {
+                              setConfirmingDeleteId(null);
                               setOpenActionMenuId(
                                 openActionMenuId === row._id ? null : row._id,
-                              )
-                            }
+                              );
+                            }}
                             disabled={submitting || !!editingId._id}
                             title="Actions"
                             aria-label={`Actions for ${row.date.split("T")[0]} ${row.time || "AM"} record`}
@@ -1425,7 +1430,7 @@ function ProcurementContent() {
                             ⋮
                           </button>
                           {openActionMenuId === row._id && (
-                            <RowActionPopup className={styles.actionMenuPopup} onClose={() => setOpenActionMenuId(null)}>
+                            <RowActionPopup className={styles.actionMenuPopup} onClose={closeActionMenu}>
                               <button data-button="menu"
                                 onClick={() => handleEdit(row)}
                                 className={styles.actionEditButton}
@@ -1434,11 +1439,14 @@ function ProcurementContent() {
                                 {editingId._id === row._id ? "Cancel" : "Edit"}
                               </button>
                               <button data-button="menu-danger"
-                                onClick={() => handleDelete(row._id)}
+                                onClick={(event) => {
+                                  if (confirmingDeleteId !== row._id) event.stopPropagation();
+                                  handleDelete(row._id);
+                                }}
                                 className={styles.actionDeleteButton}
                                 disabled={submitting}
                               >
-                                Delete
+                                {confirmingDeleteId === row._id ? "Confirm" : "Delete"}
                               </button>
                             </RowActionPopup>
                           )}

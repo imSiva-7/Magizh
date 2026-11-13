@@ -41,6 +41,7 @@ function AttendanceContent() {
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmingDeleteAdvanceId, setConfirmingDeleteAdvanceId] = useState(null);
   const attendanceRequestRef = useRef(null);
 
   // Date filter state
@@ -189,11 +190,11 @@ function AttendanceContent() {
   };
 
   const handleDeleteAdvance = async (advanceId) => {
-    if (
-      !window.confirm("Are you sure you want to delete this advance payment?")
-    ) {
+    if (confirmingDeleteAdvanceId !== advanceId) {
+      setConfirmingDeleteAdvanceId(advanceId);
       return;
     }
+    setConfirmingDeleteAdvanceId(null);
 
     try {
       const res = await fetch(
@@ -530,7 +531,7 @@ function AttendanceContent() {
                               onClick={() => handleDeleteAdvance(advance._id)}
                               className={styles.deleteButton}
                             >
-                              Delete
+                              {confirmingDeleteAdvanceId === advance._id ? "Confirm" : "Delete"}
                             </button>
                           </td>
                         )}
