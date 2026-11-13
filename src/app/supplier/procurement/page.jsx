@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
@@ -1438,16 +1439,17 @@ function ProcurementContent() {
                               >
                                 {editingId._id === row._id ? "Cancel" : "Edit"}
                               </button>
-                              <button data-button="menu-danger"
+                              <ConfirmDeleteButton
+                                confirming={confirmingDeleteId === row._id}
+                                onCancel={() => setConfirmingDeleteId(null)}
+                                data-button="menu-danger"
                                 onClick={(event) => {
                                   if (confirmingDeleteId !== row._id) event.stopPropagation();
                                   handleDelete(row._id);
                                 }}
                                 className={styles.actionDeleteButton}
                                 disabled={submitting}
-                              >
-                                {confirmingDeleteId === row._id ? "Confirm" : "Delete"}
-                              </button>
+                              />
                             </RowActionPopup>
                           )}
                         </div>

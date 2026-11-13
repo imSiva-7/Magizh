@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -859,7 +860,10 @@ function OrdersContent() {
                                 >
                                   Edit
                                 </button>
-                                <button data-button="menu-danger"
+                                <ConfirmDeleteButton
+                                  confirming={confirmingDeleteId === order._id}
+                                  onCancel={() => setConfirmingDeleteId(null)}
+                                  data-button="menu-danger"
                                   onClick={(event) => {
                                     if (confirmingDeleteId !== order._id) event.stopPropagation();
                                     handleDelete(order._id);
@@ -868,9 +872,7 @@ function OrdersContent() {
                                   disabled={
                                     loading || deleteLoading === order._id
                                   }
-                                >
-                                  {confirmingDeleteId === order._id ? "Confirm" : "Delete"}
-                                </button>
+                                />
                               </RowActionPopup>
                             )}
                           </div>

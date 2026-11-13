@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import { formatAttendanceHours, formatAttendanceAverage, completedAttendanceAverage } from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
@@ -526,13 +527,13 @@ function AttendanceContent() {
                         <td>{advance.reason || "-"}</td>
                         {isAdmin && (
                           <td className={styles.actionsCell}>
-                            <button
+                            <ConfirmDeleteButton
+                              confirming={confirmingDeleteAdvanceId === advance._id}
+                              onCancel={() => setConfirmingDeleteAdvanceId(null)}
                               data-button="danger"
                               onClick={() => handleDeleteAdvance(advance._id)}
                               className={styles.deleteButton}
-                            >
-                              {confirmingDeleteAdvanceId === advance._id ? "Confirm" : "Delete"}
-                            </button>
+                            />
                           </td>
                         )}
                       </tr>

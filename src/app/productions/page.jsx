@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -44,7 +45,7 @@ const ProductionFormInput = ({
   </div>
 );
 
-const ProductionTableRow = ({ entry, onDelete, isAdmin, confirmingDelete }) => {
+const ProductionTableRow = ({ entry, onDelete, isAdmin, confirmingDelete, onCancelDelete }) => {
   const formatValue = (value, minimumFractionDigits = 0) => {
     if (value === null || value === undefined || value === "" || value === 0)
       return "-";
@@ -71,13 +72,14 @@ const ProductionTableRow = ({ entry, onDelete, isAdmin, confirmingDelete }) => {
       <td>{formatValue(entry.ghee_quantity)}</td>
       {isAdmin && (
         <td>
-          <button data-button="danger"
+          <ConfirmDeleteButton
+            confirming={confirmingDelete}
+            onCancel={onCancelDelete}
+            data-button="danger"
             onClick={() => onDelete(entry._id)}
             className={styles.deleteBtn}
             title={"Delete entry"}
-          >
-            {confirmingDelete ? "Confirm" : "Delete"}
-          </button>
+          />
         </td>
       )}
     </tr>
@@ -450,6 +452,7 @@ export default function ProductionPage() {
                       key={item._id}
                       entry={item}
                       onDelete={handleDelete}
+                      onCancelDelete={() => setConfirmingDeleteId(null)}
                       confirmingDelete={confirmingDeleteId === item._id}
                       isAdmin={isAdmin}
                     />

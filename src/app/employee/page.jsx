@@ -1,4 +1,5 @@
 "use client";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -836,7 +837,10 @@ export default function Employee() {
                                   ? "Cancel"
                                   : "Edit"}
                               </button>
-                              <button data-button="menu-danger"
+                              <ConfirmDeleteButton
+                                confirming={confirmingDeleteId === item._id}
+                                onCancel={() => setConfirmingDeleteId(null)}
+                                data-button="menu-danger"
                                 onClick={(event) => {
                                   if (confirmingDeleteId !== item._id) event.stopPropagation();
                                   handleDelete(item._id);
@@ -851,10 +855,8 @@ export default function Employee() {
                               >
                                 {deleteLoading === item._id ? (
                                   <span className={styles.deleteSpinner}></span>
-                                ) : (
-                                  confirmingDeleteId === item._id ? "Confirm" : "Delete"
-                                )}
-                              </button>
+                                ) : null}
+                              </ConfirmDeleteButton>
                             </RowActionPopup>
                           )}
                         </div>

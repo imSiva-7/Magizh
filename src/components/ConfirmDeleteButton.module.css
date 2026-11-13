@@ -1,0 +1,13 @@
+.label {
+  display: inline-grid;
+  place-items: center;
+  white-space: nowrap;
+}
+
+.label > span {
+  grid-area: 1 / 1;
+}
+
+.widthLabel {
+  visibility: hidden;
+}
