@@ -27,6 +27,8 @@
 
 .createSection {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .createButton {
@@ -396,6 +398,15 @@
   color: var(--brand);
 }
 
+.subscriptionLink {
+  display: block;
+  width: fit-content;
+  margin-top: 0.35rem;
+  color: var(--brand-dark);
+  font-size: 0.8rem;
+  text-underline-offset: 0.15rem;
+}
+
 .typeCell {
   text-align: center;
 }
@@ -742,6 +753,15 @@
   }
 
   .createSection {
+    display: contents;
+  }
+
+  .createSection > a {
+    grid-area: 4 / 1 / 5 / -1;
+    justify-self: start;
+  }
+
+  .createSection > button {
     grid-area: 2 / 2;
   }
 

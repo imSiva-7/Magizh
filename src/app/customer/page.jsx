@@ -457,10 +457,9 @@ export default function Customer() {
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
           <PageHeading title="Customers" section="RELATIONSHIPS" description="Keep customer details, orders, and contacts connected." />
-          {/* <Link data-button="secondary" href="/customer/subscriptions">Subscriptions</Link> */}
-
-          {!createCustomer && (
-            <div className={styles.createSection}>
+          <div className={styles.createSection}>
+            <Link data-button="secondary" href="/customer/subscriptions">Subscriptions</Link>
+            {!createCustomer && (
               <button data-button="primary"
                 onClick={() => {
                   setCreateCustomer(true);
@@ -475,8 +474,8 @@ export default function Customer() {
                 <span className={styles.plusIcon}>+</span>
                  New Customer
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -796,7 +795,13 @@ export default function Customer() {
                       >
                         {item.customerName}
                       </Link>
-                      {/* <div><Link href={`/customer/subscriptions?customerId=${item._id}`}>Subscriptions</Link></div> */}
+                      <Link
+                        href={`/customer/subscriptions?customerId=${encodeURIComponent(item._id)}`}
+                        className={styles.subscriptionLink}
+                        aria-label={`Subscriptions for ${item.customerName}`}
+                      >
+                        Subscriptions
+                      </Link>
                     </td>
                     <td className={styles.typeCell}>
                       <CategoryBadge kind="customer" value={item.customerType} fallback="-" />
