@@ -33,7 +33,7 @@ const desktopNavItems = [
     children: [
       { name: "Order History", path: "/customer/order/history" },
       { name: "Order Payments", path: "/customer/payments" },
-      // { name: "Subscriptions", path: "/customer/subscriptions" },
+      { name: "Subscriptions", path: "/customer/subscriptions" },
     ],
   },
   {
@@ -56,7 +56,7 @@ const mobileNavItems = [
   { name: "Procurement History", path: "/supplier/procurement/history" },
   { name: "Procurement Payments", path: "/supplier/payments" },
   { name: "Customers", path: "/customer" },
-  // { name: "Subscriptions", path: "/customer/subscriptions" },
+  { name: "Subscriptions", path: "/customer/subscriptions" },
   { name: "Order History", path: "/customer/order/history" },
   { name: "Order Payments", path: "/customer/payments" },
   { name: "Employees", path: "/employee" },
@@ -74,6 +74,8 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const accountName = session?.user?.name?.trim();
+  const firstName = accountName?.split(/\s+/)[0];
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
@@ -261,9 +263,14 @@ export default function Header() {
         <div className={styles.headerRight}>
           {session ? (
             <div className={styles.userSection}>
-              <span className={styles.userName}>
-                Hi, {session.user?.name || "User"}
-              </span>
+              <div className={styles.accountGreeting} title={accountName || undefined}>
+                <span className={styles.accountIcon} aria-hidden="true">
+                  <Image src="/user.png" alt="" width={18} height={18} />
+                </span>
+                <span className={styles.userName}>
+                  {firstName ? `Hi, ${firstName}` : "Hi there"}
+                </span>
+              </div>
               <button
                 data-button="icon"
                 onClick={() => signOut()}

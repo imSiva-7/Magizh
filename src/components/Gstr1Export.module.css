@@ -5,6 +5,7 @@
 .fields { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
 .settings { min-width: 0; padding: 0; margin: 0; border: 0; }
 .fields label { display: grid; gap: .4rem; font-size: .875rem; flex: 1 1 180px; }
+.monthField { display: grid; gap: .4rem; flex: 1 1 180px; min-width: 0; }
 .panel input, .panel select { min-height: 44px; border: 1px solid var(--border); border-radius: .5rem; padding: .5rem; background: var(--surface); color: var(--text); font: inherit; min-width: 0; max-width: 100%; }
 .table { overflow-x: auto; margin-bottom: 1rem; }
 .table table { border-collapse: collapse; width: 100%; font-size: .875rem; }

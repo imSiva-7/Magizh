@@ -2,6 +2,7 @@
 import AdminSummary from "@/components/AdminSummary";
 import { useSession } from "next-auth/react";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
+import CalendarInput from "@/components/CalendarInput";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatAttendanceHours } from "@/utils/attendanceHours";
 
@@ -103,7 +104,15 @@ export default function AttendanceHistoryPage() {
       <AdminSummary><div data-filter="card" className={styles.historyControls}>
         <div className={styles.inputGroup}>
           <label htmlFor="history-month">Month</label>
-          <input id="history-month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} max={getCurrentMonth()} className={styles.input} required />
+          <CalendarInput
+            id="history-month"
+            type="month"
+            value={month}
+            max={getCurrentMonth()}
+            onChange={(event) => setMonth(event.target.value)}
+            className={styles.input}
+            required
+          />
         </div>
         <div className={styles.inputGroup}>
           <label htmlFor="history-search">Employee</label>

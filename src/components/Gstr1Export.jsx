@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 
 import { useEffect, useRef, useState } from "react";
 import { buildGstr1 } from "@/lib/gstr1.mjs";
@@ -72,7 +73,21 @@ export default function Gstr1Export({ initialMonth, onClose }) {
     <p className={styles.hint}>Export regular domestic taxable sales for one month, including B2B, B2C and separate HSN summaries. Each order must match one issued invoice. Enter the numbers from your invoice register; no numbers are generated here.</p>
     <fieldset className={styles.settings} disabled={saving}><div className={styles.fields}>
       <label>Supplier GSTIN<input value={gstin} maxLength={15} onChange={event => { setGstin(event.target.value.toUpperCase()); setReviewed(false); }} /></label>
-      <label>Return month<input type="month" min="2025-05" max={getTodayDate().slice(0, 7)} value={month} onChange={event => { setMonth(event.target.value); setReviewed(false); setDownloaded(false); }} /></label>
+      <div className={styles.monthField}>
+        <label htmlFor="gstr1-return-month">Return month</label>
+        <CalendarInput
+          id="gstr1-return-month"
+          type="month"
+          min="2025-05"
+          max={getTodayDate().slice(0, 7)}
+          value={month}
+          onChange={(event) => {
+            setMonth(event.target.value);
+            setReviewed(false);
+            setDownloaded(false);
+          }}
+        />
+      </div>
       <label>Minimum HSN digits<select value={hsnDigits} onChange={event => { setHsnDigits(event.target.value); setReviewed(false); }}><option value="6">6 digits (turnover above ₹5 crore)</option><option value="4">4 digits (turnover up to ₹5 crore)</option></select></label>
       <label>Default place of supply for unregistered customers<input value={defaultPos} inputMode="numeric" maxLength={2} placeholder="Two-digit state code" onChange={event => { setDefaultPos(event.target.value); setReviewed(false); setDownloaded(false); }} /></label>
     </div>

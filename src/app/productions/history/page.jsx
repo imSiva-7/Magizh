@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateTimeForDisplay, formatDateForDisplay, formatTimeForDisplay } from "@/lib/india-date.mjs";
@@ -340,7 +341,7 @@ export default function ProductionHistoryPage() {
             <div data-filter="grid" className={styles.dateInputGroup}>
               <div data-filter="field" className={styles.dateField}>
                 <label htmlFor="fromDate">From Date</label>
-                <input
+                <CalendarInput
                   id="fromDate"
                   name="fromDate"
                   type="date"
@@ -354,7 +355,7 @@ export default function ProductionHistoryPage() {
 
               <div data-filter="field" className={styles.dateField}>
                 <label htmlFor="toDate">To Date</label>
-                <input
+                <CalendarInput
                   id="toDate"
                   name="toDate"
                   type="date"

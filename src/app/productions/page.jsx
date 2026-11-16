@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
@@ -261,7 +262,7 @@ export default function ProductionPage() {
             <div className={styles.dateBatchRow}>
               <div className={styles.inputGroup}>
                 <label>Date</label>
-                <input
+                <CalendarInput
                   type="date"
                   value={dateStr}
                   onChange={(e) => setDateStr(e.target.value)}

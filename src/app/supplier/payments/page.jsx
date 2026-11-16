@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
@@ -428,7 +429,7 @@ export default function Payments() {
         <div data-filter="grid" className={styles.date_input_group}>
           <div data-filter="field" className={styles.date_field}>
             <label htmlFor="startDate">From Date</label>
-            <input
+            <CalendarInput
               type="date"
               id="startDate"
               name="startDate"
@@ -442,7 +443,7 @@ export default function Payments() {
           </div>
           <div data-filter="field" className={styles.date_field}>
             <label htmlFor="endDate">To Date</label>
-            <input
+            <CalendarInput
               type="date"
               id="endDate"
               name="endDate"

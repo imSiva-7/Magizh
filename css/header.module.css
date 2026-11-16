@@ -114,9 +114,29 @@
   padding-left: 1rem;
   border-left: 1px solid var(--border);
 }
+.accountGreeting {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.accountIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--brand-soft);
+}
+.accountIcon img {
+  object-fit: contain;
+}
 .userName {
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-weight: 650;
+  color: var(--brand-dark);
   max-width: 130px;
   overflow: hidden;
   white-space: nowrap;

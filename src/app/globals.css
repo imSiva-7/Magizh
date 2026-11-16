@@ -67,6 +67,16 @@ input, select, textarea { max-width: 100%; }
   cursor: pointer;
 }
 
+@supports selector(:popover-open) {
+  :root body [data-calendar-input][data-calendar-input] > input:is([type="date"], [type="month"]) {
+    padding-inline-end: 2.875rem;
+  }
+
+  :root body [data-calendar-input][data-calendar-input] > input:is([type="date"], [type="month"])::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+}
+
 /* Consistent single-choice dropdowns; retain native keyboard and mobile pickers. */
 :root body :is(main, [role="dialog"], dialog) select:not([multiple]):not([size]) {
   appearance: none;

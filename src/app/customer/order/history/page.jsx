@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import { totalCustomerDue } from "@/lib/customer-account-due.mjs";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -319,7 +320,7 @@ function OrderHistoryContent() {
                 >
                   From Date
                 </label>
-                <input
+                <CalendarInput
                   type="date"
                   id="order-history-from"
                   value={filters.startDate}
@@ -334,7 +335,7 @@ function OrderHistoryContent() {
                 <label htmlFor="order-history-to" className={styles.date_label}>
                   To Date
                 </label>
-                <input
+                <CalendarInput
                   type="date"
                   id="order-history-to"
                   value={filters.endDate}

@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import pickerStyles from "@/components/HistoryPartyPicker.module.css";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -103,27 +104,30 @@ const StatItem = ({ label, value, unit, prefix = "", trend, tone = "milk" }) => 
 );
 
 // ========== FORM SUBCOMPONENTS ==========
-const FormInput = ({ label, error, required, readOnly, ...props }) => (
-  <div className={styles.form_input_group}>
-    <label htmlFor={`history-entry-${props.name}`} className={styles.form_label}>
-      {label}
-      {required && <span aria-hidden="true" className={styles.required_asterisk}>*</span>}
-    </label>
-    <input
-      className={`${styles.form_input} ${error ? styles.input_error : ""} ${
-        readOnly ? styles.readonly_input : ""
-      }`}
-      autoComplete="off"
-      id={`history-entry-${props.name}`}
-      aria-label={label}
-      aria-required={Boolean(required)}
-      aria-invalid={Boolean(error)}
-      readOnly={readOnly}
-      {...props}
-    />
-    {error && <span className={styles.error_text}>{error}</span>}
-  </div>
-);
+const FormInput = ({ label, error, required, readOnly, ...props }) => {
+  const Field = props.type === "date" ? CalendarInput : "input";
+  return (
+    <div className={styles.form_input_group}>
+      <label htmlFor={`history-entry-${props.name}`} className={styles.form_label}>
+        {label}
+        {required && <span aria-hidden="true" className={styles.required_asterisk}>*</span>}
+      </label>
+      <Field
+        className={`${styles.form_input} ${error ? styles.input_error : ""} ${
+          readOnly ? styles.readonly_input : ""
+        }`}
+        autoComplete="off"
+        id={`history-entry-${props.name}`}
+        aria-label={label}
+        aria-required={Boolean(required)}
+        aria-invalid={Boolean(error)}
+        readOnly={readOnly}
+        {...props}
+      />
+      {error && <span className={styles.error_text}>{error}</span>}
+    </div>
+  );
+};
 
 // ========== MAIN COMPONENT ==========
 function ProcurementHistoryContent() {
@@ -813,7 +817,7 @@ function ProcurementHistoryContent() {
                 <label htmlFor="startDate" className={styles.date_label}>
                   From Date
                 </label>
-                <input
+                <CalendarInput
                   id="startDate"
                   name="startDate"
                   type="date"
@@ -828,7 +832,7 @@ function ProcurementHistoryContent() {
                 <label htmlFor="endDate" className={styles.date_label}>
                   To Date
                 </label>
-                <input
+                <CalendarInput
                   id="endDate"
                   name="endDate"
                   type="date"

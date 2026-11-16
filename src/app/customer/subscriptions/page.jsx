@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -274,9 +275,10 @@ function SubscriptionsContent() {
                     ))}
                   </select>
                 </label>
-                <label>
-                  Start date
-                  <input
+                <div className={styles.dateField}>
+                  <label htmlFor="subscription-start-date">Start date</label>
+                  <CalendarInput
+                    id="subscription-start-date"
                     type="date"
                     value={form.startDate}
                     min={getTodayDate()}
@@ -285,10 +287,11 @@ function SubscriptionsContent() {
                       setForm({ ...form, startDate: event.target.value })
                     }
                   />
-                </label>
-                <label>
-                  End date (optional)
-                  <input
+                </div>
+                <div className={styles.dateField}>
+                  <label htmlFor="subscription-end-date">End date (optional)</label>
+                  <CalendarInput
+                    id="subscription-end-date"
                     type="date"
                     value={form.endDate}
                     min={form.startDate}
@@ -296,7 +299,7 @@ function SubscriptionsContent() {
                       setForm({ ...form, endDate: event.target.value })
                     }
                   />
-                </label>
+                </div>
                 <fieldset className={styles.weekdays}>
                   <legend>Delivery days</legend>
                   <button
@@ -548,9 +551,10 @@ function SubscriptionsContent() {
                           >
                             Cancel
                           </button>
-                          <label>
-                            Skip a date
-                            <input
+                          <div className={styles.dateField}>
+                            <label htmlFor={`skip-date-${subscription._id}`}>Skip a date</label>
+                            <CalendarInput
+                              id={`skip-date-${subscription._id}`}
                               type="date"
                               min={getTodayDate()}
                               value={skipDates[subscription._id] || ""}
@@ -561,7 +565,7 @@ function SubscriptionsContent() {
                                 })
                               }
                             />
-                          </label>
+                          </div>
                           <button
                             data-button="secondary"
                             disabled={busy || !skipDates[subscription._id]}

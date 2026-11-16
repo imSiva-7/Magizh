@@ -3,6 +3,7 @@ import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import { formatAttendanceHours, formatAttendanceAverage, completedAttendanceAverage } from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
+import CalendarInput from "@/components/CalendarInput";
 import { attendanceFilename } from "@/utils/attendanceFilename";
 import DataSkeleton from "@/components/DataSkeleton";
 
@@ -305,13 +306,13 @@ function AttendanceContent() {
           {(selectedEmpID || employeesLoading) && (
             <div className={styles.inputGroup}>
               <label htmlFor="month-select">Select Month</label>
-              <input
+              <CalendarInput
                 id="month-select"
                 type="month"
                 value={month}
-                onChange={(e) => handleMonthChange(e.target.value)}
-                className={styles.input}
+                onChange={(event) => handleMonthChange(event.target.value)}
                 max={currentMonth}
+                className={styles.input}
                 disabled={isSubmitting}
               />
             </div>
@@ -447,7 +448,7 @@ function AttendanceContent() {
                   </div>
                   <div className={styles.inputGroup}>
                     <label htmlFor="date">Date *</label>
-                    <input
+                    <CalendarInput
                       id="date"
                       type="date"
                       value={advanceForm.date}

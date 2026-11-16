@@ -1,9 +1,30 @@
 "use client";
 
 import { useEffect, useEffectEvent, useRef } from "react";
+import { toast } from "react-toastify";
 import styles from "./ConfirmDeleteButton.module.css";
 
 const CONFIRM_DELAY_MS = 500;
+const DELETE_NOTICE_KEY = "magizh:delete-confirmation-notice";
+let deleteNoticeShown = false;
+
+function showDeleteNotice() {
+  if (deleteNoticeShown) return;
+  deleteNoticeShown = true;
+
+  try {
+    if (window.localStorage.getItem(DELETE_NOTICE_KEY)) return;
+    window.localStorage.setItem(DELETE_NOTICE_KEY, "1");
+  } catch {
+    // Keep the notice once per page load if storage is unavailable.
+  }
+
+  toast.info("Delete now takes two clicks. Select Confirm to delete, or click outside to cancel.", {
+    toastId: DELETE_NOTICE_KEY,
+    role: "status",
+    autoClose: 6500,
+  });
+}
 
 export default function ConfirmDeleteButton({
   confirming,
@@ -26,6 +47,7 @@ export default function ConfirmDeleteButton({
 
     if (!confirming) {
       confirmAfter.current = now + CONFIRM_DELAY_MS;
+      showDeleteNotice();
     }
     onClick(event);
   };

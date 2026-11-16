@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -42,33 +43,36 @@ const FormInput = memo(
     inputMode = "text",
     id,
     helperText,
-  }) => (
-    <div className={styles.inputGroup}>
-      <label htmlFor={id}>
-        {label}
-        {required && <span className={styles.required}>*</span>}
-      </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        min={min}
-        max={max}
-        step={step}
-        disabled={disabled}
-        inputMode={inputMode}
-        autoComplete="off"
-        className={`${styles.input} ${error ? styles.inputError : ""} ${success ? styles.inputSuccess : ""}`}
-      />
-      {error && <span className={styles.errorText}>{error}</span>}
-      {success && <span className={styles.successText}>{success}</span>}
-      {helperText && !error && !success && (
-        <span className={styles.helperText}>{helperText}</span>
-      )}
-    </div>
-  ),
+  }) => {
+    const Field = type === "date" ? CalendarInput : "input";
+    return (
+      <div className={styles.inputGroup}>
+        <label htmlFor={id}>
+          {label}
+          {required && <span className={styles.required}>*</span>}
+        </label>
+        <Field
+          id={id}
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          min={min}
+          max={max}
+          step={step}
+          disabled={disabled}
+          inputMode={inputMode}
+          autoComplete="off"
+          className={`${styles.input} ${error ? styles.inputError : ""} ${success ? styles.inputSuccess : ""}`}
+        />
+        {error && <span className={styles.errorText}>{error}</span>}
+        {success && <span className={styles.successText}>{success}</span>}
+        {helperText && !error && !success && (
+          <span className={styles.helperText}>{helperText}</span>
+        )}
+      </div>
+    );
+  },
 );
 
 FormInput.displayName = "FormInput";

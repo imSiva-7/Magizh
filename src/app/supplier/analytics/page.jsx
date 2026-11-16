@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -41,8 +42,8 @@ export default function AnalyticsPage() {
     <AdminSummary><div data-filter="card" className={styles.filter_section}>
       <div data-filter="title" className={styles.filter_title}><h2>Filter by Date Range</h2></div>
       <div data-filter="grid" className={styles.date_input_group}>
-        <div data-filter="field" className={styles.date_field}><label htmlFor="startDate">From Date</label><input type="date" id="startDate" name="startDate" value={dateRange.startDate} onChange={(event) => setDateRange((previous) => ({ ...previous, startDate: event.target.value }))} max={dateRange.endDate || getTodayDate()} className={styles.date_input} /></div>
-        <div data-filter="field" className={styles.date_field}><label htmlFor="endDate">To Date</label><input type="date" id="endDate" name="endDate" value={dateRange.endDate} onChange={(event) => setDateRange((previous) => ({ ...previous, endDate: event.target.value }))} min={dateRange.startDate} max={getTodayDate()} className={styles.date_input} /></div>
+        <div data-filter="field" className={styles.date_field}><label htmlFor="startDate">From Date</label><CalendarInput type="date" id="startDate" name="startDate" value={dateRange.startDate} onChange={(event) => setDateRange((previous) => ({ ...previous, startDate: event.target.value }))} max={dateRange.endDate || getTodayDate()} className={styles.date_input} /></div>
+        <div data-filter="field" className={styles.date_field}><label htmlFor="endDate">To Date</label><CalendarInput type="date" id="endDate" name="endDate" value={dateRange.endDate} onChange={(event) => setDateRange((previous) => ({ ...previous, endDate: event.target.value }))} min={dateRange.startDate} max={getTodayDate()} className={styles.date_input} /></div>
       </div>
       <div data-filter="actions" className={styles.filter_actions}>
         <button data-button="secondary" type="button" onClick={() => setDateRange(initialRange())} className={`${styles.btn} ${styles.btn_primary}`}>Reset</button>

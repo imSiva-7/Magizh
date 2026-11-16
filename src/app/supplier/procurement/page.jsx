@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -46,34 +47,37 @@ const initialFilters = {
   endDate: getTodayDate(),
 };
 
-const InputGroup = ({ label, error, required, readOnly, ...props }) => (
-  <div className={styles.input_group}>
-    <label
-      htmlFor={`procurement-${props.name}`}
-      className={required ? styles.required_label : ""}
-    >
-      {label}
-      {required && (
-        <span aria-hidden="true" className={styles.required_asterisk}>
-          *
-        </span>
-      )}
-    </label>
-    <input
-      className={`${styles.input} ${error ? styles.input_error : ""} ${
-        readOnly ? styles.read_only_input : ""
-      }`}
-      autoComplete="off"
-      id={`procurement-${props.name}`}
-      aria-label={label}
-      aria-required={Boolean(required)}
-      aria-invalid={Boolean(error)}
-      readOnly={readOnly}
-      {...props}
-    />
-    {error && <span className={styles.error_text}>{error}</span>}
-  </div>
-);
+const InputGroup = ({ label, error, required, readOnly, ...props }) => {
+  const Field = props.type === "date" ? CalendarInput : "input";
+  return (
+    <div className={styles.input_group}>
+      <label
+        htmlFor={`procurement-${props.name}`}
+        className={required ? styles.required_label : ""}
+      >
+        {label}
+        {required && (
+          <span aria-hidden="true" className={styles.required_asterisk}>
+            *
+          </span>
+        )}
+      </label>
+      <Field
+        className={`${styles.input} ${error ? styles.input_error : ""} ${
+          readOnly ? styles.read_only_input : ""
+        }`}
+        autoComplete="off"
+        id={`procurement-${props.name}`}
+        aria-label={label}
+        aria-required={Boolean(required)}
+        aria-invalid={Boolean(error)}
+        readOnly={readOnly}
+        {...props}
+      />
+      {error && <span className={styles.error_text}>{error}</span>}
+    </div>
+  );
+};
 
 const TimePeriodSelect = ({ value, onChange, error }) => (
   <div className={styles.input_group}>
@@ -976,7 +980,7 @@ function ProcurementContent() {
               <div data-filter="grid" className={styles.date_input_group}>
                 <div data-filter="field" className={styles.date_field}>
                   <label htmlFor="startDate">From Date</label>
-                  <input
+                  <CalendarInput
                     id="startDate"
                     type="date"
                     name="startDate"
@@ -989,7 +993,7 @@ function ProcurementContent() {
                 </div>
                 <div data-filter="field" className={styles.date_field}>
                   <label htmlFor="endDate">To Date</label>
-                  <input
+                  <CalendarInput
                     id="endDate"
                     type="date"
                     name="endDate"

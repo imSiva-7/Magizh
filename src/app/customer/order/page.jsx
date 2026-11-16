@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
@@ -67,27 +68,28 @@ const sanitizeNumericInput = (value) => {
 const LoadingSpinner = () => <DataSkeleton label="Loading orders..." />;
 
 const InputGroup = ({ label, error, required, readOnly, ...props }) => {
+  const Field = props.type === "date" ? CalendarInput : "input";
   const id = props.id || `order-${String(props.name || label).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
-  <div className={styles.input_group}>
-    <label htmlFor={id} className={required ? styles.required_label : ""}>
-      {label}
-      {required && <span className={styles.required_asterisk}>*</span>}
-    </label>
-    <input
-      id={id}
-      aria-required={Boolean(required)}
-      aria-invalid={Boolean(error)}
-      aria-describedby={error ? `${id}-error` : undefined}
-      className={`${styles.input} ${error ? styles.input_error : ""} ${
-        readOnly ? styles.read_only_input : ""
-      }`}
-      autoComplete="off"
-      readOnly={readOnly}
-      {...props}
-    />
-    {error && <span id={`${id}-error`} className={styles.error_text}>{error}</span>}
-  </div>
+    <div className={styles.input_group}>
+      <label htmlFor={id} className={required ? styles.required_label : ""}>
+        {label}
+        {required && <span className={styles.required_asterisk}>*</span>}
+      </label>
+      <Field
+        id={id}
+        aria-required={Boolean(required)}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className={`${styles.input} ${error ? styles.input_error : ""} ${
+          readOnly ? styles.read_only_input : ""
+        }`}
+        autoComplete="off"
+        readOnly={readOnly}
+        {...props}
+      />
+      {error && <span id={`${id}-error`} className={styles.error_text}>{error}</span>}
+    </div>
   );
 };
 
@@ -683,7 +685,7 @@ function OrdersContent() {
             <div data-filter="grid" className={styles.date_input_group}>
               <div data-filter="field" className={styles.date_field}>
                 <label>From Date</label>
-                <input
+                <CalendarInput
                   type="date"
                   name="startDate"
                   value={filters.startDate}
@@ -693,7 +695,7 @@ function OrdersContent() {
               </div>
               <div data-filter="field" className={styles.date_field}>
                 <label>To Date</label>
-                <input
+                <CalendarInput
                   type="date"
                   name="endDate"
                   value={filters.endDate}

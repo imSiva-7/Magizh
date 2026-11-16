@@ -1,4 +1,5 @@
 "use client";
+import CalendarInput from "@/components/CalendarInput";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
@@ -323,7 +324,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                 <div className={orderStyles.form_grid}>
                   <div className={orderStyles.input_group}>
                     <label htmlFor="history-order-date">Date</label>
-                    <input
+                    <CalendarInput
                       id="history-order-date"
                       className={orderStyles.input}
                       ref={dateRef}
