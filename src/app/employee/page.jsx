@@ -294,7 +294,9 @@ export default function Employee() {
     fetchData();
   }, [fetchData]);
 
-  function openCreateEmployee() {
+  const suggestedEmpID = useMemo(() => {
+    if (loadError) return "";
+
     const assigned = new Set(entries
       .map(({ empID }) => String(empID ?? ""))
       .filter(empID => /^\d{4}$/.test(empID))
@@ -305,11 +307,15 @@ export default function Employee() {
       while (next <= 9999 && assigned.has(next)) next++;
     }
 
+    return next <= 9999 ? String(next).padStart(4, "0") : "";
+  }, [entries, loadError]);
+
+  function openCreateEmployee() {
     setCreateEmployee(true);
     setIsEditing(false);
     setFormData({
       ...initialFormState,
-      empID: !loadError && next <= 9999 ? String(next).padStart(4, "0") : "",
+      empID: suggestedEmpID,
     });
     setFormErrors({});
     setEmpIDAvailable(null);
@@ -503,6 +509,8 @@ export default function Employee() {
     return `₹${parsed.toLocaleString("en-IN")}`;
   };
 
+  const isSuggestedEmpID = !isEditing && !!suggestedEmpID && formData.empID === suggestedEmpID;
+
   return (
     <div className={styles.container}>
       <ToastContainer
@@ -568,7 +576,7 @@ export default function Employee() {
                 !isEditing &&
                 empIDAvailable === true &&
                 formData.empID.length === 4
-                  ? "✓ Available"
+                  ? (isSuggestedEmpID ? "✓ Suggested ID available. You can change it." : "✓ Available")
                   : ""
               }
               helperText={
@@ -576,7 +584,9 @@ export default function Employee() {
                   ? "Checking availability..."
                   : isEditing
                     ? "Employee ID cannot be changed"
-                    : ""
+                    : isSuggestedEmpID
+                      ? "Suggested ID. You can change it."
+                      : ""
               }
               required
               disabled={isSubmitting || isEditing}
