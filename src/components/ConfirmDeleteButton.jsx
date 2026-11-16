@@ -46,7 +46,13 @@ export default function ConfirmDeleteButton({
   }, [confirming]);
 
   return (
-    <button type="button" {...buttonProps} ref={buttonRef} onClick={handleClick}>
+    <button
+      type="button"
+      {...buttonProps}
+      ref={buttonRef}
+      onClick={handleClick}
+      data-confirming-delete={confirming ? "" : undefined}
+    >
       <span className={styles.label}>
         <span aria-hidden="true" className={styles.widthLabel}>Delete</span>
         <span aria-hidden="true" className={styles.widthLabel}>Confirm</span>

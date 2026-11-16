@@ -92,6 +92,11 @@
   color: #991b1b;
 }
 
+:root body [data-button]:is([data-button="danger"], [data-button="menu-danger"])[data-confirming-delete]:not(:disabled) {
+  border-color: #b91c1c;
+  box-shadow: inset 0 0 0 2px #b91c1c;
+}
+
 :root body [data-button="toggle"][aria-pressed="true"] {
   background: var(--brand);
   border-color: var(--brand);
