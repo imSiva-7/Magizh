@@ -18,9 +18,24 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-body { margin: 0; background: var(--page-bg); color: var(--text); font-family: var(--font-sans); line-height: 1.5; -webkit-font-smoothing: antialiased; }
-/* Let the footer follow the content instead of reserving an empty viewport. */
-body > main { min-height: 0; }
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+/* Fill spare viewport height on short pages and let long pages scroll. */
+body > main {
+  flex: 1 0 auto;
+  min-width: 0;
+  min-height: 0;
+}
 :root body > main > div {
   min-height: 0;
   padding-bottom: 1.5rem;
