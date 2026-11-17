@@ -1,20 +1,16 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
+import SummaryStat from "@/components/SummaryStat";
+import summaryStyles from "@/app/page.module.css";
+import { customerDaily } from "@/lib/customer-charts";
 import AdminSummary from "@/components/AdminSummary";
-import { totalCustomerDue } from "@/lib/customer-account-due.mjs";
 import DataSkeleton from "@/components/DataSkeleton";
 import CustomerCharts from "@/components/CustomerCharts";
-import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat } from "@/utils/formatNumberWithComma";
 import NewCustomerOrder from "@/components/NewCustomerOrder";
 import Gstr1Export from "@/components/Gstr1Export";
 import { useEntryForm } from "@/lib/use-entry-form";
-import CustomerLeaderboard from "@/components/CustomerLeaderboard";
 
-import StatTrendBackground from "@/components/StatTrendBackground";
-import trendStyles from "@/css/stat-trend.module.css";
-import { orderCardTrends } from "@/lib/history-card-trends";
-import { sumPaymentPeriod } from "@/lib/customer-payment-period.mjs";
 import { useState, useEffect, useCallback, useMemo, useRef, Suspense } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -100,14 +96,12 @@ const CommentEditor = ({
 
 function OrderHistoryContent() {
   const [loadError, setLoadError] = useState("");
-  const [trendCustomers, setTrendCustomers] = useState([]);
-  const cardTrends = useMemo(
-    () => orderCardTrends(trendCustomers),
-    [trendCustomers],
-  );
-  const [paymentPeriod, setPaymentPeriod] = useState(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ orders: [], summary: {} });
+  const [customerAccounts, setCustomerAccounts] = useState(null);
+  const dailyOrders = useMemo(() => customerDaily(data.orders), [data.orders]);
+  const orderCount = data.summary?.orderCount || 0;
+  const totalSales = data.summary?.totalAmount || 0;
   const [filters, setFilters] = useState({
     startDate: getCurrentMonthStartDate(),
     endDate: getTodayDate(),
@@ -136,23 +130,21 @@ function OrderHistoryContent() {
         filters.startDate > filters.endDate
       )
         throw new Error("From date must be before the to date.");
-      const [res, payments] = await Promise.all([
+      const [res, accounts] = await Promise.all([
         fetch(`/api/customer/order/history?${params}`, { cache: "no-store", signal: controller.signal }),
-        (canViewSummary ? fetch(`/api/customer/payment-summary?${params}`, { cache: "no-store", signal: controller.signal }) : Promise.resolve({ ok: true, json: async () => ({ customers: [] }) })),
+        canViewSummary ? fetch("/api/customer/account-summary", { cache: "no-store", signal: controller.signal }) : null,
       ]);
-      if (!res.ok || !payments.ok)
+      if (!res.ok || (accounts && !accounts.ok))
         throw new Error("History could not be loaded. Please retry.");
-      const [json, period] = await Promise.all([res.json(), payments.json()]);
+      const [json, totals] = await Promise.all([res.json(), accounts?.json()]);
       if (controller.signal.aborted) return;
       setData(json);
-      setPaymentPeriod(sumPaymentPeriod(period.customers || []));
-      setTrendCustomers(period.customers || []);
+      setCustomerAccounts(totals);
     } catch (err) {
       if (controller.signal.aborted) return;
       setLoadError(err.message);
       setData({ orders: [], summary: {} });
-      setPaymentPeriod(null);
-      setTrendCustomers([]);
+      setCustomerAccounts(null);
       toast.error(err.message);
     } finally {
       if (!controller.signal.aborted) setLoading(false);
@@ -380,60 +372,30 @@ function OrderHistoryContent() {
 
       {!loading && !loadError && (
         <AdminSummary><section
-          className={styles.stats_card}
+          className={summaryStyles.global_summary_card}
           aria-labelledby="order-history-summary"
         >
-          <h2 id="order-history-summary" className={styles.stats_header}>
-            Summary
-            <span className={styles.date_range_badge}>
+          <div className={summaryStyles.global_header}>
+            <h2 id="order-history-summary" className={summaryStyles.global_title}>Customers Summary</h2>
+            <span className={summaryStyles.date_range_badge}>
               {formatDateForDisplay(filters.startDate) || "Beginning"} to{" "}
               {formatDateForDisplay(filters.endDate) || "Latest"}
             </span>
-          </h2>
-          <div className={styles.stats_grid}>
-            {[
-              ["Orders", data.summary?.orderCount || 0, "totalOrders"],
-              [
-                "Sales",
-                `₹${formatStat(data.summary?.totalAmount || 0)}`,
-                "totalAmount",
-              ],
-              [
-                "Received",
-                `₹${formatStat(paymentPeriod?.receivedAmount || 0)}`,
-                "receivedAmount",
-              ],
-              ["Due", `₹${formatStat(totalCustomerDue(trendCustomers))}`, "currentDue"],
-              [
-                "AOV",
-                `₹${formatStat(data.summary?.orderCount ? data.summary.totalAmount / data.summary.orderCount : 0)}`,
-                "averageOrder",
-              ],
-              // ["Payments", paymentPeriod?.receiptCount || 0, "receiptCount"],
-            ].map(([label, value, metric]) => (
-              <div
-                key={label}
-                className={`${styles.stat_item} ${trendStyles.card}`}
-              >
-                <StatTrendBackground
-                  points={cardTrends[metric]}
-                  tone={
-                    metric === "totalOrders" || metric === "receiptCount"
-                      ? "milk"
-                      : "amount"
-                  }
-                />
-                <span
-                  className={styles.stat_label}
-                  title={label === "AOV" ? "Average order value" : undefined}
-                >
-                  {label}
-                </span>
-                <span data-stat-tone={statNumberTone(label, value)} className={styles.stat_value}>{value}</span>
-              </div>
-            ))}
           </div>
-          <p>Due is the current unpaid account balance for customers with activity in this period, including earlier sales. Sales and received amounts follow the selected dates.</p>
+          <div className={summaryStyles.global_stats_grid}>
+            <SummaryStat label="Orders" hint="Selected dates" value={orderCount}
+              trend={dailyOrders.map(({ date, orders }) => ({ date, value: orders }))} />
+            <SummaryStat label="Total Sales" metric="Sales" hint="Selected dates" tone="amount"
+              value={"₹" + formatStat(totalSales)}
+              trend={dailyOrders.map(({ date, amount }) => ({ date, value: amount }))} />
+            <SummaryStat label="Paid (overall)" metric="Paid" hint="All customer payments · all time"
+              value={"₹" + formatStat(customerAccounts?.paidAmount || 0)} colorClass={summaryStyles.text_green} />
+            <SummaryStat label="Due (overall)" metric="Due" hint="Outstanding now · all customers"
+              value={"₹" + formatStat(customerAccounts?.dueAmount || 0)} colorClass={summaryStyles.text_red} />
+            <SummaryStat label="AOV" hint="Average order value · selected dates" tone="amount"
+              value={"₹" + formatStat(orderCount ? totalSales / orderCount : 0)}
+              trend={dailyOrders.map(({ date, amount, orders }) => ({ date, value: orders ? amount / orders : 0 }))} />
+          </div>
         </section></AdminSummary>
       )}
 
@@ -442,7 +404,6 @@ function OrderHistoryContent() {
         <AdminSummary><CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} /></AdminSummary>
       </section>
 
-      {/* {!loading && !loadError && <CustomerLeaderboard totals={trendCustomers} orders={data.orders} startDate={filters.startDate} endDate={filters.endDate} />} */}
       {!loading && data.orders.length > 0 && (
         <AdminSummary><div className={styles.exportSection}>
           <span className={styles.entryCount}>
@@ -524,7 +485,7 @@ function OrderHistoryContent() {
                       </Link>
                     </td>
                     <td className={styles.total_cell}>
-                      ₹{formatNumberWithCommas(order.totalAmount)}
+                      ₹{formatNumberWithCommas(order.totalAmount).replace(/\.00$/, "")}
                     </td>
                     <td className={styles.status_cell}>
                       <span

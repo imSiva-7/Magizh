@@ -1,9 +1,9 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
+import StatItem from "@/components/SummaryStat";
 import AdminSummary from "@/components/AdminSummary";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
-import { statNumberTone } from "@/lib/stat-number-tone";
 import { formatStat, formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 
 import { useSession } from "next-auth/react";
@@ -16,19 +16,8 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 import HomeCharts from "@/components/HomeCharts";
-import StatTrendBackground from "@/components/StatTrendBackground";
-import trendStyles from "@/css/stat-trend.module.css";
 import { customerDaily } from "@/lib/customer-charts";
 import { procurementDaily } from "@/lib/supplier-charts";
-
-const StatItem = ({ label, metric = label, value, hint, colorClass = "", className = "", trend, tone = "milk" }) => (
-  <div className={`${styles.global_stat_item} ${trendStyles.card} ${className}`}>
-    <StatTrendBackground points={trend} tone={tone} />
-    <div className={styles.global_stat_label}>{label}</div>
-    <div data-stat-tone={statNumberTone(metric, value)} className={`${styles.global_stat_value} ${colorClass}`}>{value}</div>
-    {hint && <div className={styles.global_stat_hint}>{hint}</div>}
-  </div>
-);
 
 export default function Home() {
   const { data: session, status } = useSession();

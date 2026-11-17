@@ -1,18 +1,18 @@
 .header {
   position: sticky;
-  top: 12px;
+  top: 8px;
   z-index: 1000;
   width: calc(100% - 2 * var(--page-gutter));
   max-width: calc(1400px - 2 * var(--page-gutter));
-  margin: 12px auto 0;
+  margin: 8px auto 0;
 }
 .header::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: white;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: whitesmoke;
+  border: 1px solid #9ecbbab3;
   border-radius: 20px;
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
@@ -23,7 +23,7 @@
 .headerContainer {
   max-width: 1400px;
   padding: 0 var(--page-gutter);
-  min-height: 9cqmin;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -37,9 +37,10 @@
   text-decoration: none;
   color: var(--brand-dark);
   flex-shrink: 0;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 .logoSection img {
+  height: 44px;
   object-fit: contain;
   object-position: left center;
   border-radius: 10px;
@@ -50,7 +51,7 @@
   font-weight: 650;
   letter-spacing: 0.12em;
   line-height: 1.25;
-  color: var(--text-muted);
+  color: #000;
 }
 .desktopNav {
   display: none;
@@ -70,19 +71,17 @@
   display: inline-flex;
   padding: 0.6rem 0.8rem;
   border-radius: 0.65rem;
-  color: var(--text-secondary);
+  color: #000;
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
   transition: background 0.15s;
 }
 .navButton:hover {
-  background: var(--surface-muted);
-  color: var(--brand-dark);
+  background: #d7ede3;
 }
 .navButton.active {
-  background: var(--brand-soft);
-  color: var(--brand);
+  background: #a8d6c3;
 }
 .dropdown {
   display: none;
@@ -105,13 +104,12 @@
   display: block;
   padding: 0.7rem 0.6rem;
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: #000;
   text-decoration: none;
   border-radius: 0.5rem;
 }
 .dropdownItem:hover {
   background: var(--brand-soft);
-  color: var(--brand);
 }
 .arrow {
   color: var(--text-muted);
@@ -150,7 +148,7 @@
 .userName {
   font-size: 0.8rem;
   font-weight: 650;
-  color: var(--brand-dark);
+  color: #000;
   max-width: 130px;
   overflow: hidden;
   white-space: nowrap;
@@ -182,7 +180,7 @@
   border: 1px solid var(--border);
   border-radius: 0.65rem;
   background: var(--surface-muted);
-  color: var(--brand-dark);
+  color: #000;
   font-size: 0.8rem;
   font-weight: 650;
   min-height: 42px;
@@ -195,7 +193,7 @@
 }
 .sessionLoading {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: #000;
 }
 .mobileMenuButton {
   font-size: 1.25rem;
@@ -263,7 +261,7 @@
   display: block;
   padding: 0.75rem 1rem;
   text-decoration: none;
-  color: var(--text-secondary);
+  color: #000;
   border-radius: 0.65rem;
   font-size: 0.9rem;
   font-weight: 550;
@@ -272,11 +270,10 @@
   background: var(--brand-soft);
 }
 .mobileActive {
-  background: var(--brand);
-  color: #fff;
+  background: #a8d6c3;
 }
 .mobileNavButton.mobileActive:hover {
-  background: var(--brand-hover);
+  background: #97cbb5;
 }
 .mobileLogoutButton {
   width: 100%;
@@ -309,12 +306,12 @@
 @media (max-width: 600px) {
   .headerContainer {
     padding: 0 var(--page-gutter);
-    min-height: 72px;
+    min-height: 64px;
     gap: 0.5rem;
   }
   .logoSection img {
     width: 104px;
-    height: 40px;
+    height: 38px;
   }
   .brandText {
     font-size: 0.5rem;

@@ -1,6 +1,6 @@
 "use client";
 import { getTodayDate, INDIA_TIME_ZONE } from "@/lib/india-date.mjs";
-import { useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import styles from "@/css/footer.module.css";
 import Image from "next/image";
@@ -16,8 +16,27 @@ const subscribeToDay = callback => {
 };
 
 export default function Footer() {
+  const wordmarkRef = useRef(null);
   const currentYear = Number(getTodayDate().slice(0, 4));
   const weekday = useSyncExternalStore(subscribeToDay, getWeekday, getServerWeekday);
+
+  useEffect(() => {
+    const wordmark = wordmarkRef.current;
+    if (!wordmark || typeof IntersectionObserver === "undefined") return;
+
+    wordmark.dataset.reveal = "pending";
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.intersectionRatio < 0.25) return;
+      wordmark.dataset.reveal = "visible";
+      observer.disconnect();
+    }, { threshold: 0.25 });
+
+    observer.observe(wordmark);
+    return () => {
+      observer.disconnect();
+      delete wordmark.dataset.reveal;
+    };
+  }, []);
 
   const { data: session } = useSession();
   const isAdmin =
@@ -137,6 +156,14 @@ export default function Footer() {
           </div>
         </div>
 
+        <div ref={wordmarkRef} className={styles.wordmark} aria-hidden="true">
+          {Array.from("MAGIZH", (letter, index) => (
+            <span key={letter} className={styles.letter} style={{ "--letter-index": index }}>
+              {letter}
+            </span>
+          ))}
+        </div>
+
         <div className={styles.footerBottom}>
           <p className={styles.greeting}>Enjoy the rest of your {weekday}.</p>
           <div className={styles.copyright}>
@@ -144,7 +171,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.34</span>
+            <span className={styles.version}>v1.7.35</span>
           </div>
         </div>
       </div>
