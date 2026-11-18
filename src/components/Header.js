@@ -239,13 +239,7 @@ export default function Header() {
           className={styles.logoSection}
           aria-label="Magizh Dairy home"
         >
-          <Image
-            src="/magizh-logo.png"
-            alt="Magizh Dairy"
-            width={120}
-            height={48}
-            priority
-          />
+          <span className={styles.brandName}>Magizh</span>
           <span className={styles.brandText}>OPERATIONS WORKSPACE</span>
         </Link>
 

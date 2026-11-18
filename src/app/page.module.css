@@ -988,6 +988,24 @@ input[type="date"].filter_input {
   }
 }
 @media (max-width: 600px) {
+  .customerDueTable {
+    min-width: 0;
+    table-layout: fixed;
+  }
+  .customerDueTable th:first-child {
+    width: 55%;
+  }
+  .customerDueTable th,
+  .customerDueTable td {
+    padding-inline: 0.5rem;
+  }
+  .customerDueTable .customerName {
+    display: block;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .header {
     text-align: left;
   }

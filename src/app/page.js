@@ -563,7 +563,7 @@ export default function Home() {
         {customerDueList.length > 0 && (
           <div>
             <div className={styles.tableWrapper}>
-              <table className={styles.dueTable}>
+              <table className={`${styles.dueTable} ${styles.customerDueTable}`}>
                 <thead>
                   <tr>
                     <th>Customer Name</th>
@@ -577,6 +577,7 @@ export default function Home() {
                         <Link
                           href={`/customer/order?customerId=${customer.id}`}
                           className={styles.customerName}
+                          title={customer.name || undefined}
                         >
                           {customer.name || "-"}
                         </Link>

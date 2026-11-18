@@ -44,14 +44,13 @@
   flex-shrink: 0;
   padding: 0.25rem 0;
 }
-.logoSection img {
-  height: 44px;
-  object-fit: contain;
-  object-position: left center;
-  border-radius: 10px;
+.brandName {
+  font-size: 1.75rem;
+  font-weight: 750;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
 }
 .brandText {
-    padding-left: .5rem;
   font-size: 0.57rem;
   font-weight: 650;
   letter-spacing: 0.12em;
@@ -411,12 +410,10 @@
     min-height: var(--mobile-header-height);
     gap: 0.5rem;
   }
-  .logoSection img {
-    width: 104px;
-    height: 38px;
+  .brandName {
+    font-size: 1.5rem;
   }
   .brandText {
-    padding-left: 0;
     font-size: 0.5rem;
   }
   .userName {

@@ -2,8 +2,11 @@
 .footerContainer { max-width: 1400px; margin: 0 auto; padding: clamp(1.25rem, 3vw, 2rem) clamp(1.125rem, 6vw, 6rem) 1rem; }
 .footerMain { display: grid; grid-template-columns: 1.8fr repeat(3, 1fr); gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #35594a; }
 .footerSection { min-width: 0; }
-.footerLogo { display: inline-flex; padding: 0.35rem 0.7rem; border-radius: 0.75rem; background: #fff; margin-bottom: 1rem; }
-.logoIcon { width: 110px; height: auto; object-fit: contain; }
+.footerLogo {
+  composes: brandName from "./header.module.css";
+  color: var(--brand-soft);
+  margin-bottom: 1rem;
+}
 .footerDescription { color: #b8cec0; font-size: 0.85rem; line-height: 1.7; max-width: 230px; margin: 0; }
 .sectionTitle { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; color: #a9c7b6; margin: 0.5rem 0 1rem; }
 .footerLinks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
@@ -27,6 +30,34 @@
 
 @media (max-width: 768px) {
   .footerContainer { padding-inline: var(--page-gutter); }
+}
+
+.linkRollover {
+  display: inline-grid;
+  vertical-align: top;
+  overflow: hidden;
+}
+
+.linkRollover > span {
+  grid-area: 1 / 1;
+}
+
+.linkRollover > span + span {
+  transform: translateY(100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .linkRollover > span {
+    transition: transform 0.4s ease;
+  }
+
+  .footerLink:is(:hover, :focus-visible) .linkRollover > span:first-child {
+    transform: translateY(-100%);
+  }
+
+  .footerLink:is(:hover, :focus-visible) .linkRollover > span:last-child {
+    transform: translateY(0);
+  }
 }
 
 .footerMain {
