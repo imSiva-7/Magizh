@@ -417,7 +417,7 @@ export default function StockPage() {
               </div>
             )}
 
-            <AdminSummary><div className={styles.summaryGrid}>
+            <AdminSummary><div data-fade-up="" className={styles.summaryGrid}>
               <div className={`${styles.summaryCard} ${styles.valueSummary}`}>
                 <span>Stock value</span>
                 <strong>
@@ -635,7 +635,7 @@ export default function StockPage() {
               </section>
             )}
 
-            <section
+            <section data-fade-up=""
               aria-labelledby="inventory-title"
               className={styles.inventorySection}
             >
@@ -727,7 +727,7 @@ export default function StockPage() {
 
             <AdminSummary><StockCharts items={items} /></AdminSummary>
 
-            <section className={styles.panel} aria-labelledby="movement-title">
+            <section data-fade-up="" className={styles.panel} aria-labelledby="movement-title">
               <div className={styles.sectionHeading}>
                 <h2 id="movement-title">Recent movements</h2>
                 <span className={styles.helper}>

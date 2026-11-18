@@ -191,6 +191,10 @@
   }
 }
 .container { background: var(--page-bg); padding: 2.5rem 1rem; }
+
+@media (max-width: 768px) {
+  .container { padding-inline: var(--page-gutter); }
+}
 .card { border-radius: 1.25rem; box-shadow: var(--shadow-raised); }
 .header { background: var(--brand-dark); }
 .input { border-width: 1px; border-radius: 0.65rem; min-height: 48px; }

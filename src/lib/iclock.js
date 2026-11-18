@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 const METHODS = { 0: "password", 1: "fingerprint", 2: "card", 15: "face" };
 const MAX_RETRIES = 5;
+const DUPLICATE_PUNCH_WINDOW_SECONDS = 5 * 60;
 
 // The terminal sends wall-clock time in India, independently of the server's TZ.
 export function parsePunches(text, deviceId) {
@@ -59,10 +60,12 @@ export function mergeDay(previous, records) {
   if (previous?.manualTimes) return { ...previous, punches };
   const checkIn = punches[0].time;
   const last = punches[punches.length - 1].time;
-  const checkOut = last !== checkIn ? last : null;
   const seconds = (time) =>
     time.split(":").reduce((value, part) => value * 60 + Number(part), 0);
-  const hours = checkOut ? (seconds(checkOut) - seconds(checkIn)) / 3600 : 0;
+  const elapsedSeconds = seconds(last) - seconds(checkIn);
+  // A near-repeat stays in the raw log without closing the attendance day.
+  const checkOut = elapsedSeconds > DUPLICATE_PUNCH_WINDOW_SECONDS ? last : null;
+  const hours = checkOut ? elapsedSeconds / 3600 : 0;
   return {
     ...previous,
     date: records[0].date,

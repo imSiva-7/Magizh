@@ -327,7 +327,7 @@ function AttendanceContent() {
       {!employeesLoading && !loading && attendanceData && (
         <>
           {/* Employee Info Card */}
-          <div className={styles.infoCard}>
+          <div data-fade-up="" className={styles.infoCard}>
             <h2>Employee Information</h2>
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
@@ -570,7 +570,7 @@ function AttendanceContent() {
             </div></AdminSummary>
           )}
           {/* Attendance Records Table */}
-          <div className={styles.attendanceSection}>
+          <div data-fade-up="" className={styles.attendanceSection}>
             <h2>Daily Attendance Records</h2>
             {attendanceData.attendance.length > 0 ? (
               <div className={styles.tableWrapper}>
@@ -667,14 +667,14 @@ function AttendanceContent() {
 
       {/* Empty State */}
       {!employeesLoading && !loading && !attendanceData && selectedEmpID && (
-        <div className={styles.emptyState}>
+        <div data-fade-up="" className={styles.emptyState}>
           <div className={styles.emptyIcon}>📊</div>
           <p>No attendance data available for the selected period</p>
         </div>
       )}
 
       {!employeesLoading && !loading && !selectedEmpID && (
-        <div className={styles.emptyState}>
+        <div data-fade-up="" className={styles.emptyState}>
           <div className={styles.emptyIcon}>👥</div>
           <p>Please select an employee to view attendance data</p>
         </div>

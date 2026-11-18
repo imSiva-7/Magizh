@@ -1355,7 +1355,7 @@ input[type="date"]::-webkit-date-and-time-value {
 /* Tablets & Mobile */
 @media (max-width: 768px) {
   .page_container {
-    padding: 0.75rem;
+    padding: 0.75rem var(--page-gutter);
   }
   .header {
     flex-direction: column;

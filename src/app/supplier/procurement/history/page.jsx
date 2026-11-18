@@ -885,7 +885,7 @@ function ProcurementHistoryContent() {
         </div>
       ) : (
         summary.count > 0 && (
-          <AdminSummary><div className={styles.stats_card}>
+          <AdminSummary><div data-fade-up="" className={styles.stats_card}>
             <h3 className={styles.stats_header}>
               Summary
               <span className={styles.date_range_badge}>
@@ -946,7 +946,7 @@ function ProcurementHistoryContent() {
 
 
       <section aria-label="Procurement history analytics">
-        <AdminSummary><SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} /></AdminSummary>
+        <AdminSummary><SupplierCharts records={procurementData} filters={filters} loading={loading} error={loadError} onRetry={fetchAllData} showOrderValue /></AdminSummary>
       </section>
 
       {/* EXPORT */}
@@ -978,7 +978,7 @@ function ProcurementHistoryContent() {
       {loadError && <div className={styles.error_alert} role="alert"><span>{loadError}</span><AdminSummary><button data-button="secondary" type="button" onClick={fetchAllData} className={styles.clear_filter_btn}>Try again</button></AdminSummary></div>}
       <div className={styles.table_wrapper}>
         {!loading && !loadError && summary.count === 0 ? (
-          <div className={styles.empty_state}>
+          <div data-fade-up="" className={styles.empty_state}>
             <span className={styles.empty_icon}>🔍</span>
             <h3 className={styles.empty_title}>No Records Found</h3>
             <p className={styles.empty_message}>
@@ -994,7 +994,7 @@ function ProcurementHistoryContent() {
           </div>
         ) : (
           !loading && (
-            <div className={styles.table_container}>
+            <div data-fade-up="" className={styles.table_container}>
               <table className={styles.table} aria-label="All procurement history">
                 <thead>
                   <tr>

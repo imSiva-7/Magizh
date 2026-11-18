@@ -139,15 +139,15 @@ export default function AttendanceHistoryPage() {
       ) : error ? (
         <div className={styles.emptyState} role="alert"><p>{error}</p><button data-button="secondary" type="button" onClick={() => setRefresh((value) => value + 1)} className={styles.primaryButton}>Try again</button></div>
       ) : !data.records.length ? (
-        <div className={styles.emptyState}><p>{!month ? "Choose a month to view attendance." : searchDebounced ? `No attendance found for “${searchDebounced}”.` : "No attendance found for these filters."}</p></div>
+        <div data-fade-up="" className={styles.emptyState}><p>{!month ? "Choose a month to view attendance." : searchDebounced ? `No attendance found for “${searchDebounced}”.` : "No attendance found for these filters."}</p></div>
       ) : (
         <>
-          {data.summary && <AdminSummary><div className={styles.historyOverview} aria-label="Attendance summary">
+          {data.summary && <AdminSummary><div data-fade-up="" className={styles.historyOverview} aria-label="Attendance summary">
             <div className={styles.historyStat}><span>Employees</span><strong>{data.summary.uniqueEmployees}</strong><small>in these results</small></div>
             <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{formatAttendanceHours(data.summary.totalHours)}</strong><small>recorded this month</small></div>
             <div className={`${styles.historyStat} ${data.summary.incompleteCount > 0 ? styles.historyStatAttention : ""}`}><span>Missing checkout</span><strong>{data.summary.incompleteCount || 0}</strong><small>{data.summary.incompleteCount ? "needs attention" : "all checkouts recorded"}</small></div>
           </div></AdminSummary>}
-          <div className={styles.historyGroups}>
+          <div data-fade-up="" className={styles.historyGroups}>
             {groups.map(([date, records]) => (
               <section key={date} className={styles.historyGroup} aria-label={formatAttendanceDate(date)}>
                 <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatAttendanceDate(date)}</time></h2></div>

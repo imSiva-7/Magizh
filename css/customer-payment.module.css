@@ -939,7 +939,7 @@
 
 @media (max-width: 768px) {
   .page_container {
-    padding: 0.75rem;
+    padding: 0.75rem var(--page-gutter);
   }
   .page_title {
     font-size: 1.5rem;

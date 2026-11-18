@@ -502,7 +502,7 @@ export default function Payments() {
         </div>
       )}
       {!isLoading && globalStats.totalMilk > 0 && (
-        <AdminSummary><div className={styles.global_summary_card}>
+        <AdminSummary><div data-fade-up="" className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Suppliers Summary</h2>
             <span className={styles.date_range_badge}>
@@ -552,7 +552,7 @@ export default function Payments() {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className={styles.supplier_grid}>
+        <div data-fade-up="" className={styles.supplier_grid}>
           {filteredSupplierList.map((supplier) => {
             const stats = supplierTotalsMap[supplier._id];
             if (

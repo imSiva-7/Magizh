@@ -1,4 +1,8 @@
 .page { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; color: var(--text); }
+
+@media (max-width: 768px) {
+  .page { padding-inline: var(--page-gutter); }
+}
 .heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .panel { margin: 1.25rem 0; padding: 1.5rem; border: 1px solid var(--border); border-radius: 1rem; background: var(--surface, white); }
 .panel h2 { margin: 0 0 0.75rem; font-size: 1.2rem; }

@@ -175,7 +175,7 @@ export default function ProductionAnalyticsPage() {
         <>
           {/* Summary Cards */}
           {data.totals && (
-            <AdminSummary><div className={styles.summary_card}>
+            <AdminSummary><div data-fade-up="" className={styles.summary_card}>
               <div className={styles.summary_header}>
                 <h2>Summary</h2>
                 <span className={styles.date_range_badge}>
@@ -212,7 +212,7 @@ export default function ProductionAnalyticsPage() {
           )}
 
           {/* Daily Milk Production Line Chart */}
-          <div className={styles.chart_card}>
+          <div data-fade-up="" className={styles.chart_card}>
             <h3>Daily Milk Production</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
@@ -238,7 +238,7 @@ export default function ProductionAnalyticsPage() {
           </div>
 
           {/* Fat & SNF Trends */}
-          <div className={styles.chart_card}>
+          <div data-fade-up="" className={styles.chart_card}>
             <h3>Fat & SNF Trends</h3>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={data.daily}>
@@ -265,7 +265,7 @@ export default function ProductionAnalyticsPage() {
 
           {/* Product Breakdown Pie Chart */}
           {data.products.length > 0 && (
-            <div className={styles.chart_card}>
+            <div data-fade-up="" className={styles.chart_card}>
               <h3>Product Breakdown (by Quantity)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
@@ -296,7 +296,7 @@ export default function ProductionAnalyticsPage() {
           )}
 
           {/* Product Quantities Bar Chart */}
-          <div className={styles.chart_card}>
+          <div data-fade-up="" className={styles.chart_card}>
             <h3>Product Quantities</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={data.products}>

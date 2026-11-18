@@ -408,13 +408,13 @@ export default function ProductionPage() {
             <LoadingSpinner />
           </section>
         ) : entries.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div data-fade-up="" className={styles.emptyState}>
             <h3>No production data found</h3>
             <p>Start by submitting your first production entry above.</p>
           </div>
         ) : (
           <>
-            <section className={styles.recentEntries}>
+            <section data-fade-up="" className={styles.recentEntries}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
                   Recent Production Entries ({entries.length})

@@ -102,6 +102,16 @@ test("a repeated upload is idempotent and causes no extra attendance writes", as
   expect(db.employees.updateOne).toHaveBeenCalledTimes(1);
 });
 
+test("a punch within five minutes leaves checkout open until a later punch arrives", async () => {
+  await POST(request(`${punch("08:00:00")}\n${punch("08:04:59")}\n${punch("08:05:00")}`));
+  expect(day(db)).toMatchObject({ checkIn: "08:00:00", checkOut: null, hoursWorked: 0 });
+  expect(day(db).punches).toHaveLength(3);
+
+  await POST(request(punch("08:05:01")));
+  expect(day(db)).toMatchObject({ checkIn: "08:00:00", checkOut: "08:05:01" });
+  expect(day(db).punches).toHaveLength(4);
+});
+
 test("overlapping concurrent uploads retain both punches", async () => {
   const first = parsePunches(punch("08:00:00"), "TEST").records;
   const second = parsePunches(punch("18:00:00"), "TEST").records;

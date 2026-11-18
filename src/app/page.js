@@ -406,7 +406,7 @@ export default function Home() {
         filters={filters}
       /></AdminSummary>
       {!(supplierData.summary.totalAmount > 0) && !(customerData.summary.totalAmount > 0) && (
-        <div className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
+        <div data-fade-up="" className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
       )}
       {/* Production Summary with its own stat item class */}
       {/* {productionSummary && (
@@ -444,7 +444,7 @@ export default function Home() {
           </div>
         </div>
       )}  */}
- <AdminSummary><div className={styles.global_summary_card} hidden={!(supplierData.summary.totalAmount > 0)}>
+ <AdminSummary><div data-fade-up="" className={styles.global_summary_card} hidden={!(supplierData.summary.totalAmount > 0)}>
       {supplierData.summary.totalAmount > 0 && (
         <div>
           <div className={styles.global_header}>
@@ -517,7 +517,7 @@ export default function Home() {
       )}
 
       </div></AdminSummary>
-      <AdminSummary><div className={styles.global_summary_card}>
+      <AdminSummary><div data-fade-up="" className={styles.global_summary_card}>
           <div>
             <div className={styles.global_header}>
               <h2 className={styles.global_title}>Customers Summary</h2>

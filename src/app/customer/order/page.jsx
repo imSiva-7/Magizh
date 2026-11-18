@@ -532,7 +532,7 @@ function OrdersContent() {
         {loading ? (
           <span className={styles.loading_text}>Loading customer info...</span>
         ) : (
-          <div className={styles.header_title}>
+          <div data-fade-up="" className={styles.header_title}>
             <h1>{data.customer?.customerName}</h1>
             <div className={styles.customer_info_badges}>
               <CategoryBadge kind="customer" value={data.customer?.customerType} />
@@ -754,11 +754,11 @@ function OrdersContent() {
         {loading ? (
           <LoadingSpinner />
         ) : filteredOrders.length === 0 ? (
-          <div className={styles.empty_state}>
+          <div data-fade-up="" className={styles.empty_state}>
             <p>No orders found for the selected criteria.</p>
           </div>
         ) : (
-          <div className={styles.table_container}>
+          <div data-fade-up="" className={styles.table_container}>
             <table className={styles.table}>
               <thead>
                 <tr>

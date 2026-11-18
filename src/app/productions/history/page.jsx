@@ -416,7 +416,7 @@ export default function ProductionHistoryPage() {
       {/* Summary Stats */}
       {entries.length > 0 && (
         <>
-          <AdminSummary><div className={styles.statsCard}>
+          <AdminSummary><div data-fade-up="" className={styles.statsCard}>
             <h3>
               Summary
               <div className={styles.dateRange}>{getDateRangeLabel()}</div>
@@ -457,7 +457,7 @@ export default function ProductionHistoryPage() {
         {loading ? (
           <DataSkeleton label="Loading production history..." />
         ) : entries.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div data-fade-up="" className={styles.emptyState}>
             {error ? (
               <>
                 <span className={styles.emptyIcon}>⚠️</span>
@@ -485,7 +485,7 @@ export default function ProductionHistoryPage() {
             )}
           </div>
         ) : (
-          <div className={styles.tableContainer}>
+          <div data-fade-up="" className={styles.tableContainer}>
             <table className={styles.table} aria-label="Production History">
               <thead>
                 <tr>

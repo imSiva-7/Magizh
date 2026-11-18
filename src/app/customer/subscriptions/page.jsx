@@ -207,7 +207,7 @@ function SubscriptionsContent() {
         <DataSkeleton label="Loading subscriptions…" />
       ) : (
         <>
-          <section className={styles.panel}>
+          <section data-fade-up="" className={styles.panel}>
             <div className={styles.heading}>
               <div>
                 <h2>Scheduled orders</h2>
@@ -250,7 +250,7 @@ function SubscriptionsContent() {
             </Link>
           </section>
 
-          <section className={styles.panel}>
+          <section data-fade-up="" className={styles.panel}>
             <h2>New subscription</h2>
             <form data-entry-form onSubmit={create}>
               <fieldset disabled={busy} className={styles.fields}>
@@ -425,7 +425,7 @@ function SubscriptionsContent() {
             </form>
           </section>
 
-          <section className={styles.panel}>
+          <section data-fade-up="" className={styles.panel}>
             <h2>
               Subscriptions{" "}
               {customerId ? "for this customer" : "for all customers"}
@@ -612,7 +612,7 @@ function SubscriptionsContent() {
               </div>
             )}
           </section>
-          <section className={styles.panel}>
+          <section data-fade-up="" className={styles.panel}>
             <h2>Invoices & payments</h2>
             <p>
               Subscription orders use your existing invoices and customer

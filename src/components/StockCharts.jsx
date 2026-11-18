@@ -13,7 +13,7 @@ export default function StockCharts({ items }) {
   const priced = items.filter((item) => item.estimatedValue !== null);
   return (
     <div className={styles.chartsGrid}>
-      <section className={styles.panel} aria-labelledby="stock-value-title">
+      <section data-fade-up="" className={styles.panel} aria-labelledby="stock-value-title">
         <div className={styles.sectionHeading}><h2 id="stock-value-title">Estimated value by product</h2></div>
         <p className={styles.helper}>Based on average customer selling prices, not purchase cost.</p>
         {priced.length ? <div className={styles.chartCanvas}>
@@ -28,7 +28,7 @@ export default function StockCharts({ items }) {
           </ResponsiveContainer>
         </div> : <div className={styles.chartEmpty}>Customer prices are needed to estimate stock value.</div>}
       </section>
-      <section className={styles.panel} aria-labelledby="stock-level-title">
+      <section data-fade-up="" className={styles.panel} aria-labelledby="stock-level-title">
         <div className={styles.sectionHeading}>
           <h2 id="stock-level-title">Stock & minimum levels</h2>
           <div className={styles.segmented} role="group" aria-label="Chart units">{["kg", "L"].map((value) => <button data-button="toggle" key={value} type="button" aria-pressed={unit === value} onClick={() => setUnit(value)}>{value}</button>)}</div>

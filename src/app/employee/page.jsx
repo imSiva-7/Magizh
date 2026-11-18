@@ -751,7 +751,7 @@ export default function Employee() {
                 {isAdmin && <th scope="col">Actions</th>}
               </tr>
             </thead>
-            <tbody>
+            <tbody data-fade-up={loading ? undefined : ""}>
               {loading && entries.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 6 : 5} className={styles.loadingCell}>

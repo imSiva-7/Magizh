@@ -723,7 +723,7 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 0.75rem;
+    padding: 0.75rem var(--page-gutter);
   }
 
   .headerContent {

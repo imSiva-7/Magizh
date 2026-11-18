@@ -371,7 +371,7 @@ function OrderHistoryContent() {
       </div></AdminSummary>
 
       {!loading && !loadError && (
-        <AdminSummary><section
+        <AdminSummary><section data-fade-up=""
           className={summaryStyles.global_summary_card}
           aria-labelledby="order-history-summary"
         >
@@ -401,7 +401,7 @@ function OrderHistoryContent() {
 
       {/* Export Section */}
       <section aria-label="Order history analytics">
-        <AdminSummary><CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} /></AdminSummary>
+        <AdminSummary><CustomerCharts records={data.orders} filters={filters} loading={loading} error={loadError} onRetry={fetchHistory} showProcurementValue /></AdminSummary>
       </section>
 
       {!loading && data.orders.length > 0 && (
@@ -437,7 +437,7 @@ function OrderHistoryContent() {
             </button></AdminSummary>
           </div>
         ) : data.orders.length === 0 ? (
-          <div className={styles.empty_state}>
+          <div data-fade-up="" className={styles.empty_state}>
             <span className={styles.empty_icon}>📋</span>
             <h3 className={styles.empty_title}>No Orders Found</h3>
             <p className={styles.empty_message}>
@@ -452,7 +452,7 @@ function OrderHistoryContent() {
             </button></AdminSummary>
           </div>
         ) : (
-          <div className={styles.table_container}>
+          <div data-fade-up="" className={styles.table_container}>
             <table className={styles.table}>
               <thead>
                 <tr>

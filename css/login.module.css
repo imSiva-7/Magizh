@@ -196,4 +196,8 @@
 .btn { background: var(--brand); border-radius: 0.65rem; min-height: 48px; }
 .btn:hover:not(:disabled) { background: var(--brand-hover); transform: none; box-shadow: none; }
 @media (max-width: 800px) { .container { flex-direction: column; align-items: stretch; padding: 2rem 1.25rem; gap: 2rem; } .welcome { max-width: 100%; } .welcome h2 { font-size: 2rem; } .welcome p { margin: 1rem 0; } .workflow { display: none; } .card { max-width: 100%; flex: auto; } }
+
+@media (max-width: 768px) {
+  .container { padding-inline: var(--page-gutter); }
+}
 @media (max-width: 480px) { .header { padding: 1.5rem 1.5rem 0; } .form { padding: 1.5rem; } }

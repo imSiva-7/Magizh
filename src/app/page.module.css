@@ -2,7 +2,7 @@
 .dashboard {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem var(--page-gutter);
+  padding: clamp(0.875rem, 2vw, 1.5rem) clamp(0.875rem, 2.5vw, 2rem);
   font-family: var(--font-sans);
   background: #f6f8f5;
   min-height: 100vh;
@@ -15,8 +15,8 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 2.75rem;
+  margin-bottom: 1.5rem;
+  padding: clamp(1.125rem, 3vw, 2rem);
   border-radius: 1.5rem;
   background: linear-gradient(115deg, #163e32, #27795d);
 }
@@ -597,7 +597,7 @@
 /* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
   .dashboard {
-    padding: 1rem var(--page-gutter);
+    padding-inline: var(--page-gutter);
   }
   .header {
     flex-direction: column;
@@ -986,14 +986,10 @@ input[type="date"].filter_input {
   .navGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .header {
-    padding: 2rem;
-  }
 }
 @media (max-width: 600px) {
   .header {
     text-align: left;
-    padding: 1.5rem;
   }
   .userInfo {
     justify-content: flex-start;

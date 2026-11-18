@@ -53,7 +53,7 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
   const hasPayments = payments.some((entry) => entry.paid > 0 || entry.due > 0);
 
   return (
-    <div className={styles.chartGrid}>
+    <div data-fade-up="" className={styles.chartGrid}>
       <section className={styles.chartCard} aria-labelledby="activity-chart-title">
         <div className={styles.chartHeader}>
           <div><span className={styles.eyebrow}>{monthly ? "MONTHLY" : "DAILY"} TREND</span><h3 id="activity-chart-title">Sales & procurement</h3></div>

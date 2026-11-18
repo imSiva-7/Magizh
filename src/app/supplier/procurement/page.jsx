@@ -759,7 +759,7 @@ function ProcurementContent() {
         {loading ? (
           <span className={styles.loading_text}> Loading supplier info...</span>
         ) : (
-          <div className={styles.header_title}>
+          <div data-fade-up="" className={styles.header_title}>
             <h1>{data.supplier?.supplierName}</h1>
 
             <div className={styles.supplier_info}>
@@ -1143,7 +1143,7 @@ function ProcurementContent() {
           ) : (
             <>
               {/* Totals cards */}
-              <div className={styles.head_totals_grid}>
+              <div data-fade-up="" className={styles.head_totals_grid}>
                 <div className={styles.head_total_card}>
                   <span className={styles.head_total_label}>Entries</span>
                   <span className={styles.head_total_value}>
@@ -1188,7 +1188,7 @@ function ProcurementContent() {
               </div>
 
               {/* Entries table */}
-              <div className={styles.table_container}>
+              <div data-fade-up="" className={styles.table_container}>
                 <table
                   className={styles.table}
                   aria-label="Head supplier earnings"
@@ -1275,7 +1275,7 @@ function ProcurementContent() {
         {loading ? (
           <LoadingSpinner />
         ) : summary.count === 0 ? (
-          <div className={styles.empty_state}>
+          <div data-fade-up="" className={styles.empty_state}>
             {!data.supplier ? (
               <>
                 <span className={styles.empty_icon}>⚠️</span>
@@ -1306,7 +1306,7 @@ function ProcurementContent() {
             )}
           </div>
         ) : (
-          <div className={styles.table_container}>
+          <div data-fade-up="" className={styles.table_container}>
             <table className={styles.table} aria-label="Procurement history">
               <thead>
                 <tr>

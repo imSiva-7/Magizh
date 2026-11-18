@@ -465,7 +465,7 @@ export default function CustomerPayments() {
 
       {periodError && <div className={styles.account_hint} role="alert">{periodError} <button data-button="secondary" type="button" onClick={() => fetchOrders()}>Retry period data</button></div>}
       {!isLoading && !periodError && (
-        <AdminSummary><div className={styles.global_summary_card}>
+        <AdminSummary><div data-fade-up="" className={styles.global_summary_card}>
           <div className={styles.global_header}>
             <h2 className={styles.global_title}>Filtered Customers Summary</h2>
             {/* <p>Orders, sales and average order value follow the selected dates and customer filters.</p> */}
@@ -488,7 +488,7 @@ export default function CustomerPayments() {
             <StatItem label="AOV" value={`₹${formatStat(globalStats.totalOrders > 0 ? globalStats.totalAmount / globalStats.totalOrders : 0)}`} />
           </div>
           {/* <p className={styles.summary_note}>AOV (average order value) = sales ÷ orders.</p> */}
-          <section className={styles.all_time_summary} aria-labelledby="all-time-totals">
+          <section data-fade-up="" className={styles.all_time_summary} aria-labelledby="all-time-totals">
             <div className={styles.global_header}>
               <h2 id="all-time-totals" className={styles.global_title}>Totals — All time</h2>
               {/* <p>All customers and all dates, independent of the filters above.</p> */}
@@ -509,7 +509,7 @@ export default function CustomerPayments() {
           <LoadingSpinner />
         </div>
       ) : (
-        <div className={styles.supplier_grid}>
+        <div data-fade-up="" className={styles.supplier_grid}>
           {filteredCustomerList.map((customer) => {
             // Get totals from API data
             const stats = customerTotalsMap[customer._id];

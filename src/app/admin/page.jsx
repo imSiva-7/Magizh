@@ -426,7 +426,7 @@ export default function AdminPage() {
               Loading workspace accounts…
             </div>
           ) : !loaded ? null : (
-            <div className={styles.tableWrap}>
+            <div data-fade-up="" className={styles.tableWrap}>
               <table className={styles.table}>
                 <caption className={styles.srOnly}>
                   Workspace user accounts and role management

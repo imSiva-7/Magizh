@@ -17,6 +17,10 @@
   --shadow-raised: 0 16px 48px rgba(22, 62, 50, 0.1);
 }
 
+@media (max-width: 768px) {
+  :root { --page-gutter: 0.75rem; }
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 body {
   display: flex;
@@ -213,11 +217,27 @@ h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; ov
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+@keyframes data-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   main > div,
   main [data-entry-form],
   main tbody {
     animation: content-enter 180ms ease-out;
+  }
+
+  main [data-fade-up] {
+    animation: data-fade-up 700ms ease-out;
   }
 }
 @media (prefers-reduced-motion: reduce) {

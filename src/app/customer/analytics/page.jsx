@@ -211,7 +211,7 @@ export default function CustomerAnalyticsPage() {
           )} */}
 
           {productSales.products.length > 0 && (
-            <AdminSummary><section className={styles.summary_card} aria-label="Products sold">
+            <AdminSummary><section data-fade-up="" className={styles.summary_card} aria-label="Products sold">
               <div className={styles.summary_header}>
                 <h2>Products sold</h2>
                 <span className={styles.date_range_badge}>

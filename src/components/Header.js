@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
+import { getTodayDate } from "@/lib/india-date.mjs";
 import styles from "@/css/header.module.css";
 
 // Desktop navigation items
@@ -46,25 +47,40 @@ const desktopNavItems = [
   },
 ];
 
-// Mobile navigation items – must include all important pages
-const mobileNavItems = [
-  { name: "Home", path: "/" },
-  { name: "Productions", path: "/productions" },
-  // { name: "Production History", path: "/productions/history" },
-  { name: "Stock", path: "/stock" },
-  { name: "Suppliers", path: "/supplier" },
-  { name: "Procurement History", path: "/supplier/procurement/history" },
-  { name: "Procurement Payments", path: "/supplier/payments" },
-  { name: "Customers", path: "/customer" },
-  { name: "Subscriptions", path: "/customer/subscriptions" },
-  { name: "Order History", path: "/customer/order/history" },
-  { name: "Order Payments", path: "/customer/payments" },
-  { name: "Employees", path: "/employee" },
-  // { name: "Attendance", path: "/employee/attendance" },
-  { name: "Attendance History", path: "/employee/attendance/history" },
-  // { name: "Production Analytics", path: "/productions/analytics" },
-  // { name: "Supplier Analytics", path: "/supplier/analytics" },
-  // { name: "Customer Analytics", path: "/customer/analytics" },
+const mobileNavGroups = [
+  {
+    label: "Operations",
+    links: [
+      { name: "Home", path: "/", adminOnly: true },
+      { name: "Productions", path: "/productions" },
+      { name: "Stock", path: "/stock" },
+    ],
+  },
+  {
+    label: "Suppliers",
+    links: [
+      { name: "Suppliers", path: "/supplier" },
+      { name: "Procurement History", path: "/supplier/procurement/history" },
+      { name: "Procurement Payments", path: "/supplier/payments" },
+    ],
+  },
+  {
+    label: "Customers",
+    links: [
+      { name: "Customers", path: "/customer" },
+      { name: "Subscriptions", path: "/customer/subscriptions" },
+      { name: "Order History", path: "/customer/order/history" },
+      { name: "Order Payments", path: "/customer/payments" },
+    ],
+  },
+  {
+    label: "Employees",
+    adminOnly: true,
+    links: [
+      { name: "Employees", path: "/employee" },
+      { name: "Attendance History", path: "/employee/attendance/history" },
+    ],
+  },
 ];
 
 export default function Header() {
@@ -78,6 +94,56 @@ export default function Header() {
   const firstName = accountName?.split(/\s+/)[0];
   const mobileMenuRef = useRef(null);
   const menuButtonRef = useRef(null);
+  const accountIconRef = useRef(null);
+  const accountCanvasRef = useRef(null);
+  const accountId = session?.user?.id;
+
+  useEffect(() => {
+    const icon = accountIconRef.current;
+    const canvas = accountCanvasRef.current;
+    if (!accountId || !icon || !canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const storageKey = `magizh-header-greeting:${accountId}`;
+    const today = getTodayDate();
+    let cancelled = false;
+    let burst;
+    const frame = requestAnimationFrame(() => {
+      try {
+        if (localStorage.getItem(storageKey) === today) return;
+        localStorage.setItem(storageKey, today);
+      } catch {
+        return; // A persistent marker is required to keep the greeting daily.
+      }
+
+      icon.classList.add(styles.accountCelebrating);
+      import("canvas-confetti").then(({ default: confetti }) => {
+        if (cancelled || !icon.classList.contains(styles.accountCelebrating)) return;
+        burst = confetti.create(canvas, { disableForReducedMotion: true });
+        burst({
+          particleCount: 18,
+          startVelocity: 3,
+          spread: 360,
+          gravity: 0.12,
+          ticks: 110,
+          scalar: 0.32,
+          colors: ["#ef4444", "#22c55e", "#3b82f6"],
+          origin: { x: 0.5, y: 0.5 },
+        });
+      }).catch(() => {}); // The icon can animate if the particle effect fails to load.
+    });
+
+    const clearCelebration = () => {
+      burst?.reset();
+      icon.classList.remove(styles.accountCelebrating);
+    };
+    icon.addEventListener("animationend", clearCelebration, { once: true });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      icon.removeEventListener("animationend", clearCelebration);
+      clearCelebration();
+    };
+  }, [accountId]);
 
   // A drawer belongs to the mobile page that opened it. Browser history and
   // crossing the desktop breakpoint must also release its body scroll lock.
@@ -131,19 +197,19 @@ export default function Header() {
       document.body.style.overflow = "hidden";
       const panel = mobileMenuRef.current;
       const menuButton = menuButtonRef.current;
-      panel?.querySelector("button")?.focus();
+      menuButton?.focus();
       const trapFocus = (event) => {
         if (event.key !== "Tab") return;
         const items = panel?.querySelectorAll("a[href], button:not(:disabled)");
         if (!items?.length) return;
-        const first = items[0];
+        const first = menuButton;
         const last = items[items.length - 1];
         if (event.shiftKey && document.activeElement === first) {
           event.preventDefault();
           last.focus();
         } else if (!event.shiftKey && document.activeElement === last) {
           event.preventDefault();
-          first.focus();
+          first?.focus();
         }
       };
       document.addEventListener("keydown", trapFocus);
@@ -161,7 +227,12 @@ export default function Header() {
 
   return (
     <header className={styles.header}>
-      <div className={styles.headerContainer}>
+      <div
+        className={styles.headerContainer}
+        role={mobileMenuOpen ? "dialog" : undefined}
+        aria-modal={mobileMenuOpen || undefined}
+        aria-label={mobileMenuOpen ? "Mobile navigation menu" : undefined}
+      >
         {/* Logo */}
         <Link
           href="/"
@@ -264,8 +335,9 @@ export default function Header() {
           {session ? (
             <div className={styles.userSection}>
               <div className={styles.accountGreeting} title={accountName || undefined}>
-                <span className={styles.accountIcon} aria-hidden="true">
+                <span ref={accountIconRef} className={styles.accountIcon} aria-hidden="true">
                   <Image src="/user.png" alt="" width={18} height={18} />
+                  <canvas ref={accountCanvasRef} className={styles.accountParticles} width={32} height={32} />
                 </span>
                 <span className={styles.userName}>
                   {firstName ? `Hi, ${firstName}` : "Hi there"}
@@ -315,7 +387,7 @@ export default function Header() {
             aria-controls="mobile-navigation"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            {mobileMenuOpen ? "✕" : "☰"}
+            <span className={styles.menuIcon} aria-hidden="true" />
           </button>
         </div>
 
@@ -333,55 +405,42 @@ export default function Header() {
               className={`${styles.mobileNavOverlay} ${mobileMenuOpen ? styles.menuVisible : ""}`}
               inert={!mobileMenuOpen}
               aria-hidden={!mobileMenuOpen}
-              role={mobileMenuOpen ? "dialog" : undefined}
-              aria-modal={mobileMenuOpen ? "true" : undefined}
-              aria-label="Mobile navigation menu"
             >
-              <div className={styles.mobileNavHeader}>
-                <span className={styles.mobileNavTitle}>Your workspace</span>
-                <button
-                  data-button="icon"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={styles.mobileCloseBtn}
-                  aria-label="Close menu"
-                >
-                  ✕
-                </button>
-              </div>
-              <nav className={styles.mobileNav}>
-                <ul className={styles.mobileNavList}>
-                  {mobileNavItems.filter(item => (item.path !== "/" || isAdmin) && (item.path !== "/employee" || isAdmin) && (item.path !== "/employee/attendance/history" || isAdmin)).map((item) => (
-                    <li key={item.path}>
-                      <Link
-                        href={item.path}
-                        className={`${styles.mobileNavButton} ${
-                          pathname === item.path ? styles.mobileActive : ""
-                        }`}
-                        onClick={() => setMobileMenuOpen(false)}
-                        aria-current={
-                          pathname === item.path ? "page" : undefined
-                        }
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
+              <div className={styles.mobileNavContent}>
+                <nav className={styles.mobileNav} aria-label="Workspace navigation">
+                  {mobileNavGroups.filter(group => !group.adminOnly || isAdmin).map(group => (
+                    <div className={styles.mobileNavGroup} key={group.label}>
+                      <ul className={styles.mobileNavList}>
+                        {group.links.filter(item => !item.adminOnly || isAdmin).map(item => (
+                          <li key={item.path}>
+                            <Link
+                              href={item.path}
+                              className={styles.mobileNavButton}
+                              onClick={() => setMobileMenuOpen(false)}
+                              aria-current={pathname === item.path ? "page" : undefined}
+                            >
+                              {item.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                  {session && (
-                    <li>
-                      <button
-                        data-button="secondary"
-                        onClick={() => {
-                          signOut();
-                          setMobileMenuOpen(false);
-                        }}
-                        className={styles.mobileLogoutButton}
-                      >
-                        Sign Out
-                      </button>
-                    </li>
-                  )}
-                </ul>
-              </nav>
+                </nav>
+                {session && (
+                  <div className={styles.mobileNavFooter}>
+                    <button
+                      data-button="menu-danger"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        signOut();
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         }

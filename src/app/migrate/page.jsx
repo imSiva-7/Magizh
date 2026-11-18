@@ -83,7 +83,7 @@ export default function MigratePage() {
         </div>
 
         {status && (
-          <div style={{
+          <div data-fade-up="" style={{
             marginTop: '2rem',
             padding: '1.5rem',
             background: '#f8fafc',
