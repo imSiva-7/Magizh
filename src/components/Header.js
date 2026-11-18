@@ -93,6 +93,8 @@ export default function Header() {
   const accountName = session?.user?.name?.trim();
   const firstName = accountName?.split(/\s+/)[0];
   const mobileMenuRef = useRef(null);
+  const mobileBackdropRef = useRef(null);
+  const pendingMobilePath = useRef(null);
   const menuButtonRef = useRef(null);
   const accountIconRef = useRef(null);
   const accountCanvasRef = useRef(null);
@@ -149,7 +151,10 @@ export default function Header() {
   // crossing the desktop breakpoint must also release its body scroll lock.
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1100px)");
-    const closeMenu = () => setMobileMenuOpen(false);
+    const closeMenu = () => {
+      pendingMobilePath.current = null;
+      setMobileMenuOpen(false);
+    };
     const handleDesktop = (event) => {
       if (event.matches) closeMenu();
     };
@@ -222,8 +227,29 @@ export default function Header() {
   }, [mobileMenuOpen]);
 
   const toggleMobileMenu = useCallback(() => {
+    pendingMobilePath.current = null;
     setMobileMenuOpen((prev) => !prev);
   }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen || !pendingMobilePath.current) return;
+    const href = pendingMobilePath.current;
+    let cancelled = false;
+    const frame = requestAnimationFrame(async () => {
+      const animations = [
+        ...(mobileMenuRef.current?.getAnimations?.() ?? []),
+        ...(mobileBackdropRef.current?.getAnimations?.() ?? []),
+      ];
+      await Promise.allSettled(animations.map((animation) => animation.finished));
+      if (cancelled || pendingMobilePath.current !== href) return;
+      pendingMobilePath.current = null;
+      router.push(href);
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [mobileMenuOpen, router]);
 
   return (
     <header className={styles.header}>
@@ -239,8 +265,14 @@ export default function Header() {
           className={styles.logoSection}
           aria-label="Magizh Dairy home"
         >
-          <span className={styles.brandName}>Magizh</span>
-          <span className={styles.brandText}>OPERATIONS WORKSPACE</span>
+          <Image
+            className={styles.brandLogo}
+            src="/magizh-logo.png"
+            alt=""
+            width={110}
+            height={44}
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -389,6 +421,7 @@ export default function Header() {
         {
           <>
             <div
+              ref={mobileBackdropRef}
               className={`${styles.mobileBackdrop} ${mobileMenuOpen ? styles.menuVisible : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               aria-hidden="true"
@@ -410,7 +443,11 @@ export default function Header() {
                             <Link
                               href={item.path}
                               className={styles.mobileNavButton}
-                              onClick={() => setMobileMenuOpen(false)}
+                              onNavigate={(event) => {
+                                event.preventDefault();
+                                pendingMobilePath.current = item.path;
+                                setMobileMenuOpen(false);
+                              }}
                               aria-current={pathname === item.path ? "page" : undefined}
                             >
                               {item.name}

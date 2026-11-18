@@ -3,10 +3,13 @@
 .footerMain { display: grid; grid-template-columns: 1.8fr repeat(3, 1fr); gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #35594a; }
 .footerSection { min-width: 0; }
 .footerLogo {
-  composes: brandName from "./header.module.css";
-  color: var(--brand-soft);
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.75rem;
+  background: #fff;
   margin-bottom: 1rem;
 }
+.footerLogo img { object-fit: contain; }
 .footerDescription { color: #b8cec0; font-size: 0.85rem; line-height: 1.7; max-width: 230px; margin: 0; }
 .sectionTitle { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em; color: #a9c7b6; margin: 0.5rem 0 1rem; }
 .footerLinks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }

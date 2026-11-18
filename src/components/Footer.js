@@ -4,6 +4,7 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 
 import styles from "@/css/footer.module.css";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 
 const weekdayFormatter = new Intl.DateTimeFormat("en-IN", {
@@ -71,7 +72,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className={styles.footerSection}>
             <div className={styles.footerLogo}>
-              Magizh
+              <Image src="/magizh-logo.png" alt="Magizh Dairy" width={110} height={44} />
             </div>
             <p className={styles.footerDescription}>
               Fresh thinking for everyday dairy operations. Production, people,
