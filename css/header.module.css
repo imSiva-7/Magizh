@@ -47,8 +47,6 @@
 .brandLogo {
   display: block;
   object-fit: contain;
-  background: #fff;
-  border-radius: 0.75rem;
 }
 .desktopNav {
   display: none;

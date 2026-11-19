@@ -135,7 +135,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.36</span>
+            <span className={styles.version}>v1.7.37</span>
           </div>
         </div>
       </div>
