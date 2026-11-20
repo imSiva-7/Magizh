@@ -72,9 +72,11 @@
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 .navChevron {
+  position: relative;
+  top: 2px;
   width: 0.8rem;
   height: 0.8rem;
   flex-shrink: 0;
@@ -88,6 +90,7 @@
 }
 .navButton.active {
   background: #a8d6c3;
+  color: var(--brand-dark);
 }
 .dropdown {
   display: none;

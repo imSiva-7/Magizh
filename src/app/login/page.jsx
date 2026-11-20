@@ -1,10 +1,9 @@
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getInitialSession } from "@/lib/server-session";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getInitialSession();
 
   if (session?.user?.id) {
     redirect("/");
