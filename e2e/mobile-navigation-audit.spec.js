@@ -118,6 +118,25 @@ test("mobile navigation waits for the drawer and header corners to finish closin
   });
 });
 
+test("mobile sections expand independently of their parent navigation links", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/stock");
+  await page.getByRole("button", { name: "Open menu", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Mobile navigation menu" });
+  const suppliers = drawer.getByRole("button", { name: "Suppliers submenu" });
+  const customers = drawer.getByRole("button", { name: "Customers submenu" });
+  await expect(suppliers).toHaveAttribute("aria-expanded", "false");
+  await expect(drawer.getByRole("link", { name: "Procurement History", exact: true })).toBeHidden();
+  await suppliers.click();
+  await expect(suppliers).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer.getByRole("link", { name: "Procurement History", exact: true })).toBeVisible();
+  await customers.click();
+  await expect(suppliers).toHaveAttribute("aria-expanded", "false");
+  await expect(customers).toHaveAttribute("aria-expanded", "true");
+  await expect(drawer.getByRole("link", { name: "Order History", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/stock$/);
+});
+
 test("short-screen table actions remain above the table and restore the launcher on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 320 });
   await page.goto("/customer");

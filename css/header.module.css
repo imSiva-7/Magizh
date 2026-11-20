@@ -19,7 +19,7 @@
   border-radius: 20px;
   backdrop-filter: blur(10px) saturate(150%);
   -webkit-backdrop-filter: blur(10px) saturate(150%);
-  box-shadow: 0 8px 24px rgba(22, 62, 50, 0.14),
+  box-shadow: 0 6px 20px rgba(22, 62, 50, 0.09),
     inset 0 1px 2px rgba(255, 255, 255, 0.9),
     inset 0 -1px 3px rgba(67, 115, 91, 0.12);
   transition: border-radius var(--menu-close-duration) var(--menu-close-easing),
@@ -87,13 +87,18 @@
 }
 .navButton:hover {
   background: #d7ede3;
+  color: var(--brand-dark);
 }
 .navButton.active {
   background: #a8d6c3;
   color: var(--brand-dark);
 }
 .dropdown {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 0s 180ms;
   position: absolute;
   top: 100%;
   left: 0;
@@ -107,7 +112,11 @@
   list-style: none;
 }
 .dropdownOpen .dropdown {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
 }
 .dropdownItem {
   display: block;
@@ -116,13 +125,15 @@
   color: #000;
   text-decoration: none;
   border-radius: 0.5rem;
+  transition: background 150ms ease, color 150ms ease;
 }
-.dropdownItem:hover {
+.dropdownItem:hover,
+.dropdownItem[aria-current="page"] {
   background: var(--brand-soft);
+  color: var(--brand-dark);
 }
-.arrow {
-  color: var(--text-muted);
-  margin-right: 0.3rem;
+.dropdownItem[aria-current="page"] {
+  font-weight: 650;
 }
 .headerRight,
 .userSection {
@@ -185,7 +196,7 @@
 }
 .logoutButton,
 .mobileMenuButton {
-  border: 1px solid var(--border);
+  border: 0;
   background: transparent;
   width: 42px;
   height: 42px;
@@ -196,8 +207,11 @@
   color: var(--brand-dark);
 }
 :global(:root body) .logoutButton[data-button][data-button],
-:global(:root body) .mobileMenuButton[data-button][data-button] {
+:global(:root body) .mobileMenuButton[data-button][data-button],
+:global(:root body) .loginButton[data-button][data-button],
+:global(:root body) .mobileSignOutButton[data-button][data-button] {
   background: transparent;
+  border: 0;
 }
 .logoutButton:hover,
 .mobileMenuButton:hover {
@@ -208,9 +222,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 1px solid var(--border);
+  border: 0;
   border-radius: 0.65rem;
-  background: var(--surface-muted);
+  background: transparent;
   color: #000;
   font-size: 0.8rem;
   font-weight: 650;
@@ -220,7 +234,6 @@
 }
 .loginButton:hover {
   background: var(--brand-soft);
-  border-color: #b5cdbf;
 }
 .sessionLoading {
   font-size: 0.75rem;
@@ -339,6 +352,8 @@
   .mobileBackdrop,
   .mobileNavOverlay,
   .mobileNavContent > *,
+  .dropdown,
+  .mobileSubmenu,
   .navChevron,
   .menuIcon,
   .menuIcon::before,
@@ -368,6 +383,54 @@
   display: grid;
   gap: 0.25rem;
 }
+.mobileGroupRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.mobileGroupRow .mobileNavButton {
+  flex: 1;
+  min-width: 0;
+}
+.mobileGroupToggle {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  min-height: 44px;
+  background: transparent;
+  border: 0;
+  border-radius: 0.65rem;
+  color: var(--brand-dark);
+}
+.mobileGroupToggle:hover {
+  background: var(--brand-soft);
+}
+.mobileGroupToggle .navChevron {
+  width: 1rem;
+  height: 1rem;
+  top: 0;
+}
+.mobileGroupToggle[aria-expanded="true"] .navChevron {
+  transform: rotate(180deg);
+}
+.mobileSubmenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 250ms ease, opacity 180ms ease, visibility 0s 250ms;
+}
+.mobileSubmenuExpanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+.mobileSubmenu > ul {
+  min-height: 0;
+  overflow: hidden;
+  padding-left: 0.75rem;
+}
 .mobileNavButton {
   display: flex;
   align-items: center;
@@ -378,6 +441,7 @@
   border-radius: 0.65rem;
   font-size: 0.9rem;
   font-weight: 550;
+  transition: background 150ms ease, color 150ms ease;
 }
 .mobileNavButton:hover {
   background: var(--brand-soft);

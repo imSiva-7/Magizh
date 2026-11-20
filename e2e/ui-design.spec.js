@@ -42,7 +42,7 @@ test("workspace navigation supports keyboard and mobile focus", async ({ page })
   const menu = page.getByRole("dialog", { name: "Mobile navigation menu" });
   await expect(menu.getByRole("button", { name: "Close menu" })).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(menu.getByRole("link").last()).toBeFocused();
+  await expect(menu.getByRole("button", { name: "Customers submenu" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(menu.getByRole("button", { name: "Close menu" })).toBeFocused();
   await expect(menu.getByRole("link", { name: "Stock", exact: true })).toBeVisible();

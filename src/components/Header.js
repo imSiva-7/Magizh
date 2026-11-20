@@ -87,11 +87,13 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedMobileGroup, setExpandedMobileGroup] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === "admin";
   const accountName = session?.user?.name?.trim();
-  const firstName = accountName?.split(/\s+/)[0];
+  const rawFirstName = accountName?.split(/\s+/)[0];
+  const firstName = rawFirstName && rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1);
   const headerRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const pendingMobilePath = useRef(null);
@@ -203,7 +205,8 @@ export default function Header() {
       menuButton?.focus();
       const trapFocus = (event) => {
         if (event.key !== "Tab") return;
-        const items = panel?.querySelectorAll("a[href], button:not(:disabled)");
+        const items = Array.from(panel?.querySelectorAll("a[href], button:not(:disabled)") ?? [])
+          .filter((item) => !item.closest("[inert]"));
         if (!items?.length) return;
         const first = menuButton;
         const last = items[items.length - 1];
@@ -226,8 +229,16 @@ export default function Header() {
 
   const toggleMobileMenu = useCallback(() => {
     pendingMobilePath.current = null;
+    if (!mobileMenuOpen) {
+      const activeGroup = mobileNavGroups.find((group) => {
+        if (group.label === "Operations" || (group.adminOnly && !isAdmin)) return false;
+        const path = group.links[0].path;
+        return pathname === path || pathname.startsWith(`${path}/`);
+      });
+      setExpandedMobileGroup(activeGroup?.label ?? null);
+    }
     setMobileMenuOpen((prev) => !prev);
-  }, []);
+  }, [isAdmin, mobileMenuOpen, pathname]);
 
   const navigateAfterMenuClose = useCallback((href) => {
     pendingMobilePath.current = href === pathname ? null : { href, from: pathname };
@@ -269,6 +280,20 @@ export default function Header() {
       clearTimeout(fallbackTimer);
     };
   }, [mobileMenuOpen, pathname, router]);
+
+  const renderMobileLink = (item) => (
+    <Link
+      href={item.path}
+      className={styles.mobileNavButton}
+      onNavigate={(event) => {
+        event.preventDefault();
+        navigateAfterMenuClose(item.path);
+      }}
+      aria-current={pathname === item.path ? "page" : undefined}
+    >
+      {item.name}
+    </Link>
+  );
 
   return (
     <header ref={headerRef} className={styles.header}>
@@ -332,15 +357,7 @@ export default function Header() {
                       ? styles.active
                       : ""
                   }`}
-                  aria-current={
-                    (
-                      item.path === "/"
-                        ? pathname === "/"
-                        : pathname.startsWith(item.path)
-                    )
-                      ? "page"
-                      : undefined
-                  }
+                  aria-current={pathname === item.path ? "page" : undefined}
                   aria-expanded={item.children ? openDropdown === item.path : undefined}
                 >
                   {item.name}
@@ -356,34 +373,18 @@ export default function Header() {
                   )}
                 </Link>
                 {item.children && (
-                  <ul className={styles.dropdown}>
-                    {Array.isArray(item.children) ? (
-                      item.children.map((child) => (
-                        <li key={child.path}>
-                          <Link
-                            href={child.path}
-                            className={styles.dropdownItem}
-                          >
-                            <span className={styles.arrow} aria-hidden="true">
-                              ↳{" "}
-                            </span>{" "}
-                            {child.name}
-                          </Link>
-                        </li>
-                      ))
-                    ) : (
-                      <li key={item.children.path}>
+                  <ul className={styles.dropdown} inert={openDropdown !== item.path}>
+                    {(Array.isArray(item.children) ? item.children : [item.children]).map((child) => (
+                      <li key={child.path}>
                         <Link
-                          href={item.children.path}
+                          href={child.path}
                           className={styles.dropdownItem}
+                          aria-current={pathname === child.path ? "page" : undefined}
                         >
-                          <span className={styles.arrow} aria-hidden="true">
-                            ↳{" "}
-                          </span>{" "}
-                          {item.children.name}
+                          {child.name}
                         </Link>
                       </li>
-                    )}
+                    ))}
                   </ul>
                 )}
               </li>
@@ -469,32 +470,50 @@ export default function Header() {
             >
               <div className={styles.mobileNavContent}>
                 <nav className={styles.mobileNav} aria-label="Workspace navigation">
-                  {mobileNavGroups.filter(group => !group.adminOnly || isAdmin).map(group => (
-                    <div className={styles.mobileNavGroup} key={group.label}>
-                      <ul className={styles.mobileNavList}>
-                        {group.links.filter(item => !item.adminOnly || isAdmin).map(item => (
-                          <li key={item.path}>
-                            <Link
-                              href={item.path}
-                              className={styles.mobileNavButton}
-                              onNavigate={(event) => {
-                                event.preventDefault();
-                                navigateAfterMenuClose(item.path);
-                              }}
-                              aria-current={pathname === item.path ? "page" : undefined}
-                            >
-                              {item.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                  {mobileNavGroups.filter(group => !group.adminOnly || isAdmin).map(group => {
+                    const links = group.links.filter(item => !item.adminOnly || isAdmin);
+                    const collapsible = group.label !== "Operations" && links.length > 1;
+                    const expanded = expandedMobileGroup === group.label;
+                    const submenuId = `mobile-submenu-${group.label.toLowerCase()}`;
+                    return (
+                      <div className={styles.mobileNavGroup} key={group.label}>
+                        {collapsible ? (
+                          <>
+                            <div className={styles.mobileGroupRow}>
+                              {renderMobileLink(links[0])}
+                              <button
+                                type="button"
+                                className={styles.mobileGroupToggle}
+                                aria-label={`${group.label} submenu`}
+                                aria-expanded={expanded}
+                                aria-controls={submenuId}
+                                onClick={() => setExpandedMobileGroup((current) => current === group.label ? null : group.label)}
+                              >
+                                <svg className={styles.navChevron} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                  <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            </div>
+                            <div id={submenuId} className={`${styles.mobileSubmenu} ${expanded ? styles.mobileSubmenuExpanded : ""}`} inert={!expanded}>
+                              <ul className={styles.mobileNavList}>
+                                {links.slice(1).map(item => <li key={item.path}>{renderMobileLink(item)}</li>)}
+                              </ul>
+                            </div>
+                          </>
+                        ) : (
+                          <ul className={styles.mobileNavList}>
+                            {links.map(item => <li key={item.path}>{renderMobileLink(item)}</li>)}
+                          </ul>
+                        )}
+                      </div>
+                    );
+                  })}
                 </nav>
                 {session && (
                   <div className={styles.mobileNavFooter}>
                     <button
                       data-button="menu-danger"
+                      className={styles.mobileSignOutButton}
                       onClick={() => {
                         setMobileMenuOpen(false);
                         signOut();
