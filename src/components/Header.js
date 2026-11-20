@@ -92,8 +92,8 @@ export default function Header() {
   const isAdmin = session?.user?.role === "admin";
   const accountName = session?.user?.name?.trim();
   const firstName = accountName?.split(/\s+/)[0];
+  const headerRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  const mobileBackdropRef = useRef(null);
   const pendingMobilePath = useRef(null);
   const menuButtonRef = useRef(null);
   const accountIconRef = useRef(null);
@@ -171,10 +171,8 @@ export default function Header() {
     const handleClickOutside = (event) => {
       if (
         mobileMenuOpen &&
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target) &&
-        menuButtonRef.current &&
-        !menuButtonRef.current.contains(event.target)
+        headerRef.current &&
+        !headerRef.current.contains(event.target)
       ) {
         setMobileMenuOpen(false);
       }
@@ -231,28 +229,49 @@ export default function Header() {
     setMobileMenuOpen((prev) => !prev);
   }, []);
 
+  const navigateAfterMenuClose = useCallback((href) => {
+    pendingMobilePath.current = href === pathname ? null : { href, from: pathname };
+    // Fetch the next route while the menu is collapsing, without showing it yet.
+    if (href !== pathname) router.prefetch(href);
+    setMobileMenuOpen(false);
+  }, [pathname, router]);
+
   useEffect(() => {
     if (mobileMenuOpen || !pendingMobilePath.current) return;
-    const href = pendingMobilePath.current;
-    let cancelled = false;
-    const frame = requestAnimationFrame(async () => {
-      const animations = [
-        ...(mobileMenuRef.current?.getAnimations?.() ?? []),
-        ...(mobileBackdropRef.current?.getAnimations?.() ?? []),
-      ];
-      await Promise.allSettled(animations.map((animation) => animation.finished));
-      if (cancelled || pendingMobilePath.current !== href) return;
+    const pending = pendingMobilePath.current;
+    if (pending.from !== pathname) {
       pendingMobilePath.current = null;
-      router.push(href);
+      return;
+    }
+    let cancelled = false;
+    let fallbackTimer;
+    const frame = requestAnimationFrame(async () => {
+      const header = headerRef.current;
+      if (header?.getAnimations) {
+        // Include the header's ::before corners, panel, backdrop and menu icon.
+        // Ignore unrelated keyframe animations (for example, the greeting).
+        const transitions = header.getAnimations({ subtree: true })
+          .filter((animation) => "transitionProperty" in animation);
+        await Promise.allSettled(transitions.map((animation) => animation.finished));
+      } else if (header && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const duration = parseFloat(getComputedStyle(header).getPropertyValue("--menu-close-duration"));
+        await new Promise((resolve) => {
+          fallbackTimer = setTimeout(resolve, Number.isFinite(duration) ? duration : 400);
+        });
+      }
+      if (cancelled || pendingMobilePath.current !== pending) return;
+      pendingMobilePath.current = null;
+      router.push(pending.href);
     });
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
+      clearTimeout(fallbackTimer);
     };
-  }, [mobileMenuOpen, router]);
+  }, [mobileMenuOpen, pathname, router]);
 
   return (
-    <header className={styles.header}>
+    <header ref={headerRef} className={styles.header}>
       <div
         className={styles.headerContainer}
         role={mobileMenuOpen ? "dialog" : undefined}
@@ -264,6 +283,11 @@ export default function Header() {
           href="/"
           className={styles.logoSection}
           aria-label="Magizh Dairy home"
+          onNavigate={(event) => {
+            if (!mobileMenuOpen) return;
+            event.preventDefault();
+            navigateAfterMenuClose("/");
+          }}
         >
           <Image
             className={styles.brandLogo}
@@ -317,8 +341,19 @@ export default function Header() {
                       ? "page"
                       : undefined
                   }
+                  aria-expanded={item.children ? openDropdown === item.path : undefined}
                 >
                   {item.name}
+                  {item.children && (
+                    <svg
+                      className={styles.navChevron}
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
                 </Link>
                 {item.children && (
                   <ul className={styles.dropdown}>
@@ -389,7 +424,7 @@ export default function Header() {
           ) : (
             <button
               data-button="secondary"
-              onClick={() => router.push("/login")}
+              onClick={() => mobileMenuOpen ? navigateAfterMenuClose("/login") : router.push("/login")}
               className={styles.loginButton}
               aria-label="Log in"
             >
@@ -421,7 +456,6 @@ export default function Header() {
         {
           <>
             <div
-              ref={mobileBackdropRef}
               className={`${styles.mobileBackdrop} ${mobileMenuOpen ? styles.menuVisible : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               aria-hidden="true"
@@ -445,8 +479,7 @@ export default function Header() {
                               className={styles.mobileNavButton}
                               onNavigate={(event) => {
                                 event.preventDefault();
-                                pendingMobilePath.current = item.path;
-                                setMobileMenuOpen(false);
+                                navigateAfterMenuClose(item.path);
                               }}
                               aria-current={pathname === item.path ? "page" : undefined}
                             >

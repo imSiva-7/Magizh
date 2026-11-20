@@ -82,6 +82,42 @@ test("browser Back dismisses the mobile drawer on the restored page", async ({ p
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 });
 
+test("mobile navigation waits for the drawer and header corners to finish closing", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/stock");
+  await page.getByRole("button", { name: "Open menu", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Mobile navigation menu" });
+  await page.waitForFunction(() => {
+    const panel = document.getElementById("mobile-navigation");
+    const header = panel?.closest("header");
+    return header && getComputedStyle(panel).opacity === "1" &&
+      getComputedStyle(header, "::before").borderBottomLeftRadius === "0px";
+  });
+  await page.evaluate(() => {
+    const panel = document.getElementById("mobile-navigation");
+    const header = panel.closest("header");
+    const observeNavigation = () => {
+      if (location.pathname === "/stock") {
+        requestAnimationFrame(observeNavigation);
+        return;
+      }
+      window.mobileNavigationAtCommit = {
+        visibility: getComputedStyle(panel).visibility,
+        opacity: getComputedStyle(panel).opacity,
+        radius: getComputedStyle(header, "::before").borderBottomLeftRadius,
+      };
+    };
+    requestAnimationFrame(observeNavigation);
+  });
+  await drawer.getByRole("link", { name: "Customers", exact: true }).click();
+  await expect(page).toHaveURL(/\/customer$/);
+  await expect.poll(() => page.evaluate(() => window.mobileNavigationAtCommit)).toEqual({
+    visibility: "hidden",
+    opacity: "0",
+    radius: "20px",
+  });
+});
+
 test("short-screen table actions remain above the table and restore the launcher on Escape", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 320 });
   await page.goto("/customer");

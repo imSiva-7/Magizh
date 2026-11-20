@@ -1,6 +1,7 @@
 .header {
   --mobile-header-height: 72px;
   --menu-close-duration: 400ms;
+  --menu-close-easing: cubic-bezier(0.4, 0, 0.2, 1);
   position: sticky;
   top: 8px;
   z-index: 1000;
@@ -21,9 +22,9 @@
   box-shadow: 0 8px 24px rgba(22, 62, 50, 0.14),
     inset 0 1px 2px rgba(255, 255, 255, 0.9),
     inset 0 -1px 3px rgba(67, 115, 91, 0.12);
-  transition: border-radius 0s var(--menu-close-duration),
-    border-bottom-color 0s var(--menu-close-duration),
-    box-shadow 0s var(--menu-close-duration);
+  transition: border-radius var(--menu-close-duration) var(--menu-close-easing),
+    border-bottom-color var(--menu-close-duration) ease,
+    box-shadow var(--menu-close-duration) ease;
 }
 .headerContainer {
   max-width: 1400px;
@@ -57,13 +58,14 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  text-transform: uppercase;
 }
 .navItem {
   position: relative;
 }
 .navButton {
   display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.6rem 0.8rem;
   border-radius: 0.65rem;
   color: #000;
@@ -71,6 +73,15 @@
   font-size: 0.85rem;
   font-weight: 600;
   transition: background 0.15s;
+}
+.navChevron {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex-shrink: 0;
+  transition: transform 0.5s ease;
+}
+.dropdownOpen .navChevron {
+  transform: rotate(180deg);
 }
 .navButton:hover {
   background: #d7ede3;
@@ -172,7 +183,7 @@
 .logoutButton,
 .mobileMenuButton {
   border: 1px solid var(--border);
-  background: #fff;
+  background: transparent;
   width: 42px;
   height: 42px;
   border-radius: 0.65rem;
@@ -180,6 +191,10 @@
   align-items: center;
   justify-content: center;
   color: var(--brand-dark);
+}
+:global(:root body) .logoutButton[data-button][data-button],
+:global(:root body) .mobileMenuButton[data-button][data-button] {
+  background: transparent;
 }
 .logoutButton:hover,
 .mobileMenuButton:hover {
@@ -245,7 +260,7 @@
   border-bottom-right-radius: 0;
   border-bottom-color: transparent;
   box-shadow: none;
-  transition-delay: 0s;
+  transition-duration: 220ms;
 }
 .mobileBackdrop {
   position: fixed;
@@ -256,7 +271,8 @@
   z-index: -2;
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
+  /* Visibility stays active until closing ends, blocking clicks on the old page. */
+  pointer-events: auto;
   transition: opacity var(--menu-close-duration) ease-out,
     backdrop-filter var(--menu-close-duration) ease-out,
     visibility 0s linear var(--menu-close-duration);
@@ -276,8 +292,8 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: grid-template-rows var(--menu-close-duration) cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 120ms ease-out calc(var(--menu-close-duration) - 120ms),
+  transition: grid-template-rows var(--menu-close-duration) var(--menu-close-easing),
+    opacity var(--menu-close-duration) ease-in,
     visibility 0s linear var(--menu-close-duration);
 }
 
@@ -308,7 +324,7 @@
 
 .mobileNavContent > * {
   opacity: 0;
-  transition: opacity 100ms ease-in;
+  transition: opacity 180ms ease-out;
 }
 .mobileNavOverlay.menuVisible .mobileNavContent > * {
   opacity: 1;
@@ -320,6 +336,7 @@
   .mobileBackdrop,
   .mobileNavOverlay,
   .mobileNavContent > *,
+  .navChevron,
   .menuIcon,
   .menuIcon::before,
   .menuIcon::after {
@@ -378,6 +395,14 @@
   }
   .mobileMenuButton {
     display: none;
+  }
+}
+@media (min-width: 1100px) and (max-width: 1250px) {
+  .navList {
+    gap: 0.25rem;
+  }
+  .navButton {
+    padding-inline: 0.6rem;
   }
 }
 @media (max-width: 1099px) {

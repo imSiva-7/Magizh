@@ -1365,7 +1365,7 @@ function ProcurementContent() {
                       </span>
                     </td>
                     <td className={styles.quantity_cell}>
-                      {parseFloat(row.milkQuantity).toFixed(2)}
+                      {parseFloat(row.milkQuantity).toFixed(2) }
                     </td>
                     <td className={styles.fat_cell}>
                       {parseFloat(row.fatPercentage).toFixed(2)}
