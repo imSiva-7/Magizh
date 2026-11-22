@@ -566,6 +566,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .presentBadge {
@@ -595,6 +596,10 @@
 .timeCell {
   font-family: var(--font-sans);
   font-weight: 500;
+}
+
+.attendanceSection :is(.checkInTime, .checkOutTime) {
+  white-space: nowrap;
 }
 
 .checkInTime,
@@ -996,6 +1001,7 @@
   font-size: 0.813rem;
   font-weight: 600;
   border: 1px solid #fed7aa;
+  white-space: nowrap;
 }
 
 /* Incomplete Row Highlight */

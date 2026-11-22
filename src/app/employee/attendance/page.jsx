@@ -635,7 +635,9 @@ function AttendanceContent() {
                         </td>
                         <td className={styles.hoursCell}>
                           {day.status === "present" && !day.checkOut
-                            ? (day.date === attendanceToday() ? "In progress" : "Missing checkout")
+                            ? (day.date === attendanceToday()
+                              ? "In progress"
+                              : <span className={styles.missingBadge}>Missing checkout</span>)
                             : day.hoursWorked > 0 ? formatAttendanceHours(day.hoursWorked) : "-"}
                         </td>
                         {isAdmin && (

@@ -108,6 +108,34 @@ for (const width of [320, 390]) {
   });
 }
 
+test("attendance status labels stay on one line on mobile", async ({ page }) => {
+  await page.route("**/api/attendance?*", route => route.fulfill({ json: {
+    ...attendance("EMP001"),
+    attendance: [
+      { date: "2026-01-13", status: "present", checkIn: "13:34:00", checkOut: "12:45:00", hoursWorked: 11.18 },
+      { date: "2026-01-14", status: "present", checkIn: "08:00:00", hoursWorked: 0 },
+      { date: "2026-01-15", status: "pending", hoursWorked: 0 },
+    ],
+  } }));
+  await page.goto("/employee/attendance?empID=EMP001&month=2026-01");
+  const table = page.getByRole("table");
+  const checkInTime = table.getByText("1:34 PM", { exact: true });
+  const checkOutTime = table.getByText("12:45 PM", { exact: true });
+  const missingCheckout = table.getByText("Missing checkout", { exact: true });
+  const notRecorded = table.getByText("Not recorded yet", { exact: true });
+  await expect(checkInTime).toBeVisible();
+  await expect(checkOutTime).toBeVisible();
+  await expect(missingCheckout).toBeVisible();
+  await expect(notRecorded).toBeVisible();
+  for (const label of [checkInTime, checkOutTime, missingCheckout, notRecorded]) {
+    expect(await label.evaluate(element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return range.getClientRects().length;
+    })).toBe(1);
+  }
+});
+
 test("advance entry hides quick shortcuts and fits a narrow mobile screen", async ({ page }) => {
   await page.goto("/employee/attendance?empID=EMP002");
   const shortcuts = page.getByRole("navigation", { name: "Quick entries" });
