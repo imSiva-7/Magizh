@@ -8,6 +8,10 @@
   min-height: 100vh;
 }
 
+@media (min-width: 769px) and (max-width: 1600px) {
+  .page_container .historyStatsGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 .new_order_button {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
