@@ -36,7 +36,10 @@ for (const width of [320, 1280]) {
     await expect(litres.getByText("Ghee", { exact: true }).locator("..")).toContainText("2.25 L");
     await chart.getByRole("button", { name: "Kilograms sold", exact: true }).click();
     await expect(chart.getByRole("list", { name: "Products sold in kg" }).getByRole("listitem")).toHaveCount(5);
+    await expect(chart.getByRole("table")).toHaveCount(0);
+    await chart.getByText("View product data", { exact: true }).click();
     await expect(chart.getByRole("table")).toContainText("120.50 L");
+    await chart.getByText("View product data", { exact: true }).click();
     await expect(page.getByRole("region", { name: "Order payment status breakdown" })).toContainText("1 order");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await chart.screenshot({ path: `test-results/customer-products-${width}.png` });

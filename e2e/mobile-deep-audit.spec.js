@@ -139,6 +139,28 @@ test("production analytics reports a failed load and can retry", async ({ page, 
   await expect(page.getByRole("heading", { name: "Summary", exact: true })).toBeVisible();
 });
 
+test("production analytics shows product quantities once and keeps kg and litres separate", async ({ page, context, baseURL }) => {
+  await setup(page, context, baseURL);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route("**/api/analytics/productions?**", route => route.fulfill({ json: {
+    ...analytics,
+    products: [{ name: "Curd", quantity: 75 }, { name: "Cream", quantity: 40 }, { name: "Ghee", quantity: 21 }],
+  } }));
+  await page.goto("/productions/analytics");
+  const quantities = page.getByRole("region", { name: "Product Quantities", exact: true });
+  const kilograms = quantities.getByRole("group", { name: "Product quantities (kg)", exact: true });
+  const litres = quantities.getByRole("group", { name: "Product quantities (L)", exact: true });
+  await expect(kilograms.getByText("Curd", { exact: true })).toBeVisible();
+  await expect(kilograms.getByText("Cream", { exact: true })).toBeVisible();
+  await expect(kilograms.getByText("Ghee", { exact: true })).toHaveCount(0);
+  await expect(litres.getByText("Ghee", { exact: true })).toBeVisible();
+  await expect(litres.getByText("Curd", { exact: true })).toHaveCount(0);
+  await expect(kilograms.getByText(/\d kg$/).first()).toBeVisible();
+  await expect(litres.getByText(/\d L$/).first()).toBeVisible();
+  await expect(page.getByText("Product Breakdown (by Quantity)", { exact: true })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 for (const entity of ["customer", "employee"]) {
   test(`${entity} load failures offer retry instead of a false empty directory`, async ({ page, context, baseURL }) => {
     await setup(page, context, baseURL);

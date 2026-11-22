@@ -1,8 +1,8 @@
 /* ========== PAGE CONTAINER ========== */
 .dashboard {
-  max-width: 1400px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: clamp(0.875rem, 2vw, 1.5rem) clamp(0.875rem, 2.5vw, 2rem);
+  padding: clamp(0.875rem, 2vw, 1.5rem) var(--page-gutter);
   font-family: var(--font-sans);
   background: #f6f8f5;
   min-height: 100vh;
@@ -97,12 +97,6 @@
 .header .eyebrow {
   color: #c3e7d5;
 }
-.intro {
-  color: #d7e9df;
-  max-width: 32rem;
-  line-height: 1.65;
-  margin: 1rem 0 0;
-}
 .sessionStatus {
   color: #d7e9df;
   font-size: 0.875rem;
@@ -119,10 +113,6 @@
   color: #163e32;
   font-size: 1.5rem;
   letter-spacing: -0.03em;
-}
-.sectionHint {
-  color: var(--text-muted);
-  font-size: 0.875rem;
 }
 .navCard::after {
   content: "↗";
@@ -187,6 +177,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 }
 .chartHeader h3 {
   margin: 0;
@@ -203,12 +194,6 @@
 .chartHeader a:hover {
   text-decoration: underline;
 }
-.chartDescription {
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-muted);
-  margin: 1rem 0;
-}
 .chartCanvas {
   height: 280px;
   min-width: 0;
@@ -224,8 +209,8 @@
 }
 .chartDetails {
   border-top: 1px solid var(--border);
-  padding-top: 1rem;
-  margin-top: 1rem;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
@@ -243,10 +228,6 @@
 .chartTable td {
   padding: 0.75rem;
   border-bottom: 1px solid var(--border);
-}
-.chartTable caption {
-  padding: 0.75rem;
-  text-align: left;
 }
 @media (max-width: 1050px) {
   .chartGrid {
@@ -586,12 +567,6 @@
   font-weight: 600;
   margin: 0;
   color: var(--brand);
-}
-.navCard p {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.4;
 }
 
 /* ========== RESPONSIVE ========== */
@@ -1021,9 +996,6 @@ input[type="date"].filter_input {
   .navCard {
     padding: 1.25rem;
   }
-  .sectionHint {
-    display: none;
-  }
   .dataStatus {
     flex-wrap: wrap;
     padding: 1.5rem;
@@ -1056,10 +1028,6 @@ input[type="date"].filter_input {
   }
   .logo h1 {
     font-size: clamp(1.875rem, 3.25vw, 2.75rem);
-  }
-  .intro {
-    font-size: 0.9rem;
-    margin-top: 0.75rem;
   }
   .sectionHeading {
     margin-bottom: 1rem;

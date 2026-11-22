@@ -91,7 +91,6 @@ export default function CustomerAnalyticsPage() {
         <PageHeading
           title="Customer Analytics"
           section="BUSINESS INSIGHTS"
-          description="Understand sales trends, product demand, and customer payment patterns."
         />
       </div>
 

@@ -19,22 +19,15 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 import { getCurrentMonthStartDate, getTodayDate } from "@/utils/dateUtils";
+import { DAIRY_PRODUCTS } from "@/lib/stock";
 import styles from "@/css/analytics.module.css";
 
-const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-];
+const productUnits = {
+  ...Object.fromEntries(DAIRY_PRODUCTS.map(({ name, unit }) => [name, unit])),
+  Cream: "kg",
+};
 
 const getFormattedDateRange = (startDate, endDate) => {
   if (startDate && endDate) {
@@ -99,7 +92,7 @@ export default function ProductionAnalyticsPage() {
     <div className={styles.page_container}>
       {/* Header */}
       <div className={styles.header}>
-        <PageHeading title="Production Analytics" section="BUSINESS INSIGHTS" description="Follow daily production, milk quality, and the products you make." />
+        <PageHeading title="Production Analytics" section="BUSINESS INSIGHTS" />
       </div>
 
       {/* Filter Section */}
@@ -215,10 +208,11 @@ export default function ProductionAnalyticsPage() {
           <div data-fade-up="" className={styles.chart_card}>
             <h3>Daily Milk Production</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} />
-                <YAxis />
+              <LineChart data={data.daily} accessibilityLayer>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} tickLine={false} axisLine={false} minTickGap={24} tick={{ fontSize: 11 }} />
+                <YAxis tickLine={false} axisLine={false} width={55} tick={{ fontSize: 11 }} />
+                <YAxis yAxisId="batches" orientation="right" allowDecimals={false} tickLine={false} axisLine={false} width={42} tick={{ fontSize: 11 }} />
                 <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
@@ -226,12 +220,15 @@ export default function ProductionAnalyticsPage() {
                   dataKey="milk"
                   stroke="#8884d8"
                   name="Milk (L)"
+                  dot={data.daily.length === 1}
                 />
                 <Line
                   type="monotone"
                   dataKey="batches"
+                  yAxisId="batches"
                   stroke="#82ca9d"
-                  name="Batches"
+                  name="Batches (right axis)"
+                  dot={data.daily.length === 1}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -241,10 +238,10 @@ export default function ProductionAnalyticsPage() {
           <div data-fade-up="" className={styles.chart_card}>
             <h3>Fat & SNF Trends</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.daily}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} />
-                <YAxis domain={[0, "dataMax"]} />
+              <LineChart data={data.daily} accessibilityLayer>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" tickFormatter={formatDateForDisplay} tickLine={false} axisLine={false} minTickGap={24} tick={{ fontSize: 11 }} />
+                <YAxis domain={[0, "dataMax"]} tickLine={false} axisLine={false} width={55} tick={{ fontSize: 11 }} />
                 <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
@@ -252,63 +249,39 @@ export default function ProductionAnalyticsPage() {
                   dataKey="fat"
                   stroke="#ff7300"
                   name="Fat %"
+                  dot={data.daily.length === 1}
                 />
                 <Line
                   type="monotone"
                   dataKey="snf"
                   stroke="#387908"
                   name="SNF %"
+                  dot={data.daily.length === 1}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Product Breakdown Pie Chart */}
-          {data.products.length > 0 && (
-            <div data-fade-up="" className={styles.chart_card}>
-              <h3>Product Breakdown (by Quantity)</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={data.products}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="quantity"
-                    nameKey="name"
-                  >
-                    {data.products.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Product Quantities Bar Chart */}
-          <div data-fade-up="" className={styles.chart_card}>
-            <h3>Product Quantities</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={data.products}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="quantity" fill="#8884d8" name="Quantity" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {/* Product quantities grouped by their units (no misleading mixed-unit percentages). */}
+          <section data-fade-up="" className={styles.chart_card} aria-labelledby="product-quantities-title">
+            <h3 id="product-quantities-title">Product Quantities</h3>
+            {data.products.length > 0 ? ["kg", "L", ""].map(unit => {
+              const products = data.products.filter(product => (productUnits[product.name] || "") === unit);
+              return products.length > 0 && (
+                <div key={unit} role="group" aria-label={unit ? `Product quantities (${unit})` : "Other product quantities"}>
+                  <ResponsiveContainer width="100%" height={Math.max(110, products.length * 44 + 36)}>
+                    <BarChart data={products} layout="vertical" accessibilityLayer margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" tickFormatter={value => unit ? `${value} ${unit}` : value} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                      <YAxis type="category" dataKey="name" width={108} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                      <Tooltip formatter={value => [`${formatNumberWithCommas(value, 2)}${unit ? ` ${unit}` : ""}`, "Quantity"]} />
+                      <Bar dataKey="quantity" fill="#27795d" name="Quantity" maxBarSize={26} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            }) : <div className={styles.empty_state}>No product quantities in this date range.</div>}
+          </section>
         </>
       )}
     </div>

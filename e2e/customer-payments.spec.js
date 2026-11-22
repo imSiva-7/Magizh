@@ -36,13 +36,13 @@ async function mockPayments(page, { failOnce = false } = {}) {
 }
 
 test("partial payments reduce due and overpayments become credit, with correction history", async ({ page }) => {
-  await mockPayments(page);
+  const { requests } = await mockPayments(page);
   await page.goto("/customer/payments");
   await expect(page.getByRole("button", { name: "Mark as Paid", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Amount received (₹)").fill("300.25");
-  await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹699.75 due");
+  await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹700 due");
   await dialog.getByLabel("Payment method").selectOption("UPI");
   await dialog.getByLabel("Reference (optional)").fill("UPI-123");
   await page.setViewportSize({ width: 390, height: 844 });
@@ -52,7 +52,7 @@ test("partial payments reduce due and overpayments become credit, with correctio
   await expect(dialog).toHaveCount(0);
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
   await dialog.getByLabel("Amount received (₹)").fill("799.75");
-  await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹100.00 credit");
+  await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹100 credit");
   await dialog.getByRole("button", { name: "Save payment", exact: true }).click();
   await expect(page.getByRole("button", { name: "Record payment", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
@@ -65,6 +65,7 @@ test("partial payments reduce due and overpayments become credit, with correctio
   await dialog.getByRole("button", { name: "View payment history" }).click();
   await expect(dialog.getByRole("cell", { name: "Cash · Duplicate cash receipt", exact: true })).toBeVisible();
   await expect(dialog.getByRole("cell", { name: "UPI · UPI-123", exact: true })).toBeVisible();
+  expect(requests.map(request => Number(request.paidAmount))).toEqual([300.25, 799.75, -100]);
 });
 
 test("retry after a lost response uses the same receipt ID", async ({ page }) => {

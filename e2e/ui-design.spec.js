@@ -2,6 +2,26 @@ import { test, expect } from "@playwright/test";
 import { loadEnvConfig } from "@next/env";
 import { encode } from "next-auth/jwt";
 
+test("desktop dropdown highlights are separated without closing between items", async ({ page }) => {
+  await page.route("**/api/auth/session", route => route.fulfill({ json: {} }));
+  await page.goto("/login");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  await nav.getByRole("link", { name: "Customers", exact: true }).hover();
+  const history = nav.getByRole("link", { name: "Order History", exact: true });
+  const payments = nav.getByRole("link", { name: "Order Payments", exact: true });
+  const subscriptions = nav.getByRole("link", { name: "Subscriptions", exact: true });
+  await expect(history).toBeVisible();
+  await expect(subscriptions).toBeVisible();
+  const [first, second, third] = await Promise.all([history.boundingBox(), payments.boundingBox(), subscriptions.boundingBox()]);
+  expect(second.y - (first.y + first.height)).toBeGreaterThanOrEqual(4);
+  expect(third.y - (second.y + second.height)).toBeGreaterThanOrEqual(4);
+  await page.mouse.move(first.x + first.width / 2, first.y + first.height + 2);
+  await expect(payments).toBeVisible();
+  await payments.hover();
+  await expect(payments).toHaveCSS("background-color", "rgb(234, 243, 237)");
+  await history.locator("../..").screenshot({ path: "test-results/header-dropdown-spacing.png" });
+});
+
 test("desktop dropdown closes after a click, pointer exit, and Escape", async ({ page }) => {
   await page.route("**/api/auth/session", (route) => route.fulfill({ json: {} }));
   await page.goto("/login");

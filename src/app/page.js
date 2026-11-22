@@ -16,6 +16,7 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 import HomeCharts from "@/components/HomeCharts";
+import MonthlyGoals from "@/components/MonthlyGoals";
 import { customerDaily } from "@/lib/customer-charts";
 import { procurementDaily } from "@/lib/supplier-charts";
 
@@ -199,7 +200,6 @@ export default function Home() {
         <div className={styles.logo}>
           <span className={styles.eyebrow}>MAGIZH DAIRY / OPERATIONS</span>
           <h1>Every day, made simpler.</h1>
-          <p className={styles.intro}>From fresh milk to final payments. Your dairy operations, all in one place.</p>
         </div>
         <div className={styles.userInfo}>
           {status === "authenticated" ? (
@@ -217,9 +217,10 @@ export default function Home() {
         </div>
       </header>
 
+      <AdminSummary><MonthlyGoals /></AdminSummary>
+
       <div className={styles.sectionHeading}>
         <div><span className={styles.eyebrow}>EXPLORE THE PLATFORM</span><h2>Your workspace</h2></div>
-        <span className={styles.sectionHint}>Choose a module to get started</span>
       </div>
       <nav className={styles.navGrid} aria-label="Dashboard modules">
         <Link href="/productions" className={styles.navCard}>
@@ -232,21 +233,18 @@ export default function Home() {
             />
           </div>
           <h2>Production</h2>
-          <p>Record daily milk production and by‑products</p>
         </Link>
         <Link href="/supplier" className={styles.navCard}>
           <div className={styles.navIcon}>
             <Image src="/wholesale.png" alt="Supplier" width={30} height={30} />
           </div>
           <h2>Suppliers</h2>
-          <p>Manage supplier information and rates</p>
         </Link>
         <Link href="/customer" className={styles.navCard}>
           <div className={styles.navIcon}>
             <Image src="/customer.png" alt="Customer" width={30} height={30} />
           </div>
           <h2>Customers</h2>
-          <p>View and manage customer details</p>
         </Link>
         <Link href="/supplier/payments" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -258,7 +256,6 @@ export default function Home() {
             />
           </div>
           <h2>Supplier Payments</h2>
-          <p>Track and settle payments to suppliers</p>
         </Link>
         <Link href="/customer/payments" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -270,7 +267,6 @@ export default function Home() {
             />
           </div>
           <h2>Customer Payments</h2>
-          <p>Track payments and outstanding balances</p>
         </Link>
         <Link href="/productions/analytics" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -282,7 +278,6 @@ export default function Home() {
             />
           </div>
           <h2>Production Analytics</h2>
-          <p>View production insights and reports</p>
         </Link>
         <Link href="/supplier/analytics" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -294,7 +289,6 @@ export default function Home() {
             />
           </div>
           <h2>Supplier Analytics</h2>
-          <p>View procurement insights and reports</p>
         </Link>
         <Link href="/customer/analytics" className={styles.navCard}>
           <div className={styles.navIcon}>
@@ -306,7 +300,6 @@ export default function Home() {
             />
           </div>
           <h2>Customer Analytics</h2>
-          <p>View customer insights and reports</p>
         </Link>
       </nav>
 
@@ -389,11 +382,11 @@ export default function Home() {
       {loading ? (
         <div className={styles.dataStatus} role="status">
           <div className={styles.spinner} aria-hidden="true" />
-          <div><h3>Preparing your overview</h3><p>Loading the latest records. You can explore any module above.</p></div>
+          <h3>Preparing your overview</h3>
         </div>
       ) : error ? (
         <div className={styles.dataStatus} role="alert">
-          <div><h3>Overview unavailable</h3><p>{error}. You can still use the workspace links above.</p></div>
+          <div><h3>Overview unavailable</h3><p>{error}</p></div>
           <button data-button="secondary" onClick={() => setFilters((prev) => ({ ...prev }))} className={styles.retryBtn}>Try again</button>
         </div>
       ) : (
@@ -406,7 +399,7 @@ export default function Home() {
         filters={filters}
       /></AdminSummary>
       {!(supplierData.summary.totalAmount > 0) && !(customerData.summary.totalAmount > 0) && (
-        <div data-fade-up="" className={styles.dataStatus}><div><h3>No activity in this date range</h3><p>Choose another date range or open a module to add your first record.</p></div></div>
+        <div data-fade-up="" className={styles.dataStatus}><h3>No activity in this date range</h3></div>
       )}
       {/* Production Summary with its own stat item class */}
       {/* {productionSummary && (
@@ -544,16 +537,16 @@ export default function Home() {
                 value={`₹${formatStat(customerData.summary.totalAmount)}`}
               />
               <StatItem
-                label="Paid (overall)"
+                label="Paid (all time)"
                 metric="Paid"
-                hint="All customer payments · all time"
+                hint="All customer payments"
                 value={`₹${formatStat(customerAccounts.paidAmount)}`}
                 colorClass={styles.text_green}
               />
               <StatItem
-                label="Due (overall)"
+                label="Due (current)"
                 metric="Due"
-                hint="Outstanding now · all customers"
+                hint="All customers"
                 tone="amount"
                 value={`₹${formatStat(customerAccounts.dueAmount)}`}
                 colorClass={styles.text_red}
@@ -567,7 +560,7 @@ export default function Home() {
                 <thead>
                   <tr>
                     <th>Customer Name</th>
-                    <th>Due (overall) (₹)</th>
+                    <th>Current due (₹)</th>
                   </tr>
                 </thead>
                 <tbody>

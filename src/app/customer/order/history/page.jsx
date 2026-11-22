@@ -382,19 +382,19 @@ function OrderHistoryContent() {
               {formatDateForDisplay(filters.endDate) || "Latest"}
             </span>
           </div>
-          <div className={summaryStyles.global_stats_grid}>
+          <div className={`${summaryStyles.global_stats_grid} ${styles.historyStatsGrid}`}>
             <SummaryStat label="Orders" hint="Selected dates" value={orderCount}
               trend={dailyOrders.map(({ date, orders }) => ({ date, value: orders }))} />
             <SummaryStat label="Total Sales" metric="Sales" hint="Selected dates" tone="amount"
               value={"₹" + formatStat(totalSales)}
               trend={dailyOrders.map(({ date, amount }) => ({ date, value: amount }))} />
-            <SummaryStat label="Paid (overall)" metric="Paid" hint="All customer payments · all time"
-              value={"₹" + formatStat(customerAccounts?.paidAmount || 0)} colorClass={summaryStyles.text_green} />
-            <SummaryStat label="Due (overall)" metric="Due" hint="Outstanding now · all customers"
-              value={"₹" + formatStat(customerAccounts?.dueAmount || 0)} colorClass={summaryStyles.text_red} />
             <SummaryStat label="AOV" hint="Average order value · selected dates" tone="amount"
               value={"₹" + formatStat(orderCount ? totalSales / orderCount : 0)}
               trend={dailyOrders.map(({ date, amount, orders }) => ({ date, value: orders ? amount / orders : 0 }))} />
+            <SummaryStat label="Paid (all time)" metric="Paid" hint="All customer payments"
+              value={"₹" + formatStat(customerAccounts?.paidAmount || 0)} colorClass={summaryStyles.text_green} />
+            <SummaryStat label="Due (current)" metric="Due" hint="All customers"
+              value={"₹" + formatStat(customerAccounts?.dueAmount || 0)} colorClass={summaryStyles.text_red} />
           </div>
         </section></AdminSummary>
       )}

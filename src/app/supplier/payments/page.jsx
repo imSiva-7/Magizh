@@ -490,11 +490,7 @@ export default function Payments() {
       {statusFilter && (
         <div className={styles.status_notice} role="status">
           <p>
-            <strong>{statusFilter === "Not Paid" ? "Showing due payments only." : "Showing paid payments only."}</strong>{" "}
-            {statusFilter === "Not Paid"
-              ? "Paid records are excluded, so Paid shows ₹0 in this view. This does not mean no payments were made."
-              : "Unpaid records are excluded, so Due shows ₹0 in this view. This does not mean there is no outstanding balance."}
-            {" "}Stats and graphs reflect the selected filter.
+            <strong>{statusFilter === "Not Paid" ? "Due only · Paid records excluded" : "Paid only · Unpaid records excluded"}</strong>
           </p>
           <button type="button" data-button="secondary" onClick={() => handleStatusChange("")} disabled={isLoading}>
             Show all payments

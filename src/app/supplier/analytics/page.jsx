@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
     fetchData(); return () => controller.abort();
   }, [dateRange, reload]);
   return <div className={styles.page_container}>
-    <div className={styles.header}><PageHeading title="Supplier Analytics" section="BUSINESS INSIGHTS" description="Explore milk procurement, quality trends, and supplier performance." /></div>
+    <div className={styles.header}><PageHeading title="Supplier Analytics" section="BUSINESS INSIGHTS" /></div>
     <AdminSummary><div data-filter="card" className={styles.filter_section}>
       <div data-filter="title" className={styles.filter_title}><h2>Filter by Date Range</h2></div>
       <div data-filter="grid" className={styles.date_input_group}>

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
+import { startDeleteToast } from "@/lib/delete-toast";
 import "react-toastify/dist/ReactToastify.css";
 import styles from "@/css/admin.module.css";
 
@@ -217,6 +218,7 @@ export default function AdminPage() {
     if (!deleteTarget || busy || sameUser(deleteTarget, session?.user)) return;
     const user = deleteTarget;
     setBusy({ id: user._id, type: "delete" });
+    const notification = startDeleteToast("Deleting account…");
     try {
       await readResponse(
         await fetch(`/api/admin/users?id=${encodeURIComponent(user._id)}`, {
@@ -227,11 +229,12 @@ export default function AdminPage() {
       setUsers((previous) => previous.filter((item) => item._id !== user._id));
       clearChange(user._id);
       setDeleteTarget(null);
-      toast.success("Account deleted");
+      notification.success("Account deleted");
       searchRef.current?.focus();
     } catch (error) {
       setDeleteTarget(null);
       setRowErrors((previous) => ({ ...previous, [user._id]: error.message }));
+      notification.error(error.message);
     } finally {
       setBusy(null);
     }
@@ -266,9 +269,6 @@ export default function AdminPage() {
         <div>
           <span className={styles.eyebrow}>WORKSPACE ADMINISTRATION</span>
           <h1>Admin Dashboard</h1>
-          <p>
-            People, roles and access. Keep your workspace in the right hands.
-          </p>
         </div>
         <div className={styles.session}>
           <span className={styles.sessionDot} aria-hidden="true" />
@@ -280,30 +280,22 @@ export default function AdminPage() {
       </header>
       <div className={styles.stats} aria-label="Account overview">
         {[
-          ["All accounts", users.length, "Registered in this workspace", "01"],
-          ["Employees", counts.employee || 0, "Daily operations", "02"],
+          ["All accounts", users.length],
+          ["Employees", counts.employee || 0],
           [
-            "Administrators",
+            "Admins & developers",
             (counts.admin || 0) + (counts.dev || 0),
-            "Admins and developers",
-            "03",
           ],
           [
-            "Business accounts",
+            "Customers & suppliers",
             (counts.customer || 0) + (counts.supplier || 0),
-            "Customers and suppliers",
-            "04",
           ],
-        ].map(([title, count, caption, index]) => (
+        ].map(([title, count]) => (
           <div key={title} className={styles.stat}>
             <div className={styles.statTop}>
               <span>{title}</span>
-              <span className={styles.statIndex} aria-hidden="true">
-                {index}
-              </span>
             </div>
             <strong>{loaded ? count : "—"}</strong>
-            <p>{caption}</p>
           </div>
         ))}
       </div>

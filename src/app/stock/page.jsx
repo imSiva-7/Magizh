@@ -49,14 +49,14 @@ function StockLoadingState() {
       </p>
       <div aria-hidden="true">
         <AdminSummary><div className={styles.summaryGrid}>
-          {["Stock value", "In stock", "Attention"].map((label, index) => (
+          {["Estimated stock value", "In stock", "Needs attention"].map((label, index) => (
             <div
               key={label}
               className={`${styles.summaryCard} ${index === 0 ? styles.valueSummary : ""}`}
             >
               <span>{label}</span>
               <Skeleton large />
-              <Skeleton />
+              {index === 0 && <Skeleton />}
             </div>
           ))}
         </div></AdminSummary>
@@ -332,7 +332,6 @@ export default function StockPage() {
         <PageHeading
           title="Stock Management"
           section="INVENTORY"
-          description="See what is available, spot low stock, and keep every movement accounted for."
         />
         <div className={styles.headerActions}>
           <button
@@ -419,7 +418,7 @@ export default function StockPage() {
 
             <AdminSummary><div data-fade-up="" className={styles.summaryGrid}>
               <div className={`${styles.summaryCard} ${styles.valueSummary}`}>
-                <span>Stock value</span>
+                <span>Estimated stock value</span>
                 <strong>
                   {totalValue === null ? "—" : `₹${formatStat(totalValue)}`}
                 </strong>
@@ -435,14 +434,12 @@ export default function StockPage() {
                   {items.filter((item) => item.quantity > 0).length}
                   <small> / {items.length}</small>
                 </strong>
-                <small>Products with a positive balance</small>
               </div>
               <div className={styles.summaryCard}>
-                <span>Attention</span>
+                <span>Needs attention</span>
                 <strong className={attention.length ? styles.warningText : ""}>
                   {attention.length}
                 </strong>
-                <small>Low, empty, or negative balances</small>
               </div>
             </div></AdminSummary>
 

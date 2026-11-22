@@ -59,7 +59,6 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
           <div><span className={styles.eyebrow}>{monthly ? "MONTHLY" : "DAILY"} TREND</span><h3 id="activity-chart-title">Sales & procurement</h3></div>
           <Link href="/customer/analytics">View analytics ↗</Link>
         </div>
-        <p className={styles.chartDescription}>Order value compared with the cost of milk procured. Amounts include unpaid records.</p>
         {trend.length ? <>
           <div className={styles.chartCanvas}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 320, height: 280 }}>
@@ -75,15 +74,14 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <details className={styles.chartDetails}><summary>View trend data</summary><div className={styles.tableWrapper}><table className={styles.chartTable}><caption>Sales and milk procurement value in rupees</caption><thead><tr><th scope="col">Period</th><th scope="col">Sales</th><th scope="col">Milk procurement</th></tr></thead><tbody>{trend.map((entry) => <tr key={entry.date}><th scope="row">{dateLabel(entry.date)}</th><td>{money(entry.sales)}</td><td>{money(entry.procurement)}</td></tr>)}</tbody></table></div></details>
+          <details className={styles.chartDetails}><summary>View trend data</summary><div className={styles.tableWrapper}><table className={styles.chartTable} aria-label="Sales and milk procurement value in rupees"><thead><tr><th scope="col">Period</th><th scope="col">Sales</th><th scope="col">Milk procurement</th></tr></thead><tbody>{trend.map((entry) => <tr key={entry.date}><th scope="row">{dateLabel(entry.date)}</th><td>{money(entry.sales)}</td><td>{money(entry.procurement)}</td></tr>)}</tbody></table></div></details>
         </> : <div className={styles.chartEmpty}>No sales or procurement records in this date range.</div>}
       </section>
       <section className={styles.chartCard} aria-labelledby="payments-chart-title">
         <div className={styles.chartHeader}>
-          <div><span className={styles.eyebrow}>PAYMENT STATUS</span><h3 id="payments-chart-title">Paid & outstanding</h3></div>
+          <div><span className={styles.eyebrow}>ORDER & COLLECTION STATUS</span><h3 id="payments-chart-title">Paid & outstanding</h3></div>
           <Link href="/supplier/analytics">View analytics ↗</Link>
         </div>
-        <p className={styles.chartDescription}>Customer receipts and supplier payments for records in the selected period.</p>
         {hasPayments ? <>
           <div className={styles.chartCanvas}>
             <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 320, height: 280 }}>
@@ -98,7 +96,7 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <details className={styles.chartDetails}><summary>View payment data</summary><div className={styles.tableWrapper}><table className={styles.chartTable}><caption>Payment status in rupees</caption><thead><tr><th scope="col">Account</th><th scope="col">Paid</th><th scope="col">Outstanding</th></tr></thead><tbody>{payments.map((entry) => <tr key={entry.name}><th scope="row">{entry.name}</th><td>{money(entry.paid)}</td><td>{money(entry.due)}</td></tr>)}</tbody></table></div></details>
+          <details className={styles.chartDetails}><summary>View payment data</summary><div className={styles.tableWrapper}><table className={styles.chartTable} aria-label="Payment status in rupees"><thead><tr><th scope="col">Account</th><th scope="col">Paid</th><th scope="col">Outstanding</th></tr></thead><tbody>{payments.map((entry) => <tr key={entry.name}><th scope="row">{entry.name}</th><td>{money(entry.paid)}</td><td>{money(entry.due)}</td></tr>)}</tbody></table></div></details>
         </> : <div className={styles.chartEmpty}>No payment amounts in this date range.</div>}
       </section>
     </div>

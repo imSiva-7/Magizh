@@ -1,6 +1,7 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { startDeleteToast } from "@/lib/delete-toast";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
@@ -478,6 +479,7 @@ export default function Employee() {
     setConfirmingDeleteId(null);
 
     setDeleteLoading(id);
+    const notification = startDeleteToast("Deleting employee…");
 
     try {
       const res = await fetch(`/api/employee?id=${id}`, { method: "DELETE" });
@@ -487,7 +489,7 @@ export default function Employee() {
         throw new Error(data.error || data.message || `Delete failed`);
       }
 
-      toast.success("Employee deleted successfully");
+      notification.success("Employee deleted successfully");
 
       if (formData.employeeId === id) {
         resetForm();
@@ -496,7 +498,7 @@ export default function Employee() {
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.error(error.message || "Failed to delete employee");
+      notification.error(error.message || "Failed to delete employee");
     } finally {
       setDeleteLoading(null);
     }
@@ -528,7 +530,7 @@ export default function Employee() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <PageHeading title="Employees" section="YOUR TEAM" description="Keep employee profiles and contact details in one place." />
+          <PageHeading title="Employees" section="YOUR TEAM" />
 
           {!createEmployee && (
             <div className={styles.createSection}>

@@ -1,6 +1,7 @@
 "use client";
 import AdminSummary from "@/components/AdminSummary";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { startDeleteToast } from "@/lib/delete-toast";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -409,7 +410,7 @@ export default function Customer() {
     setDeleteLoading(id);
     setOpenActionMenuId(null); // close any open menu
 
-    const notification = toast.loading("Deleting customer…");
+    const notification = startDeleteToast("Deleting customer…");
     try {
       const res = await fetch(`/api/customer?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -418,7 +419,7 @@ export default function Customer() {
         throw new Error(data.error || data.message || `Delete failed`);
       }
 
-      toast.update(notification, { render: "Customer deleted successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
+      notification.success("Customer deleted successfully");
 
       setDeleteTarget(null);
       if (formData.customerId === id) {
@@ -428,7 +429,7 @@ export default function Customer() {
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.update(notification, { render: error.message || "Failed to delete customer", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
+      notification.error(error.message || "Failed to delete customer");
     } finally {
       setDeleteLoading(null);
     }
@@ -456,7 +457,7 @@ export default function Customer() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <PageHeading title="Customers" section="RELATIONSHIPS" description="Keep customer details, orders, and contacts connected." />
+          <PageHeading title="Customers" section="RELATIONSHIPS" />
           <div className={styles.createSection}>
             <Link data-button="secondary" href="/customer/subscriptions">Subscriptions</Link>
             {!createCustomer && (

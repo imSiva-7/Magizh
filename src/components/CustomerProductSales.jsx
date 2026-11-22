@@ -18,7 +18,6 @@ export default function CustomerProductSales({ products }) {
     <div className={styles.heading}><h2>Product sales</h2><div className={styles.controls} role="group" aria-label="Product sales metric">
       {[["amount", "Sales value"], ["L", "Litres sold"], ["kg", "Kilograms sold"]].map(([value, name]) => <button key={value} data-button="toggle" type="button" aria-pressed={metric === value} onClick={() => setMetric(value)}>{name}</button>)}
     </div></div>
-    <p className={styles.hint}>Compare sales in rupees, or quantities within the same unit.</p>
     {!rows.length ? <p className={styles.empty}>No {metric === "L" ? "litre" : metric === "kg" ? "kilogram" : "product"} sales in this period.</p> : <ul className={styles.bars} aria-label={metric === "amount" ? "Products by sales value" : `Products sold in ${metric}`}>
       {rows.map(row => <li key={row.name}>
         <div className={styles.barLabel}><span>{row.name}</span><strong>{valueLabel(row)}</strong></div>
@@ -26,11 +25,10 @@ export default function CustomerProductSales({ products }) {
         {metric === "amount" && <span className={styles.quantity}>{quantity(row)} sold</span>}
       </li>)}
     </ul>}
-    <div className={styles.tableWrapper}><table>
-      <caption>Product quantities and sales for the selected period</caption>
+    {products.length > 0 && <details className={styles.details}><summary>View product data</summary><div className={styles.tableWrapper}><table aria-label="Product quantities and sales for the selected period">
       <thead><tr><th scope="col">Product</th><th scope="col">Sold</th><th scope="col">Sales</th></tr></thead>
-      <tbody>{products.length ? products.map(row => <tr key={row.name}><th scope="row">{row.name}</th><td>{quantity(row)}</td><td>{money(row.amount)}</td></tr>) : <tr><td colSpan={3}>No products sold in this period.</td></tr>}</tbody>
-    </table></div>
+      <tbody>{products.map(row => <tr key={row.name}><th scope="row">{row.name}</th><td>{quantity(row)}</td><td>{money(row.amount)}</td></tr>)}</tbody>
+    </table></div></details>}
   </section>;
 }
 
@@ -38,7 +36,6 @@ export function CustomerOrderStatus({ payment }) {
   const maximum = Math.max(0, ...payment.map(row => Number(row.count) || 0));
   return <section className={styles.card} aria-label="Order payment status breakdown">
     <div className={styles.heading}><h2>Order payment status</h2></div>
-    <p className={styles.hint}>Number of orders by saved payment status. Actual receipts and balances are on Customer Payments.</p>
     <ul className={styles.bars}>{payment.map(row => <li key={row.status}>
       <div className={styles.barLabel}><span>{row.status || "Unspecified"}</span><strong>{formatStat(row.count)} {Number(row.count) === 1 ? "order" : "orders"}</strong></div>
       <div className={styles.track} aria-hidden="true"><span className={row.status === "Paid" ? "" : styles.unpaid} style={{ width: `${maximum > 0 ? Math.max(0, Number(row.count) / maximum * 100) : 0}%` }} /></div>

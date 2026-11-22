@@ -41,6 +41,52 @@ async function mockProcurements(page, { head = false, fail = false, rows = recor
   return headRequests;
 }
 
+const toastColors = {
+  success: { background: "rgb(231, 246, 237)", border: "rgb(184, 226, 197)", icon: "rgb(50, 180, 93)" },
+  info: { background: "rgb(230, 240, 251)", border: "rgb(173, 208, 243)", icon: "rgb(8, 117, 223)" },
+  error: { background: "rgb(252, 236, 232)", border: "rgb(244, 191, 181)", icon: "rgb(233, 75, 53)" },
+  pending: { background: "rgb(237, 245, 240)", border: "rgb(200, 223, 208)", icon: "rgb(39, 121, 93)" },
+};
+
+async function expectToastStyle(page, notification, tone) {
+  const colors = toastColors[tone];
+  await expect(notification).toHaveCSS("border-radius", "16px");
+  await expect(notification).toHaveCSS("background-color", colors.background);
+  await expect(notification).toHaveCSS("border-left-color", colors.border);
+  await expect(notification).toHaveCSS("border-right-color", colors.border);
+  const icon = notification.locator(".Toastify__toast-icon");
+  await expect(icon).toHaveCSS("width", "42px");
+  await expect(icon).toHaveCSS("height", "42px");
+  await expect(icon).toHaveCSS("background-color", colors.icon);
+  await expect(notification.locator(".Toastify__progress-bar--wrp")).toHaveCSS("visibility", "hidden");
+  await expect(page.locator(".Toastify__toast-container").filter({ has: notification })).toHaveCSS("position", "fixed");
+  await expect(page.locator(".Toastify").filter({ has: notification })).toHaveCSS("position", "fixed");
+  await expect.poll(async () => {
+    const header = await page.locator("body > header").boundingBox();
+    const toast = await notification.boundingBox();
+    return toast && header && toast.x >= header.x - 1 && toast.y >= header.y + header.height &&
+      Math.abs(toast.x + toast.width - (header.x + header.width)) <= 1;
+  }).toBeTruthy();
+}
+
+async function measurePageLayout(page) {
+  return page.locator("#main-content").evaluate(main => {
+    const measure = element => {
+      const { x, y, width, height } = element.getBoundingClientRect();
+      // Document-relative coordinates are independent of any ordinary scrolling.
+      return [x + window.scrollX, y + window.scrollY, width, height].map(Math.round);
+    };
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      documentHeight: document.documentElement.scrollHeight,
+      main: measure(main),
+      content: Array.from(main.querySelectorAll("h1, h2, form, table"))
+        .filter(element => element.getClientRects().length > 0)
+        .map(measure),
+    };
+  });
+}
+
 test("history shows daily milk and weighted quality averages and fits desktop and mobile", async ({ page }) => {
   await mockProcurements(page);
   await page.goto("/supplier/procurement/history");
@@ -92,6 +138,124 @@ test("head commissions use active dates and flag recovered uncertain payments", 
   expect(requests.at(-1).get("endDate")).toBe(date);
   await page.evaluate(() => { document.activeElement?.blur(); window.scrollTo(0, 0); });
   await page.screenshot({ path: "test-results/procurement-head-desktop.png", fullPage: true });
+});
+
+for (const succeeds of [true, false]) {
+  test(`delete toast responds promptly when procurement deletion ${succeeds ? "succeeds" : "fails"}`, async ({ page }) => {
+    await mockProcurements(page);
+    let releaseDelete;
+    let releaseRefresh;
+    const deleteGate = new Promise((resolve) => { releaseDelete = resolve; });
+    const refreshGate = new Promise((resolve) => { releaseRefresh = resolve; });
+    let deleteCount = 0;
+    let deleted = false;
+    let refreshStarted = false;
+
+    await page.route("**/api/supplier/procurement?*", async (route) => {
+      const request = route.request();
+      if (request.method() === "DELETE") {
+        expect(new URL(request.url()).searchParams.get("id")).toBe(records[0]._id);
+        deleteCount += 1;
+        await deleteGate;
+        deleted = succeeds;
+        return route.fulfill({ status: succeeds ? 200 : 500, json: succeeds ? {} : { error: "Preview delete failed" } });
+      }
+      if (request.method() !== "GET") throw new Error("Unexpected preview mutation");
+      if (deleted) {
+        refreshStarted = true;
+        await refreshGate;
+      }
+      return route.fulfill({ json: deleted ? [] : [records[0]] });
+    });
+
+    try {
+      await page.goto("/supplier/procurement?supplierId=child");
+      await page.getByRole("button", { name: `Actions for ${date} AM record` }).click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+      const notice = page.locator(".magizh-delete-toast").filter({ hasText: /Delete now takes two clicks/ });
+      await expect(notice).toBeVisible();
+      await expectToastStyle(page, notice, "info");
+      expect(deleteCount).toBe(0);
+
+      // The deliberate confirmation guard prevents accidental double-click deletion.
+      await page.getByRole("button", { name: "Confirm", exact: true }).click({ delay: 550 });
+      const pending = page.locator(".magizh-delete-toast").filter({ hasText: "Deleting record…" });
+      await expect(pending).toBeVisible();
+      await expect.poll(() => deleteCount).toBe(1);
+      const toastId = await pending.getAttribute("id");
+      await expect(page.getByText("Deleted successfully", { exact: true })).toHaveCount(0);
+      await page.setViewportSize({ width: succeeds ? 1920 : 390, height: 844 });
+      await expectToastStyle(page, pending, "pending");
+      await expect(pending.getByRole("button", { name: "close" })).toHaveCount(0);
+      await page.screenshot({ path: `test-results/toast-${succeeds ? "desktop" : "mobile"}-pending.png` });
+
+      releaseDelete();
+      const result = page.locator(".magizh-delete-toast").filter({ hasText: succeeds ? "Deleted successfully" : "Preview delete failed" });
+      await expect(result).toBeVisible();
+      await expect(result).toHaveAttribute("id", toastId);
+      await expect(pending).toHaveCount(0);
+      await expectToastStyle(page, result, succeeds ? "success" : "error");
+      await expect(result.getByRole("button", { name: "close" })).toHaveCSS("width", succeeds ? "36px" : "40px");
+      await page.screenshot({ path: `test-results/toast-${succeeds ? "desktop-success" : "mobile-error"}.png` });
+      await result.screenshot({ path: `test-results/toast-${succeeds ? "desktop-success" : "mobile-error"}-card.png` });
+
+      if (succeeds) {
+        // The success toast must already be visible while the table refresh is blocked.
+        await expect.poll(() => refreshStarted).toBe(true);
+        releaseRefresh();
+      } else {
+        await expect(page.getByRole("button", { name: `Actions for ${date} AM record` })).toBeVisible();
+        expect(refreshStarted).toBe(false);
+      }
+    } finally {
+      releaseDelete();
+      releaseRefresh();
+    }
+  });
+}
+
+for (const width of [1280, 390]) {
+  test(`toast overlays the page without changing content layout at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    // Isolate geometry from the entrance animations on the procurement page itself.
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await mockProcurements(page);
+    await page.goto("/supplier/procurement?supplierId=child");
+    await expect(page.getByRole("heading", { name: supplier.supplierName })).toBeVisible();
+    await expect(page.getByRole("table", { name: "Procurement history" })).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+
+    // Resetting already-default filters emits a real informational toast but does not
+    // change the displayed records or make a mutation request.
+    const reset = page.getByRole("button", { name: "Reset", exact: true });
+    await reset.scrollIntoViewIfNeeded();
+    const before = await measurePageLayout(page);
+    expect(before.content.length).toBeGreaterThan(3);
+    await reset.click();
+
+    const notification = page.locator(".Toastify__toast").filter({ hasText: "Date filters reset to default." });
+    await expect(notification).toBeVisible();
+    await expectToastStyle(page, notification, "info");
+    expect(await measurePageLayout(page)).toEqual(before);
+    const close = notification.getByRole("button", { name: "close" });
+    await expect(close).toHaveCSS("width", width === 390 ? "40px" : "36px");
+    await close.click();
+    await expect(notification).toBeHidden();
+    expect(await measurePageLayout(page)).toEqual(before);
+  });
+}
+
+test("reduced motion preserves the toast auto-dismiss duration", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await mockProcurements(page);
+  await page.goto("/supplier/procurement?supplierId=child");
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await page.mouse.move(0, 0);
+  const notification = page.locator(".Toastify__toast").filter({ hasText: "Date filters reset to default." });
+  await expect(notification).toBeVisible();
+  await expect(notification.locator(".Toastify__progress-bar--animated")).toHaveCSS("animation-duration", "3s");
+  await expect(notification.locator(".Toastify__progress-bar--wrp")).toHaveCSS("visibility", "hidden");
+  await expect(notification).toBeHidden({ timeout: 7000 });
 });
 
 test("history storage failure has a retry instead of a misleading empty result", async ({ page }) => {

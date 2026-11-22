@@ -187,7 +187,6 @@ function SubscriptionsContent() {
         <PageHeading
           title="Customer Subscriptions"
           section="RELATIONSHIPS"
-          description="Regular deliveries for selected customers, without re-entering daily orders."
         />
         <Link data-button="secondary" href="/customer">
           Customers
@@ -213,8 +212,8 @@ function SubscriptionsContent() {
                 <h2>Scheduled orders</h2>
                 <p>
                   {configured
-                    ? "Automation credentials are configured. The daily schedule is set for 5:00 AM IST after deployment; actual timing depends on the hosting plan. Orders can also be generated below."
-                    : "The daily schedule is set for 5:00 AM IST, but automatic generation still needs deployment and scheduler credentials. Use Generate due orders to create scheduled orders."}
+                    ? "5:00 AM IST schedule · Credentials configured"
+                    : "5:00 AM IST schedule · Automation not configured"}
                 </p>
               </div>
               <button
@@ -235,9 +234,7 @@ function SubscriptionsContent() {
               </button>
             </div>
             <p>
-              Orders appear in Order History and update customer balances. They
-              start as Not Paid. Pausing stops future generation; resuming
-              starts from today without charging for paused dates.
+              New orders are unpaid. Resuming skips paused dates. Invoicing and payment matching are manual.
             </p>
             <Link
               href={
@@ -332,10 +329,7 @@ function SubscriptionsContent() {
                   ))}
                 </fieldset>
                 <div className={styles.products}>
-                  <p>
-                    Enter quantities for the products to deliver. Prices are
-                    copied from the customer and saved with this subscription.
-                  </p>
+                  <p>Customer prices are saved with the subscription.</p>
                   {SUBSCRIPTION_PRODUCTS.map((product) => (
                     <div className={styles.product} key={product.name}>
                       <strong>{product.name}</strong>
@@ -478,7 +472,7 @@ function SubscriptionsContent() {
                             .join(", ")}{" "}
                       ·{" "}
                       {subscription.gstType === "exclusive"
-                        ? "Includes 5% GST added to prices"
+                        ? "5% GST added"
                         : "GST included"}
                     </p>
                     <p>
@@ -489,19 +483,12 @@ function SubscriptionsContent() {
                       ·{" "}
                       {subscription.affectStockValue
                         ? "Deducts stock"
-                        : "Does not deduct stock"}
+                        : "No stock deduction"}
                     </p>
                     {subscription.status === "active" && (
                       <p>
-                        Next date to process:{" "}
+                        Next processing date:{" "}
                         {formatDateForDisplay(subscription.nextDate)}
-                        {!subscription.weekdays.includes(
-                          new Date(
-                            `${subscription.nextDate}T00:00:00Z`,
-                          ).getUTCDay(),
-                        )
-                          ? " (delivery only on selected weekdays)"
-                          : ""}
                       </p>
                     )}
                     {subscription.lastOrderDate && (
@@ -611,15 +598,6 @@ function SubscriptionsContent() {
                 ))}
               </div>
             )}
-          </section>
-          <section data-fade-up="" className={styles.panel}>
-            <h2>Invoices & payments</h2>
-            <p>
-              Subscription orders use your existing invoices and customer
-              payment ledger. Invoice delivery and bank/payment matching are not
-              connected yet; no invoices or messages are sent automatically, and
-              payments are not assumed to be received.
-            </p>
           </section>
         </>
       )}

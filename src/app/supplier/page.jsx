@@ -1,6 +1,7 @@
 "use client";
 import AdminSummary from "@/components/AdminSummary";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { startDeleteToast } from "@/lib/delete-toast";
 import DataSkeleton from "@/components/DataSkeleton";
 import RowActionPopup from "@/components/RowActionPopup";
 import CategoryBadge from "@/components/CategoryBadge";
@@ -476,7 +477,7 @@ export default function Supplier() {
 
   const handleDelete = async (id) => {
     setDeleteLoading(id);
-    const notification = toast.loading("Deleting supplier…");
+    const notification = startDeleteToast("Deleting supplier…");
     try {
       const res = await fetch(`/api/supplier?id=${id}`, { method: "DELETE" });
       const data = await res.json();
@@ -485,13 +486,13 @@ export default function Supplier() {
         throw new Error(data.error || data.message || `Delete failed`);
       }
 
-      toast.update(notification, { render: "Supplier deleted successfully", type: "success", isLoading: false, autoClose: 5000, closeOnClick: true });
+      notification.success("Supplier deleted successfully");
       setDeleteTarget(null);
       if (formData.supplierId === id) resetForm();
       fetchData();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.update(notification, { render: error.message || "Failed to delete supplier", type: "error", isLoading: false, autoClose: 5000, closeOnClick: true });
+      notification.error(error.message || "Failed to delete supplier");
     } finally {
       setDeleteLoading(null);
     }
@@ -587,7 +588,7 @@ export default function Supplier() {
 
       <div className={styles.headerSection}>
         <div className={styles.headerContent}>
-          <PageHeading title="Suppliers" section="RELATIONSHIPS" description="Manage your supplier network, milk rates, and procurement details." />
+          <PageHeading title="Suppliers" section="RELATIONSHIPS" />
 
           {!createSupplier && (
             <div className={styles.createSection}>

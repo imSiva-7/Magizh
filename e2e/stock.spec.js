@@ -72,12 +72,12 @@ test("minimum level edits stay as drafts until saved and cancel discards them", 
   await page.goto("/stock");
   const butter = page.getByRole("article", { name: "Butter inventory" });
   await expect(butter).toContainText("Minimum 20.00 kg");
-  await page.getByRole("button", { name: "Minimum levels", exact: true }).click();
+  await page.getByRole("button", { name: "Min levels", exact: true }).click();
   await page.getByLabel("Butter (kg)", { exact: true }).fill("4");
   await expect(butter).toContainText("Minimum 20.00 kg");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(butter).toContainText("Low stock");
-  await page.getByRole("button", { name: "Minimum levels", exact: true }).click();
+  await page.getByRole("button", { name: "Min levels", exact: true }).click();
   await expect(page.getByLabel("Butter (kg)", { exact: true })).toHaveValue("20");
   await page.getByLabel("Butter (kg)", { exact: true }).fill("4.5");
   await page.getByRole("button", { name: "Save minimum levels" }).click();
@@ -104,7 +104,7 @@ test("optional data failures do not appear as zero prices or healthy stock", asy
   await expect(page.getByRole("article", { name: "Butter inventory" })).toContainText("Minimum unavailable");
   await expect(page.getByRole("article", { name: "Butter inventory" })).toContainText("Not priced");
   await expect(page.getByRole("status")).toContainText("customer prices");
-  await expect(page.getByRole("button", { name: "Minimum levels", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Min levels", exact: true })).toBeDisabled();
 });
 
 test("failed balance requests show a retry instead of a false empty inventory", async ({ page }) => {
@@ -112,7 +112,7 @@ test("failed balance requests show a retry instead of a false empty inventory", 
   await page.goto("/stock");
   await expect(page.getByRole("alert").filter({ hasText: "Could not load stock balances" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "+ Adjust stock", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "+/- stock", exact: true })).toBeDisabled();
 });
 
 test("slow stock requests show card placeholders and refresh retains loaded inventory", async ({ page }) => {
@@ -123,8 +123,8 @@ test("slow stock requests show card placeholders and refresh retains loaded inve
   const loading = page.getByTestId("stock-loading");
   await expect(loading).toBeVisible();
   await expect(page.getByRole("status")).toHaveText("Loading inventory…");
-  await expect(page.getByTestId("stock-product-skeleton")).toHaveCount(7);
-  await expect(page.getByRole("button", { name: "+ Adjust stock", exact: true })).toBeDisabled();
+  await expect(page.getByTestId("stock-product-skeleton")).toHaveCount(6);
+  await expect(page.getByRole("button", { name: "+/- stock", exact: true })).toBeDisabled();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await page.screenshot({ path: "test-results/stock-loading-mobile.png", fullPage: true });

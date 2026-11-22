@@ -338,7 +338,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                   {lines.map((line) => (
                     <div key={line.name} className={orderStyles.input_group}>
                       <label htmlFor={`new-order-${line.price}`}>
-                        {line.name}
+                        {line.name} ({line.unit})
                       </label>
                       <input
                         id={`new-order-${line.price}`}
@@ -362,7 +362,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                     </div>
                   ))}
                 </div>
-                <p className={styles.hint}>Enter quantities in L or kg. Avg is the average saved customer price, before any extra GST.</p>
+                <p className={styles.hint}>Avg price · before extra GST</p>
                 {lines.some((line) => !line.priced) && (
                   <p className={styles.hint}>
                     Products without a price are unavailable. Ask an admin to

@@ -1,6 +1,7 @@
 import "./globals.css";
 import "./buttons.css";
 import "./filters.css";
+import "./toasts.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EntryShortcuts from "@/components/EntryShortcuts";

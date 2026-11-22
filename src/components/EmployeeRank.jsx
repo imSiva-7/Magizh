@@ -43,8 +43,7 @@ export function EmployeeRankBadge({ ranking, month }) {
 export function EmployeeLeaderboard({ month, state }) {
   if (!month) return null;
   return <section className={styles.board} aria-label="Monthly employee hours ranking">
-    <div className={styles.heading}><h2>Top employees</h2><span>{formatAttendanceMonth(month)}</span></div>
-    <p className={styles.hint}>Ranked by completed attendance hours. Missing checkouts are excluded. Search and status filters do not change ranks.</p>
+    <div className={styles.heading}><h2>Top employees by completed hours</h2><span>{formatAttendanceMonth(month)}</span></div>
     {state.loading ? <p role="status">Loading hours ranking…</p> : state.error ? <p role="alert">{state.error} <button data-button="secondary" type="button" onClick={state.retry}>Retry ranking</button></p> : !state.rankings.length ? <p className={styles.hint}>No completed attendance hours to rank this month.</p> : <ol className={styles.leaders}>
       {state.rankings.filter(row => row.rank <= 3).map(row => <li key={row.empID}>
         <EmployeeRankBadge ranking={row} month={month} />

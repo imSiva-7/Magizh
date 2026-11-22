@@ -1,6 +1,7 @@
 :root {
   color-scheme: light;
   --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --page-max-width: 1400px;
   --page-gutter: clamp(1.25rem, 3.5vw, 2.5rem);
   --brand: #27795d;
   --brand-dark: #163e32;
@@ -241,5 +242,6 @@ h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; ov
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  /* Toastify uses the progress animation as its auto-dismiss timer. */
+  *:not(.Toastify__progress-bar--animated), *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

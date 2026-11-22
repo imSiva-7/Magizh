@@ -11,8 +11,7 @@ export default function CustomerLeaderboard({ totals, customers = [], orders = [
   const rankings = useMemo(() => rankCustomerSales(totals, customers, orders), [totals, customers, orders]);
   const period = startDate || endDate ? `${formatDateForDisplay(startDate) || "Beginning"} to ${formatDateForDisplay(endDate) || "Latest"}` : "All time";
   return <section data-fade-up="" className={styles.board} aria-label="Customer sales ranking">
-    <div className={styles.heading}><h2>Top customers</h2><span>{period}</span></div>
-    <p className={styles.hint}>Ranked by sales value in this period, including unpaid orders. Search and activity filters do not change ranks.</p>
+    <div className={styles.heading}><h2>Top customers by total sales</h2><span>{period}</span></div>
     {!rankings.length ? <p className={styles.hint}>No sales to rank in this period.</p> : <ol className={styles.leaders}>
       {rankings.filter(row => row.rank <= 3).map(row => {
         const label = row.rank === 1 ? (row.tied ? "Joint top customer" : "Top customer") : `${row.tied ? "Joint " : ""}#${row.rank}`;

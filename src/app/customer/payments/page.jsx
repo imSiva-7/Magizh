@@ -402,7 +402,6 @@ export default function CustomerPayments() {
       <AdminSummary><div data-filter="card" className={styles.filter_section}>
         <div data-filter="title" className={styles.filter_title}>
           <h2>Filter by Date Range</h2>
-          <span>Applies to period sales and receipts; overall balances stay all time</span>
         </div>
 
         <div data-filter="grid" className={styles.date_input_group}>

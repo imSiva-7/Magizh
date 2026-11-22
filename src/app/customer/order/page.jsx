@@ -1,6 +1,7 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { startDeleteToast } from "@/lib/delete-toast";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -466,16 +467,17 @@ function OrdersContent() {
     }
     setConfirmingDeleteId(null);
     setDeleteLoading(id);
+    const notification = startDeleteToast("Deleting order…");
     try {
       const res = await fetch(`/api/customer/order?id=${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Delete failed");
-      toast.success("Order deleted");
+      notification.success("Order deleted");
       await fetchAllData();
       if (editingId._id === id) resetForm();
     } catch (error) {
-      toast.error(error.message);
+      notification.error(error.message);
     } finally {
       setDeleteLoading(null);
       setOpenActionMenuId(null);

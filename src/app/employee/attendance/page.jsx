@@ -1,5 +1,6 @@
 "use client";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { startDeleteToast } from "@/lib/delete-toast";
 import AdminSummary from "@/components/AdminSummary";
 import { formatAttendanceHours, formatAttendanceAverage, completedAttendanceAverage } from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
@@ -197,6 +198,7 @@ function AttendanceContent() {
       return;
     }
     setConfirmingDeleteAdvanceId(null);
+    const notification = startDeleteToast("Deleting advance payment…");
 
     try {
       const res = await fetch(
@@ -212,11 +214,11 @@ function AttendanceContent() {
         throw new Error(data.error || "Failed to delete advance");
       }
 
-      toast.success("Advance payment deleted successfully");
+      notification.success("Advance payment deleted successfully");
       fetchAttendanceData(selectedEmpID, month);
     } catch (error) {
       console.error("Delete advance error:", error);
-      toast.error(error.message || "Failed to delete advance");
+      notification.error(error.message || "Failed to delete advance");
     }
   };
 
@@ -361,7 +363,6 @@ function AttendanceContent() {
 
           <AdminSummary><section className={styles.summaryCard} aria-labelledby="attendance-stats-title">
             <h2 id="attendance-stats-title">Monthly Stats — {formatAttendanceMonth(month)}</h2>
-            {attendanceData.summary.paidLeaveEligible === false && <p>Paid leave starts the month after this employee was created.</p>}
             {[
               ["Attendance", [
                 ["Month Days", attendanceData.period.daysInPeriod],
@@ -372,6 +373,7 @@ function AttendanceContent() {
                 ["Other Absent Days", attendanceData.summary.excessLeaveDays, "Absent days beyond the paid leave allowance"],
                 ["Paid Leave Used / Limit", `${attendanceData.summary.paidLeaveDays} / ${attendanceData.summary.paidLeaveAllowance} days`],
                 ["Paid Leave Left", attendanceData.summary.remainingPaidLeave],
+                ...(attendanceData.summary.paidLeaveEligible === false ? [["Paid Leave Eligible", "No", "Eligibility starts the month after the employee was created"]] : []),
                 ["Hours Worked", formatAttendanceHours(attendanceData.summary.totalHoursWorked)],
                 ["Month Hours", formatAttendanceHours(attendanceData.summary.standardHours)],
                 ["Hours for Full Pay", formatAttendanceHours(attendanceData.summary.fullSalaryThresholdHours)],

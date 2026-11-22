@@ -32,7 +32,7 @@ for (const history of [false, true]) {
     await form.getByRole("button", { name: "Save times", exact: true }).click();
     await expect(form).toHaveCount(0);
     expect(saved).toMatchObject({ empID: "EMP001", date: "2026-01-15", expectedCheckIn: "08:00:00", expectedCheckOut: "16:00:00" });
-    await expect(page.getByRole("cell", { name: history ? "9.00h" : "9h", exact: true })).toBeVisible();
+    await expect(page.getByRole("cell", { name: "9h 00m", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
@@ -73,6 +73,40 @@ test("switching employees ignores an older slow attendance response", async ({ p
   await expect(name).toContainText("Bala");
   await expect(name).not.toContainText("Anitha");
 });
+
+for (const width of [320, 390]) {
+  test(`attendance history fits all columns on a ${width}px screen`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.route("**/api/attendance/history?*", route => route.fulfill({ json: {
+      records: [
+        { date: "2026-01-15", empID: "EMP001", name: "Mageshwari", checkIn: "23:59:00", checkOut: "06:15:00", checkOutNextDay: true, hoursWorked: 6.27 },
+        { date: "2026-01-15", empID: "EMP002", name: "A long employee name", checkIn: "08:44:00", hoursWorked: 0 },
+      ],
+      summary: { uniqueEmployees: 2, totalHours: 6.27, incompleteCount: 1 },
+    } }));
+    await page.goto("/employee/attendance/history");
+    const day = page.getByRole("region", { name: "15/01/26", exact: true });
+    const table = day.getByRole("table");
+    await expect(table.getByRole("columnheader")).toHaveCount(5);
+    await expect(table.getByRole("columnheader", { name: "Check out (IST)", exact: true })).toBeVisible();
+    await expect(table.getByText("11:59 PM", { exact: true })).toBeVisible();
+    await expect(table.getByText("(+1 day)", { exact: false })).toBeVisible();
+    await expect(table.getByText("Missing", { exact: true })).toBeVisible();
+    await expect(table.getByRole("button", { name: /Attendance actions for EMP001/ })).toBeVisible();
+
+    const geometry = await table.evaluate(element => ({
+      tableWidth: element.getBoundingClientRect().width,
+      wrapperWidth: element.parentElement.clientWidth,
+      overflowingCells: [...element.querySelectorAll("th, td")]
+        .filter(cell => cell.scrollWidth > cell.clientWidth + 1)
+        .map(cell => cell.textContent),
+    }));
+    expect(geometry.tableWidth).toBeLessThanOrEqual(geometry.wrapperWidth + 1);
+    expect(geometry.overflowingCells).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await day.screenshot({ path: `test-results/attendance-history-${width}.png` });
+  });
+}
 
 test("advance entry hides quick shortcuts and fits a narrow mobile screen", async ({ page }) => {
   await page.goto("/employee/attendance?empID=EMP002");

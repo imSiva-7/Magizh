@@ -97,7 +97,7 @@ export default function AttendanceHistoryPage() {
         draggable
       />
       <div className={styles.headerContent}>
-        <PageHeading title="Attendance History" section="YOUR TEAM" description="Daily check-in, check-out, and hours worked. Times in IST." />
+        <PageHeading title="Attendance History" section="YOUR TEAM" />
         <Link data-button="secondary" href="/employee/attendance" className={styles.secondaryButton}>Employee details</Link>
       </div>
 
@@ -143,9 +143,9 @@ export default function AttendanceHistoryPage() {
       ) : (
         <>
           {data.summary && <AdminSummary><div data-fade-up="" className={styles.historyOverview} aria-label="Attendance summary">
-            <div className={styles.historyStat}><span>Employees</span><strong>{data.summary.uniqueEmployees}</strong><small>in these results</small></div>
-            <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{formatAttendanceHours(data.summary.totalHours)}</strong><small>recorded this month</small></div>
-            <div className={`${styles.historyStat} ${data.summary.incompleteCount > 0 ? styles.historyStatAttention : ""}`}><span>Missing checkout</span><strong>{data.summary.incompleteCount || 0}</strong><small>{data.summary.incompleteCount ? "needs attention" : "all checkouts recorded"}</small></div>
+            <div className={styles.historyStat}><span>Employees</span><strong>{data.summary.uniqueEmployees}</strong></div>
+            <div className={`${styles.historyStat} ${styles.historyStatHours}`}><span>Total hours</span><strong>{formatAttendanceHours(data.summary.totalHours)}</strong></div>
+            <div className={`${styles.historyStat} ${data.summary.incompleteCount > 0 ? styles.historyStatAttention : ""}`}><span>Missing checkout</span><strong>{data.summary.incompleteCount || 0}</strong></div>
           </div></AdminSummary>}
           <div data-fade-up="" className={styles.historyGroups}>
             {groups.map(([date, records]) => (
@@ -153,7 +153,7 @@ export default function AttendanceHistoryPage() {
                 <div className={styles.historyGroupHeader}><h2 className={styles.historyDateTitle}><time dateTime={date}>{formatAttendanceDate(date)}</time></h2></div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.attendanceTable}>
-                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in</th><th scope="col">Check out</th><th scope="col">Hours</th>{isAdmin && <th scope="col">Actions</th>}</tr></thead>
+                    <thead><tr><th scope="col">Employee</th><th scope="col">Check in (IST)</th><th scope="col">Check out (IST)</th><th scope="col">Hours</th>{isAdmin && <th scope="col">Actions</th>}</tr></thead>
                     <tbody>{records.map((record, index) => (
                       <tr key={`${record.empID}-${date}-${index}`}>
                         <td className={styles.nameCell}>
@@ -161,7 +161,7 @@ export default function AttendanceHistoryPage() {
                           <span className={styles.historyEmployeeId}>{record.empID}</span>
                         </td>
                         <td className={styles.historyTimeCell}>{record.checkIn ? <span className={styles.checkInTime}>{formatTime(record.checkIn)}</span> : "—"}</td>
-                        <td className={styles.historyTimeCell}>{record.checkOut ? <span className={styles.checkOutTime}>{formatTime(record.checkOut)}{record.checkOutNextDay && " (+1 day)"}</span> : record.checkIn ? <span className={styles.missingBadge}>Missing</span> : "—"}</td>
+                        <td className={styles.historyTimeCell}>{record.checkOut ? <span className={styles.checkOutTime}>{formatTime(record.checkOut)}{record.checkOutNextDay && <span className={styles.nextDayMarker}> (+1 day)</span>}</span> : record.checkIn ? <span className={styles.missingBadge}>Missing</span> : "—"}</td>
                         <td className={styles.hoursCell}>{formatAttendanceHours(record.hoursWorked)}</td>
                         {isAdmin && <td><AttendanceTimeEditor empID={record.empID} day={record} onSaved={() => { setRefresh(value => value + 1); toast.success("Attendance times updated"); }} /></td>}
                       </tr>

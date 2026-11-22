@@ -1,6 +1,7 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { startDeleteToast } from "@/lib/delete-toast";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -219,6 +220,7 @@ export default function ProductionPage() {
       return;
     }
     setConfirmingDeleteId(null);
+    const notification = startDeleteToast("Deleting entry…");
 
     const previousEntries = [...entries];
     setEntries((prev) => prev.filter((item) => item._id !== id));
@@ -228,10 +230,10 @@ export default function ProductionPage() {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Delete failed");
-      toast.success("Entry deleted");
+      notification.success("Entry deleted");
     } catch (error) {
       setEntries(previousEntries);
-      toast.error("Error deleting entry");
+      notification.error("Error deleting entry");
     }
   };
 
@@ -251,7 +253,7 @@ export default function ProductionPage() {
 
       {/* Header */}
       <header className={styles.pageHeader}>
-        <PageHeading title="Production Entry" section="DAILY OPERATIONS" description="Record each batch, track milk quality, and capture finished products." />
+        <PageHeading title="Production Entry" section="DAILY OPERATIONS" />
       </header>
 
       {/* Main Form */}

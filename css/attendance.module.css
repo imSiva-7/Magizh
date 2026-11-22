@@ -1092,10 +1092,9 @@
 .historyControls .inputGroup { margin: 0; min-width: 0; }
 .historyControlActions { display: flex; gap: 0.5rem; }
 .historyOverview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.85rem; margin: 1.35rem 0; }
-.historyStat { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 0.75rem; row-gap: 0.2rem; padding: 0.9rem 1rem; background: #fff; border: 1px solid var(--border); border-radius: 0.85rem; box-shadow: var(--shadow-card); }
+.historyStat { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 0.75rem; padding: 0.9rem 1rem; background: #fff; border: 1px solid var(--border); border-radius: 0.85rem; box-shadow: var(--shadow-card); }
 .historyStat > span { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
-.historyStat > strong { grid-column: 2; grid-row: 1 / span 2; color: var(--brand-dark); font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
-.historyStat > small { color: var(--text-muted); font-size: 0.72rem; }
+.historyStat > strong { grid-column: 2; color: var(--brand-dark); font-size: 1.45rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .historyStatHours { background: #eff6ff; border-color: #bfdbfe; }
 .historyStatHours > strong { color: #1e40af; }
 .historyStatHours > strong small { font-size: 0.8rem; }
@@ -1117,6 +1116,16 @@
 .historyEmployee:hover { color: var(--brand); text-decoration: underline; }
 .historyEmployeeId { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-top: 0.2rem; }
 @media (max-width: 1000px) { .historyControls { grid-template-columns: repeat(2, minmax(0, 1fr)); } .historyControlActions { align-self: end; } }
+@media (max-width: 768px) {
+  .compactHistory .historyGroup .attendanceTable { min-width: 0; }
+  .compactHistory .historyGroup .attendanceTable th:first-child { width: 27%; text-align: left; }
+  .compactHistory .historyGroup .attendanceTable th:nth-child(5) { width: 3rem; }
+  .compactHistory .historyGroup .attendanceTable th, .compactHistory .historyGroup .attendanceTable td { padding: 0.65rem 0.35rem; }
+  .compactHistory .historyGroup .attendanceTable :is(th, td):not(:first-child) { text-align: center; }
+  .compactHistory .historyGroup .attendanceTable :is(th, td):nth-child(5) { padding-inline: 0.12rem; }
+  .compactHistory .historyGroup .attendanceTable th { white-space: normal; }
+  .compactHistory .historyEmployee { max-width: 100%; }
+}
 @media (max-width: 600px) {
   .historyOverview { grid-template-columns: 1fr; gap: 0.6rem; }
   .historyStat { padding: 0.75rem 0.85rem; }
@@ -1124,8 +1133,16 @@
   .historyControls .inputGroup:nth-child(2) { grid-column: 1 / -1; grid-row: 2; }
   .historyControlActions { grid-column: 1 / -1; }
   .historyControlActions button { flex: 1; }
-  .compactHistory .historyGroup .attendanceTable th, .compactHistory .historyGroup .attendanceTable td { padding: 0.7rem 0.5rem; font-size: 0.75rem; }
-  .compactHistory .historyGroup .missingBadge { padding: 0.2rem 0.35rem; font-size: 0.7rem; }
+  .compactHistory .historyGroup .attendanceTable { min-width: 290px; }
+  .compactHistory .historyGroup .attendanceTable th:first-child { width: auto; }
+  .compactHistory .historyGroup .attendanceTable th:nth-child(2),
+  .compactHistory .historyGroup .attendanceTable th:nth-child(3) { width: clamp(3.8rem, 19vw, 7rem); }
+  .compactHistory .historyGroup .attendanceTable th:nth-child(4) { width: clamp(3rem, 14vw, 5rem); }
+  .compactHistory .historyGroup .attendanceTable th, .compactHistory .historyGroup .attendanceTable td { padding: 0.45rem 0.2rem; font-size: 0.75rem; }
+  .compactHistory .historyGroup :is(.checkInTime, .checkOutTime, .missingBadge) { padding: 0.15rem 0.2rem; font-size: 0.7rem; }
+  .compactHistory .nextDayMarker { display: block; font-size: 0.625rem; line-height: 1.2; }
+  .compactHistory .historyGroup .hoursCell { white-space: normal; }
+  .compactHistory .historyEmployeeId { overflow-wrap: anywhere; }
 }
 
 .compactHistory .historyControls { margin-top: 1.5rem; }

@@ -118,12 +118,12 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
   }}>
       <div className={styles.modal_header}><h3 id="customer-payment-title" title={customerName}>Record payment — {customerName}</h3><button data-button="icon" type="button" className={styles.close_btn} onClick={onClose} disabled={submitting} aria-label="Close payment dialog">✕</button></div>
-      <p>Record the amount received, including partial payments. Extra payments stay as customer credit.</p>
+      <p>Overpayments become customer credit.</p>
       <div className={styles.payment_info}><p>Total received: <strong className={styles.received_number}>{money(currentPaid)}</strong></p><p>Current balance: <strong className={currentDue < 0 ? styles.credit_number : styles.due_number}>{balanceText(currentDue)}</strong></p></div>
       <form onSubmit={submit} className={styles.payment_form}>
         <label>Entry type<select value={kind} onChange={event => setKind(event.target.value)} disabled={submitting}><option value="payment">Payment received</option>{isAdmin && <option value="correction">Payment correction</option>}</select></label>
         <label>{kind === "payment" ? "Amount received (₹)" : "Correction amount (₹)"}<input ref={amountRef} className={styles.amount_input} type="number" step="0.01" inputMode="decimal" min={kind === "payment" ? "0.01" : undefined} placeholder={kind === "payment" ? "Enter amount (e.g. 500)" : "e.g. -100 or 50"} value={amount} onChange={event => setAmount(event.target.value)} disabled={submitting} required /></label>
-        {kind === "correction" && <p>Use a negative amount to reverse a receipt, or a positive amount to correct an under-recorded receipt. The reason is saved in payment history.</p>}
+        {kind === "correction" && <p>Negative amount: reversal. Positive amount: additional receipt.</p>}
         <label>Payment method<select value={method} onChange={event => setMethod(event.target.value)} disabled={submitting}>{["Cash", "UPI", "Bank transfer", "Cheque", "Other"].map(value => <option key={value}>{value}</option>)}</select></label>
         <label>Reference (optional)<input value={reference} maxLength={100} onChange={event => setReference(event.target.value)} disabled={submitting} placeholder="UPI or bank reference" /></label>
         <label>{kind === "correction" ? "Correction reason" : "Note (optional)"}<input value={note} maxLength={500} onChange={event => setNote(event.target.value)} disabled={submitting} required={kind === "correction"} /></label>
