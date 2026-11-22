@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useRef } from "react";
 import { toast } from "react-toastify";
+import { DELETE_TOAST_CLASS } from "@/lib/delete-toast";
 import styles from "./ConfirmDeleteButton.module.css";
 
 const CONFIRM_DELAY_MS = 500;
@@ -23,6 +24,7 @@ function showDeleteNotice() {
     toastId: DELETE_NOTICE_KEY,
     role: "status",
     autoClose: 6500,
+    className: DELETE_TOAST_CLASS,
   });
 }
 

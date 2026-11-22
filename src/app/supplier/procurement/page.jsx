@@ -1,6 +1,7 @@
 "use client";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { startDeleteToast } from "@/lib/delete-toast";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
@@ -604,6 +605,7 @@ function ProcurementContent() {
       return;
     }
     setConfirmingDeleteId(null);
+    const notification = startDeleteToast("Deleting record…");
 
     try {
       const res = await fetch(`/api/supplier/procurement?id=${id}`, {
@@ -613,12 +615,12 @@ function ProcurementContent() {
         const errorData = await res.json();
         throw new Error(errorData.error || "Delete failed");
       }
+      notification.success("Deleted successfully");
       await fetchAllData();
-      toast.success("Deleted successfully");
       if (editingId._id === id) resetForm();
     } catch (error) {
       console.error("Delete error:", error);
-      toast.error(error.message || "Failed to delete record");
+      notification.error(error.message || "Failed to delete record");
     }
   };
 
@@ -875,10 +877,10 @@ function ProcurementContent() {
               readOnly
               placeholder={
                 data.supplier?.supplierCustomRate
-                  ? `Custom Rate Rs: ${data.supplier?.supplierCustomRate}`
+                  ? `Custom rate: ₹${data.supplier?.supplierCustomRate}`
                   : hasCut
-                    ? `Based on reduced TSR (${effectiveTSRate.toFixed(0)})`
-                    : "Auto-calculated based on 'Total Solids' rate"
+                    ? `Adjusted TSR: ${effectiveTSRate.toFixed(0)}`
+                    : "Auto-calculated"
               }
               error={errors.rate}
             />
@@ -894,20 +896,6 @@ function ProcurementContent() {
               placeholder="Auto-calculated"
             />
           </div>
-
-          {hasCut && currentPricing.totalAmount && (
-            <div className={styles.cut_info_banner}>
-              <span className={styles.cut_info_icon}>ℹ️</span>
-              <span>
-                TSR includes a cut of{" "}
-                {parseFloat(data.supplier.cutPercentage).toFixed(1)} for{" "}
-                <strong>
-                  {data.supplier.headSupplierName || "the head supplier"}
-                </strong>
-                .
-              </span>
-            </div>
-          )}
 
           {editingId && editingId._id && (
             <div className={styles.edit_payment_wrapper}>
@@ -1106,9 +1094,6 @@ function ProcurementContent() {
           <div className={styles.head_earnings_header}>
             <div>
               <h2>Head Supplier Earnings</h2>
-              <span className={styles.head_earnings_subtitle}>
-                TSR cuts received from child suppliers
-              </span>
             </div>
             <button data-button="secondary"
               type="button"
@@ -1125,8 +1110,7 @@ function ProcurementContent() {
             <p className={styles.cut_info_banner} role="status">
               {headData.reviewCount} recovered commission
               {headData.reviewCount === 1 ? " needs" : "s need"} payment review.
-              Confirm their payment status before treating the outstanding total
-              as final.
+              {" "}Due is provisional.
             </p>
           )}
 
@@ -1135,10 +1119,7 @@ function ProcurementContent() {
           ) : !headData || headData.entries.length === 0 ? (
             <div className={styles.empty_state}>
               <span className={styles.empty_icon}>📭</span>
-              <p>
-                No cuts received yet. Child procurements will appear here
-                automatically.
-              </p>
+              <p>No cuts received yet.</p>
             </div>
           ) : (
             <>
