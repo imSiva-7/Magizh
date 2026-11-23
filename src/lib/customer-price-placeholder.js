@@ -1,7 +1,11 @@
 import { stockMoney, stockNumber } from "./stock";
 
-export function customerPricePlaceholder(rate, average, unit) {
+export function customerQuantityLabel(name, unit) {
+  return `${name} Quantity (${unit === "kg" ? "Kg" : unit})`;
+}
+
+export function customerPricePlaceholder(rate, average) {
   const price = stockNumber(rate);
   const averagePrice = stockNumber(average);
-  return `${price !== null && price > 0 ? `${stockMoney(price)}` : "Price not set"} · Avg ${averagePrice === null ? "unavailable" : stockMoney(Math.round(averagePrice))}`;
+  return `Rate: ${price !== null && price > 0 ? stockMoney(price) : "Not set"} · Avg Rate: ${averagePrice === null ? "Unavailable" : stockMoney(Math.round(averagePrice))}`;
 }

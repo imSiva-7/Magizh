@@ -52,8 +52,11 @@ test("staff can create an order in the inline history form with saved prices on 
   await dialog.getByRole("button", { name: /Corner Shop/ }).click();
   await expect(dialog.getByLabel("Date", { exact: true })).toBeFocused();
   await dialog.getByLabel("Date", { exact: true }).fill(earlierDate);
-  await dialog.getByLabel("Milk quantity (L)").fill("2.5");
-  await expect(dialog.getByLabel("Butter quantity (kg)")).toBeDisabled();
+  const milk = dialog.getByLabel("Milk Quantity (L)", { exact: true });
+  await expect(milk).toHaveAttribute("placeholder", "Rate: ₹40 · Avg Rate: ₹40");
+  await expect(dialog.getByLabel("Ghee Quantity (L)", { exact: true })).toHaveAttribute("placeholder", "Rate: ₹500 · Avg Rate: ₹500");
+  await milk.fill("2.5");
+  await expect(dialog.getByLabel("Butter Quantity (Kg)", { exact: true })).toBeDisabled();
   await dialog.getByLabel("GST Option", { exact: true }).selectOption("exclusive");
   await expect(dialog.getByLabel("Order Total", { exact: true })).toHaveValue("₹105.00");
   await expect(dialog.getByLabel("Milk amount", { exact: true })).toHaveCount(0);
@@ -66,10 +69,10 @@ test("staff can create an order in the inline history form with saved prices on 
   await dialog.getByRole("button", { name: "Create Order", exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(launcher).toBeFocused();
-  await expect(page.getByLabel("From Date", { exact: true })).toHaveValue(earlierDate);
+  await expect(page.getByLabel("From Date", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("table").getByRole("link", { name: "Corner Shop", exact: true })).toBeVisible();
   expect(writes).toHaveLength(1);
-  expect(writes[0]).toMatchObject({ customerId: customer._id, totalAmount: 105, gstType: "exclusive", gstRate: 5, affectStockValue: false, paymentStatus: "Not Paid", items: [{ product: "Milk", quantity: 2.5, ratePerUnit: 40, totalAmount: 105 }] });
+  expect(writes[0]).toMatchObject({ customerId: customer._id, date: earlierDate, totalAmount: 105, gstType: "exclusive", gstRate: 5, affectStockValue: false, paymentStatus: "Not Paid", items: [{ product: "Milk", quantity: 2.5, ratePerUnit: 40, totalAmount: 105 }] });
 });
 
 test("failed saves retain input and double clicks submit once; Escape restores focus", async ({ page, context, baseURL }) => {

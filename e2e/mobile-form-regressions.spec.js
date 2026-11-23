@@ -43,7 +43,11 @@ for (const [width, height] of [[320, 568], [390, 844], [568, 320], [844, 390]]) 
     await page.keyboard.press("Escape");
     await expect(form).toHaveCount(0);
     await page.goto(`/customer/order?customerId=${id}`);
-    await expect(page.getByLabel("Milk", { exact: true })).toBeEnabled();
+    const milk = page.getByLabel("Milk Quantity (L)", { exact: true });
+    await expect(milk).toBeEnabled();
+    await expect(milk).toHaveAttribute("placeholder", "Rate: ₹40 · Avg Rate: ₹40");
+    await expect(page.getByLabel("Butter Quantity (Kg)", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Ghee Quantity (L)", { exact: true })).toHaveAttribute("placeholder", "Rate: ₹500 · Avg Rate: ₹500");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const launcher = page.getByRole("button", { name: "Record payment", exact: true });
     await launcher.click();

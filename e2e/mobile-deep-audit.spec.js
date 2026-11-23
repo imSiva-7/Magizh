@@ -60,7 +60,7 @@ for (const [width, height] of [[320, 568], [390, 844], [768, 1024], [844, 390]])
         if (path.startsWith("/customer/order?")) {
           const payment = page.getByRole("button", { name: "Record payment", exact: true });
           await expect(payment).toContainText("Record payment");
-          const milk = page.getByLabel("Milk", { exact: true });
+          const milk = page.getByLabel("Milk Quantity (L)", { exact: true });
           await expect(milk).toHaveAttribute("inputmode", "decimal");
           await page.locator('label[for="order-milk"]').click();
           await expect(milk).toBeFocused();
@@ -120,7 +120,7 @@ test.describe("IST procurement sessions", () => {
 test("order detail rejects malformed quantities before any write", async ({ page, context, baseURL }) => {
   await setup(page, context, baseURL);
   await page.goto(`/customer/order?customerId=${id}`);
-  const milk = page.getByLabel("Milk", { exact: true });
+  const milk = page.getByLabel("Milk Quantity (L)", { exact: true });
   await milk.fill("1.2.3");
   await page.locator('form button[type="submit"]').click();
   await expect(milk).toHaveAttribute("aria-invalid", "true");

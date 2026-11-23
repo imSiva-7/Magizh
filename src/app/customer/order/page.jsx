@@ -13,7 +13,7 @@ import { customerAccountTrends } from "@/lib/history-card-trends";
 import CategoryBadge from "@/components/CategoryBadge";
 import CustomerPaymentDialog from "@/components/CustomerPaymentDialog";
 import { averageProductPrice, DAIRY_PRODUCTS } from "@/lib/stock";
-import { customerPricePlaceholder } from "@/lib/customer-price-placeholder";
+import { customerPricePlaceholder, customerQuantityLabel } from "@/lib/customer-price-placeholder";
 
 import { useSession } from "next-auth/react";
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
@@ -37,7 +37,7 @@ const PRODUCT_FIELDS = [
   { name: "Ghee", priceKey: "gheePrice" },
   { name: "Soft Paneer", priceKey: "softPaneerPrice" },
   { name: "Premium Paneer", priceKey: "premiumPaneerPrice" },
-];
+].map(product => ({ ...product, unit: DAIRY_PRODUCTS.find(item => item.name === product.name).unit }));
 
 const GST_RATE = 5;
 const GST_OPTIONS = [
@@ -569,7 +569,7 @@ function OrdersContent() {
               <InputGroup
                 key={product.name}
                 className={`${styles.input} ${styles.price_hint}`}
-                label={product.name}
+                label={customerQuantityLabel(product.name, product.unit)}
                 name={product.name}
                 type="text"
                 inputMode="decimal"
@@ -577,8 +577,8 @@ function OrdersContent() {
                 onChange={(e) =>
                   handleQuantityChange(product.name, e.target.value)
                 }
-                placeholder={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], DAIRY_PRODUCTS.find(item => item.name === product.name).unit)}
-                title={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name], DAIRY_PRODUCTS.find(item => item.name === product.name).unit)}
+                placeholder={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name])}
+                title={customerPricePlaceholder(data.customer?.[product.priceKey], averagePrices[product.name])}
                 error={errors[product.name]}
                 disabled={submitting || loading}
               />

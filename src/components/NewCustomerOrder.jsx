@@ -10,8 +10,8 @@ import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
 import styles from "./NewCustomerOrder.module.css";
 import pickerStyles from "./HistoryPartyPicker.module.css";
 import orderStyles from "@/css/order.module.css";
-import { buildInventory } from "@/lib/stock";
-import { customerPricePlaceholder } from "@/lib/customer-price-placeholder";
+import { averageProductPrice } from "@/lib/stock";
+import { customerPricePlaceholder, customerQuantityLabel } from "@/lib/customer-price-placeholder";
 
 const PRODUCTS = [
   { name: "Milk", price: "milkPrice", unit: "L" },
@@ -96,7 +96,7 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
       .slice(0, 8);
   }, [customers, query]);
 
-  const averagePrices = useMemo(() => Object.fromEntries(buildInventory({}, {}, customers).map(product => [product.name, product.averagePrice])), [customers]);
+  const averagePrices = useMemo(() => Object.fromEntries(PRODUCTS.map(product => [product.name, averageProductPrice(customers, product.price)])), [customers]);
   const lines = PRODUCTS.map((product) => {
     const rate = Number(customer?.[product.price]);
     const quantity = Number(quantities[product.name] || 0);
@@ -338,12 +338,12 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                   {lines.map((line) => (
                     <div key={line.name} className={orderStyles.input_group}>
                       <label htmlFor={`new-order-${line.price}`}>
-                        {line.name} ({line.unit})
+                        {customerQuantityLabel(line.name, line.unit)}
                       </label>
                       <input
                         id={`new-order-${line.price}`}
                         className={`${orderStyles.input} ${orderStyles.price_hint}`}
-                        aria-label={`${line.name} quantity (${line.unit})`}
+                        aria-label={customerQuantityLabel(line.name, line.unit)}
                         type="number"
                         min="0"
                         step="0.01"
@@ -356,8 +356,8 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
                           }))
                         }
                         disabled={!line.priced}
-                        placeholder={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name], line.unit)}
-                        title={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name], line.unit)}
+                        placeholder={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name])}
+                        title={customerPricePlaceholder(customer?.[line.price], averagePrices[line.name])}
                       />
                     </div>
                   ))}
