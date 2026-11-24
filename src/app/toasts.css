@@ -62,6 +62,30 @@
   padding-inline-end: 1rem;
 }
 
+:root body .Toastify__toast.magizh-undo-toast {
+  --toast-background: #f4f8f4;
+  --toast-border: #bfd7c7;
+  padding: .5rem .625rem;
+}
+
+.magizh-undo-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.magizh-undo-message { font-size: .875rem; color: var(--brand-dark); }
+:root body .magizh-undo-row button[data-button] {
+  white-space: nowrap;
+  padding-inline: .8rem;
+  border-color: #bfd7c7;
+  color: var(--brand-dark);
+  font-weight: 750;
+}
+
 :root body .Toastify__toast--success {
   --toast-accent: #32b45d;
   --toast-background: #e7f6ed;

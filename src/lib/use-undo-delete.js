@@ -32,11 +32,11 @@ export function useUndoDelete() {
     };
 
     job.toastId = toast(
-      createElement("div", null,
-        `${label} will be deleted in 5 seconds. `,
+      createElement("div", { className: "magizh-undo-row" },
+        createElement("span", { className: "magizh-undo-message" }, `${label} pending deletion`),
         createElement("button", { type: "button", "data-button": "secondary", onClick: undo }, "Undo"),
       ),
-      { className: DELETE_TOAST_CLASS, autoClose: false, closeOnClick: false, closeButton: false, draggable: false },
+      { className: `${DELETE_TOAST_CLASS} magizh-undo-toast`, autoClose: false, closeOnClick: false, closeButton: false, draggable: false },
     );
     job.timer = setTimeout(async () => {
       job.started = true;

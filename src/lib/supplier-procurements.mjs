@@ -149,7 +149,7 @@ export function getProcurementStore(db) {
   const store = {
     find(query = {}, options = {}) { return nestedCursor(collection, query, options.projection); },
     async findOne(query, options = {}) { return (await store.find(query, options).limit(1).toArray())[0] || null; },
-    aggregate(pipeline) { return collection.aggregate([...flattenPipeline(pipeline[0]?.$match || {}), ...pipeline]); },
+    aggregate(pipeline, options) { return collection.aggregate([...flattenPipeline(pipeline[0]?.$match || {}), ...pipeline], options); },
     async countDocuments(query) { return (await collection.aggregate([...flattenPipeline(query), { $count: "count" }]).toArray())[0]?.count || 0; },
     async insertOne(input) {
       const entry = { ...input, _id: input._id || new ObjectId() };

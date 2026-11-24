@@ -170,6 +170,7 @@ for (const succeeds of [true, false]) {
 
     try {
       await page.clock.install();
+      await page.setViewportSize({ width: succeeds ? 1280 : 320, height: 844 });
       await page.goto("/supplier/procurement?supplierId=child");
       await page.getByRole("button", { name: `Actions for ${date} AM record` }).click();
       await page.getByRole("button", { name: "Delete", exact: true }).click();
@@ -182,6 +183,10 @@ for (const succeeds of [true, false]) {
       await page.getByRole("button", { name: "Confirm", exact: true }).click({ delay: 550 });
       const undo = page.getByRole("button", { name: "Undo", exact: true });
       await expect(undo).toBeVisible();
+      const message = await page.getByText("Procurement pending deletion", { exact: true }).boundingBox();
+      const action = await undo.boundingBox();
+      expect(message.x + message.width).toBeLessThan(action.x);
+      expect(Math.abs(message.y + message.height / 2 - action.y - action.height / 2)).toBeLessThan(2);
       await expect(page.getByRole("button", { name: `Actions for ${date} AM record` })).toHaveCount(0);
       expect(deleteCount).toBe(0);
       await undo.click();

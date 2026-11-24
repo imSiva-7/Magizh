@@ -18,6 +18,7 @@ It handles daily production, supplier procurement, customer orders, inventory (s
 - **Analytics Dashboard** – Visual summaries (pie & bar charts) for production, stock, supplier totals, and customer outstanding.
 - **Invoice Generation** – Download PDF invoices for individual orders or bulk export from history.
 - **Authentication & Roles** – Admin‑only access for sensitive operations (NextAuth).
+- **Magizh Intelligence** – Read-only operational insights, suggested next steps and optional AI chat. See the [setup and data access guide](docs/magizh-intelligence.md).
 
 ---
 
