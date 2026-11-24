@@ -91,6 +91,7 @@ export function buildSupplierDocument(records) {
 export function flattenPipeline(query = {}) {
   const pipeline = [];
   if (query.supplierId && typeof query.supplierId.toHexString === "function") pipeline.push({ $match: { supplierId: query.supplierId } });
+  else if (Array.isArray(query.supplierId?.$in)) pipeline.push({ $match: { supplierId: { $in: query.supplierId.$in } } });
   if (query._id?.toHexString) pipeline.push({ $match: { entryIds: query._id } });
   else if (Array.isArray(query._id?.$in)) pipeline.push({ $match: { entryIds: { $in: query._id.$in } } });
   pipeline.push(

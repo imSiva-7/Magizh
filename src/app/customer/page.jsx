@@ -251,7 +251,7 @@ export default function Customer() {
     setLoading(true);
     setLoadError("");
     try {
-      const res = await fetch("/api/customer", { cache: "no-store" });
+      const res = await fetch("/api/customer?includeDeleteStatus=true", { cache: "no-store" });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
@@ -872,9 +872,10 @@ export default function Customer() {
                                   setOpenActionMenuId(null);
                                 }}
                                 className={styles.actionDeleteButton}
-                                disabled={loading || deleteLoading === item._id}
+                                disabled={loading || deleteLoading === item._id || Boolean(item.deleteBlockedReason)}
+                                title={item.deleteBlockedReason || "Delete"}
                               >
-                                Delete
+                                {item.deleteBlockedReason ? `Delete unavailable: ${item.deleteBlockedReason}` : "Delete"}
                               </button>
                             </RowActionPopup>
                           )}

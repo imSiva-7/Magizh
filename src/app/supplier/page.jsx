@@ -252,7 +252,7 @@ export default function Supplier() {
     setLoading(true);
     setLoadError("");
     try {
-      const res = await fetch(`/api/supplier`);
+      const res = await fetch("/api/supplier?includeDeleteStatus=true", { cache: "no-store" });
       if (!res.ok) {
         const errorText = await res.text();
         throw new Error(
@@ -1086,14 +1086,15 @@ export default function Supplier() {
                                 disabled={
                                   deleteLoading === item._id ||
                                   loading ||
-                                  isEditing
+                                  isEditing ||
+                                  Boolean(item.deleteBlockedReason)
                                 }
-                                title={isEditing ? "Delete disabled" : "Delete"}
+                                title={item.deleteBlockedReason || (isEditing ? "Delete disabled" : "Delete")}
                               >
                                 {deleteLoading === item._id ? (
                                   <span className={styles.deleteSpinner}></span>
                                 ) : (
-                                  "Delete"
+                                  item.deleteBlockedReason ? `Delete unavailable: ${item.deleteBlockedReason}` : "Delete"
                                 )}
                               </button>
                             </RowActionPopup>

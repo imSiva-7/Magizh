@@ -169,6 +169,7 @@ for (const succeeds of [true, false]) {
     });
 
     try {
+      await page.clock.install();
       await page.goto("/supplier/procurement?supplierId=child");
       await page.getByRole("button", { name: `Actions for ${date} AM record` }).click();
       await page.getByRole("button", { name: "Delete", exact: true }).click();
@@ -179,6 +180,18 @@ for (const succeeds of [true, false]) {
 
       // The deliberate confirmation guard prevents accidental double-click deletion.
       await page.getByRole("button", { name: "Confirm", exact: true }).click({ delay: 550 });
+      const undo = page.getByRole("button", { name: "Undo", exact: true });
+      await expect(undo).toBeVisible();
+      await expect(page.getByRole("button", { name: `Actions for ${date} AM record` })).toHaveCount(0);
+      expect(deleteCount).toBe(0);
+      await undo.click();
+      await page.clock.fastForward(5100);
+      expect(deleteCount).toBe(0);
+      await page.getByRole("button", { name: `Actions for ${date} AM record` }).click();
+      await page.getByRole("button", { name: "Delete", exact: true }).click();
+      await page.getByRole("button", { name: "Confirm", exact: true }).click({ delay: 550 });
+      await expect(undo).toBeVisible();
+      await page.clock.fastForward(5100);
       const pending = page.locator(".magizh-delete-toast").filter({ hasText: "Deleting record…" });
       await expect(pending).toBeVisible();
       await expect.poll(() => deleteCount).toBe(1);

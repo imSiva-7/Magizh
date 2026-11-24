@@ -128,6 +128,13 @@ async function wouldCreateCycle(db, headId, children) {
 }
 
 // --- GET ---
+function hasCommissionHistory(commissions) {
+  return Boolean(commissions && (commissions.entryIds?.length ||
+    Object.keys(commissions.entries || {}).length ||
+    Object.keys(commissions.legacyReferences || {}).length ||
+    Object.keys(commissions.byProcurement || {}).length));
+}
+
 export async function GET(request) {
   const METHOD = METHOD_NAMES.GET;
 
@@ -178,7 +185,30 @@ export async function GET(request) {
       .sort({ [sortBy]: sortDir })
       .toArray();
 
-    return NextResponse.json(suppliers);
+    if (searchParams.get("includeDeleteStatus") !== "true" || !suppliers.length) {
+      return NextResponse.json(suppliers);
+    }
+    const ids = suppliers.map(({ _id }) => _id);
+    const [procurements, commissions, parents] = await Promise.all([
+      getProcurementStore(db).aggregate([
+        { $match: { supplierId: { $in: ids } } },
+        { $group: { _id: "$supplierId" } },
+      ]).toArray(),
+      db.collection("head_supplier_entries").find({ _id: { $in: ids } }).toArray(),
+      db.collection("suppliers").distinct("childSuppliers.supplierId", { "childSuppliers.supplierId": { $in: ids } }),
+    ]);
+    const withProcurements = new Set(procurements.map(({ _id }) => String(_id)));
+    const withCommissions = new Set(commissions.filter(hasCommissionHistory).map(({ _id }) => String(_id)));
+    const inHeadSupplier = new Set(parents.map(String));
+    return NextResponse.json(suppliers.map((supplier) => {
+      const id = String(supplier._id);
+      return {
+        ...supplier,
+        deleteBlockedReason: withProcurements.has(id) ? "Supplier has existing procurements"
+          : withCommissions.has(id) ? "Supplier has head commission history"
+          : inHeadSupplier.has(id) ? "Supplier belongs to a head supplier" : null,
+      };
+    }));
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });
@@ -437,7 +467,7 @@ export async function DELETE(request) {
     }
 
     const commissions = await db.collection("head_supplier_entries").findOne({ _id });
-    if (commissions && ((commissions.entryIds?.length || 0) > 0 || Object.keys(commissions.entries || {}).length > 0 || Object.keys(commissions.legacyReferences || {}).length > 0 || Object.keys(commissions.byProcurement || {}).length > 0)) {
+    if (hasCommissionHistory(commissions)) {
       return NextResponse.json({ error: "Cannot delete supplier with head commission history" }, { status: 409 });
     }
 

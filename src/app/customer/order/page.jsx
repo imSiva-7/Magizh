@@ -2,6 +2,7 @@
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { statNumberTone } from "@/lib/stat-number-tone";
@@ -160,7 +161,7 @@ function OrdersContent() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(null);
+  const { pendingIds, scheduleDelete } = useUndoDelete();
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   const closeActionMenu = useCallback(() => {
     setOpenActionMenuId(null);
@@ -325,12 +326,13 @@ function OrdersContent() {
     const start = filters.startDate;
     const end = filters.endDate;
     return data.orders.filter((order) => {
+      if (pendingIds.has(order._id)) return false;
       const recordDate = order.date.split("T")[0];
       if (start && start !== "" && recordDate < start) return false;
       if (end && end !== "" && recordDate > end) return false;
       return true;
     });
-  }, [data.orders, filters]);
+  }, [data.orders, filters, pendingIds]);
 
   // Summary now uses total_orders balance if available
   const summary = useMemo(() => {
@@ -466,22 +468,22 @@ function OrdersContent() {
       return;
     }
     setConfirmingDeleteId(null);
-    setDeleteLoading(id);
-    const notification = startDeleteToast("Deleting order…");
-    try {
-      const res = await fetch(`/api/customer/order?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Delete failed");
-      notification.success("Order deleted");
-      await fetchAllData();
-      if (editingId._id === id) resetForm();
-    } catch (error) {
-      notification.error(error.message);
-    } finally {
-      setDeleteLoading(null);
-      setOpenActionMenuId(null);
-    }
+    setOpenActionMenuId(null);
+    scheduleDelete(id, "Order", async () => {
+      const notification = startDeleteToast("Deleting order…");
+      try {
+        const res = await fetch(`/api/customer/order?id=${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        setData((prev) => ({ ...prev, orders: prev.orders.filter((order) => order._id !== id) }));
+        notification.success("Order deleted");
+        await fetchAllData();
+        if (editingId._id === id) resetForm();
+      } catch (error) {
+        notification.error(error.message);
+      }
+    });
   };
 
   const handleEdit = (order) => {
@@ -847,7 +849,6 @@ function OrdersContent() {
                               }}
                               disabled={
                                 loading ||
-                                deleteLoading === order._id ||
                                 !!editingId._id
                               }
                             >
@@ -859,7 +860,7 @@ function OrdersContent() {
                                   onClick={() => handleEdit(order)}
                                   className={styles.actionEditButton}
                                   disabled={
-                                    loading || deleteLoading === order._id
+                                    loading
                                   }
                                 >
                                   Edit
@@ -874,7 +875,7 @@ function OrdersContent() {
                                   }}
                                   className={styles.actionDeleteButton}
                                   disabled={
-                                    loading || deleteLoading === order._id
+                                    loading
                                   }
                                 />
                               </RowActionPopup>

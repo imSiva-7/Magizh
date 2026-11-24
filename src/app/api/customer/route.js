@@ -63,7 +63,24 @@ export async function GET(request) {
       .sort({ customerName: 1 })
       .toArray();
 
-    return NextResponse.json(customers);
+    if (searchParams.get("includeDeleteStatus") !== "true" || !customers.length) {
+      return NextResponse.json(customers);
+    }
+    const ids = customers.map(({ _id }) => _id);
+    const [orders, subscriptions] = await Promise.all([
+      db.collection("orders").distinct("customerId", { customerId: { $in: ids } }),
+      db.collection("customer_subscriptions").distinct("customerId", {
+        customerId: { $in: ids }, status: { $in: ["active", "paused"] },
+      }),
+    ]);
+    const withOrders = new Set(orders.map(String));
+    const withSubscriptions = new Set(subscriptions.map(String));
+    return NextResponse.json(customers.map((customer) => ({
+      ...customer,
+      deleteBlockedReason: withOrders.has(String(customer._id))
+        ? "Customer has existing orders"
+        : withSubscriptions.has(String(customer._id)) ? "Customer has active or paused subscriptions" : null,
+    })));
   } catch (error) {
     console.error(`${METHOD} error:`, error);
     return NextResponse.json({ error: "Fetch failed" }, { status: 500 });

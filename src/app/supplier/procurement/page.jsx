@@ -2,6 +2,7 @@
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 import AdminSummary from "@/components/AdminSummary";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay, getIndiaTimePeriod as getCurrentTimePeriod } from "@/lib/india-date.mjs";
@@ -209,6 +210,7 @@ function ProcurementContent() {
   const [formData, setFormData] = useState(initialForm);
   const [openActionMenuId, setOpenActionMenuId] = useState(null);
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
+  const { pendingIds, scheduleDelete } = useUndoDelete();
   const closeActionMenu = useCallback(() => {
     setOpenActionMenuId(null);
     setConfirmingDeleteId(null);
@@ -605,23 +607,27 @@ function ProcurementContent() {
       return;
     }
     setConfirmingDeleteId(null);
-    const notification = startDeleteToast("Deleting record…");
+    setOpenActionMenuId(null);
+    scheduleDelete(id, "Procurement", async () => {
+      const notification = startDeleteToast("Deleting record…");
 
-    try {
-      const res = await fetch(`/api/supplier/procurement?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Delete failed");
+      try {
+        const res = await fetch(`/api/supplier/procurement?id=${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Delete failed");
+        }
+        notification.success("Deleted successfully");
+        setData((prev) => ({ ...prev, allProcurements: prev.allProcurements.filter((record) => record._id !== id) }));
+        await fetchAllData();
+        if (editingId._id === id) resetForm();
+      } catch (error) {
+        console.error("Delete error:", error);
+        notification.error(error.message || "Failed to delete record");
       }
-      notification.success("Deleted successfully");
-      await fetchAllData();
-      if (editingId._id === id) resetForm();
-    } catch (error) {
-      console.error("Delete error:", error);
-      notification.error(error.message || "Failed to delete record");
-    }
+    });
   };
 
   const handleEdit = (item) => {
@@ -660,12 +666,13 @@ function ProcurementContent() {
     const end = filters.endDate;
 
     return data.allProcurements.filter((record) => {
+      if (pendingIds.has(record._id)) return false;
       const recordDate = record.date.split("T")[0];
       if (start && recordDate < start) return false;
       if (end && recordDate > end) return false;
       return true;
     });
-  }, [filters.startDate, filters.endDate, data.allProcurements]);
+  }, [filters.startDate, filters.endDate, data.allProcurements, pendingIds]);
 
   const decoratedTableData = useMemo(() => {
     const dateCounts = {};

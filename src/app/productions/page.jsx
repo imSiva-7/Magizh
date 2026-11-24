@@ -2,6 +2,7 @@
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
+import { useUndoDelete } from "@/lib/use-undo-delete";
 import DataSkeleton from "@/components/DataSkeleton";
 import { formatDateForDisplay } from "@/lib/india-date.mjs";
 
@@ -96,6 +97,8 @@ export default function ProductionPage() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState([]);
+  const { pendingIds, scheduleDelete } = useUndoDelete();
+  const visibleEntries = entries.filter((entry) => !pendingIds.has(entry._id));
   const [confirmingDeleteId, setConfirmingDeleteId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateStr, setDateStr] = useState(getTodayDate());
@@ -220,21 +223,19 @@ export default function ProductionPage() {
       return;
     }
     setConfirmingDeleteId(null);
-    const notification = startDeleteToast("Deleting entry…");
-
-    const previousEntries = [...entries];
-    setEntries((prev) => prev.filter((item) => item._id !== id));
-
-    try {
-      const response = await fetch(`/api/production?id=${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) throw new Error("Delete failed");
-      notification.success("Entry deleted");
-    } catch (error) {
-      setEntries(previousEntries);
-      notification.error("Error deleting entry");
-    }
+    scheduleDelete(id, "Production entry", async () => {
+      const notification = startDeleteToast("Deleting entry…");
+      try {
+        const response = await fetch(`/api/production?id=${id}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) throw new Error("Delete failed");
+        setEntries((prev) => prev.filter((item) => item._id !== id));
+        notification.success("Entry deleted");
+      } catch {
+        notification.error("Error deleting entry");
+      }
+    });
   };
 
   const resetForm = () => {
@@ -409,7 +410,7 @@ export default function ProductionPage() {
           <section className={styles.recentEntries}>
             <LoadingSpinner />
           </section>
-        ) : entries.length === 0 ? (
+        ) : visibleEntries.length === 0 ? (
           <div data-fade-up="" className={styles.emptyState}>
             <h3>No production data found</h3>
             <p>Start by submitting your first production entry above.</p>
@@ -419,7 +420,7 @@ export default function ProductionPage() {
             <section data-fade-up="" className={styles.recentEntries}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>
-                  Recent Production Entries ({entries.length})
+                  Recent Production Entries ({visibleEntries.length})
                 </h2>
                 <div className={styles.sectionActions}>
                   <button data-button="secondary"
@@ -450,7 +451,7 @@ export default function ProductionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.map((item) => (
+                  {visibleEntries.map((item) => (
                     <ProductionTableRow
                       key={item._id}
                       entry={item}
