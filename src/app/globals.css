@@ -1,6 +1,6 @@
 :root {
   color-scheme: light;
-  --font-sans: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: var(--font-plus-jakarta-sans, "Segoe UI"), system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --page-max-width: 1400px;
   --page-gutter: clamp(1.25rem, 3.5vw, 2.5rem);
   --brand: #27795d;

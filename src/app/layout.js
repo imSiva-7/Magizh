@@ -2,11 +2,18 @@ import "./globals.css";
 import "./buttons.css";
 import "./filters.css";
 import "./toasts.css";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EntryShortcuts from "@/components/EntryShortcuts";
 import AuthProvider from "./AuthProvider";
 import { getInitialSession } from "@/lib/server-session";
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-plus-jakarta-sans",
+});
 
 export const metadata = {
   title: "Magizh Dairy",
@@ -17,7 +24,7 @@ export default async function RootLayout({ children }) {
   const session = await getInitialSession();
 
   return (
-    <html lang="en-IN">
+    <html lang="en-IN" className={plusJakartaSans.variable}>
       <body>
         <AuthProvider session={session}>
           <a className="skip-link" href="#main-content">Skip to content</a>
