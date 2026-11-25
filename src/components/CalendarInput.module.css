@@ -4,15 +4,17 @@
 }
 
 .field > input {
+  display: block;
   width: 100%;
+  transition: none;
 }
 
 .trigger {
   display: none;
   position: absolute;
-  inset-block: 50% auto;
+  inset-block: 0;
   inset-inline-end: 0.375rem;
-  transform: translateY(-50%);
+  margin-block: auto;
   align-items: center;
   justify-content: center;
   width: 2.125rem;

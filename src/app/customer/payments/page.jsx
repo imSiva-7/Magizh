@@ -145,6 +145,7 @@ export default function CustomerPayments() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [paymentDialogView, setPaymentDialogView] = useState("payment");
   const paymentTriggerRef = useRef(null);
+  const ordersRequestRef = useRef(null);
 
   // Load the directory only. Period summaries do not depend on lifetime totals.
   useEffect(() => {
@@ -165,7 +166,11 @@ export default function CustomerPayments() {
 
   // Fetch orders with date filters
   const fetchOrders = useCallback(
-    async (signal) => {
+    async () => {
+      ordersRequestRef.current?.abort();
+      const controller = new AbortController();
+      ordersRequestRef.current = controller;
+      const { signal } = controller;
       setIsLoading(true);
       setPeriodError("");
       try {
@@ -197,9 +202,8 @@ export default function CustomerPayments() {
   );
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetchOrders(controller.signal);
-    return () => controller.abort();
+    fetchOrders();
+    return () => ordersRequestRef.current?.abort();
   }, [fetchOrders]);
 
   const handleShowMore = (customerId) => {
@@ -415,7 +419,6 @@ export default function CustomerPayments() {
               onChange={handleFilterChange}
               max={filters.endDate || getTodayDate()}
               className={styles.date_input}
-              disabled={isLoading}
             />
           </div>
           <div data-filter="field" className={styles.date_field}>
@@ -429,7 +432,6 @@ export default function CustomerPayments() {
               min={filters.startDate}
               max={getTodayDate()}
               className={styles.date_input}
-              disabled={isLoading}
             />
           </div>
         </div>
@@ -439,7 +441,6 @@ export default function CustomerPayments() {
             type="button"
             onClick={resetFilters}
             className={`${styles.btn} ${styles.btn_reset}`}
-            disabled={isLoading}
           >
             Reset
           </button>
@@ -447,7 +448,7 @@ export default function CustomerPayments() {
             type="button"
             onClick={clearFilters}
             className={`${styles.btn} ${styles.btn_clear}`}
-            disabled={(!filters.endDate && !filters.startDate) || isLoading}
+            disabled={!filters.endDate && !filters.startDate}
           >
             Clear
           </button>
@@ -455,7 +456,6 @@ export default function CustomerPayments() {
             type="button"
             onClick={loadTodayData}
             className={`${styles.btn} ${styles.btn_today}`}
-            disabled={isLoading}
           >
             Today
           </button>

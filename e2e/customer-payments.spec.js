@@ -35,6 +35,34 @@ async function mockPayments(page, { failOnce = false } = {}) {
   return { requests, receipts };
 }
 
+test("date filters stay steady while payment results load", async ({ page }) => {
+  await mockPayments(page);
+  await page.route("**/api/customer/order/history?*", async route => {
+    if (new URL(route.request().url()).searchParams.get("startDate") === "2020-01-02") {
+      await route.fallback();
+    }
+  });
+  await page.goto("/customer/payments");
+  const from = page.getByLabel("From Date");
+  const to = page.getByLabel("To Date");
+  await expect(from).toBeEnabled();
+  await expect(to).toBeEnabled();
+  const layout = await from.evaluate(input => {
+    const rect = input.getBoundingClientRect();
+    const button = input.nextElementSibling.getBoundingClientRect();
+    const animations = [];
+    for (let element = input; element && element.tagName !== "MAIN"; element = element.parentElement) {
+      animations.push(getComputedStyle(element).animationName);
+    }
+    return { centered: Math.abs(rect.top + rect.height / 2 - button.top - button.height / 2) < 1, animations };
+  });
+  expect(layout.centered).toBe(true);
+  expect(layout.animations.every(name => name === "none")).toBe(true);
+  const refreshed = page.waitForResponse(response => response.url().includes("/api/customer/order/history?startDate=2020-01-02"));
+  await from.fill("2020-01-02");
+  expect((await refreshed).ok()).toBe(true);
+});
+
 test("partial payments reduce due and overpayments become credit, with correction history", async ({ page }) => {
   const { requests } = await mockPayments(page);
   await page.goto("/customer/payments");

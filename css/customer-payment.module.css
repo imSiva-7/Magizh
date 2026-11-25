@@ -1221,7 +1221,7 @@
 }
 .modal_content_large.payment_dialog:not([open]) { display: none; }
 .modal_content_large.payment_dialog[open] { display: block; }
-.payment_dialog::backdrop { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(4px); }
+.payment_dialog::backdrop { background: rgba(30, 41, 59, 0.6); }
 .payment_dialog .modal_header {
   position: sticky;
   top: 0;
@@ -1310,7 +1310,6 @@
 
 .history_dialog::backdrop {
   background: rgb(15 23 42 / 55%);
-  backdrop-filter: blur(2px);
 }
 
 .history_customer {

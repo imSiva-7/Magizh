@@ -1094,7 +1094,7 @@ export default function Supplier() {
                                 {deleteLoading === item._id ? (
                                   <span className={styles.deleteSpinner}></span>
                                 ) : (
-                                  item.deleteBlockedReason ? `Delete unavailable: ${item.deleteBlockedReason}` : "Delete"
+                                  "Delete"
                                 )}
                               </button>
                             </RowActionPopup>
