@@ -161,7 +161,7 @@ function AttendanceContent() {
         amount: parseFloat(advanceForm.amount),
         date: advanceForm.date,
         month: month,
-        reason: advanceForm.reason.trim(),
+        reason: advanceForm.reason ? advanceForm.reason.trim() : "General Advance",
       };
 
       const res = await fetch("/api/attendance", {

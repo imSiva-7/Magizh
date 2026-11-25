@@ -231,13 +231,12 @@ h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; ov
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  main > div,
-  main [data-entry-form],
-  main tbody {
+  main > div:not([data-calendar-input], :has([data-calendar-input])),
+  main :is([data-entry-form], tbody):not(:has([data-calendar-input])) {
     animation: content-enter 180ms ease-out;
   }
 
-  main [data-fade-up] {
+  main [data-fade-up]:not(:has([data-calendar-input])) {
     animation: data-fade-up 700ms ease-out;
   }
 }

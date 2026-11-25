@@ -89,11 +89,19 @@ for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 640 
     await page.goto("/customer/payments");
     await page.getByRole("button", { name: "Record payment", exact: true }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.evaluate(element => { element.scrollTop = 0; });
+    await expect(dialog.getByLabel("Amount received (₹)")).toBeFocused();
+    expect(await dialog.evaluate(element => element.scrollTop)).toBe(0);
     const bounds = await dialog.boundingBox();
     await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
     await page.mouse.wheel(0, 2000);
     await expect.poll(() => dialog.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
+    const header = dialog.getByRole("heading", { name: /Record payment/ });
+    const headerGap = await header.evaluate(heading => {
+      const dialog = heading.closest("dialog");
+      return heading.parentElement.getBoundingClientRect().top - dialog.getBoundingClientRect().top - dialog.clientTop;
+    });
+    expect(headerGap).toBeCloseTo(0);
+    await expect(dialog.getByRole("button", { name: "Close payment dialog" })).toBeInViewport();
     const save = dialog.getByRole("button", { name: "Save payment", exact: true });
     await expect(save).toBeInViewport();
     await dialog.getByRole("button", { name: "View payment history" }).click();

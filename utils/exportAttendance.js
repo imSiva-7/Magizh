@@ -354,7 +354,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
         status,
         formatTime(status, day.checkIn),
         `${formatTime(status, day.checkOut)}${day.checkOutNextDay ? " (+1 day)" : ""}`,
-        day.hoursWorked > 0 ? `${day.hoursWorked}h` : "-",
+        day.hoursWorked > 0 ? `${Number(day.hoursWorked).toFixed(2)}h` : "-",
       ];
     });
 

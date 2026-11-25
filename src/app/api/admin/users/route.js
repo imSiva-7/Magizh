@@ -10,6 +10,7 @@ const isAdminOrDev = (session) => {
   const role = session?.user?.role;
   return role === "admin" || role === "dev";
 };
+
 const isOwnAccount = (user, session) =>
   String(user._id) === String(session.user.id) ||
   Boolean(

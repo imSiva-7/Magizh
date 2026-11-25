@@ -38,7 +38,7 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     dialog.showModal();
-    amountRef.current?.focus();
+    amountRef.current?.focus({ preventScroll: true });
     return () => {
       dialog.close();
       document.body.style.overflow = previousOverflow;
