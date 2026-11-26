@@ -613,14 +613,14 @@ function AttendanceContent() {
                             >
                               {
                                 {
-                                  paid_leave: "Paid Leave",
-                                  excess_leave: "Absent",
-                                  pending: "Not recorded yet",
+                                  paid_leave: "L",
+                                  excess_leave: "A",
+                                  pending: "NR",
                                 }[day.status]
                               }
                             </span>
                           ) : (
-                            <span className={styles.presentBadge}>Present</span>
+                            <span className={styles.presentBadge}>P</span>
                           )}
                         </td>
                         <td className={styles.timeCell}>
