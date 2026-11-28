@@ -1,3 +1,4 @@
+import { addMagizhWatermark } from "./pdfWatermark";
 import { jsPDF } from "jspdf";
 import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
@@ -402,6 +403,7 @@ export const exportToPDF = (procurements, supplier, dateRange, fileName) => {
     { align: "center" }
   );
 
+  addMagizhWatermark(doc);
   doc.save(reportFilename("Procurement Bill", supplier?.supplierName || "All Suppliers", procurements.map(record => record.date)));
 };
 

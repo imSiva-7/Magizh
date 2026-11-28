@@ -1,3 +1,4 @@
+import { addMagizhWatermark } from "./pdfWatermark";
 import { attendanceToday, formatAttendanceDate, formatAttendanceMonth } from "./attendanceDates.mjs";
 import { jsPDF } from "jspdf";
 import { attendanceFilename } from "./attendanceFilename";
@@ -453,6 +454,7 @@ export const exportAttendanceToPDF = (attendanceData, month, fileName, returnByt
   }
 
   // Save PDF
+  addMagizhWatermark(doc);
   if (returnBytes) return doc.output("arraybuffer");
   doc.save(fileName ? `${fileName}.pdf` : attendanceFilename(attendanceData.employee?.name, month));
 };

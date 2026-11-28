@@ -1,3 +1,4 @@
+import { addMagizhWatermark } from "./pdfWatermark";
 import { jsPDF } from "jspdf";
 import { reportFilename } from "./reportFilename";
 import autoTable from "jspdf-autotable";
@@ -473,5 +474,6 @@ export const exportInvoiceToPDF = async (
   );
 
   // Save PDF
+  addMagizhWatermark(doc);
   doc.save(reportFilename("Invoice", customer?.customerName || "All Customers", orders.map(order => order.date)));
 };
