@@ -2,7 +2,11 @@
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
 import AdminSummary from "@/components/AdminSummary";
-import { formatAttendanceHours, formatAttendanceAverage, completedAttendanceAverage } from "@/utils/attendanceHours";
+import {
+  formatAttendanceHours,
+  formatAttendanceAverage,
+  completedAttendanceAverage,
+} from "@/utils/attendanceHours";
 import AttendanceTimeEditor from "@/components/AttendanceTimeEditor";
 import CalendarInput from "@/components/CalendarInput";
 import { attendanceFilename } from "@/utils/attendanceFilename";
@@ -44,7 +48,8 @@ function AttendanceContent() {
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmingDeleteAdvanceId, setConfirmingDeleteAdvanceId] = useState(null);
+  const [confirmingDeleteAdvanceId, setConfirmingDeleteAdvanceId] =
+    useState(null);
   const attendanceRequestRef = useRef(null);
 
   // Date filter state
@@ -161,7 +166,9 @@ function AttendanceContent() {
         amount: parseFloat(advanceForm.amount),
         date: advanceForm.date,
         month: month,
-        reason: advanceForm.reason ? advanceForm.reason.trim() : "General Advance",
+        reason: advanceForm.reason
+          ? advanceForm.reason.trim()
+          : "General Advance",
       };
 
       const res = await fetch("/api/attendance", {
@@ -285,45 +292,53 @@ function AttendanceContent() {
       </div>
 
       {/* Employee Selection */}
-      <AdminSummary><div data-filter="card" className={styles.filterSection}>
-        <div data-filter="grid" className={styles.filterGrid}>
-          <div className={styles.inputGroup}>
-            <label htmlFor="employee-select">Select Employee</label>
-            <select
-              id="employee-select"
-              value={selectedEmpID}
-              onChange={(e) => handleEmployeeChange(e.target.value)}
-              className={styles.selectInput}
-              disabled={isSubmitting || employeesLoading}
-            >
-              <option value="">{employeesLoading ? "Loading employees…" : "-- Choose Employee --"}</option>
-              {employees.map((emp) => (
-                <option key={emp._id} value={emp.empID}>
-                  {emp.empID} - {emp.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {(selectedEmpID || employeesLoading) && (
+      <AdminSummary>
+        <div data-filter="card" className={styles.filterSection}>
+          <div data-filter="grid" className={styles.filterGrid}>
             <div className={styles.inputGroup}>
-              <label htmlFor="month-select">Select Month</label>
-              <CalendarInput
-                id="month-select"
-                type="month"
-                value={month}
-                onChange={(event) => handleMonthChange(event.target.value)}
-                max={currentMonth}
-                className={styles.input}
-                disabled={isSubmitting}
-              />
+              <label htmlFor="employee-select">Select Employee</label>
+              <select
+                id="employee-select"
+                value={selectedEmpID}
+                onChange={(e) => handleEmployeeChange(e.target.value)}
+                className={styles.selectInput}
+                disabled={isSubmitting || employeesLoading}
+              >
+                <option value="">
+                  {employeesLoading
+                    ? "Loading employees…"
+                    : "-- Choose Employee --"}
+                </option>
+                {employees.map((emp) => (
+                  <option key={emp._id} value={emp.empID}>
+                    {emp.empID} - {emp.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
+
+            {(selectedEmpID || employeesLoading) && (
+              <div className={styles.inputGroup}>
+                <label htmlFor="month-select">Select Month</label>
+                <CalendarInput
+                  id="month-select"
+                  type="month"
+                  value={month}
+                  onChange={(event) => handleMonthChange(event.target.value)}
+                  max={currentMonth}
+                  className={styles.input}
+                  disabled={isSubmitting}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div></AdminSummary>
+      </AdminSummary>
 
       {/* Loading State */}
-      {(employeesLoading || loading) && <DataSkeleton label="Loading attendance data..." />}
+      {(employeesLoading || loading) && (
+        <DataSkeleton label="Loading attendance data..." />
+      )}
 
       {/* Attendance Data Display */}
       {!employeesLoading && !loading && attendanceData && (
@@ -361,51 +376,170 @@ function AttendanceContent() {
             </div>
           </div>
 
-          <AdminSummary><section className={styles.summaryCard} aria-labelledby="attendance-stats-title">
-            <h2 id="attendance-stats-title">Monthly Stats — {formatAttendanceMonth(month)}</h2>
-            {[
-              ["Attendance", [
-                ["Month Days", attendanceData.period.daysInPeriod],
-                ["Days Left", attendanceData.summary.remainingDays],
-                ["Present Days", attendanceData.summary.workedDays],
-                ["Completed Days", completedHours.days, "Days with valid check-in and checkout times"],
-                ["Absent Days", attendanceData.summary.absentDays],
-                ["Other Absent Days", attendanceData.summary.excessLeaveDays, "Absent days beyond the paid leave allowance"],
-                ["Paid Leave Used / Limit", `${attendanceData.summary.paidLeaveDays} / ${attendanceData.summary.paidLeaveAllowance} days`],
-                ["Paid Leave Left", attendanceData.summary.remainingPaidLeave],
-                ...(attendanceData.summary.paidLeaveEligible === false ? [["Paid Leave Eligible", "No", "Eligibility starts the month after the employee was created"]] : []),
-                ["Hours Worked", formatAttendanceHours(attendanceData.summary.totalHoursWorked)],
-                ["Month Hours", formatAttendanceHours(attendanceData.summary.standardHours)],
-                ["Hours for Full Pay", formatAttendanceHours(attendanceData.summary.fullSalaryThresholdHours)],
-                ["Hours Still Needed", formatAttendanceAverage(Math.max(0, attendanceData.summary.fullSalaryThresholdHours - completedHours.hours)), "Additional worked hours needed to reach full salary"],
-                ["Full Pay Eligible", attendanceData.summary.fullSalaryEligible ? "Yes" : "No"],
-                ["Overtime Hours", formatAttendanceHours(attendanceData.summary.totalOvertimeHours), "Already included in hours worked"],
-                ["Avg / Completed Day", formatAttendanceAverage(completedHours.average)],
-                ...(attendanceData.summary.incompleteDays > 0 ? [["Incomplete Days", attendanceData.summary.incompleteDays]] : []),
-              ]],
-              ["Salary", [
-                ["Hourly Pay", formatCurrency(attendanceData.summary.hourlyRate)],
-                ["Daily Pay", formatCurrency(attendanceData.summary.dailyRate)],
-                ["Paid Leave Pay", formatCurrency(attendanceData.summary.paidLeavePay), "Included in pay with leave"],
-                ["Pay Without Leave", formatCurrency(attendanceData.summary.salaryWithoutLeavePay), "Salary excluding paid leave pay, before advances"],
-                ["Pay With Leave", formatCurrency(attendanceData.summary.salaryIncludingLeavePay), "Salary including paid leave pay, before advances"],
-                ["Advances", formatCurrency(attendanceData.summary.totalAdvances)],
-                ["Net Salary", formatCurrency(attendanceData.summary.netSalary)],
-              ]],
-            ].map(([title, items]) => (
-              <section key={title} className={styles.summarySection} aria-label={title}>
-                <h3>{title}</h3>
-                <div className={styles.summaryGrid}>
-                  {items.map(([label, value, description]) => (
-                    <div key={label} className={`${styles.summaryItem} ${label === "Net Salary" ? styles.netSalary : ""}`}>
-                      <span className={styles.summaryLabel} title={description}>{label}</span>
-                      <span className={styles.summaryValue}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))}
-          </section></AdminSummary>
+          <AdminSummary>
+            <section
+              className={styles.summaryCard}
+              aria-labelledby="attendance-stats-title"
+            >
+              <h2 id="attendance-stats-title">
+                Monthly Stats — {formatAttendanceMonth(month)}
+              </h2>
+              {[
+                [
+                  "Attendance",
+                  [
+                    ["Month Days", attendanceData.period.daysInPeriod],
+                    ["Days Left", attendanceData.summary.remainingDays],
+                    ["Present Days", attendanceData.summary.workedDays],
+                    [
+                      "Completed Days",
+                      completedHours.days,
+                      "Days with valid check-in and checkout times",
+                    ],
+                    ["Absent Days", attendanceData.summary.absentDays],
+                    [
+                      "Other Absent Days",
+                      attendanceData.summary.excessLeaveDays,
+                      "Absent days beyond the paid leave allowance",
+                    ],
+                    [
+                      "Paid Leave Used / Limit",
+                      `${attendanceData.summary.paidLeaveDays} / ${attendanceData.summary.paidLeaveAllowance} days`,
+                    ],
+                    [
+                      "Paid Leave Left",
+                      attendanceData.summary.remainingPaidLeave,
+                    ],
+                    ...(attendanceData.summary.paidLeaveEligible === false
+                      ? [
+                          [
+                            "Paid Leave Eligible",
+                            "No",
+                            "Eligibility starts the month after the employee was created",
+                          ],
+                        ]
+                      : []),
+                    [
+                      "Hours Worked",
+                      formatAttendanceHours(
+                        attendanceData.summary.totalHoursWorked,
+                      ),
+                    ],
+                    [
+                      "Month Hours",
+                      formatAttendanceHours(
+                        attendanceData.summary.standardHours,
+                      ),
+                    ],
+                    [
+                      "Hours for Full Pay",
+                      formatAttendanceHours(
+                        attendanceData.summary.fullSalaryThresholdHours,
+                      ),
+                    ],
+                    [
+                      "Hours Still Needed",
+                      formatAttendanceAverage(
+                        Math.max(
+                          0,
+                          attendanceData.summary.fullSalaryThresholdHours -
+                            completedHours.hours,
+                        ),
+                      ),
+                      "Additional worked hours needed to reach full salary",
+                    ],
+                    [
+                      "Full Pay Eligible",
+                      attendanceData.summary.fullSalaryEligible ? "Yes" : "No",
+                    ],
+                    [
+                      "Overtime Hours",
+                      formatAttendanceHours(
+                        attendanceData.summary.totalOvertimeHours,
+                      ),
+                      "Already included in hours worked",
+                    ],
+                    [
+                      "Avg / Completed Day",
+                      formatAttendanceAverage(completedHours.average),
+                    ],
+                    ...(attendanceData.summary.incompleteDays > 0
+                      ? [
+                          [
+                            "Incomplete Days",
+                            attendanceData.summary.incompleteDays,
+                          ],
+                        ]
+                      : []),
+                  ],
+                ],
+                [
+                  "Salary",
+                  [
+                    [
+                      "Hourly Pay",
+                      formatCurrency(attendanceData.summary.hourlyRate),
+                    ],
+                    [
+                      "Daily Pay",
+                      formatCurrency(attendanceData.summary.dailyRate),
+                    ],
+                    [
+                      "Paid Leave Pay",
+                      formatCurrency(attendanceData.summary.paidLeavePay),
+                      "Included in pay with leave",
+                    ],
+                    [
+                      "Pay Without Leave",
+                      formatCurrency(
+                        attendanceData.summary.salaryWithoutLeavePay,
+                      ),
+                      "Salary excluding paid leave pay, before advances",
+                    ],
+                    [
+                      "Pay With Leave",
+                      formatCurrency(
+                        attendanceData.summary.salaryIncludingLeavePay,
+                      ),
+                      "Salary including paid leave pay, before advances",
+                    ],
+                    [
+                      "Advances",
+                      formatCurrency(attendanceData.summary.totalAdvances),
+                    ],
+                    [
+                      "Net Salary",
+                      formatCurrency(attendanceData.summary.netSalary),
+                    ],
+                  ],
+                ],
+              ].map(([title, items]) => (
+                <section
+                  key={title}
+                  className={styles.summarySection}
+                  aria-label={title}
+                >
+                  <h3>{title}</h3>
+                  <div className={styles.summaryGrid}>
+                    {items.map(([label, value, description]) => (
+                      <div
+                        key={label}
+                        className={`${styles.summaryItem} ${label === "Net Salary" ? styles.netSalary : ""}`}
+                      >
+                        <span
+                          className={styles.summaryLabel}
+                          title={description}
+                        >
+                          {label}
+                        </span>
+                        <span className={styles.summaryValue}>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </section>
+          </AdminSummary>
 
           {/* Advances Section */}
           <div className={styles.advancesSection}>
@@ -531,8 +665,12 @@ function AttendanceContent() {
                         {isAdmin && (
                           <td className={styles.actionsCell}>
                             <ConfirmDeleteButton
-                              confirming={confirmingDeleteAdvanceId === advance._id}
-                              onCancel={() => setConfirmingDeleteAdvanceId(null)}
+                              confirming={
+                                confirmingDeleteAdvanceId === advance._id
+                              }
+                              onCancel={() =>
+                                setConfirmingDeleteAdvanceId(null)
+                              }
                               data-button="danger"
                               onClick={() => handleDeleteAdvance(advance._id)}
                               className={styles.deleteButton}
@@ -553,23 +691,25 @@ function AttendanceContent() {
 
           {/* Export Section */}
           {attendanceData && (
-            <AdminSummary><div className={styles.exportSection}>
-              <span className={styles.entryCount}>
-                Attendance data for {attendanceData.employee.name} (
-                {formatAttendanceMonth(month)})
-              </span>
-              <div className={styles.exportButtons}>
-                <button
-                  data-button="secondary"
-                  disabled={isSubmitting}
-                  onClick={handleExportPDF}
-                  className={styles.exportBtn}
-                  aria-label="Export attendance as PDF"
-                >
-                  Export as PDF
-                </button>
+            <AdminSummary>
+              <div className={styles.exportSection}>
+                <span className={styles.entryCount}>
+                  Attendance data for {attendanceData.employee.name} (
+                  {formatAttendanceMonth(month)})
+                </span>
+                <div className={styles.exportButtons}>
+                  <button
+                    data-button="secondary"
+                    disabled={isSubmitting}
+                    onClick={handleExportPDF}
+                    className={styles.exportBtn}
+                    aria-label="Export attendance as PDF"
+                  >
+                    Export as PDF
+                  </button>
+                </div>
               </div>
-            </div></AdminSummary>
+            </AdminSummary>
           )}
           {/* Attendance Records Table */}
           <div data-fade-up="" className={styles.attendanceSection}>
@@ -594,7 +734,8 @@ function AttendanceContent() {
                         className={
                           day.status === "paid_leave"
                             ? styles.paidLeaveRow
-                            : day.status !== "present" && day.status !== "pending"
+                            : day.status !== "present" &&
+                                day.status !== "pending"
                               ? styles.absentRow
                               : ""
                         }
@@ -624,21 +765,42 @@ function AttendanceContent() {
                           )}
                         </td>
                         <td className={styles.timeCell}>
-                          {day.status !== "present"
-                            ? "-"
-                            : day.checkIn ? <span className={styles.checkInTime}>{formatTime(day.checkIn)}</span> : "—"}
+                          {day.status !== "present" ? (
+                            "-"
+                          ) : day.checkIn ? (
+                            <span className={styles.checkInTime}>
+                              {formatTime(day.checkIn)}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                         <td className={styles.timeCell}>
-                          {day.status !== "present"
-                            ? "-"
-                            : day.checkOut ? <span className={styles.checkOutTime}>{formatTime(day.checkOut)}{day.checkOutNextDay && " (+1 day)"}</span> : "—"}
+                          {day.status !== "present" ? (
+                            "-"
+                          ) : day.checkOut ? (
+                            <span className={styles.checkOutTime}>
+                              {formatTime(day.checkOut)}
+                              {day.checkOutNextDay && " (+1 day)"}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
                         </td>
                         <td className={styles.hoursCell}>
-                          {day.status === "present" && !day.checkOut
-                            ? (day.date === attendanceToday()
-                              ? "In progress"
-                              : <span className={styles.missingBadge}>Missing checkout</span>)
-                            : day.hoursWorked > 0 ? formatAttendanceHours(day.hoursWorked) : "-"}
+                          {day.status === "present" && !day.checkOut ? (
+                            day.date === attendanceToday() ? (
+                              "In progress"
+                            ) : (
+                              <span className={styles.missingBadge}>
+                                Missing
+                              </span>
+                            )
+                          ) : day.hoursWorked > 0 ? (
+                            formatAttendanceHours(day.hoursWorked)
+                          ) : (
+                            "-"
+                          )}
                         </td>
                         {isAdmin && (
                           <td>
