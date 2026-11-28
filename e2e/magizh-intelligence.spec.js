@@ -45,7 +45,8 @@ async function preview({ page, context, baseURL }, { role, configured, onChat, o
   });
 }
 
-test("admin can see the record-based snapshot and tasks when AI is not configured", async ({ page, context, baseURL }) => {
+// Re-enable these flows when the overview and chat mounts are restored.
+test.skip("admin can see the record-based snapshot and tasks when AI is not configured", async ({ page, context, baseURL }) => {
   await preview({ page, context, baseURL }, { role: "admin", configured: false });
   await page.goto("/");
   const card = page.getByRole("region", { name: "Magizh Intelligence" });
@@ -60,7 +61,7 @@ test("admin can see the record-based snapshot and tasks when AI is not configure
   await expect(dialog.getByRole("textbox", { name: "Your question" })).toBeDisabled();
 });
 
-test("AI briefing is generated on request and uses the matching snapshot", async ({ page, context, baseURL }) => {
+test.skip("AI briefing is generated on request and uses the matching snapshot", async ({ page, context, baseURL }) => {
   const requests = [];
   await preview({ page, context, baseURL }, { role: "admin", configured: true, onBriefing: body => requests.push(body) });
   await page.goto("/");
@@ -72,7 +73,7 @@ test("AI briefing is generated on request and uses the matching snapshot", async
   expect(requests).toEqual([{ action: "briefing" }]);
 });
 
-test("employee can ask a stock question on mobile and send a follow-up", async ({ page, context, baseURL }) => {
+test.skip("employee can ask a stock question on mobile and send a follow-up", async ({ page, context, baseURL }) => {
   const requests = [];
   await preview({ page, context, baseURL }, { role: "employee", configured: true, onChat: body => {
     requests.push(body);
@@ -99,6 +100,17 @@ test("employee can ask a stock question on mobile and send a follow-up", async (
   await page.goto("/productions");
   await expect(page.locator("[data-entry-form]")).toBeVisible();
   await expect(launcher).toBeVisible();
+});
+
+test("the AI panel and launcher are hidden for signed-in users", async ({ page, context, baseURL }) => {
+  await preview({ page, context, baseURL }, { role: "admin", configured: true });
+  const launcher = page.getByRole("button", { name: "Open Magizh Intelligence" });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "This month vs last month" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Magizh Intelligence" })).toHaveCount(0);
+  await expect(launcher).toHaveCount(0);
+  await page.goto("/stock");
+  await expect(launcher).toHaveCount(0);
 });
 
 test("chat launcher stays off the sign-in page", async ({ page }) => {

@@ -6,7 +6,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import EntryShortcuts from "@/components/EntryShortcuts";
-import IntelligenceChat from "@/components/intelligence/IntelligenceChat";
+// import IntelligenceChat from "@/components/intelligence/IntelligenceChat";
 import AuthProvider from "./AuthProvider";
 import { getInitialSession } from "@/lib/server-session";
 
@@ -32,7 +32,7 @@ export default async function RootLayout({ children }) {
           <Header />
           <main id="main-content" tabIndex={-1}>{children}</main>
           <EntryShortcuts />
-          <IntelligenceChat />
+          {/* <IntelligenceChat /> */}
           <Footer />
         </AuthProvider>
       </body>

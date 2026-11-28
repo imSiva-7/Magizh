@@ -16,8 +16,9 @@ import {
 } from "@/utils/formatNumberWithComma";
 import Image from "next/image";
 import HomeCharts from "@/components/HomeCharts";
+import MonthlyComparison from "@/components/MonthlyComparison";
 import MonthlyGoals from "@/components/MonthlyGoals";
-import IntelligenceOverview from "@/components/intelligence/IntelligenceOverview";
+// import IntelligenceOverview from "@/components/intelligence/IntelligenceOverview";
 import { customerDaily } from "@/lib/customer-charts";
 import { procurementDaily } from "@/lib/supplier-charts";
 
@@ -307,7 +308,8 @@ export default function Home() {
       <div className={styles.sectionHeading}>
         <div><span className={styles.eyebrow}>AT A GLANCE</span><h2>Business overview</h2></div>
       </div>
-      <AdminSummary><IntelligenceOverview /></AdminSummary>
+      {/* <AdminSummary><IntelligenceOverview /></AdminSummary> */}
+      <AdminSummary><MonthlyComparison /></AdminSummary>
       {/* Date Filters */}
       <AdminSummary><div data-filter="card" className={styles.filter_form}>
         <div data-filter="title" className={styles.filter_header}>

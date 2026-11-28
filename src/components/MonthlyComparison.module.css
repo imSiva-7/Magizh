@@ -1,0 +1,128 @@
+.comparison {
+  --comparison-current: #27795d;
+  --comparison-previous: #a36122;
+  --comparison-draw-duration: 400ms;
+  margin-bottom: 1.5rem;
+}
+
+.heading {
+  margin-bottom: 0.9rem;
+}
+
+.heading h2 {
+  margin: 0;
+  color: #163e32;
+  font-size: 1.25rem;
+}
+
+.heading p,
+.status {
+  margin: 0.3rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.status button {
+  margin-top: 0.5rem;
+}
+
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.totals > div {
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.65rem;
+  background: var(--comparison-tint);
+}
+
+.current {
+  --comparison-line: var(--comparison-current);
+  --comparison-tint: #edf6f1;
+}
+
+.previous {
+  --comparison-line: var(--comparison-previous);
+  --comparison-tint: #fbf3e8;
+}
+
+.totals dt {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.totals dt::before {
+  flex: 0 0 1rem;
+  border-top: 3px solid var(--comparison-line);
+  content: "";
+}
+
+.previous dt::before {
+  border-top-style: dashed;
+}
+
+.totals dd {
+  display: grid;
+  gap: 0.125rem;
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.totals strong {
+  color: #163e32;
+  font-size: clamp(0.95rem, 2vw, 1.35rem);
+  overflow-wrap: anywhere;
+}
+
+.axisLabel {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .comparison :global(.recharts-line-curve) {
+    animation: drawLine var(--comparison-draw-duration) linear;
+  }
+
+  .comparison :global(.recharts-reference-dot) {
+    animation: revealEndDot var(--comparison-draw-duration) step-end;
+  }
+}
+
+@keyframes drawLine {
+  from {
+    clip-path: inset(-4px 100% -4px -4px) fill-box;
+  }
+
+  to {
+    clip-path: inset(-4px) fill-box;
+  }
+}
+
+@keyframes revealEndDot {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .chartGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

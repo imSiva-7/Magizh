@@ -19,6 +19,17 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
     if (path === "/api/auth/session") return route.fulfill({ json: { user, expires: "2099-01-01" } });
     if (path === "/api/customer/account-summary") return route.fulfill({ json: { paidAmount: 4200, dueAmount: 800, customers: [] } });
     if (path === "/api/overview/goals") return route.fulfill({ json: { ...currentGoalPeriod(), targets: { sales: null, profit: null }, actual: { sales: 0, procurement: 0, profit: 0 } } });
+    if (path === "/api/overview/monthly-comparison") {
+      const series = (current, previous) => Array.from({ length: 31 }, (_, index) => ({
+        day: index + 1,
+        current: index < 20 ? current * index : null,
+        previous: previous * index,
+      }));
+      return route.fulfill({ json: {
+        currentEnd: "2026-11-20", previousEnd: "2026-10-31",
+        sales: series(1000, 900), procurement: series(800, 850),
+      } });
+    }
     return route.fulfill({ json: [] });
   });
   const orders = [
@@ -47,6 +58,25 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await page.route("**/api/production/history?*", (route) => route.fulfill({ json: [] }));
   await page.route("**/api/stock/balance", (route) => route.fulfill({ json: {} }));
   await page.goto("/");
+  const comparison = page.getByRole("region", { name: "This month vs last month" });
+  const sales = comparison.getByRole("region", { name: "Sales", exact: true });
+  const procurement = comparison.getByRole("region", { name: "Milk procurement" });
+  await expect(sales).toContainText("₹19,000");
+  await expect(sales).toContainText("₹17,100");
+  await expect(procurement).toContainText("₹15,200");
+  await expect(procurement).toContainText("₹16,150");
+  await expect(sales.locator(".recharts-line-curve")).toHaveCount(2);
+  await expect(procurement.locator(".recharts-line-curve")).toHaveCount(2);
+  for (const line of await comparison.locator(".recharts-line-curve").all()) {
+    await expect(line).toHaveCSS("animation-duration", "0.4s");
+  }
+  await comparison.screenshot({ path: "test-results/monthly-comparison-desktop.png", animations: "disabled" });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(sales.locator(".recharts-line-curve").first()).toHaveCSS("animation-name", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await sales.getByText("View daily totals").click();
+  await expect(sales.getByRole("row").filter({ has: page.getByRole("rowheader", { name: "21", exact: true }) })).toContainText("—₹18,000");
+  await sales.getByText("View daily totals").click();
   await page.getByRole("button", { name: "Clear", exact: true }).click();
   const trend = page.getByRole("region", { name: "Sales & procurement" });
   const payment = page.getByRole("region", { name: "Paid & outstanding" });
@@ -72,6 +102,9 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await payment.getByText("View payment data", { exact: true }).click();
   await expect(payment.getByRole("row").filter({ hasText: "Customers" })).toContainText("₹1,200");
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect(sales.getByRole("application")).toBeVisible();
+  await expect(sales).toContainText("₹19,000");
+  await comparison.screenshot({ path: "test-results/monthly-comparison-mobile.png" });
   await expect(trend.getByRole("application")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await trend.getByText("View trend data", { exact: true }).click();
