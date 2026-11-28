@@ -32,6 +32,13 @@ function database({ failLedger = false } = {}) {
 }
 const request = (details) => ({ url: `http://localhost/api/customer/total_orders?customerId=${id}`, json: async () => details });
 
+test("a payment can equal ₹1,00,000 but cannot exceed it", async () => {
+  const db = database(); getDatabase.mockResolvedValue(db);
+  expect((await PUT(request({ paidAmount: "100000.01" }))).status).toBe(400);
+  expect(db.state().totalOrdersLedger).toHaveLength(0);
+  expect((await PUT(request({ paidAmount: "100000" }))).status).toBe(200);
+});
+
 test("partial receipts accumulate, settle and become credit without changing orders", async () => {
   const db = database(); getDatabase.mockResolvedValue(db);
   expect((await PUT(request({ paidAmount: "300.25" }))).data.dueAmount).toBe(699.75);

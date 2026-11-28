@@ -69,6 +69,31 @@ test("switching to desktop closes a mobile drawer and releases scroll", async ({
   expect(await page.evaluate(() => document.body.style.overflow)).not.toBe("hidden");
 });
 
+test("employees cannot open customer payments or order history", async ({ context, page, baseURL }) => {
+  const user = { role: "employee", name: "Employee navigation audit" };
+  const token = await encode({ secret: process.env.NEXTAUTH_SECRET, token: user, maxAge: 600 });
+  const domain = new URL(baseURL).hostname;
+  await context.addCookies(["next-auth.session-token", "__Secure-next-auth.session-token"].map(name => ({
+    name, value: token, domain, path: "/", secure: name.startsWith("__Secure"),
+  })));
+  await page.route("**/api/auth/session", route => route.fulfill({ json: { user, expires: "2099-01-01" } }));
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/customer");
+  await page.getByRole("button", { name: "Open menu", exact: true }).click();
+  const drawer = page.getByRole("dialog", { name: "Mobile navigation menu" });
+  const customers = drawer.getByRole("button", { name: "Customers submenu" });
+  if (await customers.getAttribute("aria-expanded") === "false") await customers.click();
+  await expect(drawer.getByRole("link", { name: "Subscriptions" })).toBeVisible();
+  for (const path of ["/customer/payments", "/customer/order/history"]) {
+    await expect(page.locator(`a[href="${path}"]`)).toHaveCount(0);
+  }
+  for (const path of ["/customer/payments", "/customer/order/history?add=1"]) {
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/unauthorized$/);
+  }
+});
+
 test("browser Back dismisses the mobile drawer on the restored page", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/stock");

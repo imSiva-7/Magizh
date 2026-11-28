@@ -142,11 +142,11 @@ input[type="date"].date_input {
   justify-content: center;
 }
 
-input[type="date"]::-webkit-datetime-edit {
+input[type="date"].date_input::-webkit-datetime-edit {
   padding: 0;
   line-height: 1.5;
 }
-input[type="date"]::-webkit-date-and-time-value {
+input[type="date"].date_input::-webkit-date-and-time-value {
   text-align: left;
 }
 

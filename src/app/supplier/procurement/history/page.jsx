@@ -1,4 +1,5 @@
 "use client";
+import { QUANTITY_LIMIT, PROCUREMENT_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import CalendarInput from "@/components/CalendarInput";
 import AdminSummary from "@/components/AdminSummary";
 import pickerStyles from "@/components/HistoryPartyPicker.module.css";
@@ -384,7 +385,6 @@ function ProcurementHistoryContent() {
     const q = parseFloat(formData.milkQuantity);
     if (!formData.milkQuantity) errs.milkQuantity = "Quantity is required";
     else if (q <= 0) errs.milkQuantity = "Must be > 0";
-    else if (q > 10000) errs.milkQuantity = "Seems too high";
 
     const f = parseFloat(formData.fatPercentage);
     if (!formData.fatPercentage) errs.fatPercentage = "Fat % is required";
@@ -407,6 +407,10 @@ function ProcurementHistoryContent() {
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     if (addBusyRef.current) return;
+    if (Number(formData.milkQuantity) > QUANTITY_LIMIT) {
+      toast.error(PROCUREMENT_LIMIT_MESSAGE);
+      return;
+    }
     if (!validateAddForm()) {
       toast.error("Please fix the form errors");
       return;

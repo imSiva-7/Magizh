@@ -1,3 +1,4 @@
+import { QUANTITY_LIMIT, QUANTITY_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getTodayDate } from "@/lib/india-date.mjs";
@@ -107,6 +108,7 @@ export async function applyStockChanges(db, entries, incFields) {
 
 export function normalizeOrderItems(items) {
   if (!Array.isArray(items) || !items.length) throw new Error("At least one order item is required");
+  const quantities = new Map();
   return items.map(item => {
     if (!item || typeof item.product !== "string" || !Object.hasOwn(productToTotalField, item.product.trim())) {
       throw new Error("Select a valid order product");
@@ -119,7 +121,11 @@ export function normalizeOrderItems(items) {
     }
     const quantity = roundStockQuantity(item.quantity);
     if (quantity <= 0 || Math.abs(quantity - Number(item.quantity)) > 1e-8) throw new Error("Use at most four decimal places for quantities");
-    return { product: item.product.trim(), quantity, ratePerUnit: Number(item.ratePerUnit), totalAmount: Number(item.totalAmount) };
+    const product = item.product.trim();
+    const productQuantity = roundStockQuantity((quantities.get(product) ?? 0) + quantity);
+    if (Number(item.quantity) > QUANTITY_LIMIT || productQuantity > QUANTITY_LIMIT) throw new Error(QUANTITY_LIMIT_MESSAGE);
+    quantities.set(product, productQuantity);
+    return { product, quantity, ratePerUnit: Number(item.ratePerUnit), totalAmount: Number(item.totalAmount) };
   });
 }
 

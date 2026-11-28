@@ -3,7 +3,8 @@ import { formatDateTimeForDisplay } from "@/lib/india-date.mjs";
 
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import { PAYMENT_LIMIT, PAYMENT_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import { moneyCents, paymentBalance } from "@/lib/customer-payments.mjs";
 import styles from "@/css/customer-payment.module.css";
 
@@ -80,13 +81,19 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
   }, [historyOpen, customerId]);
 
   if (!isOpen) return null;
+  const exceedsPaymentLimit = Math.abs(Number(amount)) > PAYMENT_LIMIT;
   let preview = null;
-  try { if (amount && moneyCents(amount) !== 0) preview = paymentBalance(Number(currentPaid) + Number(currentDue), currentPaid, amount); } catch { /* Inline validation happens on submit. */ }
+  try { if (amount && !exceedsPaymentLimit && moneyCents(amount) !== 0) preview = paymentBalance(Number(currentPaid) + Number(currentDue), currentPaid, amount); } catch { /* Inline validation happens on submit. */ }
 
   const submit = async event => {
     event.preventDefault();
     if (busy.current) return;
     setError("");
+    if (exceedsPaymentLimit) {
+      setError(PAYMENT_LIMIT_MESSAGE);
+      toast.error(PAYMENT_LIMIT_MESSAGE, { containerId: "customer-payment-limit", toastId: "customer-payment-limit" });
+      return;
+    }
     try {
       if (kind === "correction" && !isAdmin) throw new Error("Only an admin can correct payments.");
       const cents = moneyCents(amount);
@@ -132,6 +139,7 @@ export default function CustomerPaymentDialog({ isOpen, customerId, customerName
         <div className={styles.modal_actions}><button data-button="primary" type="submit" disabled={submitting}>{submitting ? "Saving…" : kind === "payment" ? "Save payment" : "Save correction"}</button><button data-button="secondary" type="button" className={styles.ledger_btn} onClick={() => setHistoryOpen(true)} disabled={historyLoading || submitting}>View payment history</button><button data-button="secondary" type="button" onClick={onClose} disabled={submitting}>Cancel</button></div>
       </form>
       {historyError && <p role="alert">{historyError}</p>}
+      <ToastContainer containerId="customer-payment-limit" position="top-right" autoClose={4000} />
   </dialog>
     {historyOpen && <dialog ref={historyDialogRef} className={`${styles.modal_content_large} ${styles.history_dialog}`} aria-labelledby="payment-history-title" onCancel={event => { event.preventDefault(); setHistoryOpen(false); }} onClick={event => { if (event.target === event.currentTarget) setHistoryOpen(false); }}>
       <div className={styles.modal_header}><div><h3 id="payment-history-title">Payment history</h3><p className={styles.history_customer}>{customerName}</p></div><button data-button="icon" type="button" className={styles.close_btn} onClick={() => setHistoryOpen(false)} aria-label="Close payment history">✕</button></div>

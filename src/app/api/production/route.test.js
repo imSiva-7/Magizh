@@ -34,6 +34,12 @@ let mockDb;
 beforeEach(()=>{jest.clearAllMocks();jest.spyOn(console,"log").mockImplementation(()=>{});mockDb=database();getDatabase.mockResolvedValue(mockDb.db);});
 afterEach(()=>jest.restoreAllMocks());
 
+test("production allows exactly 1,000 per product", async () => {
+  expect((await POST(request({ curd_quantity: 1000.01 }))).status).toBe(400);
+  expect(mockDb.state().entries).toHaveLength(0);
+  expect((await POST(request({ curd_quantity: 1000, butter_quantity: 1000 }))).status).toBe(201);
+});
+
 test("production preserves two decimal places for FAT and SNF", async () => {
  const response = await POST(request({ fat_percentage: 4.25, snf_percentage: 8.56 }));
  expect(response.status).toBe(201);

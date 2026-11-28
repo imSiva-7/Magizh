@@ -1,4 +1,5 @@
 "use client";
+import { QUANTITY_LIMIT, QUANTITY_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
@@ -405,6 +406,10 @@ function OrdersContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Object.values(quantities).some(quantity => Number(quantity) > QUANTITY_LIMIT)) {
+      toast.error(QUANTITY_LIMIT_MESSAGE);
+      return;
+    }
     if (!validateForm()) return toast.error("Please fix form errors");
 
     const items = [];

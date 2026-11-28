@@ -119,6 +119,12 @@ test("procurement save is single and cannot be closed or edited while pending", 
   await page.getByRole("spinbutton", { name: "SNF %", exact: true }).fill("8.5");
   const form = page.locator("[data-procurement-form]");
   expect(await form.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  const quantity = page.getByRole("spinbutton", { name: "Milk Quantity (L)", exact: true });
+  await quantity.fill("1000.01");
+  await form.locator("form").evaluate(el => el.requestSubmit());
+  await expect(page.locator(".Toastify__toast")).toContainText("Create another record");
+  expect(writes).toHaveLength(0);
+  await quantity.fill("20");
   await form.locator("form").evaluate(el => { el.requestSubmit(); el.requestSubmit(); });
   try {
     await expect(page.getByRole("button", { name: "Saving...", exact: true })).toBeDisabled();

@@ -57,6 +57,20 @@ function database(stock, retry = false) {
 
 const request = () => ({ json: async () => ({ customerId: new ObjectId().toHexString(), date: "2026-10-16", affectStockValue: true, items: [{ product: "Butter", quantity: 2, ratePerUnit: 50, totalAmount: 100 }], totalAmount: 100 }) });
 
+test("splitting the same product across lines cannot bypass the order quantity maximum", async () => {
+  const db = database(1);
+  getDatabase.mockResolvedValue(db);
+  const order = await request().json();
+  const item = order.items[0];
+  const response = await POST({ json: async () => ({
+    ...order,
+    affectStockValue: false,
+    items: [{ ...item, quantity: 600 }, { ...item, quantity: 401 }],
+  }) });
+  expect(response.status).toBe(400);
+  expect(db.state().orders).toHaveLength(0);
+});
+
 test("insufficient stock rolls back the order inserted before stock validation", async () => {
   const db = database(1);
   getDatabase.mockResolvedValue(db);

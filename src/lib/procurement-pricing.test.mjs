@@ -4,9 +4,16 @@ import {
   priceProcurement,
   procurementPricing,
   truncateCalculatedRate,
+  validateProcurementInput,
 } from "./procurement-pricing.mjs";
 
 const input = { milkQuantity: 10, fatPercentage: 4, snfPercentage: 8.5 };
+
+test("procurement allows exactly 1,000 litres", () => {
+  const entry = { ...input, date: "2026-11-28", time: "AM", milkQuantity: 1000 };
+  assert.equal(validateProcurementInput(entry).milkQuantity, 1000);
+  assert.throws(() => validateProcurementInput({ ...entry, milkQuantity: 1000.01 }), /Create another record/);
+});
 const snapshot = (supplierTSRate) => ({
   customRate: false,
   parentTsr: supplierTSRate,

@@ -1,3 +1,4 @@
+import { QUANTITY_LIMIT, PROCUREMENT_LIMIT_MESSAGE } from "./record-limits.mjs";
 const r2 = (n) => Math.round(n * 100) / 100;
 const r4 = (n) => Math.round(n * 10000) / 10000;
 const problem = (message, status = 400) => {
@@ -40,6 +41,7 @@ export function procurementPricing(record) {
 }
 
 export function validateProcurementInput(body) {
+  if (Number(body?.milkQuantity) > QUANTITY_LIMIT) problem(PROCUREMENT_LIMIT_MESSAGE);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(body.date || ""))
     problem("Invalid procurement date");
   const date = new Date(`${body.date}T00:00:00Z`);

@@ -11,7 +11,7 @@ const customer = { _id: "aaaaaaaaaaaaaaaaaaaaaaaa", customerName: "Corner Shop",
 async function setup(page, context, baseURL, { failOnce = false } = {}) {
   loadEnvConfig(process.cwd(), true);
   test.skip(!process.env.NEXTAUTH_SECRET, "Local auth secret required");
-  const token = await encode({ secret: process.env.NEXTAUTH_SECRET, token: { role: "employee", name: "Order preview" }, maxAge: 300 });
+  const token = await encode({ secret: process.env.NEXTAUTH_SECRET, token: { role: "dev", name: "Order preview" }, maxAge: 300 });
   const domain = new URL(baseURL).hostname;
   await context.addCookies([{ name: "__Secure-next-auth.session-token", value: token, domain, path: "/", secure: true }]);
   const orders = [], writes = [];
@@ -24,7 +24,7 @@ async function setup(page, context, baseURL, { failOnce = false } = {}) {
       return route.fulfill({ status: 201, json: orders.at(-1) });
     }
     if (request.method() !== "GET") throw new Error("Unmocked writes are forbidden");
-    if (url.pathname === "/api/auth/session") return route.fulfill({ json: { user: { role: "employee", email: "staff@example.test" }, expires: "2099-01-01" } });
+    if (url.pathname === "/api/auth/session") return route.fulfill({ json: { user: { role: "dev", email: "staff@example.test" }, expires: "2099-01-01" } });
     if (url.pathname === "/api/customer") return route.fulfill({ json: [customer] });
     const included = orders.filter(order => (!url.searchParams.get("startDate") || order.date >= url.searchParams.get("startDate")) && (!url.searchParams.get("endDate") || order.date <= url.searchParams.get("endDate")));
     const amount = included.reduce((sum, row) => sum + row.totalAmount, 0);
@@ -55,6 +55,10 @@ test("staff can create an order in the inline history form with saved prices on 
   const milk = dialog.getByLabel("Milk Quantity (L)", { exact: true });
   await expect(milk).toHaveAttribute("placeholder", "Rate: ₹40 · Avg Rate: ₹40");
   await expect(dialog.getByLabel("Ghee Quantity (L)", { exact: true })).toHaveAttribute("placeholder", "Rate: ₹500 · Avg Rate: ₹500");
+  await milk.fill("1000.01");
+  await dialog.getByRole("button", { name: "Create Order", exact: true }).click();
+  await expect(page.locator(".Toastify__toast")).toContainText("Create another record");
+  expect(writes).toHaveLength(0);
   await milk.fill("2.5");
   await expect(dialog.getByLabel("Butter Quantity (Kg)", { exact: true })).toBeDisabled();
   await dialog.getByLabel("GST Option", { exact: true }).selectOption("exclusive");

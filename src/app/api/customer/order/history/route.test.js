@@ -6,7 +6,7 @@ jest.mock("next-auth", () => ({ getServerSession: jest.fn() }));
 jest.mock("@/app/api/auth/[...nextauth]/route", () => ({ authOptions: {} }));
 jest.mock("@/lib/mongodb", () => ({ __esModule: true, default: Promise.resolve({ db: jest.fn() }) }));
 
-test.each(["employee", "dev", "admin"])("%s receives order records, only admins receive the summary", async role => {
+test.each(["dev", "admin"])("%s receives order records, only admins receive the summary", async role => {
   getServerSession.mockResolvedValue({ user: { role } });
   const orders = [{ _id: "order-1", totalAmount: 100 }];
   const summary = { totalAmount: 100, orderCount: 1 };
@@ -16,6 +16,14 @@ test.each(["employee", "dev", "admin"])("%s receives order records, only admins 
   const data = await response.json();
   expect(data.orders).toEqual(orders);
   expect(data.summary).toEqual(role === "admin" ? summary : undefined);
+});
+
+test("employees cannot read order history", async () => {
+  const client = await clientPromise;
+  client.db.mockClear();
+  getServerSession.mockResolvedValue({ user: { role: "employee" } });
+  expect((await GET({ url: "http://localhost/api/customer/order/history" })).status).toBe(403);
+  expect(client.db).not.toHaveBeenCalled();
 });
 
 test("anonymous callers cannot read order history", async () => {

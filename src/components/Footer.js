@@ -111,7 +111,7 @@ export default function Footer() {
             <ul className={styles.footerLinks}>
               <FooterNavLink href="/productions/history">Stock</FooterNavLink>
               <FooterNavLink href="/supplier/procurement/history">Procurements</FooterNavLink>
-              <FooterNavLink href="/customer/order/history">Orders</FooterNavLink>
+              {isAdmin && <FooterNavLink href="/customer/order/history">Orders</FooterNavLink>}
             </ul>
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function Footer() {
             <span className={styles.copyrightText}>
               © {currentYear} Magizh Dairy Productions. All rights reserved.
             </span>
-            <span className={styles.version}>v1.7.48</span>
+            <span className={styles.version}>v1.7.49</span>
           </div>
         </div>
       </div>

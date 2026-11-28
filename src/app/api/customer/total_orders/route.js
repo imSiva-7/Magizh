@@ -1,3 +1,4 @@
+import { PAYMENT_LIMIT, PAYMENT_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
@@ -53,6 +54,7 @@ export async function PUT(request) {
     const customerId = new URL(request.url).searchParams.get("customerId");
     if (!customerId || !ObjectId.isValid(customerId)) return NextResponse.json({ error: "Valid customerId required" }, { status: 400 });
     const data = await request.json();
+    if (Math.abs(Number(data.paidAmount)) > PAYMENT_LIMIT) return NextResponse.json({ error: PAYMENT_LIMIT_MESSAGE }, { status: 400 });
     let cents;
     try { cents = moneyCents(data.paidAmount); }
     catch (error) { return NextResponse.json({ error: error.message }, { status: 400 }); }

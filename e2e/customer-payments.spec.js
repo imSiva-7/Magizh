@@ -69,6 +69,10 @@ test("partial payments reduce due and overpayments become credit, with correctio
   await expect(page.getByRole("button", { name: "Mark as Paid", exact: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Record payment", exact: true }).click();
   const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Amount received (₹)").fill("100000.01");
+  await dialog.getByRole("button", { name: "Save payment", exact: true }).click();
+  await expect(dialog.locator(".Toastify__toast")).toContainText("Create another record");
+  expect(requests).toHaveLength(0);
   await dialog.getByLabel("Amount received (₹)").fill("300.25");
   await expect(dialog.getByRole("status")).toHaveText("Balance after this entry: ₹700 due");
   await dialog.getByLabel("Payment method").selectOption("UPI");

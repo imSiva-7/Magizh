@@ -236,7 +236,7 @@ function SubscriptionsContent() {
             <p>
               New orders are unpaid. Resuming skips paused dates. Invoicing and payment matching are manual.
             </p>
-            <Link
+            {(customerId || session?.user?.role !== "employee") && <Link
               href={
                 customerId
                   ? `/customer/order?customerId=${encodeURIComponent(customerId)}`
@@ -244,7 +244,7 @@ function SubscriptionsContent() {
               }
             >
               View orders
-            </Link>
+            </Link>}
           </section>
 
           <section data-fade-up="" className={styles.panel}>

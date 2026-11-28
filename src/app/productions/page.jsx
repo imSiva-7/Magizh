@@ -1,4 +1,5 @@
 "use client";
+import { QUANTITY_LIMIT, QUANTITY_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
@@ -169,6 +170,11 @@ export default function ProductionPage() {
 
     const now = Date.now();
     if (isSubmitting || now - lastSubmitTime.current < 2000) return;
+
+    if (Object.entries(formData).some(([field, value]) => field.endsWith("_quantity") && Number(value) > QUANTITY_LIMIT)) {
+      toast.error(QUANTITY_LIMIT_MESSAGE);
+      return;
+    }
 
     if (!batchNo) {
       toast.error("Batch number missing");

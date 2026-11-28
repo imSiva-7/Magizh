@@ -1,4 +1,5 @@
 "use client";
+import { QUANTITY_LIMIT, PROCUREMENT_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import CalendarInput from "@/components/CalendarInput";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { startDeleteToast } from "@/lib/delete-toast";
@@ -547,6 +548,10 @@ function ProcurementContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (Number(formData.milkQuantity) > QUANTITY_LIMIT) {
+      toast.error(PROCUREMENT_LIMIT_MESSAGE);
+      return;
+    }
     if (!validateForm()) {
       toast.error("Please fix form errors");
       return;

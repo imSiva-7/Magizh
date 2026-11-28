@@ -451,11 +451,11 @@ input[type="date"].filter_input {
   justify-content: center;
 }
 
-input[type="date"]::-webkit-datetime-edit {
+input[type="date"]:is(.input, .filter_input)::-webkit-datetime-edit {
   padding: 0;
   line-height: 1.5;
 }
-input[type="date"]::-webkit-date-and-time-value {
+input[type="date"]:is(.input, .filter_input)::-webkit-date-and-time-value {
   text-align: left;
 }
 
@@ -518,7 +518,7 @@ input[type="date"]::-webkit-date-and-time-value {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card);
 }
-button:disabled {
+.page_container button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none !important;

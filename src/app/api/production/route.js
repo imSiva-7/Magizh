@@ -1,3 +1,4 @@
+import { QUANTITY_LIMIT, QUANTITY_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import { requireAdmin, requireStaff } from "@/lib/mutation-auth";
 import { NextResponse } from "next/server";
 import getDatabase from "@/database/connectToMongoDB";
@@ -167,6 +168,9 @@ export async function POST(request) {
     for (const product of VALID_PRODUCTS) {
       const percentage = PERCENTAGE_FIELDS.includes(product);
       const key = `${product}${percentage ? "_percentage" : "_quantity"}`;
+      if (!percentage && Number(data[key]) > QUANTITY_LIMIT) {
+        return NextResponse.json({ error: QUANTITY_LIMIT_MESSAGE }, { status: 400 });
+      }
       if (data[key] !== undefined && data[key] !== null && data[key] !== "" && parseQuantity(data[key], percentage) === null) {
         return NextResponse.json({ error: `Invalid ${key}` }, { status: 400 });
       }

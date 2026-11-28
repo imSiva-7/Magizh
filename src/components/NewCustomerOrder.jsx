@@ -1,9 +1,11 @@
 "use client";
+import { QUANTITY_LIMIT, QUANTITY_LIMIT_MESSAGE } from "@/lib/record-limits.mjs";
 import CalendarInput from "@/components/CalendarInput";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { toast } from "react-toastify";
 import CategoryBadge from "./CategoryBadge";
 import { getTodayDate } from "@/utils/dateUtils";
 import { formatNumberWithCommas } from "@/utils/formatNumberWithComma";
@@ -134,6 +136,11 @@ export default function NewCustomerOrder({ onClose, onCreated }) {
       lines.some((line) => !Number.isFinite(line.quantity) || line.quantity < 0)
     ) {
       setError("Quantities must be zero or greater.");
+      return;
+    }
+    if (lines.some(line => line.quantity > QUANTITY_LIMIT)) {
+      setError(QUANTITY_LIMIT_MESSAGE);
+      toast.error(QUANTITY_LIMIT_MESSAGE);
       return;
     }
     const selected = lines.filter((line) => line.quantity > 0);

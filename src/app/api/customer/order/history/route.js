@@ -6,6 +6,7 @@ import clientPromise from "@/lib/mongodb"
 export async function GET(request) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  if (session.user.role === "employee") return NextResponse.json({ error: "Order history is unavailable to employees" }, { status: 403 });
   try {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");

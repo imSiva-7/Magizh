@@ -32,8 +32,8 @@ const desktopNavItems = [
     name: "Customers",
     path: "/customer",
     children: [
-      { name: "Order History", path: "/customer/order/history" },
-      { name: "Order Payments", path: "/customer/payments" },
+      { name: "Order History", path: "/customer/order/history", hideForEmployees: true },
+      { name: "Order Payments", path: "/customer/payments", hideForEmployees: true },
       { name: "Subscriptions", path: "/customer/subscriptions" },
     ],
   },
@@ -69,8 +69,8 @@ const mobileNavGroups = [
     links: [
       { name: "Customers", path: "/customer" },
       { name: "Subscriptions", path: "/customer/subscriptions" },
-      { name: "Order History", path: "/customer/order/history" },
-      { name: "Order Payments", path: "/customer/payments" },
+      { name: "Order History", path: "/customer/order/history", hideForEmployees: true },
+      { name: "Order Payments", path: "/customer/payments", hideForEmployees: true },
     ],
   },
   {
@@ -91,6 +91,7 @@ export default function Header() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.role === "admin";
+  const isEmployee = session?.user?.role === "employee";
   const accountName = session?.user?.name?.trim();
   const rawFirstName = accountName?.split(/\s+/)[0];
   const firstName = rawFirstName && rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1);
@@ -374,7 +375,7 @@ export default function Header() {
                 </Link>
                 {item.children && (
                   <ul className={styles.dropdown} inert={openDropdown !== item.path}>
-                    {(Array.isArray(item.children) ? item.children : [item.children]).map((child) => (
+                    {(Array.isArray(item.children) ? item.children : [item.children]).filter(child => !isEmployee || !child.hideForEmployees).map((child) => (
                       <li key={child.path}>
                         <Link
                           href={child.path}
@@ -471,7 +472,7 @@ export default function Header() {
               <div className={styles.mobileNavContent}>
                 <nav className={styles.mobileNav} aria-label="Workspace navigation">
                   {mobileNavGroups.filter(group => !group.adminOnly || isAdmin).map(group => {
-                    const links = group.links.filter(item => !item.adminOnly || isAdmin);
+                    const links = group.links.filter(item => (!item.adminOnly || isAdmin) && (!isEmployee || !item.hideForEmployees));
                     const collapsible = group.label !== "Operations" && links.length > 1;
                     const expanded = expandedMobileGroup === group.label;
                     const submenuId = `mobile-submenu-${group.label.toLowerCase()}`;

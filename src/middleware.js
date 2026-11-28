@@ -10,6 +10,7 @@ const rolePermissions = {
 
 const isPathAllowed = (path, userRole) => {
   if (!userRole) return false;
+  if (userRole === "employee" && /^\/customer\/(payments|order\/history)(\/|$)/.test(path)) return false;
   if (path === "/" || /\/(analytics)(\/|$)/.test(path)) return userRole === "admin";
   if (userRole === "admin" || userRole === "dev") return true;
   const allowed = rolePermissions[userRole];
