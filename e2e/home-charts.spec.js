@@ -13,13 +13,16 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
     { name: "next-auth.session-token", value: token, domain, path: "/" },
     { name: "__Secure-next-auth.session-token", value: token, domain, path: "/", secure: true },
   ]);
-  await page.route("**/api/**", route => {
+  let releaseComparison;
+  const comparisonResponse = new Promise(resolve => { releaseComparison = resolve; });
+  await page.route("**/api/**", async route => {
     if (route.request().method() !== "GET") throw new Error("Chart previews never write business data");
     const path = new URL(route.request().url()).pathname;
     if (path === "/api/auth/session") return route.fulfill({ json: { user, expires: "2099-01-01" } });
     if (path === "/api/customer/account-summary") return route.fulfill({ json: { paidAmount: 4200, dueAmount: 800, customers: [] } });
     if (path === "/api/overview/goals") return route.fulfill({ json: { ...currentGoalPeriod(), targets: { sales: null, profit: null }, actual: { sales: 0, procurement: 0, profit: 0 } } });
     if (path === "/api/overview/monthly-comparison") {
+      await comparisonResponse;
       const series = (current, previous) => Array.from({ length: 31 }, (_, index) => ({
         day: index + 1,
         current: index < 20 ? current * index : null,
@@ -61,18 +64,28 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   const comparison = page.getByRole("region", { name: "This month vs last month" });
   const sales = comparison.getByRole("region", { name: "Sales", exact: true });
   const procurement = comparison.getByRole("region", { name: "Milk procurement" });
+  await expect(comparison.getByRole("status")).toHaveText("Loading monthly comparison…");
+  await expect(sales.getByRole("application")).toHaveCount(0);
+  await page.evaluate(() => document.fonts.ready);
+  const loadingHeight = await comparison.evaluate(node => node.offsetHeight);
+  releaseComparison();
   await expect(sales).toContainText("₹19,000");
   await expect(sales).toContainText("₹17,100");
   await expect(procurement).toContainText("₹15,200");
   await expect(procurement).toContainText("₹16,150");
   await expect(sales.locator(".recharts-line-curve")).toHaveCount(2);
   await expect(procurement.locator(".recharts-line-curve")).toHaveCount(2);
+  expect(Math.abs(await comparison.evaluate(node => node.offsetHeight) - loadingHeight)).toBeLessThanOrEqual(2);
+  const details = sales.locator("details");
+  await expect(details).toHaveCSS("animation-name", "data-fade-up");
+  await expect(details).toHaveCSS("animation-delay", "0.12s");
   for (const line of await comparison.locator(".recharts-line-curve").all()) {
     await expect(line).toHaveCSS("animation-duration", "0.4s");
   }
   await comparison.screenshot({ path: "test-results/monthly-comparison-desktop.png", animations: "disabled" });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(sales.locator(".recharts-line-curve").first()).toHaveCSS("animation-name", "none");
+  await expect(details).toHaveCSS("animation-name", "none");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await sales.getByText("View daily totals").click();
   await expect(sales.getByRole("row").filter({ has: page.getByRole("rowheader", { name: "21", exact: true }) })).toContainText("—₹18,000");

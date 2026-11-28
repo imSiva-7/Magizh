@@ -2,6 +2,7 @@
   --comparison-current: #27795d;
   --comparison-previous: #a36122;
   --comparison-draw-duration: 400ms;
+  --comparison-plot-delay: 80ms;
   margin-bottom: 1.5rem;
 }
 
@@ -96,13 +97,58 @@
   text-align: center;
 }
 
+.loadingStatus {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.placeholderTotals > div {
+  background: #eff3f0;
+}
+
+.placeholderTotals dt::before {
+  display: none;
+}
+
+.placeholderTotals :is(dt, strong, dd span) {
+  background: linear-gradient(#dfe8e1, #dfe8e1) left center / 36% 0.55em no-repeat;
+}
+
+.placeholderPlot {
+  background: repeating-linear-gradient(to bottom, transparent 0 calc(20% - 1px), #edf2ee calc(20% - 1px) 20%);
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .comparison [data-fade-up] {
+    animation-duration: 360ms;
+    animation-delay: var(--comparison-reveal-delay, 0ms);
+    animation-fill-mode: backwards;
+  }
+
+  .previous {
+    --comparison-reveal-delay: 40ms;
+  }
+
+  .plot,
+  .axisLabel {
+    --comparison-reveal-delay: var(--comparison-plot-delay);
+  }
+
+  .details {
+    --comparison-reveal-delay: 120ms;
+  }
+
   .comparison :global(.recharts-line-curve) {
-    animation: drawLine var(--comparison-draw-duration) linear;
+    animation: drawLine var(--comparison-draw-duration) linear var(--comparison-plot-delay) backwards;
   }
 
   .comparison :global(.recharts-reference-dot) {
-    animation: revealEndDot var(--comparison-draw-duration) step-end;
+    animation: revealEndDot var(--comparison-draw-duration) step-end var(--comparison-plot-delay) backwards;
   }
 }
 
