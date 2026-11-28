@@ -216,6 +216,7 @@ export default function ProductionAnalyticsPage() {
                 <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="milk"
                   stroke="#8884d8"
@@ -223,6 +224,7 @@ export default function ProductionAnalyticsPage() {
                   dot={data.daily.length === 1}
                 />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="batches"
                   yAxisId="batches"
@@ -245,6 +247,7 @@ export default function ProductionAnalyticsPage() {
                 <Tooltip labelFormatter={formatDateForDisplay} />
                 <Legend />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="fat"
                   stroke="#ff7300"
@@ -252,6 +255,7 @@ export default function ProductionAnalyticsPage() {
                   dot={data.daily.length === 1}
                 />
                 <Line
+                  isAnimationActive={false}
                   type="monotone"
                   dataKey="snf"
                   stroke="#387908"
@@ -275,7 +279,7 @@ export default function ProductionAnalyticsPage() {
                       <XAxis type="number" tickFormatter={value => unit ? `${value} ${unit}` : value} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
                       <YAxis type="category" dataKey="name" width={108} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
                       <Tooltip formatter={value => [`${formatNumberWithCommas(value, 2)}${unit ? ` ${unit}` : ""}`, "Quantity"]} />
-                      <Bar dataKey="quantity" fill="#27795d" name="Quantity" maxBarSize={26} radius={[0, 4, 4, 0]} />
+                      <Bar className="recharts-horizontal-bars" isAnimationActive={false} dataKey="quantity" fill="#27795d" name="Quantity" maxBarSize={26} radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

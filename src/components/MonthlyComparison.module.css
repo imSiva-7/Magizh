@@ -1,7 +1,6 @@
 .comparison {
   --comparison-current: #27795d;
   --comparison-previous: #a36122;
-  --comparison-draw-duration: 400ms;
   --comparison-plot-delay: 80ms;
   margin-bottom: 1.5rem;
 }
@@ -137,28 +136,19 @@
   .plot,
   .axisLabel {
     --comparison-reveal-delay: var(--comparison-plot-delay);
+    --chart-delay: var(--comparison-plot-delay);
   }
 
   .details {
     --comparison-reveal-delay: 120ms;
   }
 
-  .comparison :global(.recharts-line-curve) {
-    animation: drawLine var(--comparison-draw-duration) linear var(--comparison-plot-delay) backwards;
+  .plot :global(.recharts-wrapper) {
+    animation: none;
   }
 
   .comparison :global(.recharts-reference-dot) {
-    animation: revealEndDot var(--comparison-draw-duration) step-end var(--comparison-plot-delay) backwards;
-  }
-}
-
-@keyframes drawLine {
-  from {
-    clip-path: inset(-4px 100% -4px -4px) fill-box;
-  }
-
-  to {
-    clip-path: inset(-4px) fill-box;
+    animation: revealEndDot var(--chart-duration) step-end var(--comparison-plot-delay) backwards;
   }
 }
 

@@ -80,7 +80,7 @@ test("home charts aggregate records, follow date filters, and fit mobile", async
   await expect(details).toHaveCSS("animation-name", "data-fade-up");
   await expect(details).toHaveCSS("animation-delay", "0.12s");
   for (const line of await comparison.locator(".recharts-line-curve").all()) {
-    await expect(line).toHaveCSS("animation-duration", "0.4s");
+    await expect(line).toHaveCSS("animation-duration", "1s");
   }
   await comparison.screenshot({ path: "test-results/monthly-comparison-desktop.png", animations: "disabled" });
   await page.emulateMedia({ reducedMotion: "reduce" });

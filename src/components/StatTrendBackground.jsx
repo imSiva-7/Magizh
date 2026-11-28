@@ -35,6 +35,7 @@ export default function StatTrendBackground({ points = [], tone = "milk" }) {
       aria-hidden="true"
       focusable="false"
       data-testid="stat-trend"
+      data-chart-sparkline=""
       data-points={ordered.length}
     >
       {ordered.length > 1 ? (

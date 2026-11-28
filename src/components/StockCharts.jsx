@@ -22,7 +22,7 @@ export default function StockCharts({ items }) {
               <XAxis type="number" tickFormatter={moneyAxis} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
               <YAxis type="category" dataKey="name" width={100} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
               <Tooltip formatter={(value) => [stockMoney(Number(value)), "Estimated selling value"]} />
-              <Bar dataKey="estimatedValue" fill="#27795d" barSize={22} radius={[0, 4, 4, 0]} isAnimationActive={false} />
+              <Bar className="recharts-horizontal-bars" dataKey="estimatedValue" fill="#27795d" barSize={22} radius={[0, 4, 4, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div> : <div className={styles.chartEmpty}>Customer prices are needed to estimate stock value.</div>}
@@ -40,8 +40,8 @@ export default function StockCharts({ items }) {
               <YAxis type="category" dataKey="name" width={100} axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
               <Tooltip formatter={(value, name) => [`${stockQuantity(Number(value))} ${unit}`, name]} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="quantity" name={`Available (${unit})`} fill="#27795d" barSize={12} radius={[0, 3, 3, 0]} isAnimationActive={false} />
-              <Bar dataKey="minimum" name={`Minimum (${unit})`} fill="#d18b36" barSize={12} radius={[0, 3, 3, 0]} isAnimationActive={false} />
+              <Bar className="recharts-horizontal-bars" dataKey="quantity" name={`Available (${unit})`} fill="#27795d" barSize={12} radius={[0, 3, 3, 0]} isAnimationActive={false} />
+              <Bar className="recharts-horizontal-bars" dataKey="minimum" name={`Minimum (${unit})`} fill="#d18b36" barSize={12} radius={[0, 3, 3, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>

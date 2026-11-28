@@ -91,8 +91,8 @@ export default function HomeCharts({ orders, procurements, customerSummary, supp
                 <YAxis type="category" dataKey="name" tickLine={false} axisLine={false} width={85} tick={{ fontSize: 12 }} />
                 <Tooltip formatter={money} contentStyle={{ borderRadius: 12, borderColor: "#dce6df" }} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 16 }} />
-                <Bar dataKey="paid" name="Paid" stackId="payments" fill="#27795d" barSize={32} isAnimationActive={false} />
-                <Bar dataKey="due" name="Outstanding" stackId="payments" fill="#d18b36" barSize={32} isAnimationActive={false} />
+                <Bar className="recharts-horizontal-bars" dataKey="paid" name="Paid" stackId="payments" fill="#27795d" barSize={32} isAnimationActive={false} />
+                <Bar className="recharts-horizontal-bars" dataKey="due" name="Outstanding" stackId="payments" fill="#d18b36" barSize={32} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>

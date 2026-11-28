@@ -230,7 +230,34 @@ h1, h2, h3 { line-height: 1.25; letter-spacing: -0.025em; text-wrap: balance; ov
   }
 }
 
+@keyframes chart-draw {
+  from { clip-path: inset(-4px 100% -4px -4px) fill-box; }
+  to { clip-path: inset(-4px) fill-box; }
+}
+
+@keyframes chart-bars-rise {
+  from { clip-path: inset(100% 0 0) fill-box; }
+  to { clip-path: inset(0) fill-box; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  .recharts-wrapper,
+  [data-chart-sparkline] {
+    --chart-duration: 1s;
+  }
+
+  .recharts-wrapper {
+    animation: data-fade-up 360ms ease-out var(--chart-delay, 0ms) backwards;
+  }
+
+  :is(.recharts-line-curve, .recharts-area, .recharts-horizontal-bars .recharts-bar-rectangle, [data-chart-sparkline] path) {
+    animation: chart-draw var(--chart-duration) linear var(--chart-delay, 0ms) backwards;
+  }
+
+  .recharts-bar:not(.recharts-horizontal-bars) .recharts-bar-rectangle {
+    animation: chart-bars-rise var(--chart-duration) ease-out backwards;
+  }
+
   main > div:not([data-calendar-input], :has(input, select, textarea)),
   main :is([data-entry-form], tbody):not(:has(input, select, textarea)) {
     animation: content-enter 180ms ease-out;
